@@ -6,10 +6,18 @@ it was verified. Line numbers are from the shipped v1.0.0 source.
 Verification commands used throughout:
 
 ```bash
-LOCAL_PHP="$HOME/AppData/Roaming/Local/lightning-services/php-8.2.29+0/bin/win64/php.exe"
+LOCAL_PHP="$HOME/AppData/Roaming/Local/lightning-services/php-8.3.17+1/bin/win64/php.exe"
 LOCAL_PHP_INI="$HOME/AppData/Roaming/Local/run/O2BtUtET-/conf/php/php.ini"
 "$LOCAL_PHP" -c "$LOCAL_PHP_INI" tests/run.php payments     # 66 assertions, all passing
 ```
+
+Runtime: **PHP 8.3.17**, WordPress 7.0.2, WooCommerce 10.9.1 with HPOS enabled, MySQL 8.4.
+The suite was run and passed on both PHP 8.2.29 (the environment's previous engine) and 8.3.17.
+
+> Local reassigns the run-directory id and ports when it restarts. Re-derive `<id>` from
+> `~/AppData/Roaming/Local/run/<id>/conf/php/php.ini` if these paths stop working. Note that
+> `local-site.json` can lag behind the real engine — the authority is
+> `run/<id>/conf/php/php-fpm.d/www.conf`.
 
 ---
 
@@ -152,8 +160,10 @@ Log line format actually produced:
 
 1. **`src/` rather than `includes/`** — matches the project's documented modern architecture
    (`yazan-social-rewards`). All specified class names and sub-folders are preserved.
-2. **PHP 8.1 target, not 8.3** — 8.3 is not installed on this environment (Local ships 8.2.29, and
-   `phpcs.xml` pins `testVersion 8.1-`).
+2. ~~PHP 8.1 target, not 8.3~~ — **resolved.** The environment was upgraded to PHP 8.3.17, so the
+   plugin now declares `Requires PHP: 8.3` as the specification asked. The suite passes on it.
+   Remaining project-level mismatch: `yazan-core` and `yazan-social-rewards` still declare 8.1, and
+   `phpcs.xml` pins `testVersion 8.1-` — raise or scope that if phpcs is run against this plugin.
 3. **`integration_status` gains `skipped`** — the spec maps a missing dependency to `failed`. With no
    downstream YAZAN ownership or warranty system installed, *every* event would read `failed` and the
    dashboard would be uniformly red, hiding genuine faults. `skipped` means "no subscriber"; `failed`
