@@ -515,25 +515,20 @@ function yazan_atc_reassurance() {
 
 /**
  * Muted payment / trust strip after the cart form (Comma's card-icon row, restyled monochrome so it
- * reads luxe on the dark theme). Pure inline SVG (no external requests); marks inherit currentColor.
+ * reads luxe on the dark theme). The marks themselves live in inc/payment-marks.php, which derives
+ * them from the gateways WooCommerce actually offers and draws each one as inline SVG inheriting
+ * currentColor — so this row can never advertise a method the store cannot take, and still fetches
+ * nothing external.
  */
 add_action( 'woocommerce_after_add_to_cart_form', 'yazan_payment_strip' );
 function yazan_payment_strip() {
 	if ( ! function_exists( 'is_product' ) || ! is_product() ) {
 		return;
 	}
-	$marks = array( 'Visa', 'Mastercard', 'Amex', 'PayPal', 'Apple Pay' );
-	echo '<div class="yz-pay" role="img" aria-label="' . esc_attr__( 'Accepted payment methods', 'yazan' ) . '">';
-	echo '<span class="yz-pay__lock" aria-hidden="true">'
-		. '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="11" width="14" height="9" rx="1"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>'
-		. '</span>';
-	echo '<span class="yz-pay__label">' . esc_html__( 'Secure checkout', 'yazan' ) . '</span>';
-	echo '<span class="yz-pay__marks">';
-	foreach ( $marks as $mark ) {
-		echo '<span class="yz-pay__mark">' . esc_html( $mark ) . '</span>';
+	if ( ! function_exists( 'yazan_the_payment_marks' ) ) {
+		return;
 	}
-	echo '</span>';
-	echo '</div>';
+	yazan_the_payment_marks( array( 'class' => 'yz-pay--product' ) );
 }
 
 /**

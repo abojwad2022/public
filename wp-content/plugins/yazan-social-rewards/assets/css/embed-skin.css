@@ -647,6 +647,9 @@ body.yzrw-embed .yzrw-user-search {
 		white-space: normal;
 		overflow-wrap: break-word;
 		vertical-align: top;
+		/* Trim the roomy desktop padding — in a narrow fixed column it would eat
+		   most of the width and force text to break far more than necessary. */
+		padding: 0.45rem 0.4rem;
 	}
 	/* Fixed columns are narrow, so the two action buttons stack full-width and
 	   compact (each label stays on one line) instead of being clipped by the cell. */
@@ -654,7 +657,7 @@ body.yzrw-embed .yzrw-user-search {
 		display: block;
 		width: 100%;
 		margin: 0.15rem 0;
-		padding: 0.25rem 0.4rem;
+		padding: 0.2rem 0.15rem;
 		font-size: var(--yz-text-xs);
 		white-space: nowrap;
 	}

@@ -16,7 +16,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit; // No direct access.
 }
 
-define( 'YAZAN_VERSION', '2.6.1' );
+define( 'YAZAN_VERSION', '2.7.0' );
 define( 'YAZAN_DIR', get_stylesheet_directory() );
 define( 'YAZAN_URI', get_stylesheet_directory_uri() );
 
@@ -53,6 +53,7 @@ require YAZAN_DIR . '/inc/theme-switcher.php'; // Interchangeable Black/Burgundy
 require YAZAN_DIR . '/inc/homepage.php';     // Front-page content getters, ACF options, layout.
 require YAZAN_DIR . '/inc/demo-content.php'; // Dummy images for empty homepage slots (toggle off via filter).
 require YAZAN_DIR . '/inc/home-content.php'; // Real Featured-Collections + Best-Sellers (overrides demo, pri 99).
+require YAZAN_DIR . '/inc/payment-marks.php'; // Accepted-payment row (product/cart/checkout/footer).
 require YAZAN_DIR . '/inc/woocommerce.php';  // Loop/product hooks: subject line, badges, gallery, ATC.
 require YAZAN_DIR . '/inc/cartflows-compat.php'; // Fix CartFlows Instant-Checkout thank-you template on Windows/Local.
 require YAZAN_DIR . '/inc/thankyou-enhancements.php'; // Thank-you page: progress stepper, delivery ETA, brand note, support.
