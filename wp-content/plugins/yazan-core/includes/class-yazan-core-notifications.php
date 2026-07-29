@@ -158,20 +158,29 @@ class Yazan_Core_Notifications {
 	}
 
 	/**
-	 * Server side: report any orders newer than the client's last-seen id.
+	 * Orders newer than a given id.
 	 *
-	 * @param array $response Outgoing heartbeat response.
-	 * @param array $data     Incoming heartbeat data.
-	 * @return array
+	 * The single source of truth for "what has arrived since you last looked". Both the wp-admin
+	 * Heartbeat handler below and the dashboard's `yazan/v1/orders/alerts` route call it, so the
+	 * two surfaces cannot drift apart — one query, two consumers.
+	 *
+	 * Callers are responsible for the capability check; this only reads.
+	 *
+	 * @param int $last_seen Highest order id the client already knows about.
+	 * @return array{count:int,latest:int,orders:array<int,array<string,mixed>>}
 	 */
-	public static function heartbeat_received( $response, $data ) {
-		if ( ! isset( $data['yazan_last_seen'] ) || ! current_user_can( 'manage_woocommerce' ) ) {
-			return $response;
-		}
+	public static function orders_since( $last_seen ) {
+		$empty = array(
+			'count'  => 0,
+			'latest' => 0,
+			'orders' => array(),
+		);
+
 		if ( ! function_exists( 'wc_get_orders' ) ) {
-			return $response;
+			return $empty;
 		}
-		$last_seen = (int) $data['yazan_last_seen'];
+
+		$last_seen = (int) $last_seen;
 
 		$ids = wc_get_orders(
 			array(
@@ -182,23 +191,66 @@ class Yazan_Core_Notifications {
 				'type'    => 'shop_order',
 			)
 		);
+
 		if ( ! $ids ) {
+			return $empty;
+		}
+
+		$new = array_values(
+			array_filter(
+				$ids,
+				static function ( $id ) use ( $last_seen ) {
+					return (int) $id > $last_seen;
+				}
+			)
+		);
+
+		$orders = array();
+
+		// A short summary of the newest few — enough for the dashboard to name what arrived
+		// without a second round trip. Capped so a long-idle tab can't request 20 full orders.
+		foreach ( array_slice( $new, 0, 5 ) as $id ) {
+			$order = wc_get_order( $id );
+			if ( ! $order instanceof WC_Order ) {
+				continue;
+			}
+			$orders[] = array(
+				'id'       => (int) $order->get_id(),
+				'number'   => (string) $order->get_order_number(),
+				'total'    => wp_strip_all_tags( wc_price( $order->get_total(), array( 'currency' => $order->get_currency() ) ) ),
+				'status'   => (string) $order->get_status(),
+				'customer' => trim( $order->get_formatted_billing_full_name() ),
+			);
+		}
+
+		return array(
+			'count'  => count( $new ),
+			'latest' => (int) max( $ids ),
+			'orders' => $orders,
+		);
+	}
+
+	/**
+	 * Server side: report any orders newer than the client's last-seen id.
+	 *
+	 * @param array $response Outgoing heartbeat response.
+	 * @param array $data     Incoming heartbeat data.
+	 * @return array
+	 */
+	public static function heartbeat_received( $response, $data ) {
+		if ( ! isset( $data['yazan_last_seen'] ) || ! current_user_can( 'manage_woocommerce' ) ) {
 			return $response;
 		}
 
-		$new = array_filter(
-			$ids,
-			static function ( $id ) use ( $last_seen ) {
-				return (int) $id > $last_seen;
-			}
-		);
+		$result = self::orders_since( (int) $data['yazan_last_seen'] );
 
-		if ( $new ) {
+		if ( $result['count'] > 0 ) {
 			$response['yazan_new_orders'] = array(
-				'count'  => count( $new ),
-				'latest' => (int) max( $ids ),
+				'count'  => $result['count'],
+				'latest' => $result['latest'],
 			);
 		}
+
 		return $response;
 	}
 

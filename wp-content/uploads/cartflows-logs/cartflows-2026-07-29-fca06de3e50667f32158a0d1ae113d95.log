@@ -75,3 +75,7 @@
 2026-07-29T07:42:51+00:00 INFO End-Cartflows_Frontend::redirect_to_thankyou_page
 2026-07-29T07:42:52+00:00 INFO Webhook event: cartflows_step_visited - Step 11 (Type: thankyou)
 2026-07-29T07:42:52+00:00 INFO Webhook dispatch: No webhooks found for event cartflows_step_visited
+2026-07-29T07:56:44+00:00 INFO Webhook event: cartflows_step_visited - Step 10 (Type: checkout)
+2026-07-29T07:56:44+00:00 INFO Webhook dispatch: No webhooks found for event cartflows_step_visited
+2026-07-29T07:56:48+00:00 INFO Webhook event: checkout_initiated - Step 10
+2026-07-29T07:56:48+00:00 INFO Webhook dispatch: No webhooks found for event checkout_initiated
