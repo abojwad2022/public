@@ -171,3 +171,66 @@ html[data-yz-theme="burgundy"] body.cartflows-instant-checkout .wcf-embed-checko
 	--wcf-gcp-accent-color: #A50606;
 	--wcf-gcp-text-color: #F7F3F2;
 }
+
+/* --------------------------------------------------------------------------
+   Accepted-payment row under the place-order button (yazan_payment_marks_checkout,
+   inc/payment-marks.php). The same markup is styled in woocommerce.css via --yz-*
+   tokens, but neither that stylesheet nor the tokens load on this stripped template,
+   so the rules are restated here with literal colours.
+   Mirrors: --yz-muted #6E6A63 · --yz-hairline rgba(185,188,192,.3) · --yz-silver #B9BCC0.
+   -------------------------------------------------------------------------- */
+body.cartflows-instant-checkout .yz-pay {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 10px;
+	margin: 14px 0 0;
+	padding-top: 14px;
+	border-top: 1px solid rgba(185, 188, 192, 0.3);
+	color: #6E6A63;
+}
+body.cartflows-instant-checkout .yz-pay__lock { display: inline-flex; color: #B9BCC0; }
+body.cartflows-instant-checkout .yz-pay__label {
+	font-size: 12px;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+}
+body.cartflows-instant-checkout .yz-pay__marks {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 6px;
+	margin-inline-start: auto;
+}
+body.cartflows-instant-checkout .yz-pay__mark {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	min-height: 24px;
+	padding: 4px 8px;
+	border: 1px solid rgba(185, 188, 192, 0.3);
+	border-radius: 4px;
+	font-size: 10px;
+	font-weight: 600;
+	letter-spacing: 0.04em;
+	color: #4A453E;
+	white-space: nowrap;
+}
+body.cartflows-instant-checkout .yz-pay__mark--mastercard { padding-inline: 6px; }
+body.cartflows-instant-checkout .yz-pay__glyph { display: block; flex: none; opacity: 0.92; }
+body.cartflows-instant-checkout .yz-pay__name { line-height: 1; }
+
+@media (max-width: 600px) {
+	body.cartflows-instant-checkout .yz-pay__marks { margin-inline-start: 0; }
+}
+
+/* Burgundy runs the checkout dark — lift the row off the deep ground. */
+html[data-yz-theme="burgundy"] body.cartflows-instant-checkout .yz-pay {
+	border-top-color: rgba(255, 255, 255, 0.08);
+	color: #9E8A8B;
+}
+html[data-yz-theme="burgundy"] body.cartflows-instant-checkout .yz-pay__lock { color: #D6CACA; }
+html[data-yz-theme="burgundy"] body.cartflows-instant-checkout .yz-pay__mark {
+	border-color: rgba(255, 255, 255, 0.14);
+	color: #F7F3F2;
+}
