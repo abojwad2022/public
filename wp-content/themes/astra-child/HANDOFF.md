@@ -288,6 +288,37 @@ Nothing outside `astra-child/` was touched. No products, no plugins, no parent t
     hardcoded switch to a **filterable map** (`yazan_payment_gateway_marks`), which the plugin hooks.
     Result: the storefront marks row is now genuinely DERIVED — and `link` correctly disappears,
     because no Link gateway exists. The pre-launch placeholder retired itself automatically.
+- **✅ DONE — "A new order has arrived." now fires in the Yazan dashboard, not just wp-admin.**
+  **Root cause:** `Yazan_Core_Notifications::enqueue_admin_alert()` hooks `admin_enqueue_scripts`, but
+  `/dashboard` is NOT a wp-admin screen — `Yazan_Dashboard::maybe_render()` prints a standalone
+  document on `template_redirect` and exits. It never calls `wp_head()`/`wp_footer()`, so **nothing
+  enqueued can reach it** — not the script, not jQuery, not Heartbeat. Hence polling, not Heartbeat.
+  • **Server:** extracted `Yazan_Core_Notifications::orders_since()` — one query now shared by the
+    wp-admin Heartbeat handler AND the new `GET yazan/v1/orders/alerts` route, so the two surfaces
+    can't drift. Route lives in class-yazan-rest-orders.php behind that file's existing
+    `edit_shop_orders` permission callback. Omitting `since` = SEED mode (returns latest, count 0) so
+    opening the dashboard doesn't announce the whole order history.
+  • **Client:** `context/OrderAlertsContext.jsx` polls every 30s (matches the wp-admin heartbeat
+    interval), skips while `document.hidden`, catches up on `visibilitychange`. `lib/chime.js` ports
+    the WebAudio beep + adds `ctx.resume()` and a localStorage mute flag.
+  • **ToastContext extended ADDITIVELY** — `{persist, key, action, icon}`. `persist` skips the
+    auto-dismiss timer; `key` makes a repeat alert UPDATE the live toast instead of stacking. The
+    plain `success/error/info(message)` signature is untouched (30+ call sites).
+  • ⚠️ **Gotcha:** `ToastProvider` is mounted ABOVE `<BrowserRouter>` in App.jsx, so a `<Link>` inside
+    the toast throws. The action is a **callback** the caller supplies; `OrderAlertsProvider` sits
+    inside the router and passes its own `navigate('/orders')`.
+  • Header **bell + unread badge** in Layout.jsx (click → /orders + clear; right-click → mute chime).
+  • **Verified end-to-end**: endpoint 401s unauthenticated; two orders placed through the simulated
+    gateways produced one toast that updated 1 → "2 new orders have arrived." with the badge tracking,
+    and it never auto-dismissed. Verification orders deleted, stock restored, session token destroyed.
+  • ⚠️ **`window.Notification` (OS popup) needs a secure context** — it will not fire on
+    `http://yazan.local`. The in-app toast + bell are the reliable path; desktop popups start working
+    on their own once the site is HTTPS.
+  • **Screenshotting an authed dashboard**: headless Chrome can't be handed a cookie by flag. Mint a
+    `wp_generate_auth_cookie()` + session-bound `wp_rest` nonce in PHP (seed `$_COOKIE` BEFORE calling
+    `wp_create_nonce`, or the nonce is computed against an empty token and 403s), launch Chrome with
+    `--remote-debugging-port`, then drive `Network.setCookie` + `Page.captureScreenshot` over CDP from
+    a small node script (node 24 has a global `WebSocket`). Scripts kept in the scratchpad.
 - **⚠️ REGRESSION spotted (not fixed — out of scope of the payment work): Google Fonts are back.**
   `/product/…` serves 2 `fonts.googleapis.com` links (`elementor-gf-roboto`, `elementor-gf-robotoslab`).
   The `elementor_google_font` option is now **unset** (it was set to `0`), so the zero-external-request
