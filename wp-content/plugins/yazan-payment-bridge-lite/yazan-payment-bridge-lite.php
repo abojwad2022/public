@@ -5,7 +5,7 @@
  * Description:       Lightweight, secure integration layer between WooCommerce's server-verified payment states and the YAZAN digital ecosystem. Records an auditable payment-event ledger with database-enforced exactly-once semantics, then notifies the Ownership and Warranty seams. Never processes payments and never touches card data.
  * Version:           1.0.0
  * Requires at least: 6.5
- * Requires PHP:      8.1
+ * Requires PHP:      8.3
  * Author:            Yazan
  * License:           GPL-2.0-or-later
  * Text Domain:       yazan-payment-bridge
