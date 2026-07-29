@@ -3,6 +3,7 @@ import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-route
 import { boot } from './api/client.js'
 import { AuthProvider, useAuth } from './context/AuthContext.jsx'
 import { MetaProvider, useMeta } from './context/MetaContext.jsx'
+import { OrderAlertsProvider } from './context/OrderAlertsContext.jsx'
 import { ToastProvider } from './context/ToastContext.jsx'
 import Layout, { PageHeader } from './components/Layout.jsx'
 import { Alert, Skeleton, SkeletonTable, Spinner } from './components/ui/index.js'
@@ -131,16 +132,20 @@ function Gate() {
   return (
     <MetaProvider>
       <BrowserRouter basename={boot.basePath || '/dashboard'}>
-        <Layout>
-          {/* Both wrappers sit INSIDE Layout on purpose: the sidebar and header stay
-              painted while a route chunk loads, and a screen that throws costs only
-              the content area rather than unmounting the whole application. */}
-          <RouteBoundary>
-            <Suspense fallback={<RouteFallback />}>
-              <Shell />
-            </Suspense>
-          </RouteBoundary>
-        </Layout>
+        {/* Inside the router because the new-order toast navigates to /orders; inside the
+            auth gate because only a signed-in owner should be polling for orders. */}
+        <OrderAlertsProvider>
+          <Layout>
+            {/* Both wrappers sit INSIDE Layout on purpose: the sidebar and header stay
+                painted while a route chunk loads, and a screen that throws costs only
+                the content area rather than unmounting the whole application. */}
+            <RouteBoundary>
+              <Suspense fallback={<RouteFallback />}>
+                <Shell />
+              </Suspense>
+            </RouteBoundary>
+          </Layout>
+        </OrderAlertsProvider>
       </BrowserRouter>
     </MetaProvider>
   )

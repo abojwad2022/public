@@ -539,6 +539,8 @@ export default function Layout({ children }) {
 
           <div className="flex-1" />
 
+          <OrderBell />
+
           <Tooltip label={theme === 'light' ? 'Switch to dark' : 'Switch to light'}>
             <button
               type="button"
