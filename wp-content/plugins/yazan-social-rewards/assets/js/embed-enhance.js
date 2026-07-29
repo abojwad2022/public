@@ -99,7 +99,7 @@
 
 		pager.prev.onclick = function () { if ( table.__page > 0 ) { table.__page--; show(); } };
 		pager.next.onclick = function () { if ( table.__page < pages - 1 ) { table.__page++; show(); } };
-		pager.wrap.style.display = '';
+		pager.wrap.style.display = 'flex';
 		show();
 	}
 
