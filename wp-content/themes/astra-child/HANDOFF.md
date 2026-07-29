@@ -270,6 +270,24 @@ Nothing outside `astra-child/` was touched. No products, no plugins, no parent t
   • ⚠️ **Before launch:** these are on-brand monochrome stand-ins. Apple/Google/PayPal/the card networks
     each require their OWN official mark artwork under their brand guidelines — swap the SVG bodies in
     `yazan_payment_mark_glyph()` (one function, one file).
+- **✅ DONE — simulated payment gateways for local testing (new plugin `yazan-test-gateways`).**
+  Real gateways can't run here (no HTTPS, no WooPayments account, Apple/Google Pay need a verified
+  public domain), so four simulated WooCommerce gateways now cover Card / Apple Pay / Google Pay /
+  PayPal. **They mark orders PAID without taking money** — see the plugin's README.
+  • **Deliberately its OWN plugin, not yazan-core**: deleting one directory removes every trace, so a
+    fake gateway can never ride along into production with something else.
+  • **Guard:** registers only when `wp_get_environment_type()` is local/development (wp-config sets
+    `local`). On production it loads but registers nothing. Override needs `YAZAN_TG_FORCE`.
+    Plus a non-dismissible admin notice + an order note on every simulated order.
+  • **Verified end-to-end** via a real checkout POST: order → `processing`, txn id stored, stock
+    reduced, emails sent, and the **Payment Bridge wrote `payment_completed`** with `source=gateway`
+    and the right gateway id. Refunds verified too: partial → `payment_partially_refunded`/`review`,
+    remainder → `payment_refunded`. Decline outcome verified → `payment_failed`.
+    All verification orders/events were deleted and stock restored afterwards.
+  • **Knock-on:** `yazan_payment_marks_from_gateways()` in inc/payment-marks.php was refactored from a
+    hardcoded switch to a **filterable map** (`yazan_payment_gateway_marks`), which the plugin hooks.
+    Result: the storefront marks row is now genuinely DERIVED — and `link` correctly disappears,
+    because no Link gateway exists. The pre-launch placeholder retired itself automatically.
 - **⚠️ REGRESSION spotted (not fixed — out of scope of the payment work): Google Fonts are back.**
   `/product/…` serves 2 `fonts.googleapis.com` links (`elementor-gf-roboto`, `elementor-gf-robotoslab`).
   The `elementor_google_font` option is now **unset** (it was set to `0`), so the zero-external-request
