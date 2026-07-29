@@ -43,3 +43,5 @@
 2026-07-29T07:08:32+00:00 NOTICE Email "customer_refunded_order" for order #8315 not sent: no_recipient CONTEXT: {"email_type":"customer_refunded_order","status":"skipped","recipient":"guest","reason":"no_recipient","order":8315}
 2026-07-29T07:09:37+00:00 INFO Email "new_order" for order #8323 sent CONTEXT: {"email_type":"new_order","status":"sent","recipient":"admin","order":8323}
 2026-07-29T07:09:37+00:00 INFO Email "customer_processing_order" for order #8323 sent CONTEXT: {"email_type":"customer_processing_order","status":"sent","recipient":"admin","order":8323}
+2026-07-29T07:10:49+00:00 INFO Email "new_order" for order #8324 sent CONTEXT: {"email_type":"new_order","status":"sent","recipient":"admin","order":8324}
+2026-07-29T07:10:49+00:00 INFO Email "customer_processing_order" for order #8324 sent CONTEXT: {"email_type":"customer_processing_order","status":"sent","recipient":"admin","order":8324}
