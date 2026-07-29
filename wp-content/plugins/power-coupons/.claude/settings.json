@@ -1,0 +1,54 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(composer lint:*)",
+      "Bash(composer format:*)",
+      "Bash(composer phpstan:*)",
+      "Bash(composer test:*)",
+      "Bash(npm run build:*)",
+      "Bash(npm run start:*)",
+      "Bash(npm run lint-js:*)",
+      "Bash(npm run lint-css:*)",
+      "Bash(npm run pretty:*)",
+      "Bash(npm run i18n:*)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git checkout:*)",
+      "Bash(git branch:*)",
+      "Bash(git stash:*)",
+      "Bash(php -l:*)",
+      "Bash(php -r:*)",
+      "Bash(vendor/bin/phpcs:*)",
+      "Bash(vendor/bin/phpcbf:*)",
+      "Bash(vendor/bin/phpstan:*)",
+      "Bash(vendor/bin/phpunit:*)"
+    ],
+    "deny": [
+      "Bash(rm -rf:*)",
+      "Bash(curl:*)",
+      "Bash(wget:*)"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "php -l \"$CLAUDE_TOOL_INPUT_FILE_PATH\" 2>&1 | grep -E 'error|warning' || true",
+            "conditions": [
+              {
+                "field": "file_path",
+                "pattern": "\\.php$"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

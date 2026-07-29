@@ -1,0 +1,427 @@
+/* ==========================================================================
+   Yazan (Astra Child) — My Account (WooCommerce account area)
+   Scoped to body.woocommerce-account. FULLY token-driven, so it recolours with
+   the active theme automatically (Black → near-black ink, Burgundy → deep
+   burgundy) with no theme-specific rules. Enqueued only on the account page
+   (inc/my-account.php). Direction-agnostic (logical properties throughout).
+   ========================================================================== */
+
+/* Page rhythm — centre the whole account inside the brand container. */
+body.woocommerce-account .woocommerce {
+	max-width: var(--yz-container, 1200px);
+	margin-inline: auto;
+	padding-block: clamp(28px, 4vw, 60px);
+	padding-inline: clamp(16px, 4vw, 40px);
+}
+
+/* Hairline token fallback (mirrors the value used across the theme sheets). */
+body.woocommerce-account {
+	--yz-hairline: rgba(20, 18, 16, 0.12);
+}
+
+/* The account is rendered by a [woocommerce_my_account] shortcode inside an Elementor
+   flex container. Flex items shrink-wrap by default, which can collapse the account and
+   defeat the two-column grid below. Force the shortcode wrapper (and the account root) to
+   fill their container so the grid always gets full width. */
+body.woocommerce-account .elementor-widget-shortcode,
+body.woocommerce-account .elementor-widget-shortcode > .elementor-widget-container,
+body.woocommerce-account .elementor-widget-shortcode .woocommerce {
+	width: 100%;
+}
+
+/* --------------------------------------------------------------------------
+   Two-column layout (signed in): dark nav rail + content. Collapses on mobile.
+   Logged-out (login/register) keeps its own centred card layout below.
+
+   Astra + WooCommerce float the nav/content (float:left/right; width:30%/68%),
+   which would override any grid — so we NEUTRALISE those floats/widths on the
+   children and let CSS grid on `.woocommerce` own the layout in both LTR & RTL.
+   -------------------------------------------------------------------------- */
+@media (min-width: 861px) {
+	body.woocommerce-account.logged-in .woocommerce {
+		display: grid;
+		grid-template-columns: 270px minmax(0, 1fr);
+		gap: clamp(28px, 3.4vw, 56px);
+		align-items: start;
+		direction: ltr; /* deterministic column order (store locale is LTR) */
+	}
+	/* Pin each pane to an explicit column so nothing (float, source-order quirk,
+	   inherited direction) can swap or resize them. Nav rail = column 1 (left). */
+	body.woocommerce-account.logged-in .woocommerce > .woocommerce-MyAccount-navigation {
+		grid-column: 1 !important;
+		grid-row: 1 !important;
+		float: none !important;
+		width: auto !important;
+		max-width: none !important;
+		margin: 0 !important;
+	}
+	body.woocommerce-account.logged-in .woocommerce > .woocommerce-MyAccount-content {
+		grid-column: 2 !important;
+		grid-row: 1 !important;
+		float: none !important;
+		width: auto !important;
+		max-width: none !important;
+		margin: 0 !important;
+	}
+}
+
+/* Clear the float on smaller screens too (children stack cleanly). */
+body.woocommerce-account.logged-in .woocommerce-MyAccount-navigation,
+body.woocommerce-account.logged-in .woocommerce-MyAccount-content {
+	float: none;
+	width: auto;
+}
+
+/* --------------------------------------------------------------------------
+   Navigation rail — dark ink panel, brand identity header, iconed menu.
+   -------------------------------------------------------------------------- */
+body.woocommerce-account .woocommerce-MyAccount-navigation {
+	background: var(--yz-ink);
+	color: var(--yz-ivory);
+	position: sticky;
+	top: 96px; /* clear the sticky site header */
+}
+
+/* Identity block — monogram, name, member-since. */
+.yz-account-id {
+	padding: clamp(24px, 3vw, 32px) 24px;
+	border-block-end: 1px solid rgba(245, 241, 233, 0.14);
+	text-align: center;
+}
+.yz-account-id__avatar {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	inline-size: 62px;
+	block-size: 62px;
+	border-radius: 50%;
+	border: 1px solid var(--yz-gold);
+	color: var(--yz-gold);
+	font-family: var(--yz-font-display, serif);
+	font-size: 27px;
+	line-height: 1;
+	margin-block-end: 14px;
+}
+.yz-account-id__name {
+	display: block;
+	font-family: var(--yz-font-display, serif);
+	font-weight: 500;
+	font-size: 20px;
+	line-height: 1.2;
+	letter-spacing: 0.01em;
+}
+.yz-account-id__since {
+	display: block;
+	margin-block-start: 6px;
+	font-size: 11px;
+	text-transform: uppercase;
+	letter-spacing: 0.16em;
+	color: rgba(245, 241, 233, 0.55);
+}
+
+/* Menu list. */
+body.woocommerce-account .woocommerce-MyAccount-navigation ul {
+	list-style: none;
+	margin: 0;
+	padding: 10px;
+}
+body.woocommerce-account .woocommerce-MyAccount-navigation li {
+	margin: 0;
+}
+body.woocommerce-account .woocommerce-MyAccount-navigation li a {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	padding: 13px 16px;
+	color: rgba(245, 241, 233, 0.82);
+	font-family: var(--yz-font-body, sans-serif);
+	font-size: 14px;
+	letter-spacing: 0.02em;
+	text-decoration: none;
+	border: 1px solid transparent;
+	border-inline-start-width: 2px;
+	transition: color 0.25s ease, background-color 0.25s ease, border-color 0.25s ease;
+}
+body.woocommerce-account .woocommerce-MyAccount-navigation li a svg {
+	inline-size: 18px;
+	block-size: 18px;
+	flex: none;
+	opacity: 0.82;
+}
+body.woocommerce-account .woocommerce-MyAccount-navigation li a:hover,
+body.woocommerce-account .woocommerce-MyAccount-navigation li a:focus-visible {
+	color: var(--yz-ivory);
+	background: rgba(245, 241, 233, 0.06);
+	outline: none;
+}
+body.woocommerce-account .woocommerce-MyAccount-navigation li.is-active a {
+	color: var(--yz-ivory);
+	background: rgba(245, 241, 233, 0.09);
+	border-inline-start-color: var(--yz-gold);
+}
+body.woocommerce-account .woocommerce-MyAccount-navigation li.is-active a svg {
+	opacity: 1;
+}
+
+/* Divider before logout + the "Verify a Ring" utility link. */
+body.woocommerce-account .woocommerce-MyAccount-navigation-link--customer-logout,
+.yz-account-nav__extra {
+	margin-block-start: 8px;
+	padding-block-start: 8px;
+	border-block-start: 1px solid rgba(245, 241, 233, 0.12);
+}
+.yz-account-nav__extra a { color: var(--yz-gold) !important; }
+
+/* --------------------------------------------------------------------------
+   Content column.
+   -------------------------------------------------------------------------- */
+body.woocommerce-account .woocommerce-MyAccount-content {
+	min-inline-size: 0;
+}
+body.woocommerce-account .woocommerce-MyAccount-content h2,
+body.woocommerce-account .woocommerce-MyAccount-content h3 {
+	font-family: var(--yz-font-display, serif);
+	font-weight: 500;
+	letter-spacing: -0.01em;
+	color: var(--yz-ink);
+}
+body.woocommerce-account .woocommerce-MyAccount-content a {
+	color: var(--yz-agate);
+	text-underline-offset: 3px;
+}
+
+/* Dashboard greeting + brand lede. */
+.yz-dash-greeting {
+	margin: 0 0 6px;
+	font-family: var(--yz-font-display, serif);
+	font-size: clamp(24px, 3.4vw, 34px);
+	line-height: 1.12;
+	letter-spacing: -0.01em;
+	color: var(--yz-ink);
+}
+.yz-dash-greeting a {
+	font-family: var(--yz-font-body, sans-serif);
+	font-size: 13px;
+	letter-spacing: 0.02em;
+	color: var(--yz-muted, #6e6a63);
+}
+.yz-dash-lede {
+	max-width: 58ch;
+	margin: 0 0 clamp(26px, 3vw, 38px);
+	font-size: 15.5px;
+	line-height: 1.7;
+	color: var(--yz-muted, #6e6a63);
+}
+
+/* Quick-link cards. */
+.yz-dash-cards {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+	gap: clamp(14px, 1.8vw, 20px);
+}
+.yz-dash-card {
+	display: block;
+	padding: clamp(22px, 2.6vw, 28px);
+	border: 1px solid var(--yz-hairline);
+	background: linear-gradient(180deg, rgba(154, 123, 63, 0.04), transparent 72%);
+	text-decoration: none !important;
+	transition: border-color 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
+}
+.yz-dash-card:hover {
+	border-color: var(--yz-ink);
+	transform: translateY(-2px);
+	box-shadow: 0 10px 26px rgba(20, 18, 16, 0.08);
+}
+.yz-dash-card__icon {
+	display: block;
+	color: var(--yz-agate);
+	margin-block-end: 14px;
+}
+.yz-dash-card__icon svg { inline-size: 26px; block-size: 26px; }
+.yz-dash-card__title {
+	display: block;
+	font-family: var(--yz-font-display, serif);
+	font-size: 19px;
+	color: var(--yz-ink);
+	margin-block-end: 5px;
+}
+.yz-dash-card__desc {
+	display: block;
+	font-size: 13.5px;
+	line-height: 1.6;
+	color: var(--yz-muted, #6e6a63);
+}
+
+/* Orders / downloads tables — hairline, quiet header, serif nothing. */
+body.woocommerce-account .woocommerce-MyAccount-content table.shop_table {
+	border: 1px solid var(--yz-hairline);
+	border-radius: 0;
+	border-collapse: collapse;
+}
+body.woocommerce-account .woocommerce-MyAccount-content table.shop_table thead th,
+body.woocommerce-account .woocommerce-MyAccount-content table.shop_table th {
+	font-family: var(--yz-font-body, sans-serif);
+	font-size: 11px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.12em;
+	color: var(--yz-muted, #6e6a63);
+	border-block-end: 1px solid var(--yz-hairline);
+}
+body.woocommerce-account .woocommerce-MyAccount-content table.shop_table td {
+	border-block-start: 1px solid var(--yz-hairline);
+}
+
+/* --------------------------------------------------------------------------
+   Forms — account details, addresses, and the login/register cards.
+   -------------------------------------------------------------------------- */
+body.woocommerce-account .woocommerce form .form-row label,
+body.woocommerce-account .woocommerce-EditAccountForm label,
+body.woocommerce-account .woocommerce-address-fields label {
+	font-size: 12px;
+	font-weight: 500;
+	text-transform: uppercase;
+	letter-spacing: 0.1em;
+	color: var(--yz-muted, #6e6a63);
+	margin-block-end: 6px;
+}
+body.woocommerce-account .woocommerce input.input-text,
+body.woocommerce-account .woocommerce input[type="text"],
+body.woocommerce-account .woocommerce input[type="email"],
+body.woocommerce-account .woocommerce input[type="password"],
+body.woocommerce-account .woocommerce input[type="tel"],
+body.woocommerce-account .woocommerce select,
+body.woocommerce-account .woocommerce .select2-container .select2-selection {
+	border-radius: 0 !important;
+	border: 1px solid var(--yz-hairline);
+	background: #fff;
+	padding: 13px 15px;
+	font-size: 15px;
+	color: var(--yz-ink);
+	transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+body.woocommerce-account .woocommerce input.input-text:focus,
+body.woocommerce-account .woocommerce input:focus,
+body.woocommerce-account .woocommerce select:focus {
+	border-color: var(--yz-ink);
+	box-shadow: 0 0 0 3px rgba(20, 18, 16, 0.06);
+	outline: none;
+}
+
+/* --------------------------------------------------------------------------
+   Login / Register (logged out) — centred, two elegant cards.
+   -------------------------------------------------------------------------- */
+.yz-account-auth {
+	max-width: 960px;
+	margin-inline: auto;
+}
+.yz-account-auth__head {
+	text-align: center;
+	max-width: 620px;
+	margin-inline: auto;
+	margin-block-end: clamp(30px, 4vw, 48px);
+}
+.yz-account-auth__eyebrow {
+	display: block;
+	font-size: 12px;
+	font-weight: 500;
+	text-transform: uppercase;
+	letter-spacing: 0.2em;
+	color: var(--yz-agate);
+	margin-block-end: 12px;
+}
+.yz-account-auth__title {
+	margin: 0;
+	font-family: var(--yz-font-display, serif);
+	font-weight: 500;
+	font-size: clamp(30px, 5vw, 50px);
+	line-height: 1.05;
+	letter-spacing: -0.015em;
+	color: var(--yz-ink);
+}
+.yz-account-auth__lede {
+	max-width: 52ch;
+	margin: 0.7em auto 0;
+	font-size: 16px;
+	line-height: 1.66;
+	color: var(--yz-muted, #6e6a63);
+}
+
+/* Two-column card grid (register enabled). */
+body.woocommerce-account:not(.logged-in) #customer_login.u-columns {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: clamp(20px, 2.6vw, 36px);
+	align-items: stretch;
+}
+body.woocommerce-account:not(.logged-in) #customer_login .u-column1,
+body.woocommerce-account:not(.logged-in) #customer_login .u-column2 {
+	width: auto;
+	float: none;
+	margin: 0;
+	padding: clamp(28px, 3.4vw, 44px);
+	border: 1px solid var(--yz-hairline);
+	background: #fff;
+}
+/* Second card carries a faint gold ground so "Register" reads as the invitation. */
+body.woocommerce-account:not(.logged-in) #customer_login .u-column2 {
+	background: linear-gradient(180deg, rgba(154, 123, 63, 0.05), transparent 70%);
+}
+
+/* When registration is OFF, WooCommerce prints only the bare login form — centre it as one card. */
+body.woocommerce-account:not(.logged-in) form.woocommerce-form-login {
+	max-width: 460px;
+	margin-inline: auto;
+	padding: clamp(28px, 3.4vw, 44px);
+	border: 1px solid var(--yz-hairline);
+	background: #fff;
+}
+body.woocommerce-account:not(.logged-in) #customer_login form.woocommerce-form-login {
+	max-width: none;
+	margin: 0;
+	padding: 0;
+	border: 0;
+	background: none;
+}
+
+/* Card headings. */
+body.woocommerce-account:not(.logged-in) .woocommerce h2 {
+	margin: 0 0 6px;
+	font-family: var(--yz-font-display, serif);
+	font-weight: 500;
+	font-size: 26px;
+	letter-spacing: -0.01em;
+	color: var(--yz-ink);
+}
+.yz-auth-card__note {
+	margin: 0 0 22px;
+	font-size: 14px;
+	line-height: 1.6;
+	color: var(--yz-muted, #6e6a63);
+}
+
+/* Login/register submit buttons go full width for a decisive CTA. */
+body.woocommerce-account:not(.logged-in) .woocommerce-form-login__submit,
+body.woocommerce-account:not(.logged-in) .woocommerce-form-register__submit {
+	width: 100%;
+	margin-block-start: 6px;
+}
+body.woocommerce-account:not(.logged-in) .woocommerce-form-login__rememberme {
+	font-size: 13px;
+	color: var(--yz-muted, #6e6a63);
+	text-transform: none;
+	letter-spacing: 0;
+}
+body.woocommerce-account .woocommerce-LostPassword {
+	margin-block-start: 14px;
+	font-size: 13px;
+}
+
+/* --------------------------------------------------------------------------
+   Responsive.
+   -------------------------------------------------------------------------- */
+@media (max-width: 860px) {
+	body.woocommerce-account .woocommerce-MyAccount-navigation { position: static; top: auto; }
+	body.woocommerce-account:not(.logged-in) #customer_login.u-columns { grid-template-columns: 1fr; }
+	body.woocommerce-account.logged-in .woocommerce-MyAccount-content { margin-block-start: 28px; }
+}

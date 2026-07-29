@@ -1,0 +1,42 @@
+/**
+ * Yazan Core — orders-list "Print" button.
+ * Mirrors WooCommerce's .order-preview (eye) box so the printer icon sits
+ * neatly beside it, using a dashicons printer glyph.
+ */
+.woocommerce_page_wc-orders .wp-list-table .yz-print-preview,
+.post-type-shop_order .wp-list-table .yz-print-preview {
+	float: right;
+	width: 16px;
+	height: 0;
+	padding: 20px 4px 4px 4px;
+	overflow: hidden;
+	position: relative;
+	border: 2px solid transparent;
+	border-radius: 4px;
+	cursor: pointer;
+	color: inherit;
+	text-decoration: none;
+}
+
+.yz-print-preview::before {
+	font-family: dashicons;
+	content: "\f193"; /* dashicons-printer */
+	position: absolute;
+	top: 4px;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	text-align: center;
+	line-height: 16px;
+	font-size: 15px;
+	speak: never;
+}
+
+.yz-print-preview:hover,
+.yz-print-preview:focus {
+	border: 2px solid var(--wp-admin-theme-color, #00a0d2);
+}
+
+.column-order_number .yz-print-preview {
+	margin-top: 13px;
+}

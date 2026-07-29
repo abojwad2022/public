@@ -1,0 +1,354 @@
+$labelTextColor: #111827;
+$descriptionTextColor: #4b5563;
+$separatorColor: #c2c3c6;
+$tipIconColor: #666;
+$tipBubbleBg: #1e1e1e;
+$checkboxDescColor: #555;
+
+// Everything is nested under the panel id so these rules win over
+// WooCommerce's `.woocommerce_options_panel` label/input/paragraph styles
+// (which otherwise float labels and inputs and break the layout).
+#power_coupons_url_coupon_panel {
+	// Match the Rules tab: the panel itself carries the 20px padding.
+	padding: 20px;
+
+	.power-coupons-url-coupon {
+		// Reset WooCommerce options-panel label/help floats that bleed into the
+		// @wordpress/components controls rendered inside this panel.
+		.components-base-control__label,
+		.components-base-control label,
+		label.components-base-control__label {
+			float: none;
+			width: auto;
+			display: block;
+			margin: 0 0 8px;
+			padding: 0;
+		}
+
+		.components-base-control__help {
+			float: none;
+			clear: both;
+			width: auto;
+			margin: 8px 0 0;
+			padding: 0;
+			font-size: 12px;
+			color: $descriptionTextColor;
+		}
+
+		// Checkbox description text: regular weight + muted color (not bold),
+		// mirroring WooCommerce's `.form-field .description` on the native tabs.
+		label.components-checkbox-control__label {
+			margin: 0;
+			font-size: 13px;
+			font-weight: 400;
+			line-height: 1.5;
+			color: $checkboxDescColor;
+		}
+
+		// WooCommerce-style help tip: a "?" icon that reveals a dark tooltip
+		// bubble on hover/focus.
+		&__tip {
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			flex: 0 0 auto;
+			width: 16px;
+			height: 16px;
+			color: $tipIconColor;
+			cursor: help;
+			vertical-align: middle;
+
+			&::before {
+				// Dashicons is an icon font; a generic fallback is not applicable.
+				font-family: dashicons; // stylelint-disable-line font-family-no-missing-generic-family-keyword
+				content: "\f223";
+				font-size: 18px;
+				line-height: 1;
+				-webkit-font-smoothing: antialiased;
+				-moz-osx-font-smoothing: grayscale;
+			}
+
+			&:hover,
+			&:focus {
+				color: #135e96;
+				outline: none;
+			}
+		}
+
+		// Bubble is rendered only while open and positioned via inline
+		// top/left (viewport coordinates) so `position: fixed` escapes the
+		// coupon box's `overflow: hidden`.
+		&__tip-bubble {
+			position: fixed;
+			z-index: 100000;
+			width: max-content;
+			max-width: 220px;
+			padding: 8px 10px;
+			border-radius: 4px;
+			background: $tipBubbleBg;
+			color: #fff;
+			font-size: 12px;
+			font-weight: 400;
+			font-style: normal;
+			line-height: 1.5;
+			text-align: center;
+			white-space: normal;
+			transform: translateX( -50% );
+			pointer-events: none;
+
+			&::after {
+				content: "";
+				position: absolute;
+				bottom: 100%;
+				left: 50%;
+				transform: translateX( -50% );
+				border: 6px solid transparent;
+				border-bottom-color: $tipBubbleBg;
+			}
+		}
+
+		// When the feature is globally off, dim and lock the header + body so it
+		// reads as inactive, while the notice above stays fully interactive.
+		&--feature-off {
+			.power-coupons-url-coupon__header,
+			.power-coupons-url-coupon__body {
+				opacity: 0.55;
+				pointer-events: none;
+			}
+		}
+
+		// Warning banner shown when URL Coupons is disabled globally.
+		&__feature-notice {
+			display: flex;
+			align-items: flex-start;
+			gap: 10px;
+			margin: 0 0 20px;
+			padding: 12px 16px;
+			border: 1px solid #f0c33c;
+			border-left: 4px solid #dba617;
+			border-radius: 4px;
+			background: #fcf9e8;
+
+			&-icon {
+				flex: 0 0 auto;
+				font-size: 16px;
+				line-height: 20px;
+				color: #b7791f;
+			}
+
+			&-body {
+				display: flex;
+				flex-direction: column;
+				gap: 4px;
+
+				strong {
+					font-weight: 600;
+					font-size: 13px;
+					line-height: 18px;
+					color: $labelTextColor;
+				}
+
+				p {
+					margin: 0;
+					padding: 0;
+					font-size: 13px;
+					line-height: 18px;
+					color: $descriptionTextColor;
+				}
+			}
+
+			&-link {
+				align-self: flex-start;
+				margin-top: 2px;
+				font-size: 13px;
+				font-weight: 500;
+				text-decoration: none;
+			}
+		}
+
+		&__header {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+
+			&__title {
+				display: flex;
+				flex-direction: column;
+				gap: 4px;
+				width: 600px;
+
+				strong {
+					font-weight: 600;
+					font-size: 14px;
+					line-height: 24px;
+					color: $labelTextColor;
+				}
+
+				p {
+					font-weight: 400;
+					font-size: 13px;
+					line-height: 20px;
+					margin: 0;
+					padding: 0;
+					color: $descriptionTextColor;
+				}
+			}
+
+			// Match the Rules tab toggle size exactly.
+			&__control {
+				.components-form-toggle {
+					&__thumb {
+						top: 4px;
+						left: 4px;
+						width: 16px;
+						height: 16px;
+					}
+
+					&__track {
+						width: 44px;
+						height: 24px;
+						border-radius: 50px;
+					}
+
+					&.is-checked {
+						.components-form-toggle__thumb {
+							left: 8px;
+						}
+					}
+				}
+			}
+		}
+
+		&__separator {
+			border: 0;
+			border-top: 1px solid $separatorColor;
+			margin: 24px 0;
+		}
+
+		&__body {
+			padding: 0;
+			margin: 0;
+		}
+
+		// Label-left / control-right field rows.
+		&__row {
+			display: flex;
+			align-items: flex-start;
+			gap: 20px;
+			margin-bottom: 24px;
+		}
+
+		// Checkbox row: the control is short, so center the columns and drop
+		// the input-oriented top padding so the label lines up with the box.
+		&__row--checkbox {
+			align-items: center;
+
+			.power-coupons-url-coupon__row-label {
+				padding-top: 0;
+			}
+		}
+
+		&__row-label {
+			display: inline-flex;
+			align-items: center;
+			gap: 6px;
+			flex: 0 0 200px;
+			float: none;
+			width: 200px;
+			padding-top: 8px;
+			margin: 0;
+			font-weight: 500;
+			font-size: 13px;
+			line-height: 18px;
+			color: $labelTextColor;
+		}
+
+		&__row-control {
+			display: flex;
+			align-items: center;
+			gap: 8px;
+			flex: 1 1 auto;
+			min-width: 0;
+		}
+
+		&__input {
+			flex: 1 1 auto;
+			width: auto;
+			max-width: 360px;
+			height: 36px;
+			padding: 0 12px;
+			border: 1px solid #949494;
+			border-radius: 4px;
+			background: #fff;
+			color: $labelTextColor;
+			font-size: 13px;
+			line-height: 18px;
+			box-sizing: border-box;
+		}
+
+		&__field {
+			margin-bottom: 24px;
+			max-width: 600px;
+		}
+
+		&__label {
+			display: flex;
+			align-items: center;
+			gap: 6px;
+			float: none;
+			width: auto;
+			margin: 0 0 8px;
+			font-size: 13px;
+			font-weight: 500;
+			color: $labelTextColor;
+		}
+
+		&__url-row {
+			display: flex;
+			align-items: center;
+			gap: 8px;
+
+			// Match the @wordpress/components Button height to the input
+			// height so the URL field and its buttons line up evenly.
+			.components-button {
+				height: 36px;
+				flex: 0 0 auto;
+				justify-content: center;
+			}
+		}
+
+		&__url-input {
+			flex: 1 1 auto;
+			min-width: 0;
+			width: auto;
+			height: 36px;
+			padding: 0 12px;
+			border: 1px solid #949494;
+			border-radius: 4px;
+			background: #f6f7f7;
+			color: $labelTextColor;
+			font-size: 13px;
+			box-sizing: border-box;
+		}
+
+		&__help {
+			margin: 8px 0 0;
+			font-size: 12px;
+			font-style: normal;
+			line-height: 1.5;
+			color: $descriptionTextColor;
+		}
+
+		&__notice {
+			margin: 4px 0 0;
+			font-size: 13px;
+			color: $descriptionTextColor;
+		}
+
+		// One-time-link generation failure. The @wordpress/components Notice
+		// carries its own styling; just give it breathing room below the row.
+		&__token-error {
+			margin: 8px 0 0;
+		}
+	}
+}

@@ -1,0 +1,224 @@
+/* ==========================================================================
+   Yazan (Astra Child) — main stylesheet (base layer)
+   Implements Parts 12–14 of the design blueprint: color tokens, type system,
+   spacing, utilities, header & footer polish. Motion lives in motion.css;
+   commerce components in woocommerce.css.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. Design tokens (Blueprint Part 13 — Color, Part 12 — Type, Part 14 — Space)
+   -------------------------------------------------------------------------- */
+:root {
+	/* Color */
+	--yz-ink:    #141210; /* warm near-black — backgrounds, buttons, footer */
+	--yz-ivory:  #F5F1E9; /* light bg / text on dark */
+	--yz-agate:  #8C2F24; /* deep carnelian — accents, rare badges, sale (tiny doses) */
+	--yz-silver: #B9BCC0; /* certified badges, hairlines, icons */
+	--yz-sand:   #CBB78F; /* muted gold-sand — hover, dividers (sparingly) */
+	--yz-muted:  #6E6A63; /* secondary text */
+
+	/* Typography — Latin */
+	--yz-font-display: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
+	--yz-font-body:    'Jost', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+	/* Typography — Arabic (used under [dir="rtl"], see assets/css/rtl.css) */
+	--yz-font-ar-display: 'Amiri', 'Cairo', Georgia, serif;
+	--yz-font-ar-body:    'Cairo', 'Noto Naskh Arabic', system-ui, sans-serif;
+
+	/* Spacing rhythm (8px base) */
+	--yz-section:  clamp(56px, 8vw, 120px); /* section padding */
+	--yz-gap:      clamp(16px, 2.5vw, 32px); /* grid gap */
+	--yz-container: 1240px;
+	--yz-measure:   680px; /* editorial text max width */
+
+	/* Hairline */
+	--yz-hairline: rgba(185, 188, 192, 0.3); /* --yz-silver @ 30% */
+
+	/* Header — Comma-style solid bar background (swap to #F5F1E9 ivory or var(--yz-ink) for dark) */
+	--yz-header-bg: #FFFFFF;
+}
+
+/* --------------------------------------------------------------------------
+   2. Typography (Blueprint Part 12) — scale H1 64→38, H2 44→30, H3 28→22
+   -------------------------------------------------------------------------- */
+body.yazan {
+	font-family: var(--yz-font-body);
+	font-size: 16px;
+	line-height: 1.7;
+	font-weight: 400;
+}
+
+.yazan h1, .yazan h2, .yazan h3, .yazan h4,
+.yazan .entry-title,
+.yazan .site-title {
+	font-family: var(--yz-font-display);
+	font-weight: 600;       /* never 700 — heavy serifs read cheap */
+	line-height: 1.12;
+	letter-spacing: 0.005em;
+}
+
+.yazan h1 { font-size: clamp(38px, 5vw, 64px); }
+.yazan h2 { font-size: clamp(30px, 3.6vw, 44px); }
+.yazan h3 { font-size: clamp(22px, 2.2vw, 28px); }
+
+/* Tracked-uppercase label — the single biggest "premium" signal (Part 12). */
+.yz-label,
+.yz-subject,
+.yz-eyebrow {
+	font-family: var(--yz-font-body);
+	font-size: 12px;
+	font-weight: 500;
+	text-transform: uppercase;
+	letter-spacing: 0.14em;
+	color: var(--yz-muted);
+}
+
+/* Editorial text blocks stay readable. */
+.yz-measure { max-width: var(--yz-measure); margin-inline: auto; }
+
+/* --------------------------------------------------------------------------
+   3. Layout utilities
+   -------------------------------------------------------------------------- */
+.yz-section { padding-block: var(--yz-section); }
+.yz-section--ink   { background: var(--yz-ink); color: var(--yz-ivory); }
+.yz-section--ivory { background: var(--yz-ivory); color: var(--yz-ink); }
+
+.yz-container { max-width: var(--yz-container); margin-inline: auto; padding-inline: clamp(16px, 4vw, 40px); }
+
+/* Hairline divider — use instead of boxes/shadows (Part 14). */
+.yz-hairline { border: 0; border-top: 1px solid var(--yz-hairline); }
+
+/* Simple responsive grid used by collection strips / product rows. */
+.yz-grid { display: grid; gap: var(--yz-gap); }
+.yz-grid--3 { grid-template-columns: repeat(3, 1fr); }
+.yz-grid--4 { grid-template-columns: repeat(4, 1fr); }
+@media (max-width: 767px) {
+	.yz-grid--3, .yz-grid--4 { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* --------------------------------------------------------------------------
+   4. Buttons — sharp corners read "jewelry case" (Part 14)
+   -------------------------------------------------------------------------- */
+.yazan .button,
+.yazan .wp-block-button__link,
+.yazan .ast-button,
+.yazan button.single_add_to_cart_button {
+	border-radius: 0;
+	background: var(--yz-ink);
+	color: var(--yz-ivory);
+	text-transform: uppercase;
+	letter-spacing: 0.12em;
+	font-size: 13px;
+	font-weight: 500;
+	padding: 16px 32px;
+	border: 1px solid var(--yz-ink);
+	transition: background-color 250ms ease, color 250ms ease;
+}
+.yazan .button:hover,
+.yazan button.single_add_to_cart_button:hover {
+	background: transparent;
+	color: var(--yz-ink);
+}
+
+/* Ghost button (hero CTA) — 1px ivory border, transparent fill. */
+.yz-btn-ghost {
+	display: inline-block;
+	border: 1px solid var(--yz-ivory);
+	color: var(--yz-ivory);
+	background: transparent;
+	padding: 15px 34px;
+	text-transform: uppercase;
+	letter-spacing: 0.14em;
+	font-size: 13px;
+	transition: background-color 300ms ease, color 300ms ease;
+}
+.yz-btn-ghost:hover { background: var(--yz-ivory); color: var(--yz-ink); }
+
+/* --------------------------------------------------------------------------
+   5. Header polish (Blueprint Part 3 — menu hover: thin underline from left)
+   -------------------------------------------------------------------------- */
+.yazan .main-header-menu .menu-item > a,
+.yazan .ast-header-navigation-wrap .menu-item > a,
+.yazan .elementor-location-header .menu-item > a,
+.yazan .hfe-nav-menu .menu-item > a {
+	text-transform: uppercase;
+	letter-spacing: 0.1em;
+	font-size: 12px;
+	font-weight: 700;
+	position: relative;
+}
+.yazan .main-header-menu .menu-item > a::after,
+.yazan .elementor-location-header .menu-item > a::after,
+.yazan .hfe-nav-menu .menu-item > a::after {
+	content: '';
+	position: absolute;
+	inset-inline-start: 0; bottom: 4px;
+	width: 100%; height: 1px;
+	background: currentColor;
+	transform: scaleX(0);
+	transform-origin: left; /* mirrored to right under [dir="rtl"] in rtl.css */
+	transition: transform 300ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.yazan .main-header-menu .menu-item > a:hover::after,
+.yazan .elementor-location-header .menu-item > a:hover::after,
+.yazan .hfe-nav-menu .menu-item > a:hover::after { transform: scaleX(1); }
+
+/* --------------------------------------------------------------------------
+   6. Footer (Blueprint Part 11) — dark, ivory links brighten on hover
+   -------------------------------------------------------------------------- */
+.yazan .site-footer,
+.yazan .footer-adv {
+	background: var(--yz-ink);
+	color: rgba(245, 241, 233, 0.72);
+}
+.yazan .site-footer a { color: rgba(245, 241, 233, 0.72); transition: color 250ms ease; }
+.yazan .site-footer a:hover { color: var(--yz-ivory); }
+
+/* Elementor-built footer (Header Footer Elementor). The dark section BACKGROUND is set inside the
+   Elementor template (footer #1165, sections 012b4cf + cc45d63) because per-section Elementor
+   backgrounds override CSS; the text/link colours below then sit on that ink ground. */
+/* Scope = `.footer-width-fixer` — the wrapper the HFE (free) plugin puts around the Elementor footer.
+   (Elementor PRO's `.elementor-location-footer` is NOT present on this site, so an earlier attempt at
+   that selector matched nothing.) Colours use !important to beat Elementor's kit/global text colour,
+   which otherwise wins over a plain child-theme rule — the reason the dark footer text was near-black. */
+.yazan .footer-width-fixer {
+	color: rgba(245, 241, 233, 0.72);
+}
+/* Column headings — ivory, display serif, quiet tracking. */
+.yazan .footer-width-fixer .elementor-widget-heading .elementor-heading-title {
+	color: var(--yz-ivory) !important;
+	font-family: var(--yz-font-display);
+	font-weight: 600;
+	font-size: 15px;
+	letter-spacing: 0.02em;
+}
+/* Link lists + brand text — ivory at 78%, brighten to full ivory on hover. */
+.yazan .footer-width-fixer .elementor-icon-list-text,
+.yazan .footer-width-fixer .elementor-widget-text-editor,
+.yazan .footer-width-fixer .elementor-widget-text-editor p,
+.yazan .footer-width-fixer a,
+.yazan .footer-width-fixer a .elementor-icon-list-text {
+	color: rgba(245, 241, 233, 0.78) !important;
+	transition: color 250ms ease;
+}
+.yazan .footer-width-fixer a:hover,
+.yazan .footer-width-fixer a:hover .elementor-icon-list-text,
+.yazan .footer-width-fixer a:focus-visible,
+.yazan .footer-width-fixer a:focus-visible .elementor-icon-list-text {
+	color: var(--yz-ivory) !important;
+}
+.yazan .footer-width-fixer .elementor-icon-list-item { font-size: 13px; letter-spacing: 0.02em; }
+/* Copyright bar — quieter. */
+.yazan .footer-width-fixer .elementor-widget-copyright,
+.yazan .footer-width-fixer .elementor-widget-copyright * {
+	color: rgba(245, 241, 233, 0.55) !important;
+	font-size: 12px;
+	letter-spacing: 0.04em;
+}
+
+/* --------------------------------------------------------------------------
+   7. RTL notes
+   Prefer CSS logical properties (margin-inline-*, inset-inline-*, text-align:start)
+   so layout flips automatically under dir="rtl". Only directional transforms need
+   mirroring — see the frontend-animation skill.
+   -------------------------------------------------------------------------- */

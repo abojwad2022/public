@@ -1,0 +1,25 @@
+{
+  "name": "yazan-ai-core",
+  "version": "1.0.0",
+  "private": true,
+  "description": "YAZAN AI Core — standalone, stateless LLM execution service. WordPress (yazan-core) delegates provider calls here over an HMAC-authenticated REST contract; the service walks the provider fallback chain and returns a normalized result. Extraction target of Yazan_AI_Gateway.",
+  "license": "UNLICENSED",
+  "type": "commonjs",
+  "main": "dist/server.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/server.js",
+    "dev": "tsx watch src/server.ts"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "fastify": "^5.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  }
+}

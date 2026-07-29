@@ -1,0 +1,180 @@
+/**
+ * Yazan Rewards — My Account hub.
+ * On-brand, restrained: ink text, ivory surface, agate accent, silver hairlines.
+ * Direction-agnostic (logical properties) so it works in RTL and LTR.
+ */
+
+.yzrw-hub {
+	--yzrw-ink: #141210;
+	--yzrw-ivory: #f7f4ef;
+	--yzrw-agate: #9a3b2e;
+	--yzrw-silver: #d8d2c8;
+	--yzrw-muted: #8a8378;
+	color: var(--yzrw-ink);
+}
+
+.yzrw-summary {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 1rem;
+	margin-block-end: 2rem;
+}
+
+.yzrw-summary__card {
+	flex: 1 1 180px;
+	border: 1px solid var(--yzrw-silver);
+	padding: 1.25rem 1.5rem;
+	display: flex;
+	flex-direction: column;
+	gap: 0.25rem;
+	background: var(--yzrw-ivory);
+}
+
+.yzrw-summary__label {
+	font-size: 0.72rem;
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	color: var(--yzrw-muted);
+}
+
+.yzrw-summary__value {
+	font-size: 2rem;
+	line-height: 1.1;
+	font-weight: 500;
+}
+
+.yzrw-summary__unit {
+	font-size: 0.8rem;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	color: var(--yzrw-agate);
+}
+
+.yzrw-heading {
+	font-size: 1.05rem;
+	letter-spacing: 0.02em;
+	margin-block: 1.5rem 1rem;
+	padding-block-end: 0.5rem;
+	border-block-end: 1px solid var(--yzrw-silver);
+}
+
+.yzrw-catalog {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: grid;
+	gap: 0.75rem;
+}
+
+.yzrw-reward {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 1rem;
+	border: 1px solid var(--yzrw-silver);
+	padding: 1rem 1.25rem;
+	transition: border-color 0.2s ease;
+}
+
+.yzrw-reward:hover {
+	border-color: var(--yzrw-ink);
+}
+
+.yzrw-reward.is-disabled {
+	opacity: 0.55;
+}
+
+.yzrw-reward__body {
+	display: flex;
+	flex-direction: column;
+	gap: 0.2rem;
+}
+
+.yzrw-reward__title {
+	font-weight: 500;
+}
+
+.yzrw-reward__desc {
+	font-size: 0.85rem;
+	color: var(--yzrw-muted);
+}
+
+.yzrw-reward__action {
+	display: flex;
+	align-items: center;
+	gap: 1rem;
+	white-space: nowrap;
+}
+
+.yzrw-reward__cost {
+	font-size: 0.85rem;
+	letter-spacing: 0.06em;
+	color: var(--yzrw-agate);
+}
+
+.yzrw-redeem[disabled] {
+	cursor: not-allowed;
+}
+
+.yzrw-result {
+	margin-block: 1rem;
+	padding: 0.9rem 1.1rem;
+	border: 1px solid var(--yzrw-silver);
+	background: var(--yzrw-ivory);
+}
+
+.yzrw-result.is-error {
+	border-color: var(--yzrw-agate);
+}
+
+.yzrw-result code {
+	font-size: 1rem;
+	letter-spacing: 0.08em;
+}
+
+.yzrw-history {
+	width: 100%;
+	border-collapse: collapse;
+	font-size: 0.9rem;
+}
+
+.yzrw-history th,
+.yzrw-history td {
+	padding: 0.6rem 0.5rem;
+	border-block-end: 1px solid var(--yzrw-silver);
+	text-align: start;
+}
+
+.yzrw-history__amount {
+	text-align: end;
+	font-variant-numeric: tabular-nums;
+}
+
+.yzrw-history__amount.is-positive {
+	color: #2f6f3e;
+}
+
+.yzrw-history__amount.is-negative {
+	color: var(--yzrw-agate);
+}
+
+.yzrw-empty {
+	color: var(--yzrw-muted);
+	font-style: italic;
+}
+
+/* Campaigns */
+.yzrw-campaigns { list-style: none; margin: 0 0 1.5rem; padding: 0; display: grid; gap: 0.75rem; }
+.yzrw-campaign { border: 1px solid var(--yzrw-silver); padding: 1rem 1.25rem; }
+.yzrw-campaign__head { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; }
+.yzrw-campaign__title { font-weight: 500; }
+.yzrw-campaign__ends { font-size: 0.75rem; color: var(--yzrw-muted); }
+.yzrw-campaign__desc { font-size: 0.85rem; color: var(--yzrw-muted); margin: 0.35rem 0 0.6rem; }
+.yzrw-campaign__tasks { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.4rem; }
+.yzrw-task { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; padding: 0.4rem 0; border-block-start: 1px solid var(--yzrw-silver); }
+.yzrw-task__name { flex: 1 1 auto; }
+.yzrw-task__pts { color: var(--yzrw-agate); font-size: 0.8rem; letter-spacing: 0.04em; }
+.yzrw-task__done { color: #2f6f3e; font-size: 0.8rem; }
+.yzrw-task__pending { color: var(--yzrw-muted); font-size: 0.8rem; font-style: italic; }
+.yzrw-task__submit { display: inline-flex; gap: 0.4rem; align-items: center; }
+.yzrw-task-url { min-width: 180px; }

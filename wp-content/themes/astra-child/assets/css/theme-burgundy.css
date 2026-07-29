@@ -1,0 +1,576 @@
+/* ==========================================================================
+   Yazan — BURGUNDY LUXURY  ·  scoped override layer
+   --------------------------------------------------------------------------
+   Everything here is scoped under `html[data-yz-theme="burgundy"]`, so this
+   sheet is completely INERT for the Black theme — the classic look is never
+   touched. Loaded LAST so its rules win the cascade over the base sheets.
+
+   Most of the recolour happens for free via the token remap in theme-tokens.css
+   (dark surfaces, badges, buttons, bars all follow --yz-ink → deep burgundy).
+   This file fixes the two things a token swap cannot: (a) places the light
+   system used a token as *text* that must now read light on a dark canvas, and
+   (b) a handful of hard-coded light literals. Organised by the component list.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   0. Page canvas — the dark burgundy ground + light default text
+   -------------------------------------------------------------------------- */
+html[data-yz-theme="burgundy"] body.yazan,
+html[data-yz-theme="burgundy"] .site,
+html[data-yz-theme="burgundy"] #page,
+html[data-yz-theme="burgundy"] .site-content,
+html[data-yz-theme="burgundy"] #content,
+html[data-yz-theme="burgundy"] .ast-container,
+html[data-yz-theme="burgundy"] .site-primary-header-wrap,
+html[data-yz-theme="burgundy"] .entry-content {
+	background-color: var(--yz-bg);
+	color: var(--yz-text);
+}
+html[data-yz-theme="burgundy"] body.yazan {
+	--yz-header-bg: #160709;
+}
+/* Astra boxed/content wrappers that ship a white card background. */
+html[data-yz-theme="burgundy"] .ast-woocommerce-container,
+html[data-yz-theme="burgundy"] .ast-separate-container .ast-article-single,
+html[data-yz-theme="burgundy"] .ast-separate-container .ast-article-post,
+html[data-yz-theme="burgundy"] .ast-separate-container #content .ast-container {
+	background-color: transparent;
+}
+/* Primary/secondary text colour for headings + prose that inherit. */
+html[data-yz-theme="burgundy"] .yazan h1,
+html[data-yz-theme="burgundy"] .yazan h2,
+html[data-yz-theme="burgundy"] .yazan h3,
+html[data-yz-theme="burgundy"] .yazan h4,
+html[data-yz-theme="burgundy"] .entry-title,
+html[data-yz-theme="burgundy"] .entry-content p,
+html[data-yz-theme="burgundy"] .site-title a { color: var(--yz-text); }
+
+/* Section utilities: in a dark theme BOTH the "ivory" and "ink" sections are
+   dark — just different depths — so the page reads as one burgundy canvas. */
+html[data-yz-theme="burgundy"] .yz-section--ivory {
+	background: var(--yz-bg);
+	color: var(--yz-text);
+}
+html[data-yz-theme="burgundy"] .yz-section--ink {
+	background: var(--yz-surface-2);
+	color: var(--yz-text);
+}
+
+/* --------------------------------------------------------------------------
+   1. Header + announcement bar
+   The announcement bar + mobile drawer already follow --yz-ink → burgundy.
+   The Comma header forces ink TEXT/icons over its (now dark) bar, so flip the
+   forced colour to ivory and whiten the black logo.
+   -------------------------------------------------------------------------- */
+html[data-yz-theme="burgundy"] .yazan.yz-comma-header .yz-header,
+html[data-yz-theme="burgundy"] .yazan.yz-comma-header .yz-header a,
+html[data-yz-theme="burgundy"] .yazan.yz-comma-header .yz-header .menu-item > a,
+html[data-yz-theme="burgundy"] .yazan.yz-comma-header .yz-header .elementor-nav-menu .menu-item a,
+html[data-yz-theme="burgundy"] .yazan.yz-comma-header .yz-header .site-title a,
+html[data-yz-theme="burgundy"] .yazan.yz-comma-header .yz-header .ast-header-account-wrap,
+html[data-yz-theme="burgundy"] .yazan.yz-comma-header .yz-header .wc-block-mini-cart__button {
+	color: var(--yz-ivory) !important;
+}
+html[data-yz-theme="burgundy"] .yazan.yz-comma-header .yz-header {
+	border-block-end-color: var(--yz-hairline);
+}
+html[data-yz-theme="burgundy"] .yazan.yz-comma-header #masthead {
+	background-color: var(--yz-header-bg) !important;
+}
+html[data-yz-theme="burgundy"] .yazan.yz-comma-header .yz-header.is-scrolled {
+	box-shadow: 0 6px 24px rgba(0, 0, 0, 0.45);
+}
+/* Whiten the (black) logo so it reads on the dark bar. Overrides header.css's
+   `brightness(0)` with equal specificity + !important. */
+html[data-yz-theme="burgundy"] .yazan .yz-header .custom-logo,
+html[data-yz-theme="burgundy"] .yazan .yz-header .custom-logo-link img,
+html[data-yz-theme="burgundy"] .yazan .yz-header .site-logo-img img,
+html[data-yz-theme="burgundy"] .yazan .yz-header .elementor-widget-theme-site-logo img,
+html[data-yz-theme="burgundy"] .yazan .yz-header .site-branding img {
+	filter: brightness(0) invert(1) !important;
+}
+
+/* --------------------------------------------------------------------------
+   2. Mega menu — the dropdown panel goes dark, links light
+   (base classes live in megamenu.css; recolour surface + text here)
+   -------------------------------------------------------------------------- */
+html[data-yz-theme="burgundy"] .yazan .sub-menu,
+html[data-yz-theme="burgundy"] .yazan .hfe-nav-menu .sub-menu,
+html[data-yz-theme="burgundy"] .yazan .elementor-nav-menu--dropdown,
+html[data-yz-theme="burgundy"] .yazan .menu-item .sub-menu {
+	background-color: var(--yz-surface);
+	border-color: var(--yz-border);
+	box-shadow: var(--yz-shadow-lg);
+}
+html[data-yz-theme="burgundy"] .yazan .sub-menu .menu-item > a,
+html[data-yz-theme="burgundy"] .yazan .sub-menu a { color: var(--yz-text-2); }
+html[data-yz-theme="burgundy"] .yazan .sub-menu .menu-item > a:hover,
+html[data-yz-theme="burgundy"] .yazan .sub-menu a:hover { color: var(--yz-ivory); }
+
+/* --------------------------------------------------------------------------
+   3. Hero — already dark; deepen the gradient into burgundy + gold eyebrow
+   -------------------------------------------------------------------------- */
+html[data-yz-theme="burgundy"] .yz-hero {
+	background: radial-gradient(120% 90% at 72% 28%, #3a0e17 0%, var(--yz-bg) 60%);
+}
+html[data-yz-theme="burgundy"] .yz-swatches { background: var(--yz-surface-2); }
+html[data-yz-theme="burgundy"] .yz-bigimage,
+html[data-yz-theme="burgundy"] .yz-collection-card__media,
+html[data-yz-theme="burgundy"] .collection-swatch__media {
+	background-image: linear-gradient(160deg, #3a0e17, var(--yz-bg));
+}
+html[data-yz-theme="burgundy"] .yz-story__img {
+	background-image: radial-gradient(90% 80% at 40% 30%, #4a0f19, var(--yz-bg));
+}
+html[data-yz-theme="burgundy"] .yz-cstory__img {
+	background-image: linear-gradient(150deg, #4a0f19, var(--yz-bg));
+}
+html[data-yz-theme="burgundy"] .yz-cstory__panel { background: var(--yz-surface-2); }
+
+/* --------------------------------------------------------------------------
+   4. Product cards — titles/prices were ink TEXT → must read light now.
+   Media backgrounds were ivory → deep surface so image gaps stay dark.
+   -------------------------------------------------------------------------- */
+html[data-yz-theme="burgundy"] ul.products li.product.yz-card a img,
+html[data-yz-theme="burgundy"] ul.products li.product.yz-card .yz-card__img--alt,
+html[data-yz-theme="burgundy"] ul.products li.product.yz-card > a:first-of-type,
+html[data-yz-theme="burgundy"] ul.products li.product.yz-card .woocommerce-LoopProduct-link {
+	background: var(--yz-surface);
+}
+html[data-yz-theme="burgundy"] ul.products li.product.yz-card .woocommerce-loop-product__title,
+html[data-yz-theme="burgundy"] ul.products li.product.yz-card .price,
+html[data-yz-theme="burgundy"] ul.products li.product.yz-card .price ins {
+	color: var(--yz-text);
+}
+/* Gold hover language survives (gold reads on dark) — nothing to change there. */
+
+/* --------------------------------------------------------------------------
+   5. Product (single) page
+   -------------------------------------------------------------------------- */
+html[data-yz-theme="burgundy"] .yazan.single-product .product_title,
+html[data-yz-theme="burgundy"] .yazan.single-product .price,
+html[data-yz-theme="burgundy"] .yazan.single-product .woocommerce-Price-amount,
+html[data-yz-theme="burgundy"] .yazan.single-product .stock,
+html[data-yz-theme="burgundy"] .yazan.single-product .woocommerce-product-details__short-description {
+	color: var(--yz-text);
+}
+html[data-yz-theme="burgundy"] .yz-serial strong { color: var(--yz-text); }
+html[data-yz-theme="burgundy"] .yazan.single-product .woocommerce-product-gallery__image img,
+html[data-yz-theme="burgundy"] .yazan.single-product .flex-control-thumbs img {
+	background: var(--yz-surface);
+}
+html[data-yz-theme="burgundy"] .yazan.single-product .flex-control-thumbs img.flex-active {
+	border-color: var(--yz-accent);
+}
+/* Tabs + meta + related headings. */
+html[data-yz-theme="burgundy"] .yazan.single-product .wc-tabs li a,
+html[data-yz-theme="burgundy"] .yazan.single-product .woocommerce-tabs .panel,
+html[data-yz-theme="burgundy"] .yazan.single-product .product_meta,
+html[data-yz-theme="burgundy"] .yazan.single-product .product_meta a,
+html[data-yz-theme="burgundy"] .yazan.single-product table.shop_attributes th,
+html[data-yz-theme="burgundy"] .yazan.single-product table.shop_attributes td {
+	color: var(--yz-text-2);
+}
+html[data-yz-theme="burgundy"] .yazan.single-product .wc-tabs li.active a { color: var(--yz-text); }
+html[data-yz-theme="burgundy"] .yazan.single-product .woocommerce-tabs ul.tabs,
+html[data-yz-theme="burgundy"] .yazan.single-product table.shop_attributes th,
+html[data-yz-theme="burgundy"] .yazan.single-product table.shop_attributes td {
+	border-color: var(--yz-border);
+}
+
+/* --------------------------------------------------------------------------
+   6. Collections / shop archive header + intro
+   -------------------------------------------------------------------------- */
+html[data-yz-theme="burgundy"] .woocommerce-products-header__title.page-title,
+html[data-yz-theme="burgundy"] .yazan.woocommerce ul.products li.product a,
+html[data-yz-theme="burgundy"] .yazan .woocommerce-result-count { color: var(--yz-text); }
+html[data-yz-theme="burgundy"] .yz-shop-intro { color: var(--yz-text-muted); }
+
+/* --------------------------------------------------------------------------
+   7. Buttons — surfaces already burgundy; fix the (invisible) hover states.
+   Rest: deep-burgundy fill + ivory label. Hover: accent-red fill + ivory.
+   -------------------------------------------------------------------------- */
+html[data-yz-theme="burgundy"] .yazan .button,
+html[data-yz-theme="burgundy"] .yazan .wp-block-button__link,
+html[data-yz-theme="burgundy"] .yazan .ast-button,
+html[data-yz-theme="burgundy"] .yazan button.single_add_to_cart_button {
+	background: var(--yz-primary);
+	color: var(--yz-on-primary);
+	border-color: var(--yz-primary);
+}
+html[data-yz-theme="burgundy"] .yazan .button:hover,
+html[data-yz-theme="burgundy"] .yazan button.single_add_to_cart_button:hover {
+	background: var(--yz-accent);
+	color: #fff;
+	border-color: var(--yz-accent);
+}
+/* Woo button block forced with !important in woocommerce.css — match it. */
+html[data-yz-theme="burgundy"] body.yazan .single_add_to_cart_button,
+html[data-yz-theme="burgundy"] body.yazan .add_to_cart_button,
+html[data-yz-theme="burgundy"] body.yazan a.button,
+html[data-yz-theme="burgundy"] body.yazan button.button,
+html[data-yz-theme="burgundy"] body.yazan input.button,
+html[data-yz-theme="burgundy"] body.yazan .woocommerce a.button.alt,
+html[data-yz-theme="burgundy"] body.yazan .woocommerce button.button.alt,
+html[data-yz-theme="burgundy"] body.yazan .woocommerce #respond input#submit {
+	background-color: var(--yz-primary) !important;
+	border-color: var(--yz-primary) !important;
+	color: var(--yz-on-primary) !important;
+}
+html[data-yz-theme="burgundy"] body.yazan .single_add_to_cart_button:hover,
+html[data-yz-theme="burgundy"] body.yazan .add_to_cart_button:hover,
+html[data-yz-theme="burgundy"] body.yazan a.button:hover,
+html[data-yz-theme="burgundy"] body.yazan button.button:hover,
+html[data-yz-theme="burgundy"] body.yazan input.button:hover,
+html[data-yz-theme="burgundy"] body.yazan .woocommerce a.button.alt:hover,
+html[data-yz-theme="burgundy"] body.yazan .woocommerce button.button.alt:hover,
+html[data-yz-theme="burgundy"] body.yazan .woocommerce #respond input#submit:hover {
+	background-color: var(--yz-accent) !important;
+	color: #fff !important;
+}
+/* Ghost button (hero) — ivory outline on the dark ground already works; keep. */
+/* Solid filter/apply button + its hover (was transparent+ink → invisible). */
+html[data-yz-theme="burgundy"] .yazan .yz-btn-solid {
+	background: var(--yz-primary); border-color: var(--yz-primary); color: var(--yz-on-primary);
+}
+html[data-yz-theme="burgundy"] .yazan .yz-btn-solid:hover {
+	background: var(--yz-accent); border-color: var(--yz-accent); color: #fff;
+}
+
+/* --------------------------------------------------------------------------
+   8. Forms & inputs — text was ink (dark) → light; borders → light hairline
+   -------------------------------------------------------------------------- */
+html[data-yz-theme="burgundy"] .yazan input[type="text"],
+html[data-yz-theme="burgundy"] .yazan input[type="email"],
+html[data-yz-theme="burgundy"] .yazan input[type="tel"],
+html[data-yz-theme="burgundy"] .yazan input[type="number"],
+html[data-yz-theme="burgundy"] .yazan input[type="search"],
+html[data-yz-theme="burgundy"] .yazan input[type="password"],
+html[data-yz-theme="burgundy"] .yazan textarea,
+html[data-yz-theme="burgundy"] .yazan select,
+html[data-yz-theme="burgundy"] .yz-newsletter__form input[type="email"],
+html[data-yz-theme="burgundy"] .yz-shop__search input[type="search"],
+html[data-yz-theme="burgundy"] .yz-price__field input,
+html[data-yz-theme="burgundy"] .yz-shop__tools select.orderby {
+	background-color: var(--yz-surface);
+	color: var(--yz-text);
+	border-color: var(--yz-border);
+}
+html[data-yz-theme="burgundy"] .yazan input::placeholder,
+html[data-yz-theme="burgundy"] .yazan textarea::placeholder { color: var(--yz-text-muted); }
+html[data-yz-theme="burgundy"] .yazan input:focus,
+html[data-yz-theme="burgundy"] .yazan textarea:focus,
+html[data-yz-theme="burgundy"] .yazan select:focus,
+html[data-yz-theme="burgundy"] .yz-shop__search input[type="search"]:focus,
+html[data-yz-theme="burgundy"] .yz-newsletter__form input[type="email"]:focus {
+	border-color: var(--yz-accent);
+	outline: none;
+}
+html[data-yz-theme="burgundy"] .yz-price__field { border-color: var(--yz-border); }
+html[data-yz-theme="burgundy"] .yz-price__field:focus-within { border-color: var(--yz-accent); }
+html[data-yz-theme="burgundy"] .yz-price__field input { background: transparent; }
+
+/* --------------------------------------------------------------------------
+   9. Search — toolbar + live-search dropdown (was #fff → dark surface)
+   -------------------------------------------------------------------------- */
+html[data-yz-theme="burgundy"] .yz-live-search {
+	background: var(--yz-surface);
+	border-color: var(--yz-border);
+	box-shadow: 0 24px 48px -24px rgba(0, 0, 0, 0.7);
+}
+html[data-yz-theme="burgundy"] .yz-live-search__item { color: var(--yz-text-2); }
+html[data-yz-theme="burgundy"] .yz-live-search__item:hover,
+html[data-yz-theme="burgundy"] .yz-live-search__item:focus-visible {
+	background: rgba(255, 255, 255, 0.05);
+}
+html[data-yz-theme="burgundy"] .yz-live-search__title { color: var(--yz-text); }
+html[data-yz-theme="burgundy"] .yz-live-search__price .amount { color: var(--yz-text); }
+html[data-yz-theme="burgundy"] .yz-live-search__all { color: var(--yz-text-2); border-top-color: var(--yz-border); }
+html[data-yz-theme="burgundy"] .yz-live-search__all:hover { background: var(--yz-primary); color: var(--yz-on-primary); }
+html[data-yz-theme="burgundy"] .yz-shop__search-btn { color: var(--yz-text-muted); }
+html[data-yz-theme="burgundy"] .yz-shop__search-btn:hover { color: var(--yz-text); }
+
+/* --------------------------------------------------------------------------
+   10. Filters (sidebar + chips + applied) — the largest ink-as-text cluster
+   -------------------------------------------------------------------------- */
+html[data-yz-theme="burgundy"] .yz-filters__title,
+html[data-yz-theme="burgundy"] .yz-filter-group__head,
+html[data-yz-theme="burgundy"] .yz-filter-option,
+html[data-yz-theme="burgundy"] .yz-filter-option__name,
+html[data-yz-theme="burgundy"] .yz-chip {
+	color: var(--yz-text-2);
+}
+html[data-yz-theme="burgundy"] .yz-filters__head { border-bottom-color: var(--yz-border-strong); }
+html[data-yz-theme="burgundy"] .yz-filter-group,
+html[data-yz-theme="burgundy"] .yz-shop__toolbar { border-color: var(--yz-border); }
+html[data-yz-theme="burgundy"] .yz-filter-option input[type="checkbox"] { border-color: var(--yz-text-muted); }
+html[data-yz-theme="burgundy"] .yz-filter-option input[type="checkbox"]:checked {
+	background: var(--yz-accent); border-color: var(--yz-accent);
+}
+html[data-yz-theme="burgundy"] .yz-filter-option input[type="checkbox"]:checked::after { border-color: #fff; }
+/* Stone chips — rest / hover / active */
+html[data-yz-theme="burgundy"] .yz-chip { border-color: var(--yz-border); }
+html[data-yz-theme="burgundy"] .yz-chip:hover,
+html[data-yz-theme="burgundy"] .yz-chip:focus-visible { border-color: var(--yz-ivory); color: var(--yz-ivory); }
+html[data-yz-theme="burgundy"] .yz-chip.is-active {
+	background: var(--yz-primary); border-color: var(--yz-primary); color: var(--yz-on-primary);
+}
+html[data-yz-theme="burgundy"] .yz-shop__filter-toggle {
+	border-color: var(--yz-border-strong); color: var(--yz-text-2);
+}
+html[data-yz-theme="burgundy"] .yz-applied__chip {
+	background: var(--yz-primary); border-color: var(--yz-primary); color: var(--yz-on-primary);
+}
+html[data-yz-theme="burgundy"] .yz-applied__chip:hover { background: transparent; color: var(--yz-ivory); }
+
+/* --------------------------------------------------------------------------
+   11. Cart drawer (modern-cart) — the plugin is ID-scoped (#moderncart-slide-out)
+   and themes ITSELF through --moderncart-* variables it prints on :root, so we
+   (a) remap those variables into burgundy space on a more-specific selector, and
+   (b) override the couple of hard-coded #fff backgrounds on the ID root/items.
+   This is why the earlier class-only rules didn't take — ID selectors outrank
+   them. Verified against modern-cart/assets/css/cart.css + inc/scripts.php.
+   -------------------------------------------------------------------------- */
+html[data-yz-theme="burgundy"] #moderncart-slide-out-modal,
+html[data-yz-theme="burgundy"] #moderncart-slide-out,
+html[data-yz-theme="burgundy"] .moderncart-modal,
+html[data-yz-theme="burgundy"] body.yazan {
+	--moderncart-background-color: #221012;        /* panel body        */
+	--moderncart-header-background-color: #160709;  /* header band       */
+	--moderncart-quantity-background-color: #2C0A10;
+	--moderncart-primary-color: #4A0F19;            /* CTA / progress    */
+	--moderncart-primary-color-light: #2C0A10;
+	--moderncart-highlight-color: #A50606;          /* accent            */
+	--moderncart-body-color: #F7F3F2;               /* body text         */
+	--moderncart-heading-color: #F7F3F2;
+	--moderncart-header-font-color: #F7F3F2;
+	--moderncart-button-font-color: #F7F3F2;
+	--moderncart-quantity-font-color: #F7F3F2;
+	/* Floating mini-cart bubble (site-wide) → burgundy instead of the default blue. */
+	--moderncart-floating-icon-bg-color: #4A0F19;
+	--moderncart-floating-icon-color: #F7F3F2;
+	--moderncart-floating-count-bg-color: #A50606;
+	--moderncart-floating-count-text-color: #FFFFFF;
+}
+
+/* Direct #fff backgrounds the plugin sets on the ID root / popup / items — beat
+   them with !important (their selectors carry 2 IDs, so match or exceed). */
+html[data-yz-theme="burgundy"] #moderncart-slide-out-modal.moderncart-cart-style-slideout #moderncart-slide-out,
+html[data-yz-theme="burgundy"] #moderncart-slide-out-modal.moderncart-cart-style-popup #moderncart-slide-out,
+html[data-yz-theme="burgundy"] #moderncart-slide-out,
+html[data-yz-theme="burgundy"] #moderncart-slide-out .moderncart-panel,
+html[data-yz-theme="burgundy"] #moderncart-slide-out .moderncart-slide-out-cart,
+html[data-yz-theme="burgundy"] #moderncart-slide-out .moderncart-slide-out-footer {
+	background-color: #221012 !important;
+	color: #F7F3F2;
+}
+/* Modal scrim behind the drawer (plugin default is a blue-grey rgba). */
+html[data-yz-theme="burgundy"] .moderncart-modal-backdrop[role="dialog"] {
+	background-color: rgba(4, 2, 3, 0.78) !important;
+}
+
+/* Dividers + secondary text on the dark panel. */
+html[data-yz-theme="burgundy"] #moderncart-slide-out .moderncart-slide-out-header,
+html[data-yz-theme="burgundy"] #moderncart-slide-out .moderncart-cart-item-container,
+html[data-yz-theme="burgundy"] #moderncart-slide-out .moderncart-slide-out-footer,
+html[data-yz-theme="burgundy"] #moderncart-slide-out .moderncart-slide-out-recommendations-header {
+	border-color: rgba(255, 255, 255, 0.10) !important;
+}
+html[data-yz-theme="burgundy"] #moderncart-slide-out .moderncart-slide-out-header-title,
+html[data-yz-theme="burgundy"] #moderncart-slide-out .moderncart-cart-item-product-name,
+html[data-yz-theme="burgundy"] #moderncart-slide-out .moderncart-cart-item-product-name a,
+html[data-yz-theme="burgundy"] #moderncart-slide-out .moderncart-cart-item-product-link,
+html[data-yz-theme="burgundy"] #moderncart-slide-out .moderncart-cart-total,
+html[data-yz-theme="burgundy"] #moderncart-slide-out .moderncart-cart-line-items-item { color: #F7F3F2 !important; }
+html[data-yz-theme="burgundy"] #moderncart-slide-out .moderncart-slide-out-header-close { color: #9E8A8B !important; }
+
+/* Item-image + quantity chips that hard-code #fff / light-blue. */
+html[data-yz-theme="burgundy"] #moderncart-slide-out .moderncart-cart-item-image,
+html[data-yz-theme="burgundy"] #moderncart-slide-out .moderncart-cart-item-image img,
+html[data-yz-theme="burgundy"] #moderncart-slide-out .moderncart-cart-item-recommended-image {
+	background-color: #2C0A10 !important;
+}
+html[data-yz-theme="burgundy"] #moderncart-slide-out .moderncart-cart-item-quantity,
+html[data-yz-theme="burgundy"] #moderncart-slide-out .moderncart-slide-out-coupon-input {
+	background-color: #2C0A10 !important;
+	color: #F7F3F2 !important;
+	border-color: rgba(255, 255, 255, 0.14) !important;
+}
+html[data-yz-theme="burgundy"] #moderncart-slide-out .moderncart-free-shipping-progress-bar {
+	background-color: rgba(255, 255, 255, 0.10) !important;
+}
+
+/* Checkout CTA + recommended "Add" control. */
+html[data-yz-theme="burgundy"] body.yazan a.checkout-button,
+html[data-yz-theme="burgundy"] #moderncart-slide-out a.checkout-button {
+	background: var(--yz-primary) !important; color: var(--yz-on-primary) !important; border-color: var(--yz-primary) !important;
+}
+html[data-yz-theme="burgundy"] body.yazan a.checkout-button:hover {
+	background: var(--yz-accent) !important; color: #fff !important;
+}
+html[data-yz-theme="burgundy"] #moderncart-slide-out .moderncart-add-to-cart {
+	border-color: var(--yz-ivory) !important; color: var(--yz-ivory) !important; background: transparent !important;
+}
+html[data-yz-theme="burgundy"] #moderncart-slide-out .moderncart-add-to-cart:hover {
+	background: var(--yz-accent) !important; color: #fff !important; border-color: var(--yz-accent) !important;
+}
+
+/* --------------------------------------------------------------------------
+   12. Cart & checkout pages (classic Woo tables; CartFlows form → checkout.css)
+   -------------------------------------------------------------------------- */
+html[data-yz-theme="burgundy"] .woocommerce table.shop_table,
+html[data-yz-theme="burgundy"] .woocommerce table.cart,
+html[data-yz-theme="burgundy"] .woocommerce .cart-collaterals .cart_totals table,
+html[data-yz-theme="burgundy"] .woocommerce-checkout table.shop_table {
+	background: var(--yz-surface);
+	color: var(--yz-text);
+	border-color: var(--yz-border);
+}
+html[data-yz-theme="burgundy"] .woocommerce table.shop_table th,
+html[data-yz-theme="burgundy"] .woocommerce table.shop_table td,
+html[data-yz-theme="burgundy"] .woocommerce table.shop_table tr { border-color: var(--yz-border); color: var(--yz-text-2); }
+html[data-yz-theme="burgundy"] .woocommerce table.shop_table a { color: var(--yz-text); }
+html[data-yz-theme="burgundy"] .woocommerce .cart_totals h2,
+html[data-yz-theme="burgundy"] .woocommerce-checkout h3,
+html[data-yz-theme="burgundy"] .woocommerce-checkout #order_review_heading { color: var(--yz-text); }
+html[data-yz-theme="burgundy"] .woocommerce form .form-row label,
+html[data-yz-theme="burgundy"] .woocommerce-checkout .woocommerce-billing-fields label { color: var(--yz-text-2); }
+html[data-yz-theme="burgundy"] .woocommerce .cart-collaterals .cart_totals,
+html[data-yz-theme="burgundy"] .woocommerce-checkout #payment,
+html[data-yz-theme="burgundy"] .woocommerce-checkout #payment .payment_box {
+	background: var(--yz-surface); color: var(--yz-text-2); border-color: var(--yz-border);
+}
+
+/* --------------------------------------------------------------------------
+   13. Customer account (My Account)
+   -------------------------------------------------------------------------- */
+html[data-yz-theme="burgundy"] .woocommerce-account .woocommerce-MyAccount-navigation ul { border-color: var(--yz-border); }
+html[data-yz-theme="burgundy"] .woocommerce-account .woocommerce-MyAccount-navigation li { border-color: var(--yz-border); }
+html[data-yz-theme="burgundy"] .woocommerce-account .woocommerce-MyAccount-navigation a { color: var(--yz-text-2); }
+html[data-yz-theme="burgundy"] .woocommerce-account .woocommerce-MyAccount-navigation li.is-active a,
+html[data-yz-theme="burgundy"] .woocommerce-account .woocommerce-MyAccount-navigation a:hover { color: var(--yz-text); }
+html[data-yz-theme="burgundy"] .woocommerce-account .woocommerce-MyAccount-content,
+html[data-yz-theme="burgundy"] .woocommerce-account .woocommerce-MyAccount-content p,
+html[data-yz-theme="burgundy"] .woocommerce-account .addresses .address,
+html[data-yz-theme="burgundy"] .woocommerce-account address { color: var(--yz-text-2); }
+html[data-yz-theme="burgundy"] .woocommerce-account .woocommerce-MyAccount-content a { color: var(--yz-accent); }
+
+/* --------------------------------------------------------------------------
+   14. Footer — Elementor per-section bg is inline; beat it with !important.
+   Text/link colours already follow the (light) --yz-silver/-ivory tokens.
+   -------------------------------------------------------------------------- */
+html[data-yz-theme="burgundy"] .footer-width-fixer,
+html[data-yz-theme="burgundy"] .elementor-location-footer .elementor-top-section,
+html[data-yz-theme="burgundy"] .elementor-1165 .elementor-top-section,
+html[data-yz-theme="burgundy"] .yazan .site-footer,
+html[data-yz-theme="burgundy"] .yazan .footer-adv {
+	background-color: var(--yz-surface-2) !important;
+}
+html[data-yz-theme="burgundy"] .yazan .footer-width-fixer .elementor-widget-heading .elementor-heading-title {
+	color: var(--yz-ivory) !important;
+}
+
+/* --------------------------------------------------------------------------
+   15. Newsletter (dark section already) — input text + border on dark
+   -------------------------------------------------------------------------- */
+html[data-yz-theme="burgundy"] .yz-newsletter__form input[type="email"] {
+	border-color: var(--yz-border-strong); color: var(--yz-text);
+}
+html[data-yz-theme="burgundy"] .yz-newsletter__form input[type="email"]:focus { border-color: var(--yz-accent); }
+
+/* --------------------------------------------------------------------------
+   16. Badges — mostly follow tokens; keep certified legible on burgundy
+   -------------------------------------------------------------------------- */
+html[data-yz-theme="burgundy"] .yz-badge { color: var(--yz-ivory); }
+html[data-yz-theme="burgundy"] .yz-badge--certified {
+	background: var(--yz-surface-2); color: var(--yz-ivory); border-color: var(--yz-silver);
+}
+html[data-yz-theme="burgundy"] .yz-badge--rare,
+html[data-yz-theme="burgundy"] .yz-badge--sale { background: var(--yz-accent); }
+
+/* --------------------------------------------------------------------------
+   17. Breadcrumbs
+   -------------------------------------------------------------------------- */
+html[data-yz-theme="burgundy"] .woocommerce-breadcrumb,
+html[data-yz-theme="burgundy"] .woocommerce-breadcrumb a { color: var(--yz-text-muted); }
+html[data-yz-theme="burgundy"] .woocommerce-breadcrumb a:hover { color: var(--yz-text); }
+
+/* --------------------------------------------------------------------------
+   18. Pagination (Woo + Astra) — hairline chips on dark
+   -------------------------------------------------------------------------- */
+html[data-yz-theme="burgundy"] .woocommerce nav.woocommerce-pagination ul,
+html[data-yz-theme="burgundy"] .woocommerce nav.woocommerce-pagination ul li { border-color: var(--yz-border); }
+html[data-yz-theme="burgundy"] .woocommerce nav.woocommerce-pagination ul li a,
+html[data-yz-theme="burgundy"] .woocommerce nav.woocommerce-pagination ul li span { color: var(--yz-text-2); }
+html[data-yz-theme="burgundy"] .woocommerce nav.woocommerce-pagination ul li a:hover,
+html[data-yz-theme="burgundy"] .woocommerce nav.woocommerce-pagination ul li span.current {
+	background: var(--yz-primary); color: var(--yz-on-primary);
+}
+html[data-yz-theme="burgundy"] .ast-pagination a,
+html[data-yz-theme="burgundy"] .page-numbers { color: var(--yz-text-2); }
+html[data-yz-theme="burgundy"] .page-numbers.current { color: var(--yz-text); }
+
+/* --------------------------------------------------------------------------
+   19. Toasts / notices (WooCommerce messages) — dark card + accent rule
+   -------------------------------------------------------------------------- */
+html[data-yz-theme="burgundy"] .woocommerce-message,
+html[data-yz-theme="burgundy"] .woocommerce-info,
+html[data-yz-theme="burgundy"] .woocommerce-error,
+html[data-yz-theme="burgundy"] .woocommerce-noreviews,
+html[data-yz-theme="burgundy"] .wc-block-components-notice-banner {
+	background: var(--yz-surface);
+	color: var(--yz-text);
+	border-top: 3px solid var(--yz-accent);
+	box-shadow: var(--yz-shadow-md);
+}
+html[data-yz-theme="burgundy"] .woocommerce-message a,
+html[data-yz-theme="burgundy"] .woocommerce-info a,
+html[data-yz-theme="burgundy"] .woocommerce-error a { color: var(--yz-accent); }
+
+/* --------------------------------------------------------------------------
+   20. Modals / dialogs / lightbox (generic + WooCommerce PhotoSwipe)
+   -------------------------------------------------------------------------- */
+html[data-yz-theme="burgundy"] dialog,
+html[data-yz-theme="burgundy"] .yz-modal,
+html[data-yz-theme="burgundy"] [role="dialog"] .yz-modal__panel {
+	background: var(--yz-surface);
+	color: var(--yz-text);
+	border: 1px solid var(--yz-border);
+	box-shadow: var(--yz-shadow-lg);
+}
+html[data-yz-theme="burgundy"] dialog::backdrop,
+html[data-yz-theme="burgundy"] .yz-modal__scrim { background: var(--yz-scrim); }
+html[data-yz-theme="burgundy"] .pswp__bg { background: var(--yz-bg); }
+
+/* --------------------------------------------------------------------------
+   21. Loading states — skeletons + AJAX overlays on the dark canvas
+   -------------------------------------------------------------------------- */
+html[data-yz-theme="burgundy"] .yz-skeleton,
+html[data-yz-theme="burgundy"] .yz-shop__results.is-loading::after {
+	background: linear-gradient(90deg,
+		var(--yz-surface) 0%,
+		var(--yz-surface-2) 50%,
+		var(--yz-surface) 100%);
+	background-size: 200% 100%;
+}
+html[data-yz-theme="burgundy"] .woocommerce .blockUI.blockOverlay { background: var(--yz-bg) !important; opacity: 0.6 !important; }
+
+/* --------------------------------------------------------------------------
+   22. Hover + Focus states — one consistent, accessible ring across the theme
+   -------------------------------------------------------------------------- */
+html[data-yz-theme="burgundy"] .yazan a:hover { color: var(--yz-ivory); }
+html[data-yz-theme="burgundy"] a:focus-visible,
+html[data-yz-theme="burgundy"] button:focus-visible,
+html[data-yz-theme="burgundy"] input:focus-visible,
+html[data-yz-theme="burgundy"] select:focus-visible,
+html[data-yz-theme="burgundy"] textarea:focus-visible,
+html[data-yz-theme="burgundy"] [tabindex]:focus-visible {
+	outline: 2px solid var(--yz-focus);
+	outline-offset: 2px;
+}
+
+/* Native scrollbar tint on the dark canvas (WebKit + Firefox). */
+html[data-yz-theme="burgundy"] * { scrollbar-color: var(--yz-surface-2) var(--yz-bg); }
+html[data-yz-theme="burgundy"] ::-webkit-scrollbar { width: 12px; height: 12px; }
+html[data-yz-theme="burgundy"] ::-webkit-scrollbar-track { background: var(--yz-bg); }
+html[data-yz-theme="burgundy"] ::-webkit-scrollbar-thumb { background: var(--yz-surface-2); border: 3px solid var(--yz-bg); border-radius: 999px; }

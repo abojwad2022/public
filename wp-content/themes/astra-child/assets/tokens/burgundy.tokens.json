@@ -1,0 +1,89 @@
+{
+  "$schema": "https://design-tokens.github.io/format/tokens.schema.json",
+  "_meta": {
+    "name": "Yazan — Burgundy Luxury",
+    "description": "Dark burgundy design system for the Yazan luxury Yemeni-agate store. Companion to the Black Luxury (classic) theme. Style: luxury, elegant, minimal, premium, modern, timeless. Inspired by Cartier, Tom Ford, Aston Martin, Bentley, luxury-watch sites.",
+    "version": "1.0.0"
+  },
+  "color": {
+    "brand": {
+      "primary":   { "value": "#4A0F19", "type": "color", "comment": "Primary burgundy" },
+      "secondary": { "value": "#2C0A10", "type": "color", "comment": "Secondary / deepest burgundy" },
+      "accent":    { "value": "#A50606", "type": "color", "comment": "Accent red — CTAs, sale, highlights" }
+    },
+    "surface": {
+      "background": { "value": "#160709", "type": "color", "comment": "Page background" },
+      "surface":    { "value": "#221012", "type": "color", "comment": "Cards, panels, dropdowns" },
+      "surface-2":  { "value": "#2C0A10", "type": "color", "comment": "Raised / alternate surface" }
+    },
+    "text": {
+      "text":       { "value": "#F7F3F2", "type": "color", "comment": "Primary text" },
+      "text-2":     { "value": "#D6CACA", "type": "color", "comment": "Secondary text" },
+      "muted":      { "value": "#9E8A8B", "type": "color", "comment": "Muted / meta text" }
+    },
+    "line": {
+      "border":        { "value": "rgba(255,255,255,0.08)", "type": "color", "comment": "Hairlines / dividers" },
+      "border-strong": { "value": "rgba(255,255,255,0.18)", "type": "color" }
+    },
+    "utility": {
+      "gold":  { "value": "#C9A24B", "type": "color", "comment": "Refined gold hover accent (Cartier warmth)" },
+      "focus": { "value": "#C9737B", "type": "color", "comment": "Focus ring (lightened so it reads on dark)" },
+      "scrim": { "value": "rgba(4,2,3,0.72)", "type": "color", "comment": "Modal / overlay scrim" }
+    },
+    "scale": {
+      "50":  { "value": "#FBEAEC", "type": "color" },
+      "100": { "value": "#F5D0D5", "type": "color" },
+      "200": { "value": "#E7A6AE", "type": "color" },
+      "300": { "value": "#D4737E", "type": "color" },
+      "400": { "value": "#B94551", "type": "color" },
+      "500": { "value": "#8E2530", "type": "color" },
+      "600": { "value": "#6E1A24", "type": "color" },
+      "700": { "value": "#4A0F19", "type": "color", "comment": "= brand.primary" },
+      "800": { "value": "#2C0A10", "type": "color", "comment": "= brand.secondary" },
+      "900": { "value": "#1E080C", "type": "color" },
+      "950": { "value": "#160709", "type": "color", "comment": "= surface.background" }
+    }
+  },
+  "typography": {
+    "font": {
+      "display": { "value": "'Cormorant Garamond', Georgia, 'Times New Roman', serif", "type": "fontFamily" },
+      "body":    { "value": "'Jost', system-ui, -apple-system, 'Segoe UI', sans-serif", "type": "fontFamily" },
+      "ar-display": { "value": "'Amiri', 'Cairo', Georgia, serif", "type": "fontFamily" },
+      "ar-body":    { "value": "'Cairo', 'Noto Naskh Arabic', system-ui, sans-serif", "type": "fontFamily" }
+    },
+    "size": {
+      "eyebrow": { "value": "12px", "type": "dimension" },
+      "body":    { "value": "16px", "type": "dimension" },
+      "h3":      { "value": "clamp(22px, 2.2vw, 28px)", "type": "dimension" },
+      "h2":      { "value": "clamp(30px, 3.6vw, 44px)", "type": "dimension" },
+      "h1":      { "value": "clamp(38px, 5vw, 64px)", "type": "dimension" },
+      "display": { "value": "clamp(40px, 7vw, 88px)", "type": "dimension" }
+    },
+    "weight": {
+      "body":    { "value": "400", "type": "fontWeight" },
+      "medium":  { "value": "500", "type": "fontWeight" },
+      "display": { "value": "600", "type": "fontWeight", "comment": "Never 700 — heavy serifs read cheap" }
+    },
+    "tracking": {
+      "label": { "value": "0.14em", "type": "dimension", "comment": "Tracked-uppercase eyebrow/label" }
+    }
+  },
+  "radius": {
+    "none": { "value": "0", "type": "dimension", "comment": "Sharp jewellery-case corners" },
+    "pill": { "value": "999px", "type": "dimension", "comment": "Count pills / dots only" }
+  },
+  "shadow": {
+    "sm":   { "value": "0 1px 2px rgba(0,0,0,0.45)", "type": "shadow" },
+    "md":   { "value": "0 14px 34px -14px rgba(0,0,0,0.60)", "type": "shadow" },
+    "lg":   { "value": "0 28px 60px -22px rgba(0,0,0,0.75)", "type": "shadow" },
+    "glow": { "value": "0 0 0 1px rgba(165,6,6,0.35), 0 10px 34px -10px rgba(165,6,6,0.28)", "type": "shadow" }
+  },
+  "motion": {
+    "ease-out":   { "value": "cubic-bezier(0.22, 1, 0.36, 1)", "type": "cubicBezier" },
+    "ease-inout": { "value": "cubic-bezier(0.65, 0, 0.35, 1)", "type": "cubicBezier" },
+    "fast":  { "value": "250ms", "type": "duration" },
+    "med":   { "value": "500ms", "type": "duration" },
+    "slow":  { "value": "800ms", "type": "duration" },
+    "theme-transition": { "value": "400ms", "type": "duration", "comment": "Cross-theme colour crossfade (spec 300–500ms)" }
+  }
+}

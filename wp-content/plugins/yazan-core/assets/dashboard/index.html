@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Yazan — Dashboard</title>
+    <!-- Mirrors the font tags WordPress prints in production (see class-yazan-dashboard.php). -->
+    <link
+      rel="preload"
+      as="font"
+      type="font/woff2"
+      href="/wp-content/plugins/yazan-core/assets/fonts/inter-var.woff2"
+      crossorigin
+    />
+    <link rel="stylesheet" href="/wp-content/plugins/yazan-core/assets/css/yz-fonts.css" />
+    <!-- Mirrors the no-FOUC theme boot that WordPress prints in production. -->
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem('yazan-dash-theme')
+          if (t !== 'light' && t !== 'dark') {
+            t = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'
+          }
+          document.documentElement.setAttribute('data-theme', t)
+        } catch (e) {}
+      })()
+    </script>
+    <!--
+      Dev-only shell. In production WordPress renders its own document
+      (see includes/dashboard/class-yazan-dashboard.php) and injects the real
+      #yazan-boot payload. The stub below lets `npm run dev` render standalone.
+    -->
+    <script id="yazan-boot" type="application/json">
+      {
+        "restRoot": "http://yazan.local/wp-json/yazan/v1",
+        "nonce": "",
+        "basePath": "/dashboard",
+        "homeUrl": "http://yazan.local/",
+        "storeUrl": "http://yazan.local/store/",
+        "loggedIn": false,
+        "user": null
+      }
+    </script>
+    <script type="module" crossorigin src="/wp-content/plugins/yazan-core/assets/dashboard/app-BkSDvGNq.js"></script>
+    <link rel="stylesheet" crossorigin href="/wp-content/plugins/yazan-core/assets/dashboard/app-yKAPwGGP.css">
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>

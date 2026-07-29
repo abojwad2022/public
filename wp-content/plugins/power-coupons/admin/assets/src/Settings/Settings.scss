@@ -1,0 +1,422 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+	--heading-font-family: "Figtree";
+	--heading-font-style: normal;
+}
+
+.power-coupons-coupon-code {
+	text-transform: uppercase;
+	font-size: 12px;
+	text-overflow: ellipsis;
+	overflow: hidden;
+	white-space: nowrap;
+	font-weight: 600;
+	padding: 5.5px 8px;
+}
+
+html.wp-toolbar.power-coupon-modal-open {
+	padding: 0;
+
+	#wpcontent {
+		margin: 0;
+		padding: 0;
+	}
+
+	#wpadminbar,
+	#adminmenumain {
+		display:none;
+	}
+
+	.bogo-radio-button-wrapper {
+		label.cursor-pointer {
+			> div {
+				margin-left: 24px !important;
+			}
+
+			+ label {
+				left: 12px !important;
+			}
+		}
+	}
+}
+
+.power-coupons-bogo-form-tab {
+	span {
+		&.flex.items-center.gap-1 {
+			font-weight: 500;
+			font-size: 16px;
+			line-height: 24px;
+			text-align: center;
+			vertical-align: middle;
+		}
+		&:nth-child(2) {
+			font-weight: 600;
+			font-size: 16px;
+			line-height: 24px;
+			text-align: center;
+			vertical-align: middle;
+		}
+	}
+
+	// Hide framer-motion's animated underline — its layoutId animation jitters
+	// when panel content changes simultaneously with the active tab switch.
+	> span.absolute {
+		display: none !important;
+	}
+
+	// Static underline for the active tab (replaces the framer-motion one).
+	&.text-text-primary::after {
+		content: '';
+		position: absolute;
+		right: 0;
+		left: 0;
+		bottom: -1px;
+		height: 1px;
+		background-color: #f06434;
+	}
+}
+
+@layer components {
+	#wpwrap {
+
+		@apply bg-background-secondary;
+	}
+
+	#wpbody-content > .notice,
+	#wpbody-content > .error {
+		display: none !important;
+	}
+
+	#wpbody-content {
+		padding-bottom: 0;
+	}
+
+	#power-coupons-settings {
+		font-family: var( --heading-font-family );
+	}
+
+	.power_coupons-toggle-field {
+		input {
+			box-shadow: none;
+			border: 0 !important;
+		}
+		input:focus {
+			--tw-ring-opacity: 0 !important;
+		}
+	}
+
+	.power_coupons-color-field {
+		align-items: center;
+		line-height: 1;
+	}
+
+	.power_coupons-color-field .power_coupons-colorpicker-swatch-wrap {
+		display: flex;
+		align-items: center;
+		cursor: pointer;
+	}
+
+	.power_coupons-color-field .power_coupons-colorpicker-swatch {
+		padding: 0;
+		background: #fafafa;
+		display: inline-block;
+		margin: 0;
+		border-right: 1px solid #ddd;
+		box-shadow: inset 0 0 0 3px #fff;
+	}
+
+	.power_coupons-color-field .power_coupons-color-picker-popover {
+		position: absolute;
+		z-index: 9999;
+		margin: 8px 0;
+		right: 30px;
+	}
+
+	.power_coupons-color-field .power_coupons-color-picker-cover {
+		position: fixed;
+		top: 0;
+		right: 0;
+		bottom: 0;
+		left: 0;
+	}
+
+	.power_coupons-color-field {
+		.components-input-control__input,
+		.components-select-control__input {
+			font-family: var( --heading-font-family ) !important;
+		}
+	}
+
+	.power_coupons-color-field .power_coupons-field-data-content .power_coupons-colorpicker-selector {
+		display: flex;
+		align-items: center;
+	}
+
+	.power_coupons-color-field .power_coupons-field-data-content .power_coupons-colorpicker-swatch-wrap {
+		border: 1px solid #ddd;
+		border-radius: 2px;
+		background: #fff;
+		color: #444;
+	}
+
+	.power_coupons-color-field .power_coupons-field-data-content .power_coupons-colorpicker-label {
+		font-weight: 400;
+		padding: 5px 7px;
+	}
+
+	.power_coupons-color-field .power_coupons-field-data-content .power_coupons-colorpicker-reset {
+		padding: 6px;
+		cursor: pointer;
+		background: none;
+		border: none;
+	}
+
+	.power_coupons-color-field .power_coupons-color-picker {
+		position: relative;
+	}
+
+	.power_coupons-color-field .power_coupons-color-picker input {
+		margin: 0;
+	}
+
+	.power_coupons-color-field .power_coupons-color-picker input[id^="rc-editable-input-"] {
+		width: 100% !important;
+	}
+
+	.power_coupons-input-field-wrapper input.w-28 {
+
+		@apply rounded-md;
+	}
+
+	.power_coupons-input-field-wrapper input {
+		border-top-right-radius: 0;
+		border-bottom-right-radius: 0;
+		border: 1px solid;
+		outline: none;
+
+
+		@apply border-gray-300;
+	}
+
+	.power_coupons-input-field-wrapper input:focus {
+
+		@apply border-gray-300;
+		box-shadow: none;
+	}
+
+	.power_coupons-animate-spin-reverse {
+		animation: power_coupons-reverse-spin 1s ease infinite;
+
+		@keyframes power_coupons-reverse-spin {
+			from {
+				transform: rotate( 360deg );
+			}
+			to {
+				transform: rotate( 0deg );
+			}
+		}
+	}
+
+	.power_coupons-settings {
+		a.power_coupons-settings--article-link,
+		a:hover,
+		a:active {
+			color: #f06335;
+			border-color: #f06335;
+		}
+	}
+
+	.power_coupons-license-key {
+		input {
+			height: 40px;
+		}
+	}
+}
+
+:is( #power-coupons-settings ) .bg-border-interactive {
+	background-color: #f06434;
+}
+
+// Hide WordPress admin footer on Power Coupons settings and onboarding screens.
+.toplevel_page_power_coupons_settings #wpfooter {
+	display: none !important;
+}
+
+// Override force-ui ProgressSteps brand-primary-600 (purple) to match the plugin's orange theme.
+:is( #power-coupons-settings ) .ring-brand-primary-600 {
+	--tw-ring-color: #f06434 !important;
+}
+
+:is( #power-coupons-settings ) .text-brand-primary-600 {
+	color: #f06434 !important;
+}
+
+:is( #power-coupons-settings ) .bg-brand-primary-600 {
+	background-color: #f06434 !important;
+}
+
+:is( #power-coupons-settings ) .border-brand-primary-600 {
+	border-color: #f06434 !important;
+}
+
+.power-coupons-coupon-style-btn > label {
+	left: 0;
+	min-width: 0 !important;
+	margin: 0;
+	margin-top: 15px;
+}
+
+:is( #power-coupons-settings ) .checked\:border-border-interactive:checked {
+	border-color: rgb( 240 99 53 / var( --tw-bg-opacity, 1 ) ) !important;
+}
+
+/* START: Fix for the admin app sidebar height styling issue. */
+#power_coupons-settings .mcw-sidebar::after {
+	content: "";
+	position: fixed;
+	left: 0;
+	top: 0;
+	width: 420px;
+	height: 100vh;
+	background: #fff;
+	z-index: -1;
+}
+
+@media ( max-width: 1024px ) {
+	#power_coupons-settings .mcw-sidebar::after {
+		width: 225px;
+	}
+}
+
+@media ( max-width: 960px ) {
+	#power_coupons-settings .mcw-sidebar::after {
+		width: 100px;
+	}
+}
+
+@media ( max-width: 782px ) {
+	#power_coupons-settings .mcw-sidebar::after {
+		width: 75px;
+	}
+}
+/* END: Fix for the admin app sidebar height styling issue. */
+
+// Fix checkbox unchecked border: force-ui uses border-border-strong which is #f06434 (orange)
+// in our theme, but Figma specifies gray for unchecked checkboxes.
+// :not(:checked) ensures the override only applies in unchecked state so the theme
+// orange color (checked:border-border-interactive) still shows when checked.
+:is(#power-coupons-settings) input[type="checkbox"].border-border-strong:not(:checked) {
+	border-color: #6B7280 !important;
+}
+
+// Match Figma: reduce table data cell vertical padding from py-3.5 (14px) to 10px per side.
+:is(#power-coupons-settings) table td {
+	padding-top: 10px !important;
+	padding-bottom: 10px !important;
+}
+
+// Override force-ui rounded Tabs to match the reference pill style (orange active state).
+// The .pc-tabs-rounded wrapper is applied to Tabs.Group in Points.js.
+:is(#power-coupons-settings) .pc-tabs-rounded {
+	background-color: #fff !important;
+	padding: 0 !important;
+
+	// Active tab — orange tint background, orange text, orange outline.
+	> button.bg-background-primary {
+		background-color: #fef8f5 !important;
+		color: #e54e1a !important;
+		outline: 1px solid #f6a285 !important;
+		box-shadow: 0 1px 2px rgb(0 0 0 / 0.05) !important;
+
+		span {
+			color: inherit !important;
+		}
+	}
+
+	// Inactive tab — hover to orange text.
+	> button:not(.bg-background-primary) {
+		&:hover {
+			color: #e54e1a !important;
+
+			span {
+				color: inherit !important;
+			}
+		}
+	}
+}
+
+// CSS-only tooltip for campaign modal fields (avoids z-index issues with force-ui Tooltip in modal).
+.pc-field-tooltip {
+	&::after {
+		content: attr(data-tip);
+		position: absolute;
+		bottom: calc(100% + 6px);
+		left: 50%;
+		transform: translateX(-50%);
+		background: #111827;
+		color: #fff;
+		font-size: 12px;
+		font-weight: 400;
+		line-height: 1.4;
+		padding: 6px 10px;
+		border-radius: 6px;
+		white-space: normal;
+		width: max-content;
+		max-width: 240px;
+		pointer-events: none;
+		opacity: 0;
+		transition: opacity 0.15s;
+		z-index: 10;
+		box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+	}
+
+	&::before {
+		content: '';
+		position: absolute;
+		bottom: calc(100% + 2px);
+		left: 50%;
+		transform: translateX(-50%);
+		border: 4px solid transparent;
+		border-top-color: #111827;
+		pointer-events: none;
+		opacity: 0;
+		transition: opacity 0.15s;
+		z-index: 10;
+	}
+
+	&:hover::after,
+	&:hover::before,
+	&:focus::after,
+	&:focus::before {
+		opacity: 1;
+	}
+}
+
+// Override force-ui DatePicker brand colors to match plugin's orange theme.
+// force-ui defaults to purple (#6005ff) for primary/brand colors.
+// The .pc-date-picker-popup wrapper is applied to every DatePicker popup in the plugin.
+.pc-date-picker-popup {
+	// Apply button — normal & hover
+	.bg-button-primary { background-color: #f97316 !important; }
+	.hover\:bg-button-primary-hover:hover { background-color: #ea580c !important; }
+	.outline-button-primary { outline-color: #f97316 !important; }
+	.hover\:outline-button-primary-hover:hover { outline-color: #ea580c !important; }
+	.hover\:text-button-primary-hover:hover { color: #ea580c !important; }
+
+	// Selected day circles & today indicator dot
+	.bg-background-brand { background-color: #f97316 !important; }
+	.hover\:bg-background-brand:hover { background-color: #ea580c !important; }
+
+	// Range middle days (light tint between start and end)
+	.bg-brand-background-50 { background-color: #fff7ed !important; } // orange-50
+
+	// Borders, text, and focus ring
+	.border-brand-primary-600 { border-color: #f97316 !important; }
+	.text-brand-primary-600 { color: #ea580c !important; }
+	.ring-brand-primary-600 {
+		--tw-ring-color: rgb(249 115 22 / var(--tw-ring-opacity, 1)) !important;
+	}
+}

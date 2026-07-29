@@ -1,0 +1,143 @@
+/* ==========================================================================
+   Yazan (Astra Child) — motion layer
+   Implements the "Yazan — Motion & Animation Blueprint".
+   Animate ONLY transform / opacity / clip-path (+ one backdrop-filter on header).
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   Part 2 — Motion tokens (change the whole "feel" from six lines)
+   -------------------------------------------------------------------------- */
+:root {
+	--mo-ease-out:   cubic-bezier(0.22, 1, 0.36, 1);  /* signature decelerate */
+	--mo-ease-inout: cubic-bezier(0.65, 0, 0.35, 1);  /* drawers, overlays   */
+	--mo-fast:   250ms;  /* feedback: buttons, hovers      */
+	--mo-med:    500ms;  /* drawers, header, small reveals */
+	--mo-slow:   800ms;  /* section reveals, text          */
+	--mo-hero:  1200ms;  /* hero entrance, image settles   */
+	--mo-rise:   20px;
+	--mo-stagger: 90ms;
+}
+
+/* --------------------------------------------------------------------------
+   Part 3 — Page load: barely-perceptible body fade (removes paint "pop")
+   -------------------------------------------------------------------------- */
+body.yazan { animation: yz-page-in var(--mo-med) var(--mo-ease-out) both; }
+@keyframes yz-page-in { from { opacity: 0.98; } }
+
+/* --------------------------------------------------------------------------
+   Part 7 — Scroll reveals (workhorse). Authoring convention: .yz-reveal
+   The observer (motion.js) adds .is-inview once, then unobserves.
+   -------------------------------------------------------------------------- */
+.yz-reveal,
+[data-reveal] {
+	opacity: 0;
+	transform: translateY(var(--mo-rise));
+	transition: opacity var(--mo-slow) var(--mo-ease-out),
+	            transform var(--mo-slow) var(--mo-ease-out);
+}
+.yz-reveal.is-inview,
+[data-reveal].is-inview {
+	opacity: 1;
+	transform: none;
+}
+
+/* Graceful degradation: if JS (and the observer) never runs, nothing stays hidden. The inline
+   head script adds `.yz-js` before first paint, so this only applies when JS is off/failed. */
+html:not(.yz-js) .yz-reveal,
+html:not(.yz-js) [data-reveal] { opacity: 1 !important; transform: none !important; }
+html:not(.yz-js) [data-img-reveal] { clip-path: none !important; }
+html:not(.yz-js) [data-img-reveal] img { transform: none !important; }
+
+/* Row stagger — cap at position 4 so deep scroll never feels laggy (Part 10). */
+.yz-grid > .yz-reveal:nth-child(2) { transition-delay: calc(var(--mo-stagger) * 1); }
+.yz-grid > .yz-reveal:nth-child(3) { transition-delay: calc(var(--mo-stagger) * 2); }
+.yz-grid > .yz-reveal:nth-child(4) { transition-delay: calc(var(--mo-stagger) * 3); }
+
+/* Same left-to-right cascade for the WooCommerce shop/archive grid (cards carry .yz-reveal via the
+   loop post_class filter; the grid is `ul.products`). Capped at 4 so later rows reveal on scroll-enter
+   without accumulating long delays. */
+.yazan ul.products > .product.yz-reveal:nth-child(2) { transition-delay: calc(var(--mo-stagger) * 1); }
+.yazan ul.products > .product.yz-reveal:nth-child(3) { transition-delay: calc(var(--mo-stagger) * 2); }
+.yazan ul.products > .product.yz-reveal:nth-child(4) { transition-delay: calc(var(--mo-stagger) * 3); }
+
+/* --------------------------------------------------------------------------
+   Part 4 — Hero entrance (pure CSS; above the fold so no observer needed)
+   -------------------------------------------------------------------------- */
+.yz-hero__media img {
+	animation: yz-hero-img var(--mo-hero) var(--mo-ease-out) both;
+}
+@keyframes yz-hero-img {
+	from { opacity: 0; transform: scale(1.06); }
+	to   { opacity: 1; transform: scale(1); }
+}
+
+/* Masked line rise for the headline (wrap each line in .line > span). */
+.yz-hero .line { display: block; overflow: hidden; }
+.yz-hero .line > span { display: block; animation: yz-line-up var(--mo-slow) var(--mo-ease-out) both; }
+.yz-hero .line:nth-child(1) > span { animation-delay: 200ms; }
+.yz-hero .line:nth-child(2) > span { animation-delay: 320ms; }
+@keyframes yz-line-up {
+	from { transform: translateY(110%); }
+	to   { transform: translateY(0); }
+}
+
+.yz-hero__eyebrow,
+.yz-hero__cta {
+	animation: yz-fade-up var(--mo-slow) var(--mo-ease-out) 600ms both;
+}
+@keyframes yz-fade-up {
+	from { opacity: 0; transform: translateY(var(--mo-rise)); }
+	to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Below-the-fold headings: same masked rise, driven by the observer. */
+[data-reveal] .line > span {
+	transform: translateY(110%);
+	transition: transform var(--mo-slow) var(--mo-ease-out);
+}
+[data-reveal].is-inview .line > span { transform: translateY(0); }
+[data-reveal].is-inview .line:nth-child(2) > span { transition-delay: 120ms; }
+
+/* --------------------------------------------------------------------------
+   Part 6 — Image reveal: "curtain + settle" (large editorial images only)
+   -------------------------------------------------------------------------- */
+[data-img-reveal] {
+	clip-path: inset(0 0 100% 0);
+	transition: clip-path var(--mo-hero) var(--mo-ease-inout);
+	overflow: hidden;
+}
+[data-img-reveal] img {
+	transform: scale(1.12);
+	transition: transform var(--mo-hero) var(--mo-ease-out);
+}
+[data-img-reveal].is-inview { clip-path: inset(0); }
+[data-img-reveal].is-inview img { transform: scale(1); }
+
+/* Part 11 — Header scroll transitions live in assets/css/header.css (+ header.js). */
+
+/* --------------------------------------------------------------------------
+   Part 12 — Mobile: shorten motion ~30%; observer triggers sooner via JS
+   -------------------------------------------------------------------------- */
+@media (max-width: 767px) {
+	:root {
+		--mo-slow: 550ms;
+		--mo-hero: 800ms;
+		--mo-rise: 14px;
+		--mo-stagger: 60ms;
+	}
+}
+
+/* --------------------------------------------------------------------------
+   Part 2 / Part 13 — Accessibility: honor reduced motion globally (non-negotiable)
+   -------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+	*, *::before, *::after {
+		animation-duration: 0.01ms !important;
+		animation-iteration-count: 1 !important;
+		transition-duration: 0.01ms !important;
+		scroll-behavior: auto !important;
+	}
+	.yz-reveal, [data-reveal] { opacity: 1; transform: none; }
+	[data-img-reveal] { clip-path: inset(0); }
+	[data-img-reveal] img { transform: none; }
+}

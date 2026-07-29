@@ -1,0 +1,239 @@
+{
+  "_app-MediaPicker-DDlFwHU3.js": {
+    "file": "app-MediaPicker-DDlFwHU3.js",
+    "name": "MediaPicker",
+    "imports": [
+      "index.html",
+      "_app-ui-BOsaMPno.js"
+    ]
+  },
+  "_app-ProductPicker-DONaOV_0.js": {
+    "file": "app-ProductPicker-DONaOV_0.js",
+    "name": "ProductPicker",
+    "imports": [
+      "index.html",
+      "_app-ui-BOsaMPno.js"
+    ]
+  },
+  "_app-pencil-Bs9Voeo3.js": {
+    "file": "app-pencil-Bs9Voeo3.js",
+    "name": "pencil",
+    "imports": [
+      "index.html"
+    ]
+  },
+  "_app-trash-2-DxNV0mCA.js": {
+    "file": "app-trash-2-DxNV0mCA.js",
+    "name": "trash-2",
+    "imports": [
+      "index.html"
+    ]
+  },
+  "_app-ui-BOsaMPno.js": {
+    "file": "app-ui-BOsaMPno.js",
+    "name": "ui",
+    "imports": [
+      "index.html"
+    ]
+  },
+  "index.html": {
+    "file": "app-BkSDvGNq.js",
+    "name": "index",
+    "src": "index.html",
+    "isEntry": true,
+    "dynamicImports": [
+      "src/pages/Products.jsx",
+      "src/pages/ProductEditor.jsx",
+      "src/pages/Orders.jsx",
+      "src/pages/OrderDetail.jsx",
+      "src/pages/NewOrder.jsx",
+      "src/pages/Customers.jsx",
+      "src/pages/Categories.jsx",
+      "src/pages/Attributes.jsx",
+      "src/pages/Inventory.jsx",
+      "src/pages/Settings.jsx",
+      "src/pages/Coupons.jsx",
+      "src/pages/Reports.jsx",
+      "src/pages/ActivityLog.jsx",
+      "src/pages/ai/AIStudio.jsx",
+      "src/pages/ai/AIInsights.jsx",
+      "src/pages/ai/AISettings.jsx",
+      "src/pages/RewardsEmbed.jsx"
+    ]
+  },
+  "src/pages/ActivityLog.jsx": {
+    "file": "app-ActivityLog-8Zo-ZkRZ.js",
+    "name": "ActivityLog",
+    "src": "src/pages/ActivityLog.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "_app-trash-2-DxNV0mCA.js",
+      "index.html"
+    ]
+  },
+  "src/pages/Attributes.jsx": {
+    "file": "app-Attributes-CFGDRuWG.js",
+    "name": "Attributes",
+    "src": "src/pages/Attributes.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "_app-pencil-Bs9Voeo3.js",
+      "_app-trash-2-DxNV0mCA.js",
+      "index.html"
+    ]
+  },
+  "src/pages/Categories.jsx": {
+    "file": "app-Categories-BI2TIyzH.js",
+    "name": "Categories",
+    "src": "src/pages/Categories.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "_app-pencil-Bs9Voeo3.js",
+      "_app-trash-2-DxNV0mCA.js",
+      "index.html",
+      "_app-MediaPicker-DDlFwHU3.js"
+    ]
+  },
+  "src/pages/Coupons.jsx": {
+    "file": "app-Coupons-Cx_Exw-r.js",
+    "name": "Coupons",
+    "src": "src/pages/Coupons.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "_app-pencil-Bs9Voeo3.js",
+      "_app-trash-2-DxNV0mCA.js",
+      "index.html"
+    ]
+  },
+  "src/pages/Customers.jsx": {
+    "file": "app-Customers-CdK6nyQp.js",
+    "name": "Customers",
+    "src": "src/pages/Customers.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "index.html",
+      "src/pages/Orders.jsx"
+    ]
+  },
+  "src/pages/Inventory.jsx": {
+    "file": "app-Inventory-SZKo2cZd.js",
+    "name": "Inventory",
+    "src": "src/pages/Inventory.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "index.html"
+    ]
+  },
+  "src/pages/NewOrder.jsx": {
+    "file": "app-NewOrder-DLLdR6tc.js",
+    "name": "NewOrder",
+    "src": "src/pages/NewOrder.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "index.html",
+      "_app-ProductPicker-DONaOV_0.js"
+    ]
+  },
+  "src/pages/OrderDetail.jsx": {
+    "file": "app-OrderDetail-CY9DM0p_.js",
+    "name": "OrderDetail",
+    "src": "src/pages/OrderDetail.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "index.html",
+      "src/pages/Orders.jsx",
+      "_app-ProductPicker-DONaOV_0.js"
+    ]
+  },
+  "src/pages/Orders.jsx": {
+    "file": "app-Orders-DAZZRZaa.js",
+    "name": "Orders",
+    "src": "src/pages/Orders.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "index.html"
+    ]
+  },
+  "src/pages/ProductEditor.jsx": {
+    "file": "app-ProductEditor-Wdy-U9pE.js",
+    "name": "ProductEditor",
+    "src": "src/pages/ProductEditor.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "index.html",
+      "_app-ui-BOsaMPno.js",
+      "_app-MediaPicker-DDlFwHU3.js",
+      "_app-ProductPicker-DONaOV_0.js"
+    ]
+  },
+  "src/pages/Products.jsx": {
+    "file": "app-Products-36U9PlSD.js",
+    "name": "Products",
+    "src": "src/pages/Products.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "_app-pencil-Bs9Voeo3.js",
+      "_app-trash-2-DxNV0mCA.js",
+      "index.html"
+    ]
+  },
+  "src/pages/Reports.jsx": {
+    "file": "app-Reports-EuFYxsgm.js",
+    "name": "Reports",
+    "src": "src/pages/Reports.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "index.html"
+    ]
+  },
+  "src/pages/RewardsEmbed.jsx": {
+    "file": "app-RewardsEmbed-DdNpfvxv.js",
+    "name": "RewardsEmbed",
+    "src": "src/pages/RewardsEmbed.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "index.html"
+    ]
+  },
+  "src/pages/Settings.jsx": {
+    "file": "app-Settings-eDxFI4MS.js",
+    "name": "Settings",
+    "src": "src/pages/Settings.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "index.html",
+      "src/pages/ActivityLog.jsx"
+    ]
+  },
+  "src/pages/ai/AIInsights.jsx": {
+    "file": "app-AIInsights-BccjKCmM.js",
+    "name": "AIInsights",
+    "src": "src/pages/ai/AIInsights.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "index.html"
+    ]
+  },
+  "src/pages/ai/AISettings.jsx": {
+    "file": "app-AISettings-C6CgtiSR.js",
+    "name": "AISettings",
+    "src": "src/pages/ai/AISettings.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "index.html"
+    ]
+  },
+  "src/pages/ai/AIStudio.jsx": {
+    "file": "app-AIStudio-Cvt_IiTg.js",
+    "name": "AIStudio",
+    "src": "src/pages/ai/AIStudio.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "index.html"
+    ]
+  },
+  "style.css": {
+    "file": "app-yKAPwGGP.css",
+    "src": "style.css"
+  }
+}

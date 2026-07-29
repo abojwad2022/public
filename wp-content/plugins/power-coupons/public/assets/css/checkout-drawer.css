@@ -1,0 +1,545 @@
+/**
+ * Power Coupons - Checkout Drawer Styles
+ *
+ * @package Power_Coupons
+ * @since 1.0.0
+ */
+
+.power-coupons-drawer-coupons-list .power-coupons-list {
+	margin: 0;
+	padding: 0;
+}
+
+.power-coupons-list[data-context="slideout"] .power-coupon-title .coupon-code {
+	font-size: 16px !important;
+	max-width: 151px !important;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	text-align: left;
+}
+
+.power-coupons-list[data-context="slideout"] .power-coupon-card {
+	max-width: 100%;
+	height: 134px;
+}
+
+/* Drawer Trigger Button */
+.power-coupons-drawer-trigger-wrapper {
+	margin: 0.5em 0 0.5em;
+	padding: 0;
+	text-align: center;
+	width: 100%;
+}
+
+/* CartFlows Funnel Checkout Compatibility CSS. */
+.wcf-embed-checkout-form.wcf-embed-checkout-form-instant-checkout div.power-coupons-drawer-trigger-wrapper {
+	margin: 1em 0 0.5em;
+}
+
+.wc-block-components-totals-wrapper .power-coupons-drawer-trigger-wrapper {
+	margin-bottom: 0;
+}
+
+.power-coupons-drawer-button-wrapper.wc-block-components-totals-wrapper {
+	padding: 0;
+}
+
+.power-coupons-drawer-button-wrapper.wc-block-components-totals-wrapper .power-coupons-view-coupons-btn {
+	border: none;
+}
+
+div.power-coupons-drawer-trigger-wrapper .power-coupons-view-coupons-btn {
+	display: block;
+	width: 100%;
+	padding: 12px 24px;
+	background: #fff;
+	color: #111827;
+	border: 1px solid #d1d5db;
+	line-height: 16px;
+	border-radius: 4px;
+	font-size: 14px;
+	cursor: pointer;
+	transition: all 0.3s ease;
+	text-decoration: none;
+	text-align: center;
+	box-sizing: border-box;
+}
+
+div.power-coupons-drawer-trigger-wrapper .power-coupons-view-coupons-btn:hover {
+	opacity: 0.9;
+	transform: translateY( -1px );
+	box-shadow: 0 4px 8px rgba( 0, 0, 0, 0.1 );
+}
+
+div.power-coupons-drawer-trigger-wrapper .power-coupons-view-coupons-btn:focus {
+	outline: 2px solid #2196f3;
+	outline-offset: 2px;
+}
+
+div.power-coupons-drawer-trigger-wrapper .power-coupons-view-coupons-btn:focus:not( :focus-visible ) {
+	outline: none;
+}
+
+div.power-coupons-drawer-trigger-wrapper .power-coupons-view-coupons-btn svg {
+	flex-shrink: 0;
+}
+
+/* Drawer Container */
+.power-coupons-drawer {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	z-index: 999999;
+	pointer-events: none;
+	opacity: 0;
+	transition: opacity 0.3s ease;
+}
+
+.power-coupons-drawer.is-open {
+	opacity: 1;
+	pointer-events: all;
+}
+
+/* Drawer Overlay */
+.power-coupons-drawer-overlay {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	background: rgba( 0, 0, 0, 0.5 );
+	opacity: 0;
+	transition: opacity 0.3s ease;
+}
+
+.power-coupons-drawer.is-open .power-coupons-drawer-overlay {
+	opacity: 1;
+}
+
+/* Drawer Content */
+.power-coupons-drawer-content {
+	position: absolute;
+	top: 0;
+	right: 0;
+	width: 100%;
+	max-width: 365px;
+	height: 100%;
+	background: #fff;
+	box-shadow: -2px 0 8px rgba( 0, 0, 0, 0.15 );
+	display: flex;
+	flex-direction: column;
+	transform: translateX( 100% );
+	transition: transform 0.3s ease;
+}
+
+.power-coupons-drawer.is-open .power-coupons-drawer-content {
+	transform: translateX( 0 );
+}
+
+.power-coupons-drawer.is-open .power-coupons-list .power-coupons-section {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+}
+
+/* Drawer Header */
+.power-coupons-drawer-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 20px 24px;
+	border-bottom: 1px solid #e5e5e5;
+	background: #fff;
+	flex-shrink: 0;
+}
+
+.power-coupons-drawer-header h3 {
+	margin: 0;
+	font-size: 20px;
+	font-weight: 700;
+	color: #111827;
+}
+
+.power-coupons-drawer-close {
+	background: transparent;
+	border: none;
+	padding: 8px;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 4px;
+	transition: background 0.2s ease;
+	color: #6b7280;
+}
+
+.power-coupons-drawer-close:hover {
+	background: #f3f4f6;
+	color: #111827;
+}
+
+.power-coupons-drawer-close:focus {
+	background: #f3f4f6;
+	color: #111827;
+	outline: 2px solid #2196f3;
+	outline-offset: 2px;
+}
+
+.power-coupons-drawer-close:focus:not( :focus-visible ) {
+	outline: none;
+}
+
+.power-coupons-drawer-close svg {
+	width: 24px;
+	height: 24px;
+}
+
+/* Drawer Body */
+.power-coupons-drawer-body {
+	flex: 1;
+	overflow-y: auto;
+	padding: 24px;
+	background: #f9fafb;
+}
+
+/* Loading State */
+.power-coupons-drawer-loading {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	padding: 60px 20px;
+	text-align: center;
+}
+
+.power-coupons-drawer-loading.hidden {
+	display: none;
+}
+
+.power-coupons-spinner {
+	width: 48px;
+	height: 48px;
+	border: 4px solid #e5e5e5;
+	border-top-color: var( --pc-primary-color, #f06434 );
+	border-radius: 50%;
+	animation: power-coupons-spin 0.8s linear infinite;
+	margin-bottom: 16px;
+}
+
+@keyframes power-coupons-spin {
+	to {
+		transform: rotate( 360deg );
+	}
+}
+
+.power-coupons-drawer-loading p {
+	margin: 0;
+	color: #6b7280;
+	font-size: 14px;
+}
+
+/* Coupons List */
+.power-coupons-drawer-coupons-list {
+	display: none;
+}
+
+.power-coupons-drawer-coupons-list.loaded {
+	display: block;
+}
+
+/* No Coupons Message */
+.power-coupons-no-coupons {
+	text-align: center;
+	padding: 40px 20px;
+	color: #6b7280;
+}
+
+.power-coupons-no-coupons p {
+	margin: 0;
+	font-size: 14px;
+}
+
+.power-coupon-drawer-item:hover {
+	border-color: var( --pc-primary-color, #f06434 );
+	box-shadow: 0 2px 8px rgba( 0, 0, 0, 0.08 );
+}
+
+.power-coupon-drawer-item.is-applied {
+	background: #f0fdf4;
+	border-color: #86efac;
+}
+
+/* Coupon Item Header */
+.power-coupon-drawer-item-header {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	margin-bottom: 8px;
+}
+
+.power-coupon-drawer-item-code {
+	flex: 1;
+}
+
+.power-coupon-code-label {
+	display: inline-block;
+	background: #f3f4f6;
+	color: #111827;
+	padding: 6px 12px;
+	border-radius: 4px;
+	font-family: monospace;
+	font-size: 14px;
+	font-weight: 700;
+	margin-bottom: 8px;
+	border: 1px dashed #d1d5db;
+}
+
+.power-coupon-discount {
+	display: block;
+	color: var( --pc-primary-color, #f06434 );
+	font-size: 18px;
+	font-weight: 700;
+	margin-top: 4px;
+}
+
+.power-coupon-applied-badge {
+	display: inline-block;
+	background: #86efac;
+	color: #166534;
+	padding: 4px 12px;
+	border-radius: 12px;
+	font-size: 12px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+}
+
+/* Coupon Description */
+.power-coupon-drawer-item-description {
+	color: #6b7280;
+	font-size: 14px;
+	line-height: 1.5;
+	margin-bottom: 8px;
+}
+
+/* Coupon Expiry */
+.power-coupon-drawer-item-expiry {
+	color: #6b7280;
+	font-size: 12px;
+	margin-bottom: 12px;
+}
+
+/* Coupon Actions */
+.power-coupon-drawer-item-actions {
+	margin-top: 12px;
+	padding-top: 12px;
+	border-top: 1px solid #e5e5e5;
+}
+
+.power-coupon-apply-btn,
+.power-coupon-remove-btn {
+	width: 100%;
+	padding: 10px 20px;
+	border: none;
+	border-radius: 4px;
+	font-size: 14px;
+	font-weight: 600;
+	cursor: pointer;
+	transition: all 0.2s ease;
+	text-align: center;
+}
+
+.power-coupon-apply-btn {
+	background: var( --pc-primary-color, #f06434 );
+	color: var( --pc-button-text-color, #fff );
+}
+
+.power-coupon-apply-btn:hover {
+	opacity: 0.9;
+	transform: translateY( -1px );
+}
+
+.power-coupon-apply-btn:focus {
+	outline: 2px solid #2196f3;
+	outline-offset: 2px;
+}
+
+.power-coupon-apply-btn:focus:not( :focus-visible ) {
+	outline: none;
+}
+
+.power-coupon-apply-btn:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+	transform: none;
+}
+
+.power-coupon-remove-btn {
+	background: #fee2e2;
+	color: #dc2626;
+}
+
+.power-coupon-remove-btn:hover {
+	background: #fecaca;
+}
+
+.power-coupon-remove-btn:focus {
+	outline: 2px solid #2196f3;
+	outline-offset: 2px;
+}
+
+.power-coupon-remove-btn:focus:not( :focus-visible ) {
+	outline: none;
+}
+
+.power-coupon-remove-btn:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+/* Loading state for buttons */
+.power-coupon-apply-btn.loading,
+.power-coupon-remove-btn.loading {
+	opacity: 0.7;
+	cursor: wait;
+	position: relative;
+}
+
+.power-coupon-apply-btn.loading::after,
+.power-coupon-remove-btn.loading::after {
+	content: "";
+	position: absolute;
+	right: 12px;
+	top: 50%;
+	transform: translateY( -50% );
+	width: 14px;
+	height: 14px;
+	border: 2px solid currentcolor;
+	border-top-color: transparent;
+	border-radius: 50%;
+	animation: power-coupons-spin 0.6s linear infinite;
+}
+
+/* Responsive Design */
+@media ( max-width: 768px ) {
+	.power-coupons-drawer-content {
+		max-width: 100%;
+	}
+
+	.power-coupons-drawer-header {
+		padding: 16px 20px;
+	}
+
+	.power-coupons-drawer-header h3 {
+		font-size: 18px;
+	}
+
+	.power-coupons-drawer-body {
+		padding: 16px;
+	}
+}
+
+/* Scrollbar Styling */
+.power-coupons-drawer-body::-webkit-scrollbar {
+	width: 8px;
+}
+
+.power-coupons-drawer-body::-webkit-scrollbar-track {
+	background: #f1f1f1;
+}
+
+.power-coupons-drawer-body::-webkit-scrollbar-thumb {
+	background: #d1d5db;
+	border-radius: 4px;
+}
+
+.power-coupons-drawer-body::-webkit-scrollbar-thumb:hover {
+	background: #9ca3af;
+}
+
+/* Modal Display Mode */
+.power-coupons-drawer[data-display-mode="modal"] .power-coupons-drawer-content {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	right: auto;
+	transform: translate( -50%, -50% ) scale( 0.95 );
+	width: 90%;
+	max-width: 720px;
+	height: auto;
+	max-height: 80vh;
+	border-radius: 12px;
+	box-shadow: 0 25px 50px -12px rgba( 0, 0, 0, 0.25 );
+	opacity: 0;
+	transition:
+		transform 0.3s ease,
+		opacity 0.3s ease;
+}
+
+.power-coupons-drawer[data-display-mode="modal"].is-open .power-coupons-drawer-content {
+	transform: translate( -50%, -50% ) scale( 1 );
+	opacity: 1;
+}
+
+.power-coupons-drawer[data-display-mode="modal"] .power-coupons-drawer-body {
+	max-height: calc( 80vh - 72px );
+	border-radius: 0 0 12px 12px;
+}
+
+.power-coupons-drawer[data-display-mode="modal"] .power-coupons-drawer-header {
+	border-radius: 12px 12px 0 0;
+}
+
+/* Modal coupon grid - 2 columns (specificity must beat .power-coupons-drawer.is-open .power-coupons-list .power-coupons-section) */
+.power-coupons-drawer[data-display-mode="modal"].is-open .power-coupons-list .power-coupons-section {
+	display: grid;
+	grid-template-columns: repeat( 2, 1fr );
+	gap: 16px;
+}
+
+.power-coupons-drawer[data-display-mode="modal"] .power-coupons-list .power-coupons-apply-coupon-btn {
+	width: 100%;
+}
+
+.power-coupons-drawer[data-display-mode="modal"] .power-coupons-list .power-coupons-apply-coupon-btn svg {
+	width: 100%;
+	height: auto;
+}
+
+/* Modal responsive */
+@media ( max-width: 768px ) {
+	.power-coupons-drawer[data-display-mode="modal"] .power-coupons-drawer-content {
+		width: 95%;
+		max-height: 90vh;
+	}
+	.power-coupons-drawer[data-display-mode="modal"] .power-coupons-drawer-body {
+		max-height: calc( 90vh - 72px );
+	}
+	.power-coupons-drawer[data-display-mode="modal"].is-open .power-coupons-list .power-coupons-section {
+		grid-template-columns: 1fr;
+	}
+}
+
+/* Reduced motion */
+@media ( prefers-reduced-motion: reduce ) {
+	.power-coupons-drawer,
+	.power-coupons-drawer-content,
+	.power-coupons-drawer-overlay,
+	.power-coupon-apply-btn,
+	.power-coupon-remove-btn,
+	div.power-coupons-drawer-trigger-wrapper .power-coupons-view-coupons-btn {
+		transition: none;
+	}
+	div.power-coupons-drawer-trigger-wrapper .power-coupons-view-coupons-btn:hover {
+		transform: none;
+	}
+	.power-coupon-apply-btn:hover {
+		transform: none;
+	}
+	.power-coupons-spinner {
+		animation: none;
+	}
+}

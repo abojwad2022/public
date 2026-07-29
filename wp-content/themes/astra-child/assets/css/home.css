@@ -1,0 +1,273 @@
+/* ==========================================================================
+   Yazan (Astra Child) — homepage sections
+   Comma-style flow → luxury jewelry. Uses design tokens (main.css), motion
+   classes (motion.css: .yz-reveal / .yz-hero / [data-img-reveal] / [data-parallax]).
+   Loaded only on the front page (see inc/enqueue.php).
+   ========================================================================== */
+
+.yz-home { width: 100%; overflow-x: clip; }
+.yz-home-section { position: relative; }
+
+/* Headings on DARK sections must be ivory. Astra assigns a dark heading color to the heading
+   ELEMENT (higher specificity than the inherited section color), so force it back here. */
+.yz-hero__title,
+.yz-section--ink h1, .yz-section--ink h2, .yz-section--ink h3,
+.yz-cstory h2 { color: var(--yz-ivory); }
+
+/* Section vertical rhythm — luxury = whitespace. */
+.yz-home-section > .yz-container { padding-block: var(--yz-section); }
+.yz-hero > *, .yz-cstory > * { } /* hero/cstory manage their own spacing */
+
+/* Section heads */
+.yz-home-head { margin-bottom: clamp(28px, 4vw, 56px); text-align: center; position: relative; }
+.yz-home-head h2 { margin: 0; }
+.yz-home-head__intro { color: var(--yz-muted); margin: 10px 0 0; }
+.yz-section--ink .yz-home-head__intro { color: var(--yz-silver); }
+.yz-home-head__link { position: absolute; inset-inline-end: 0; bottom: 4px; }
+
+/* --------------------------------------------------------------------------
+   1b. COLLECTION SWATCHES ROW + BIG IMAGE  (commafootball top strip)
+   -------------------------------------------------------------------------- */
+.yz-swatches { background: var(--yz-ink); color: var(--yz-ivory); }
+.yz-swatches > .yz-container { padding-block: clamp(24px, 3.4vw, 44px); }
+
+/* Horizontal swatch rail — scrolls on small screens, fits on desktop. */
+.collection-swatches__grid {
+	display: grid;
+	grid-auto-flow: column;
+	grid-auto-columns: minmax(120px, 1fr);
+	gap: clamp(12px, 1.6vw, 22px);
+	overflow-x: auto;
+	scroll-snap-type: x mandatory;
+	-webkit-overflow-scrolling: touch;
+	scrollbar-width: none;
+	padding-bottom: 4px;
+}
+.collection-swatches__grid::-webkit-scrollbar { display: none; }
+
+.collection-swatch {
+	scroll-snap-align: start;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 12px;
+	text-decoration: none;
+	color: var(--yz-ivory);
+}
+.collection-swatch__media {
+	display: block; width: 100%; aspect-ratio: 4 / 5; overflow: hidden;
+	background: linear-gradient(160deg, #2a2320, var(--yz-ink));
+	border: 1px solid var(--yz-hairline);
+}
+.collection-swatch__media img {
+	width: 100%; height: 100%; object-fit: cover; display: block;
+	transition: transform 1s var(--mo-ease-out, ease);
+}
+.collection-swatch:hover .collection-swatch__media img,
+.collection-swatch:focus-visible .collection-swatch__media img { transform: scale(1.06); }
+.collection-swatch__label {
+	font-family: var(--yz-font-body);
+	font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase;
+	color: var(--yz-silver); text-align: center; line-height: 1.3;
+	transition: color 0.3s ease;
+}
+.collection-swatch:hover .collection-swatch__label,
+.collection-swatch:focus-visible .collection-swatch__label { color: var(--yz-sand); }
+
+/* Big image band directly under the swatch rail. */
+.yz-bigimage {
+	position: relative; display: flex; align-items: flex-end;
+	min-height: clamp(420px, 70vh, 760px);
+	overflow: hidden; isolation: isolate; text-decoration: none;
+	color: var(--yz-ivory); background: var(--yz-ink);
+}
+.yz-bigimage__media {
+	position: absolute; inset: 0; z-index: -2;
+	background-size: cover; background-position: center;
+	transition: transform 1.6s var(--mo-ease-out, ease);
+	/* Above-the-fold entrance: pure CSS (no scroll observer), image visible on first paint and
+	   gently settling in. Replaces the observer-gated clip-path curtain that flashed the whole
+	   fold black for ~1.2s on every load. `backwards` fill so hover-scale still works afterwards. */
+	animation: yz-bigimage-settle var(--mo-hero) var(--mo-ease-out) backwards;
+}
+@keyframes yz-bigimage-settle {
+	from { transform: scale(1.05); }
+	to   { transform: scale(1); }
+}
+.yz-bigimage__content {
+	animation: yz-fade-up var(--mo-slow) var(--mo-ease-out) 200ms backwards;
+}
+@media (prefers-reduced-motion: reduce) {
+	.yz-bigimage__media, .yz-bigimage__content { animation: none; }
+}
+.yz-bigimage:hover .yz-bigimage__media { transform: scale(1.04); }
+.yz-bigimage__scrim {
+	position: absolute; inset: 0; z-index: -1;
+	background: linear-gradient(0deg, rgba(12,11,10,0.78) 0%, rgba(12,11,10,0.28) 46%, rgba(12,11,10,0.05) 100%);
+}
+.yz-bigimage__content {
+	width: 100%; display: flex; flex-direction: column; align-items: flex-start;
+	gap: 16px; padding-block: clamp(40px, 7vh, 88px);
+}
+.yz-bigimage__eyebrow { color: var(--yz-sand); }
+.yz-bigimage__title {
+	font-family: var(--yz-font-display); font-weight: 600; line-height: 1.05;
+	font-size: clamp(30px, 5vw, 64px); max-width: 18ch; color: var(--yz-ivory);
+}
+.yz-bigimage__cta { margin-top: 6px; }
+@media (max-width: 767px) {
+	.collection-swatches__grid { grid-auto-columns: minmax(108px, 42%); }
+	.yz-bigimage { min-height: 60vh; }
+}
+
+/* --------------------------------------------------------------------------
+   2. HERO
+   -------------------------------------------------------------------------- */
+.yz-hero {
+	min-height: 92vh;
+	display: flex;
+	align-items: flex-end;
+	color: var(--yz-ivory);
+	background: radial-gradient(120% 90% at 72% 28%, #2a2320 0%, var(--yz-ink) 58%);
+	overflow: hidden;
+	isolation: isolate;
+}
+.yz-hero__media {
+	position: absolute; inset: 0; z-index: -2;
+	background-size: cover; background-position: center;
+}
+.yz-hero__scrim {
+	position: absolute; inset: 0; z-index: -1;
+	background: linear-gradient(90deg, rgba(12,11,10,0.72) 0%, rgba(12,11,10,0.35) 45%, rgba(12,11,10,0.1) 100%);
+}
+.yz-hero__inner { width: 100%; padding-block: clamp(48px, 10vh, 120px); }
+.yz-hero__eyebrow { color: var(--yz-sand); margin: 0 0 18px; }
+.yz-hero__title {
+	font-family: var(--yz-font-display);
+	font-weight: 600;
+	line-height: 1.04;
+	font-size: clamp(40px, 7vw, 88px);
+	margin: 0;
+}
+.yz-hero__intro { max-width: 44ch; margin: 22px 0 30px; color: rgba(245,241,233,0.86); font-size: 1.05rem; }
+.yz-hero__scroll {
+	position: absolute; inset-inline-start: 50%; bottom: 22px; width: 1px; height: 46px;
+	background: linear-gradient(var(--yz-sand), transparent);
+	transform: translateX(-50%);
+}
+@media (max-width: 767px) {
+	.yz-hero { min-height: 78vh; }
+	.yz-hero__scrim { background: linear-gradient(0deg, rgba(12,11,10,0.8) 0%, rgba(12,11,10,0.25) 100%); }
+}
+
+/* --------------------------------------------------------------------------
+   3. FEATURED COLLECTIONS
+   -------------------------------------------------------------------------- */
+.yz-collection-card {
+	display: block; position: relative; overflow: hidden;
+	text-decoration: none; color: var(--yz-ink);
+}
+.yz-collection-card__media {
+	display: block; aspect-ratio: 3 / 4; background-size: cover; background-position: center;
+	background-color: var(--yz-ink);
+	background-image: linear-gradient(160deg, #2a2320, var(--yz-ink));
+	transition: transform 1.2s var(--mo-ease-out);
+}
+.yz-collection-card:hover .yz-collection-card__media { transform: scale(1.05); }
+.yz-collection-card__body {
+	position: absolute; inset-inline: 0; bottom: 0;
+	display: flex; align-items: baseline; justify-content: space-between;
+	gap: 12px; padding: 18px 20px;
+	background: linear-gradient(0deg, rgba(12,11,10,0.7), transparent);
+	color: var(--yz-ivory);
+}
+.yz-collection-card__name { font-family: var(--yz-font-display); font-size: 20px; font-weight: 600; }
+.yz-collection-card__cta { color: var(--yz-sand); }
+
+/* --------------------------------------------------------------------------
+   4. BEST SELLERS — force a clean 4-up grid regardless of Woo column setting
+   -------------------------------------------------------------------------- */
+.yz-best__grid ul.products {
+	display: grid; grid-template-columns: repeat(4, 1fr); gap: 32px; margin: 0;
+}
+.yz-best__grid ul.products::before,
+.yz-best__grid ul.products::after { content: none; } /* kill Woo clearfix in grid */
+.yz-best__grid ul.products li.product { width: auto !important; margin: 0 !important; float: none !important; }
+@media (max-width: 991px) { .yz-best__grid ul.products { grid-template-columns: repeat(2, 1fr); gap: 20px; } }
+
+/* --------------------------------------------------------------------------
+   5. BRAND STORY (two column, dark)
+   -------------------------------------------------------------------------- */
+.yz-story__grid { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(28px, 5vw, 72px); align-items: center; }
+.yz-story__media { overflow: hidden; }
+.yz-story__img {
+	aspect-ratio: 4 / 5; background-size: cover; background-position: center;
+	background-image: radial-gradient(90% 80% at 40% 30%, #37302b, var(--yz-ink));
+}
+.yz-story__text h2 { margin: 8px 0 18px; }
+.yz-story__body { color: var(--yz-silver); max-width: 52ch; margin-bottom: 28px; }
+@media (max-width: 767px) { .yz-story__grid { grid-template-columns: 1fr; } }
+
+/* --------------------------------------------------------------------------
+   6. COLLECTION STORIES (full-bleed, parallax)
+   -------------------------------------------------------------------------- */
+.yz-cstory { min-height: 82vh; display: grid; grid-template-columns: 1fr 1fr; color: var(--yz-ivory); }
+.yz-cstory.is-flipped .yz-cstory__media { order: 2; }
+.yz-cstory__media { position: relative; overflow: hidden; min-height: 60vh; }
+.yz-cstory__img {
+	position: absolute; inset-inline: 0; top: -10%; height: 120%;
+	background-size: cover; background-position: center;
+	background-image: linear-gradient(150deg, #3a201f, var(--yz-ink));
+	will-change: transform;
+}
+.yz-cstory__scrim { position: absolute; inset: 0; background: rgba(12,11,10,0.28); }
+.yz-cstory__panel {
+	display: flex; flex-direction: column; justify-content: center;
+	background: var(--yz-ink);
+	padding: clamp(40px, 7vw, 96px) clamp(24px, 6vw, 88px);
+}
+.yz-cstory__panel h2 { margin: 8px 0 16px; }
+.yz-cstory__body { color: var(--yz-silver); max-width: 46ch; margin-bottom: 28px; }
+@media (max-width: 900px) {
+	.yz-cstory { grid-template-columns: 1fr; }
+	.yz-cstory.is-flipped .yz-cstory__media { order: 0; }
+}
+
+/* --------------------------------------------------------------------------
+   7. TRUST & QUALITY
+   -------------------------------------------------------------------------- */
+.yz-trust__grid { grid-template-columns: repeat(3, 1fr); text-align: center; }
+.yz-trust__item { padding: 8px; }
+.yz-trust__icon { display: inline-flex; width: 40px; height: 40px; color: var(--yz-agate); margin-bottom: 14px; }
+.yz-trust__icon svg { width: 100%; height: 100%; }
+.yz-trust__title { font-family: var(--yz-font-display); font-size: 20px; font-weight: 600; margin: 0 0 6px; }
+.yz-trust__desc { color: var(--yz-muted); margin: 0; font-size: 0.95rem; }
+@media (max-width: 767px) { .yz-trust__grid { grid-template-columns: 1fr; gap: 28px; } }
+
+/* --------------------------------------------------------------------------
+   8. REVIEWS (dark testimonials)
+   -------------------------------------------------------------------------- */
+.yz-review { margin: 0; text-align: center; padding: 8px; }
+.yz-review__stars { color: var(--yz-amber, var(--yz-sand)); letter-spacing: 0.2em; margin-bottom: 16px; }
+.yz-review__quote {
+	font-family: var(--yz-font-display); font-size: clamp(18px, 1.6vw, 22px);
+	line-height: 1.5; color: var(--yz-ivory); margin: 0 0 18px; quotes: "“" "”";
+}
+.yz-review__by { display: flex; flex-direction: column; gap: 2px; }
+.yz-review__name { color: var(--yz-ivory); letter-spacing: 0.04em; }
+.yz-review__city { color: var(--yz-silver); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.12em; }
+
+/* --------------------------------------------------------------------------
+   9. NEWSLETTER
+   -------------------------------------------------------------------------- */
+.yz-newsletter__inner { max-width: 620px; margin-inline: auto; text-align: center; }
+.yz-newsletter__title { margin: 10px 0 12px; }
+.yz-newsletter__intro { color: var(--yz-muted); margin: 0 0 26px; }
+.yz-newsletter__form { display: flex; gap: 10px; max-width: 480px; margin-inline: auto; }
+.yz-newsletter__form input[type="email"] {
+	flex: 1; border: 1px solid var(--yz-silver); background: transparent;
+	padding: 14px 16px; border-radius: 0; color: var(--yz-ink); font-size: 15px;
+}
+.yz-newsletter__form input[type="email"]:focus { outline: none; border-color: var(--yz-ink); }
+.yz-newsletter__note { margin: 12px 0 0; font-size: 0.8rem; color: var(--yz-muted); }
+@media (max-width: 480px) { .yz-newsletter__form { flex-direction: column; } }

@@ -1,0 +1,147 @@
+/* ==========================================================================
+   Yazan (Astra Child) — Mega menu
+   Turns the header's standard nav submenus (.yz-header .sub-menu, as output by HFE / Astra /
+   WordPress) into a premium dropdown, and the `.yz-mega` top-level item ("Rings") into a
+   multi-column panel. Desktop only — mobile keeps the builder's stacked/accordion behaviour.
+   Direction-agnostic (logical properties); pairs with megamenu.js for touch + keyboard.
+   ========================================================================== */
+
+@media (min-width: 922px) {
+
+	/* Anchor each dropdown to its parent item. */
+	.yazan .yz-header .menu-item-has-children {
+		position: relative;
+	}
+
+	/* ----- Base dropdown panel (hidden until hover / focus / .yz-open) ----- */
+	.yazan .yz-header .sub-menu {
+		position: absolute;
+		inset-block-start: 100%;
+		inset-inline-start: 0;
+		z-index: 1000;
+		min-width: 230px;
+		margin: 0;
+		padding: 14px 0;
+		list-style: none;
+		background: #fff;
+		border: 1px solid var(--yz-hairline, rgba(20, 18, 16, 0.10));
+		box-shadow: 0 18px 44px rgba(20, 18, 16, 0.10);
+		opacity: 0;
+		visibility: hidden;
+		/* CRITICAL: the mega panel's 3rd-level submenu re-asserts `visibility: visible` (below) so it
+		   can show inline inside the panel. Because a descendant's `visibility: visible` overrides an
+		   ancestor's `visibility: hidden`, that 3rd level stays hit-testable even while the panel is
+		   "hidden" — and since the panel sits absolutely at top:100%/left:0 over the page's top-left,
+		   hovering that transparent dead zone was opening the menu. `pointer-events: none` on the
+		   hidden panel (inherited by all descendants) stops it capturing hover regardless of visibility. */
+		pointer-events: none;
+		transform: translateY(10px);
+		transition: opacity 0.28s var(--mo-ease-out, ease),
+		            transform 0.28s var(--mo-ease-out, ease),
+		            visibility 0.28s;
+	}
+
+	.yazan .yz-header .menu-item-has-children:hover > .sub-menu,
+	.yazan .yz-header .menu-item-has-children:focus-within > .sub-menu,
+	.yazan .yz-header .menu-item-has-children.yz-open > .sub-menu {
+		opacity: 1;
+		visibility: visible;
+		pointer-events: auto;
+		transform: translateY(0);
+	}
+
+	/* Submenu links — quiet, legible, brand hover. No growing underline in the panel. */
+	.yazan .yz-header .sub-menu .menu-item > a {
+		display: block;
+		padding: 8px 22px;
+		font-family: var(--yz-font-body, inherit);
+		font-size: 13px;
+		line-height: 1.4;
+		letter-spacing: 0.04em;
+		text-transform: none;
+		white-space: nowrap;
+		color: var(--yz-ink, #14120f) !important;
+	}
+	.yazan .yz-header .sub-menu .menu-item > a:hover,
+	.yazan .yz-header .sub-menu .menu-item > a:focus {
+		color: var(--yz-agate, #8a2b1f) !important;
+	}
+	.yazan .yz-header .sub-menu .menu-item > a::after {
+		display: none !important; /* suppress the header's growing-underline inside panels */
+	}
+
+	/* ----- Mega panel: "Rings" — columns of audience → hero-material ----- */
+	.yazan .yz-header .yz-mega > .sub-menu {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 4px 44px;
+		min-width: 560px;
+		max-width: calc(100vw - 40px);
+		padding: 28px 32px;
+	}
+
+	/* Second level = a column. */
+	.yazan .yz-header .yz-mega > .sub-menu > .menu-item {
+		flex: 0 0 auto;
+		min-width: 150px;
+	}
+
+	/* Column heading (the second-level link) — display serif + hairline underline. */
+	.yazan .yz-header .yz-mega > .sub-menu > .menu-item > a {
+		padding: 0 0 8px;
+		margin-block-end: 6px;
+		font-family: var(--yz-font-display, serif);
+		font-size: 16px;
+		font-weight: 600;
+		letter-spacing: 0.01em;
+		border-block-end: 1px solid var(--yz-hairline, rgba(20, 18, 16, 0.10));
+		white-space: nowrap;
+	}
+
+	/* Third level shown inline beneath its column heading (no flyout). */
+	.yazan .yz-header .yz-mega > .sub-menu .sub-menu {
+		position: static;
+		min-width: 0;
+		padding: 4px 0 0;
+		border: 0;
+		box-shadow: none;
+		background: transparent;
+		opacity: 1;
+		visibility: visible;
+		transform: none;
+	}
+	.yazan .yz-header .yz-mega > .sub-menu .sub-menu .menu-item > a {
+		padding: 6px 0;
+		color: var(--yz-muted, #6b6258) !important;
+	}
+	.yazan .yz-header .yz-mega > .sub-menu .sub-menu .menu-item > a:hover,
+	.yazan .yz-header .yz-mega > .sub-menu .sub-menu .menu-item > a:focus {
+		color: var(--yz-agate, #8a2b1f) !important;
+	}
+
+	/* ----- Simple variant: "Collections" — one elegant column ----- */
+	.yazan .yz-header .yz-mega--simple > .sub-menu {
+		display: block;
+		flex-wrap: initial;
+		min-width: 240px;
+		padding: 14px 0;
+	}
+	.yazan .yz-header .yz-mega--simple > .sub-menu > .menu-item > a {
+		padding: 8px 22px;
+		margin-block-end: 0;
+		font-family: var(--yz-font-body, inherit);
+		font-size: 13px;
+		font-weight: 400;
+		border-block-end: 0;
+	}
+
+	/* Keep the panel on-screen for items sitting near the inline-end edge of the bar. */
+	.yazan .yz-header .menu-item-has-children:nth-last-child(-n+2) > .sub-menu {
+		inset-inline-start: auto;
+		inset-inline-end: 0;
+	}
+	.yazan .yz-header .yz-mega:nth-last-child(-n+2) > .sub-menu {
+		inset-inline-start: auto;
+		inset-inline-end: 0;
+	}
+}

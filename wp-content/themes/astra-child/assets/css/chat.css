@@ -1,0 +1,560 @@
+/**
+ * Yazan — storefront AI concierge ("Atelier Concierge").
+ *
+ * Editorial-luxury, sharp-edged design (brand radius = 0), styled ENTIRELY through the semantic theme
+ * tokens (--yz-bg / -surface / -surface-2 / -text / -text-muted / -border / -primary / -on-primary /
+ * -accent / -gold / -focus / -scrim / -shadow-*), so it re-tints automatically for the Black and
+ * Burgundy themes. Logical properties throughout, so it mirrors under RTL with no extra rules. Aged-gold
+ * is the sparing luxury accent; the serif (--yz-font-display) is used only for the title & monogram.
+ * Positioned bottom-start to stay clear of the mini-cart bubble (bottom-end).
+ */
+
+.yz-chat {
+	position: fixed;
+	inset-block-end: 1.25rem;
+	inset-inline-start: 1.25rem;
+	z-index: 99990;
+	font-family: var(--yz-font-body, inherit);
+}
+
+/* A class-level `display` beats the UA `[hidden]{display:none}` rule, so restore it explicitly. */
+.yz-chat[hidden],
+.yz-chat__panel[hidden],
+.yz-chat__nudge[hidden] {
+	display: none;
+}
+
+/* ---------- Launcher ---------- */
+
+.yz-chat__launcher {
+	position: relative;
+	display: inline-flex;
+	align-items: center;
+	gap: 0.55rem;
+	padding: 0.72rem 1.15rem;
+	background: var(--yz-primary, #141210);
+	color: var(--yz-on-primary, #f5f1e9);
+	border: 1px solid var(--yz-gold, #9a7b3f);
+	border-radius: var(--yz-radius, 0);
+	box-shadow: var(--yz-shadow-lg, 0 24px 48px -24px rgba(0, 0, 0, 0.4));
+	cursor: pointer;
+	font-family: var(--yz-font-body, inherit);
+	font-size: 0.78rem;
+	font-weight: 500;
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	animation: yz-chat-rise 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+	transition: transform 240ms cubic-bezier(0.22, 1, 0.36, 1), background 240ms, box-shadow 240ms, border-color 240ms;
+}
+
+.yz-chat__launcher:hover {
+	transform: translateY(-2px);
+	border-color: var(--yz-gold, #c9a24b);
+	box-shadow: var(--yz-shadow-lg, 0 28px 60px -22px rgba(0, 0, 0, 0.6));
+}
+
+.yz-chat__launcher:focus-visible {
+	outline: 2px solid var(--yz-focus, #8c2f24);
+	outline-offset: 3px;
+}
+
+.yz-chat__launcher-icon {
+	display: inline-flex;
+	color: var(--yz-gold, #9a7b3f);
+}
+
+/* Small gold "online" dot on the launcher. */
+.yz-chat__launcher::after {
+	content: "";
+	position: absolute;
+	inset-block-start: 0.5rem;
+	inset-inline-end: 0.5rem;
+	width: 6px;
+	height: 6px;
+	border-radius: var(--yz-radius-pill, 999px);
+	background: var(--yz-gold, #9a7b3f);
+	box-shadow: 0 0 0 0 var(--yz-gold, #9a7b3f);
+	animation: yz-chat-pulse 2.4s ease-out infinite;
+}
+
+@media (max-width: 480px) {
+	.yz-chat__launcher-label {
+		display: none;
+	}
+	.yz-chat__launcher {
+		padding: 0.72rem;
+	}
+}
+
+/* ---------- Attention nudge ---------- */
+
+.yz-chat__nudge {
+	position: absolute;
+	inset-block-end: calc(100% + 0.65rem);
+	inset-inline-start: 0;
+	width: max-content;
+	max-width: min(260px, calc(100vw - 2.5rem));
+	display: flex;
+	align-items: center;
+	gap: 0.6rem;
+	padding: 0.7rem 0.85rem;
+	background: var(--yz-surface, #fff);
+	color: var(--yz-text, #141210);
+	border: 1px solid var(--yz-border, rgba(0, 0, 0, 0.14));
+	border-block-start: 2px solid var(--yz-gold, #9a7b3f);
+	box-shadow: var(--yz-shadow-lg, 0 24px 48px -24px rgba(0, 0, 0, 0.4));
+	animation: yz-chat-rise 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.yz-chat__nudge-text {
+	font-size: 0.82rem;
+	line-height: 1.35;
+	cursor: pointer;
+}
+
+.yz-chat__nudge-close {
+	flex-shrink: 0;
+	background: none;
+	border: 0;
+	color: var(--yz-text-muted, #6e6a63);
+	font-size: 1.1rem;
+	line-height: 1;
+	cursor: pointer;
+	padding: 0;
+	transition: color 160ms;
+}
+
+.yz-chat__nudge-close:hover {
+	color: var(--yz-accent, #8c2f24);
+}
+
+/* ---------- Panel ---------- */
+
+.yz-chat__panel {
+	position: absolute;
+	inset-block-end: calc(100% + 0.75rem);
+	inset-inline-start: 0;
+	width: min(384px, calc(100vw - 2.5rem));
+	height: min(600px, calc(100vh - 7rem));
+	display: flex;
+	flex-direction: column;
+	background: var(--yz-surface, #fff);
+	color: var(--yz-text, #141210);
+	border: 1px solid var(--yz-border, rgba(0, 0, 0, 0.14));
+	border-block-start: 2px solid var(--yz-gold, #9a7b3f);
+	box-shadow: var(--yz-shadow-lg, 0 24px 48px -24px rgba(0, 0, 0, 0.4));
+	overflow: hidden;
+	transform-origin: bottom left;
+	animation: yz-chat-panel-in 300ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+[dir="rtl"] .yz-chat__panel {
+	transform-origin: bottom right;
+}
+
+@keyframes yz-chat-panel-in {
+	from {
+		opacity: 0;
+		transform: translateY(14px) scale(0.98);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0) scale(1);
+	}
+}
+
+@keyframes yz-chat-rise {
+	from {
+		opacity: 0;
+		transform: translateY(10px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+@keyframes yz-chat-pulse {
+	0% {
+		box-shadow: 0 0 0 0 color-mix(in srgb, var(--yz-gold, #9a7b3f) 60%, transparent);
+	}
+	70%,
+	100% {
+		box-shadow: 0 0 0 7px transparent;
+	}
+}
+
+/* ---------- Header ---------- */
+
+.yz-chat__head {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	padding: 0.9rem 1rem;
+	background: var(--yz-primary, #141210);
+	color: var(--yz-on-primary, #f5f1e9);
+	border-block-end: 1px solid var(--yz-gold, #9a7b3f);
+}
+
+.yz-chat__avatar {
+	flex-shrink: 0;
+	width: 38px;
+	height: 38px;
+	display: grid;
+	place-items: center;
+	font-family: var(--yz-font-display, serif);
+	font-size: 1.15rem;
+	line-height: 1;
+	color: var(--yz-gold, #9a7b3f);
+	background: rgba(255, 255, 255, 0.05);
+	border: 1px solid var(--yz-gold, #9a7b3f);
+}
+
+.yz-chat__head-text {
+	display: flex;
+	flex-direction: column;
+	gap: 0.15rem;
+	line-height: 1.2;
+	flex: 1;
+	min-width: 0;
+}
+
+.yz-chat__title {
+	font-family: var(--yz-font-display, serif);
+	font-size: 1rem;
+	letter-spacing: 0.02em;
+}
+
+.yz-chat__status {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.4rem;
+	font-size: 0.68rem;
+	letter-spacing: 0.04em;
+	opacity: 0.85;
+}
+
+.yz-chat__dot {
+	width: 6px;
+	height: 6px;
+	border-radius: var(--yz-radius-pill, 999px);
+	background: var(--yz-gold, #9a7b3f);
+	box-shadow: 0 0 0 0 var(--yz-gold, #9a7b3f);
+	animation: yz-chat-pulse 2.4s ease-out infinite;
+}
+
+.yz-chat__close {
+	flex-shrink: 0;
+	background: none;
+	border: 0;
+	color: inherit;
+	font-size: 1.5rem;
+	line-height: 1;
+	cursor: pointer;
+	opacity: 0.75;
+	transition: opacity 160ms, color 160ms;
+}
+
+.yz-chat__close:hover {
+	opacity: 1;
+	color: var(--yz-gold, #9a7b3f);
+}
+
+/* ---------- Log ---------- */
+
+.yz-chat__log {
+	flex: 1;
+	overflow-y: auto;
+	padding: 1.1rem;
+	display: flex;
+	flex-direction: column;
+	gap: 0.7rem;
+	background: var(--yz-bg, #f5f1e9);
+	scrollbar-width: thin;
+	scrollbar-color: var(--yz-border-strong, rgba(0, 0, 0, 0.28)) transparent;
+}
+
+.yz-chat__log::-webkit-scrollbar {
+	width: 7px;
+}
+
+.yz-chat__log::-webkit-scrollbar-thumb {
+	background: var(--yz-border-strong, rgba(0, 0, 0, 0.28));
+}
+
+/* ---------- Messages ---------- */
+
+.yz-chat__msg {
+	max-width: 82%;
+	padding: 0.65rem 0.85rem;
+	font-size: 0.86rem;
+	line-height: 1.55;
+	white-space: pre-wrap;
+	word-wrap: break-word;
+	border: 1px solid var(--yz-border, rgba(0, 0, 0, 0.12));
+	animation: yz-chat-rise 300ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.yz-chat__msg--assistant {
+	align-self: flex-start;
+	background: var(--yz-surface, #fff);
+	color: var(--yz-text, #141210);
+}
+
+.yz-chat__msg--user {
+	align-self: flex-end;
+	background: var(--yz-primary, #141210);
+	color: var(--yz-on-primary, #f5f1e9);
+	border-color: var(--yz-primary, #141210);
+	border-inline-end: 2px solid var(--yz-gold, #9a7b3f);
+}
+
+/* Typing indicator */
+.yz-chat__typing {
+	display: inline-flex;
+	gap: 4px;
+	align-items: center;
+}
+
+.yz-chat__typing span {
+	width: 6px;
+	height: 6px;
+	border-radius: var(--yz-radius-pill, 999px);
+	background: var(--yz-gold, #9a7b3f);
+	animation: yz-chat-bounce 1.1s infinite ease-in-out;
+}
+
+.yz-chat__typing span:nth-child(2) {
+	animation-delay: 0.15s;
+}
+
+.yz-chat__typing span:nth-child(3) {
+	animation-delay: 0.3s;
+}
+
+@keyframes yz-chat-bounce {
+	0%,
+	80%,
+	100% {
+		transform: translateY(0);
+		opacity: 0.4;
+	}
+	40% {
+		transform: translateY(-4px);
+		opacity: 1;
+	}
+}
+
+/* ---------- Quick-reply chips ---------- */
+
+.yz-chat__chips {
+	align-self: flex-start;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.4rem;
+	max-width: 100%;
+	animation: yz-chat-rise 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.yz-chat__chip {
+	padding: 0.4rem 0.7rem;
+	background: transparent;
+	color: var(--yz-text-2, #4a4540);
+	border: 1px solid var(--yz-border-strong, rgba(0, 0, 0, 0.28));
+	font-family: var(--yz-font-body, inherit);
+	font-size: 0.76rem;
+	letter-spacing: 0.02em;
+	cursor: pointer;
+	transition: color 180ms, border-color 180ms, transform 180ms;
+}
+
+.yz-chat__chip:hover {
+	color: var(--yz-gold, #9a7b3f);
+	border-color: var(--yz-gold, #9a7b3f);
+	transform: translateY(-1px);
+}
+
+/* ---------- Product cards ---------- */
+
+.yz-chat__cards {
+	align-self: flex-start;
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+	width: 100%;
+	animation: yz-chat-rise 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.yz-chat__card {
+	display: flex;
+	gap: 0.75rem;
+	padding: 0.55rem;
+	background: var(--yz-surface, #fff);
+	border: 1px solid var(--yz-border, rgba(0, 0, 0, 0.12));
+	text-decoration: none;
+	color: var(--yz-text, #141210);
+	transition: border-color 200ms, transform 200ms, box-shadow 200ms;
+}
+
+.yz-chat__card:hover {
+	border-color: var(--yz-gold, #9a7b3f);
+	transform: translateY(-2px);
+	box-shadow: var(--yz-shadow-md, 0 12px 30px -14px rgba(0, 0, 0, 0.22));
+}
+
+.yz-chat__card-img {
+	width: 64px;
+	height: 64px;
+	object-fit: cover;
+	flex-shrink: 0;
+	border: 1px solid var(--yz-border, rgba(0, 0, 0, 0.1));
+	transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.yz-chat__card:hover .yz-chat__card-img {
+	transform: scale(1.05);
+}
+
+.yz-chat__card-body {
+	display: flex;
+	flex-direction: column;
+	gap: 0.2rem;
+	min-width: 0;
+	justify-content: center;
+}
+
+.yz-chat__card-name {
+	font-family: var(--yz-font-display, serif);
+	font-size: 0.9rem;
+	line-height: 1.25;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	display: -webkit-box;
+	-webkit-line-clamp: 2;
+	-webkit-box-orient: vertical;
+}
+
+.yz-chat__card-price {
+	font-size: 0.82rem;
+	color: var(--yz-accent, #8c2f24);
+}
+
+.yz-chat__card-cta {
+	font-size: 0.64rem;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+	color: var(--yz-gold, #9a7b3f);
+}
+
+/* ---------- Form ---------- */
+
+.yz-chat__form {
+	display: flex;
+	gap: 0.5rem;
+	padding: 0.75rem;
+	border-block-start: 1px solid var(--yz-border, rgba(0, 0, 0, 0.12));
+	background: var(--yz-surface, #fff);
+}
+
+.yz-chat__input {
+	flex: 1;
+	min-width: 0;
+	padding: 0.65rem 0.8rem;
+	background: var(--yz-surface-2, #f5f1e9);
+	border: 1px solid var(--yz-border, rgba(0, 0, 0, 0.15));
+	color: var(--yz-text, #141210);
+	border-radius: var(--yz-radius, 0);
+	font-size: 0.86rem;
+	font-family: var(--yz-font-body, inherit);
+}
+
+.yz-chat__input::placeholder {
+	color: var(--yz-text-muted, #6e6a63);
+}
+
+.yz-chat__input:focus {
+	outline: 2px solid var(--yz-focus, #8c2f24);
+	outline-offset: 1px;
+}
+
+.yz-chat__send {
+	display: inline-grid;
+	place-items: center;
+	width: 44px;
+	flex-shrink: 0;
+	background: var(--yz-primary, #141210);
+	color: var(--yz-gold, #9a7b3f);
+	border: 1px solid var(--yz-gold, #9a7b3f);
+	cursor: pointer;
+	transition: background 200ms, color 200ms;
+}
+
+.yz-chat__send:hover {
+	background: var(--yz-gold, #9a7b3f);
+	color: var(--yz-primary, #141210);
+}
+
+/* Send glyph points the way the language reads. */
+[dir="rtl"] .yz-chat__send svg {
+	transform: scaleX(-1);
+}
+
+/* Voice input — hidden by JS where unsupported. Gold when actively listening. */
+.yz-chat__mic {
+	display: inline-grid;
+	place-items: center;
+	width: 40px;
+	flex-shrink: 0;
+	background: transparent;
+	color: var(--yz-text-muted, #6e6a63);
+	border: 1px solid var(--yz-border, rgba(0, 0, 0, 0.15));
+	cursor: pointer;
+	transition: color 180ms, border-color 180ms, background 180ms;
+}
+
+.yz-chat__mic:hover {
+	color: var(--yz-gold, #9a7b3f);
+	border-color: var(--yz-gold, #9a7b3f);
+}
+
+.yz-chat__mic.is-listening {
+	color: var(--yz-primary, #141210);
+	background: var(--yz-gold, #9a7b3f);
+	border-color: var(--yz-gold, #9a7b3f);
+	animation: yz-chat-mic-pulse 1.4s ease-out infinite;
+}
+
+@keyframes yz-chat-mic-pulse {
+	0% {
+		box-shadow: 0 0 0 0 color-mix(in srgb, var(--yz-gold, #9a7b3f) 55%, transparent);
+	}
+	70%,
+	100% {
+		box-shadow: 0 0 0 8px transparent;
+	}
+}
+
+/* ---------- Reduced motion ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+	.yz-chat__panel,
+	.yz-chat__launcher,
+	.yz-chat__nudge,
+	.yz-chat__msg,
+	.yz-chat__chips,
+	.yz-chat__cards {
+		animation: none;
+	}
+	.yz-chat__launcher,
+	.yz-chat__card,
+	.yz-chat__chip,
+	.yz-chat__mic {
+		transition: none;
+	}
+	.yz-chat__launcher::after,
+	.yz-chat__dot,
+	.yz-chat__typing span,
+	.yz-chat__mic.is-listening {
+		animation: none;
+	}
+}

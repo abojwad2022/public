@@ -1,0 +1,689 @@
+/* `source('./')` pins class scanning to src/. Without it, importing the token
+   file from ../../assets/ widens automatic source detection into the plugin's
+   assets folder, where Tailwind would scan the 476 kB built app.js and resurrect
+   every class it has ever purged. */
+@import 'tailwindcss' source('./');
+@import '../../assets/css/yz-tokens.css';
+
+/*
+ * Yazan dashboard — design system entry point.
+ *
+ * The real token values live in yazan-core/assets/css/yz-tokens.css, which is
+ * shared verbatim with the Yazan Rewards iframes and the wp-admin surfaces, so
+ * there is exactly one definition of the palette across the whole product.
+ * The @theme block below only RE-EXPORTS those custom properties as Tailwind
+ * tokens, which is what turns them into utilities (bg-surface, rounded-lg,
+ * shadow-2, text-xl …). Components therefore never hardcode a value.
+ *
+ * Fonts are NOT imported here — see assets/css/yz-fonts.css, which the PHP shell
+ * links directly so every surface shares one cached copy.
+ *
+ * The theme attribute is stamped on <html> before first paint by the inline boot
+ * script in class-yazan-dashboard.php, so there is no flash of the wrong theme.
+ */
+
+@theme {
+  /* --- Colour ----------------------------------------------------------- */
+  --color-canvas: var(--yz-canvas);
+  --color-sunken: var(--yz-sunken);
+  --color-surface: var(--yz-surface);
+  --color-surface2: var(--yz-surface2);
+  --color-raised: var(--yz-raised);
+  --color-scrim: var(--yz-scrim);
+
+  --color-edge: var(--yz-edge);
+  --color-edge-strong: var(--yz-edge-strong);
+  --color-divider: var(--yz-divider);
+
+  /* Interaction state layers — bg-hover / bg-active / bg-selected. */
+  --color-hover: var(--yz-hover);
+  --color-active: var(--yz-active);
+  --color-selected: var(--yz-selected);
+  --color-focus: var(--yz-focus);
+
+  --color-fg: var(--yz-fg);
+  --color-muted: var(--yz-muted);
+  --color-faint: var(--yz-faint);
+
+  --color-agate: var(--yz-agate);
+  --color-agate-hover: var(--yz-agate-hover);
+  --color-agate-active: var(--yz-agate-active);
+  --color-agate-fg: var(--yz-agate-fg);
+  --color-agate-bg: var(--yz-agate-bg);
+  /* Retained so pre-existing markup keeps working during the migration. */
+  --color-agate-lift: var(--yz-agate-hover);
+
+  --color-gold: var(--yz-gold);
+  --color-gold-hover: var(--yz-gold-hover);
+  --color-gold-bg: var(--yz-gold-bg);
+  --color-oncontrast: var(--yz-oncontrast);
+
+  --color-ok: var(--yz-ok);
+  --color-ok-solid: var(--yz-ok-solid);
+  --color-ok-bg: var(--yz-ok-bg);
+  --color-ok-border: var(--yz-ok-border);
+
+  --color-warn: var(--yz-warn);
+  --color-warn-solid: var(--yz-warn-solid);
+  --color-warn-bg: var(--yz-warn-bg);
+  --color-warn-border: var(--yz-warn-border);
+
+  --color-danger: var(--yz-danger);
+  --color-danger-solid: var(--yz-danger-solid);
+  --color-danger-bg: var(--yz-danger-bg);
+  --color-danger-border: var(--yz-danger-border);
+
+  --color-info: var(--yz-info);
+  --color-info-solid: var(--yz-info-solid);
+  --color-info-bg: var(--yz-info-bg);
+  --color-info-border: var(--yz-info-border);
+
+  --color-viz-1: var(--yz-viz-1);
+  --color-viz-2: var(--yz-viz-2);
+  --color-viz-3: var(--yz-viz-3);
+  --color-viz-4: var(--yz-viz-4);
+  --color-viz-5: var(--yz-viz-5);
+  --color-viz-6: var(--yz-viz-6);
+  --color-viz-grid: var(--yz-viz-grid);
+  --color-viz-axis: var(--yz-viz-axis);
+
+  /* --- Type ------------------------------------------------------------- */
+  --font-sans: var(--yz-font-sans);
+  --font-display: var(--yz-font-display);
+  --font-arabic: var(--yz-font-arabic);
+  --font-mono: var(--yz-font-mono);
+
+  --text-2xs: var(--yz-text-2xs);
+  --text-2xs--line-height: var(--yz-text-2xs--line-height);
+  --text-xs: var(--yz-text-xs);
+  --text-xs--line-height: var(--yz-text-xs--line-height);
+  --text-sm: var(--yz-text-sm);
+  --text-sm--line-height: var(--yz-text-sm--line-height);
+  --text-base: var(--yz-text-base);
+  --text-base--line-height: var(--yz-text-base--line-height);
+  --text-md: var(--yz-text-md);
+  --text-md--line-height: var(--yz-text-md--line-height);
+  --text-lg: var(--yz-text-lg);
+  --text-lg--line-height: var(--yz-text-lg--line-height);
+  --text-xl: var(--yz-text-xl);
+  --text-xl--line-height: var(--yz-text-xl--line-height);
+  --text-2xl: var(--yz-text-2xl);
+  --text-2xl--line-height: var(--yz-text-2xl--line-height);
+  --text-3xl: var(--yz-text-3xl);
+  --text-3xl--line-height: var(--yz-text-3xl--line-height);
+
+  --tracking-tight: var(--yz-tracking-tight);
+  --tracking-normal: var(--yz-tracking-normal);
+  --tracking-wide: var(--yz-tracking-wide);
+
+  /* --- Radius ----------------------------------------------------------- */
+  --radius-xs: var(--yz-radius-xs);
+  --radius-sm: var(--yz-radius-sm);
+  --radius-md: var(--yz-radius-md);
+  --radius-lg: var(--yz-radius-lg);
+  --radius-xl: var(--yz-radius-xl);
+
+  /* --- Elevation -------------------------------------------------------- */
+  --shadow-1: var(--yz-shadow-1);
+  --shadow-2: var(--yz-shadow-2);
+  --shadow-3: var(--yz-shadow-3);
+  --shadow-4: var(--yz-shadow-4);
+
+  /* --- Motion ----------------------------------------------------------- */
+  --ease-yz: var(--yz-ease);
+  --ease-yz-in-out: var(--yz-ease-in-out);
+
+  /* --- Layout ----------------------------------------------------------- */
+  --container-page: 96rem; /* max content width — keeps line lengths sane on wide monitors */
+}
+
+/* ==========================================================================
+   Base
+   ========================================================================== */
+
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    background-color: var(--yz-canvas);
+    color: var(--yz-fg);
+    font-family: var(--yz-font-sans);
+    font-size: var(--yz-text-base);
+    line-height: var(--yz-text-base--line-height);
+    letter-spacing: var(--yz-tracking-tight);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Headings carry the display serif; everything else stays in the UI sans. */
+  h1,
+  h2,
+  h3 {
+    letter-spacing: var(--yz-tracking-normal);
+  }
+
+  /* --- Selection --------------------------------------------------------- */
+  ::selection {
+    background: var(--yz-selected);
+    color: var(--yz-fg);
+  }
+
+  /* --- Numerals ---------------------------------------------------------
+     Prices, quantities and KPIs must line up in a column, so every numeric
+     context opts into tabular figures. Applied to table cells wholesale, since
+     tables are where misaligned digits hurt most.
+     `font-variant-numeric` on purpose, NOT `font-feature-settings`: the latter
+     is low-level and RESETS the whole inherited feature set, so it would
+     silently discard any character-variant features set further up. */
+  .yz-num,
+  td,
+  th,
+  input[type='number'],
+  .yz-input[inputmode='numeric'],
+  .yz-input[inputmode='decimal'] {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* --- Arabic / RTL ------------------------------------------------------
+     Arabic is cursive: letters JOIN. Any letter-spacing severs those joins and
+     renders the text broken, so tracking is neutralised outright for Arabic
+     text, and the Arabic UI face is substituted. */
+  :lang(ar),
+  [dir='rtl'] {
+    font-family: var(--yz-font-arabic);
+  }
+
+  :lang(ar),
+  :lang(ar) * {
+    letter-spacing: normal !important;
+    font-feature-settings: normal;
+  }
+
+  /* --- Scrollbars -------------------------------------------------------- */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--yz-edge) transparent;
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--yz-edge);
+    border-radius: var(--yz-radius-full);
+    border: 2px solid transparent;
+    background-clip: content-box;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--yz-edge-strong);
+    background-clip: content-box;
+  }
+
+  /* --- Theme crossfade ---------------------------------------------------
+     Applied by lib/theme.js only while a toggle is in flight, so the initial
+     paint never animates. */
+  html.yz-theme-animating,
+  html.yz-theme-animating * {
+    transition:
+      background-color var(--yz-duration-slow) var(--yz-ease),
+      border-color var(--yz-duration-slow) var(--yz-ease),
+      color var(--yz-duration-slow) var(--yz-ease);
+  }
+
+  /* Honour a reduced-motion preference everywhere, including third-party markup
+     rendered inside the Rewards iframes. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+/* ==========================================================================
+   Components
+   Tailwind v4 cannot @apply one custom component class inside another, so
+   `.yz-btn` carries the shared shape and the variants carry colour only.
+   Always use them together: class="yz-btn yz-btn-primary".
+   ========================================================================== */
+
+@layer components {
+  /* --- Skip link --------------------------------------------------------- */
+  .yz-skip-link {
+    position: fixed;
+    inset-block-start: 0;
+    inset-inline-start: 0;
+    z-index: var(--yz-z-toast);
+    transform: translateY(-120%);
+    background: var(--yz-surface);
+    color: var(--yz-fg);
+    border: 1px solid var(--yz-edge);
+    border-radius: var(--yz-radius-md);
+    box-shadow: var(--yz-shadow-3);
+    padding: 0.625rem 1rem;
+    margin: 0.5rem;
+    font-size: var(--yz-text-sm);
+    transition: transform var(--yz-duration) var(--yz-ease);
+  }
+  .yz-skip-link:focus-visible {
+    transform: translateY(0);
+  }
+
+  /* --- Form primitives --------------------------------------------------- */
+  .yz-input {
+    /* A flex/grid child defaults to min-width:auto, and a <select>'s min-content
+       width is its longest option — which blew the filter row wider than a phone
+       screen however it wrapped. These two lines keep any control inside its
+       track. */
+    min-width: 0;
+    max-width: 100%;
+    inline-size: 100%;
+    min-block-size: var(--yz-control-lg);
+    background: var(--yz-sunken);
+    border: 1px solid var(--yz-edge-strong);
+    border-radius: var(--yz-radius-md);
+    padding: 0.375rem 0.6875rem;
+    color: var(--yz-fg);
+    font-size: var(--yz-text-base);
+    font-family: inherit;
+    transition:
+      border-color var(--yz-duration-fast) var(--yz-ease),
+      background-color var(--yz-duration-fast) var(--yz-ease);
+  }
+  .yz-input::placeholder {
+    color: var(--yz-faint);
+  }
+  .yz-input:hover:not(:disabled):not([aria-invalid='true']) {
+    border-color: var(--yz-faint);
+  }
+  .yz-input[aria-invalid='true'] {
+    border-color: var(--yz-danger);
+  }
+  .yz-input:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+  /* select needs room for its own chevron */
+  select.yz-input {
+    padding-inline-end: 1.75rem;
+  }
+
+  .yz-label {
+    display: block;
+    margin-block-end: 0.375rem;
+    font-size: var(--yz-text-xs);
+    font-weight: 500;
+    line-height: var(--yz-text-xs--line-height);
+    color: var(--yz-muted);
+  }
+
+  .yz-help {
+    margin-block-start: 0.3125rem;
+    font-size: var(--yz-text-xs);
+    line-height: var(--yz-text-xs--line-height);
+    color: var(--yz-faint);
+  }
+
+  .yz-error {
+    margin-block-start: 0.3125rem;
+    font-size: var(--yz-text-xs);
+    line-height: var(--yz-text-xs--line-height);
+    color: var(--yz-danger);
+  }
+
+  /* --- Buttons ----------------------------------------------------------- */
+  .yz-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4375rem;
+    block-size: var(--yz-control-lg);
+    padding-inline: 0.875rem;
+    border: 1px solid transparent;
+    border-radius: var(--yz-radius-md);
+    font-size: var(--yz-text-sm);
+    font-weight: 500;
+    line-height: 1;
+    white-space: nowrap;
+    user-select: none;
+    cursor: pointer;
+    transition:
+      background-color var(--yz-duration-fast) var(--yz-ease),
+      border-color var(--yz-duration-fast) var(--yz-ease),
+      color var(--yz-duration-fast) var(--yz-ease);
+  }
+  .yz-btn:disabled,
+  .yz-btn[aria-disabled='true'] {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .yz-btn-primary {
+    background: var(--yz-agate);
+    border-color: var(--yz-agate);
+    color: #fff;
+  }
+  .yz-btn-primary:hover:not(:disabled) {
+    background: var(--yz-agate-hover);
+    border-color: var(--yz-agate-hover);
+  }
+  .yz-btn-primary:active:not(:disabled) {
+    background: var(--yz-agate-active);
+    border-color: var(--yz-agate-active);
+  }
+
+  .yz-btn-secondary {
+    background: var(--yz-surface);
+    border-color: var(--yz-edge-strong);
+    color: var(--yz-fg);
+  }
+  .yz-btn-secondary:hover:not(:disabled) {
+    background: var(--yz-surface2);
+    border-color: var(--yz-faint);
+  }
+
+  .yz-btn-ghost {
+    background: transparent;
+    border-color: var(--yz-edge);
+    color: var(--yz-fg);
+  }
+  .yz-btn-ghost:hover:not(:disabled) {
+    background: var(--yz-hover);
+    border-color: var(--yz-faint);
+  }
+
+  .yz-btn-quiet {
+    background: transparent;
+    border-color: transparent;
+    color: var(--yz-muted);
+  }
+  .yz-btn-quiet:hover:not(:disabled) {
+    background: var(--yz-hover);
+    color: var(--yz-fg);
+  }
+
+  .yz-btn-danger {
+    background: transparent;
+    border-color: var(--yz-danger-border);
+    color: var(--yz-danger);
+  }
+  .yz-btn-danger:hover:not(:disabled) {
+    background: var(--yz-danger-solid);
+    border-color: var(--yz-danger-solid);
+    color: #fff;
+  }
+
+  .yz-btn-sm {
+    block-size: var(--yz-control-sm);
+    padding-inline: 0.625rem;
+    font-size: var(--yz-text-xs);
+    gap: 0.3125rem;
+  }
+  .yz-btn-lg {
+    block-size: 2.75rem;
+    padding-inline: 1.125rem;
+    font-size: var(--yz-text-md);
+  }
+  /* Square icon-only button — keeps the 1:1 ratio at every size. */
+  .yz-btn-icon {
+    padding-inline: 0;
+    inline-size: var(--yz-control-lg);
+  }
+  .yz-btn-icon.yz-btn-sm {
+    inline-size: var(--yz-control-sm);
+  }
+
+  /* Touch devices get a compliant hit area without changing the visual size. */
+  @media (pointer: coarse) {
+    .yz-btn::after {
+      content: '';
+      position: absolute;
+    }
+    .yz-btn {
+      position: relative;
+      min-block-size: var(--yz-touch-min);
+    }
+  }
+
+  /* --- Surfaces ---------------------------------------------------------- */
+  .yz-card {
+    background: var(--yz-surface);
+    border: 1px solid var(--yz-edge);
+    border-radius: var(--yz-radius-lg);
+    box-shadow: var(--yz-shadow-1);
+  }
+  .yz-card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.875rem 1.125rem;
+    border-block-end: 1px solid var(--yz-edge);
+  }
+  .yz-card-title {
+    font-size: var(--yz-text-sm);
+    font-weight: 600;
+    color: var(--yz-fg);
+    letter-spacing: var(--yz-tracking-normal);
+  }
+
+  /* --- Badges -----------------------------------------------------------
+     Soft-filled rather than outline-only: status is the most-scanned element in
+     an order or product list and needs to register at a glance. */
+  .yz-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.125rem 0.4375rem;
+    border: 1px solid transparent;
+    border-radius: var(--yz-radius-sm);
+    font-size: var(--yz-text-xs);
+    font-weight: 500;
+    line-height: 1.125rem;
+    white-space: nowrap;
+  }
+
+  /* --- Table ------------------------------------------------------------
+     text-align uses the logical `start`, so tables read correctly in Arabic. */
+  .yz-th {
+    padding: 0.625rem 0.875rem;
+    text-align: start;
+    font-size: var(--yz-text-xs);
+    font-weight: 600;
+    color: var(--yz-muted);
+    white-space: nowrap;
+    background: var(--yz-sunken);
+    border-block-end: 1px solid var(--yz-edge);
+  }
+  .yz-td {
+    padding: 0.6875rem 0.875rem;
+    border-block-end: 1px solid var(--yz-divider);
+    vertical-align: middle;
+  }
+  .yz-tr-hover:hover {
+    background: var(--yz-hover);
+  }
+
+  /* --- Table: card mode on small screens ---------------------------------
+     A ten-column product table cannot be read on a 390px phone, and making the
+     page scroll sideways pushed the header's primary action off-screen. Below
+     the sm breakpoint each row re-flows into a stacked card.
+
+     The markup stays a real <table> — only `display` changes — so screen readers
+     and keyboard navigation continue to see rows, cells and headers exactly as
+     before. Each cell carries its column name in `data-label`, printed by a
+     ::before, because the visual header row is hidden in this mode. */
+  @media (width < 40rem) {
+    .yz-table-cards {
+      overflow-x: visible;
+    }
+    .yz-table-cards table,
+    .yz-table-cards tbody,
+    .yz-table-cards tr,
+    .yz-table-cards td {
+      display: block;
+      width: 100%;
+    }
+    /* Hidden visually, still exposed to assistive tech. */
+    .yz-table-cards thead {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+    }
+    .yz-table-cards tr {
+      padding: 0.25rem 0;
+      border-block-end: 1px solid var(--yz-divider);
+    }
+    .yz-table-cards tr:last-child {
+      border-block-end: 0;
+    }
+    .yz-table-cards .yz-td {
+      display: flex;
+      align-items: baseline;
+      gap: 0.75rem;
+      padding: 0.3125rem 0.875rem;
+      border-block-end: 0;
+      text-align: start;
+    }
+    .yz-table-cards .yz-td::before {
+      content: attr(data-label);
+      flex: 0 0 8rem;
+      font-size: var(--yz-text-xs);
+      font-weight: 600;
+      color: var(--yz-muted);
+    }
+    /* A cell with no label (checkbox, thumbnail, actions) keeps the full width. */
+    .yz-table-cards .yz-td:not([data-label])::before {
+      content: none;
+    }
+    /* The lead cell titles the card: no label, larger, first in the stack. */
+    .yz-table-cards .yz-td-primary {
+      padding-block: 0.5rem 0.25rem;
+      font-size: var(--yz-text-base);
+    }
+    .yz-table-cards .yz-td-primary::before {
+      content: none;
+    }
+    /* Right/centre alignment is a column concept; in a stack it just looks broken. */
+    .yz-table-cards .yz-td.text-end,
+    .yz-table-cards .yz-td.text-center {
+      justify-content: flex-start;
+      text-align: start;
+    }
+    /* Column sizing hints stop making sense once a cell is a row in a stack:
+       a max-width + truncate that reads fine in a grid collapses to one letter. */
+    .yz-table-cards .yz-td > * {
+      min-width: 0;
+    }
+    .yz-table-cards .yz-td {
+      max-width: none;
+      white-space: normal;
+      text-overflow: clip;
+      overflow: visible;
+    }
+  }
+
+  /* --- Skeleton ---------------------------------------------------------- */
+  .yz-skeleton {
+    background: linear-gradient(
+      90deg,
+      var(--yz-surface2) 25%,
+      var(--yz-edge) 37%,
+      var(--yz-surface2) 63%
+    );
+    background-size: 400% 100%;
+    border-radius: var(--yz-radius-sm);
+    animation: yz-shimmer 1.4s ease infinite;
+  }
+
+  @keyframes yz-shimmer {
+    0% {
+      background-position: 100% 50%;
+    }
+    100% {
+      background-position: 0 50%;
+    }
+  }
+}
+
+/* ==========================================================================
+   Focus — DELIBERATELY UNLAYERED. Do not move this into @layer base.
+   ---------------------------------------------------------------------------
+   Unlayered CSS outranks every @layer, including Tailwind's `utilities`. Inside
+   a layer, a stray `outline-none` utility on a control would silently erase the
+   focus indicator for keyboard users — which is precisely the bug this rule
+   exists to fix (the app previously had zero focus styles anywhere).
+
+   `outline` rather than a box-shadow ring, because an outline does not affect
+   layout, follows the element's own border-radius automatically, and never
+   fights the elevation system for the box-shadow property. `outline-offset`
+   opens a gap showing the surface beneath, which is what keeps the ring legible
+   even on top of an agate-filled button.
+
+   :is() rather than :where() so the rule carries real specificity.
+   ========================================================================== */
+
+:is(
+  a[href],
+  area[href],
+  button,
+  input,
+  select,
+  textarea,
+  summary,
+  [tabindex]:not([tabindex^='-']),
+  [contenteditable]:not([contenteditable='false']),
+  [role='button'],
+  [role='link'],
+  [role='tab'],
+  [role='menuitem'],
+  [role='option'],
+  [role='switch'],
+  [role='checkbox'],
+  [role='radio']
+):focus-visible {
+  outline: 2px solid var(--yz-focus);
+  outline-offset: 2px;
+}
+
+/* A control filled with the focus colour itself needs the inverse ring. */
+.yz-on-accent:focus-visible {
+  outline-color: var(--yz-focus-inset);
+}
+
+/* Genuine scroll containers clip an outward ring, so flip it inward. Tag the
+   scroller (not each control) and every descendant is handled automatically. */
+.yz-scroll-x :is(a[href], button, input, select, textarea, [tabindex]):focus-visible,
+.yz-scroll-y :is(a[href], button, input, select, textarea, [tabindex]):focus-visible {
+  outline-offset: -2px;
+}
+
+/* Table cells clip against their neighbours; let a focused one sit on top. */
+.yz-td:focus-visible,
+.yz-th:focus-visible {
+  position: relative;
+  z-index: 1;
+}
+
+/* Windows High Contrast: hand the ring to the OS. */
+@media (forced-colors: active) {
+  :is(a[href], button, input, select, textarea, summary, [tabindex]:not([tabindex^='-'])):focus-visible {
+    outline: 2px solid Highlight;
+    outline-offset: 2px;
+  }
+}

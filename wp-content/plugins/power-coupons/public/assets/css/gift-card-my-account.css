@@ -1,0 +1,131 @@
+/**
+ * Power Coupons - Gift Card My Account Styles
+ *
+ * Minimal layout-only styles. Visual properties (colors, backgrounds,
+ * border-radius) are intentionally omitted so the active theme controls them.
+ *
+ * @package Power_Coupons
+ * @since 1.0.0
+ */
+
+/* ==========================================================================
+   Layout
+   ========================================================================== */
+
+.power-coupon-gc-my-account {
+	display: flex;
+	flex-direction: column;
+	gap: 32px;
+}
+
+.power-coupon-gc-section h3 {
+	font-size: 18px;
+	font-weight: 600;
+	margin: 0 0 16px;
+}
+
+/* ==========================================================================
+   Table
+   ========================================================================== */
+
+.power-coupon-gc-table {
+	width: 100%;
+}
+
+/* ==========================================================================
+   Empty State
+   ========================================================================== */
+
+.power-coupon-gc-empty {
+	font-size: 14px;
+	padding: 20px;
+	text-align: center;
+	opacity: 0.7;
+}
+
+/* ==========================================================================
+   Code Display
+   ========================================================================== */
+
+.power-coupon-gc-table code {
+	font-size: 13px;
+	font-weight: 600;
+	letter-spacing: 0.5px;
+}
+
+/* ==========================================================================
+   Status Badges
+   ========================================================================== */
+
+.power-coupon-gc-status {
+	display: inline-block;
+	font-size: 12px;
+	font-weight: 500;
+	padding: 3px 8px;
+	border-radius: 100px;
+	white-space: nowrap;
+}
+
+.power-coupon-gc-status-active {
+	background: #dcfce7;
+	color: #166534;
+}
+
+.power-coupon-gc-status-delivered {
+	background: #dbeafe;
+	color: #1e40af;
+}
+
+.power-coupon-gc-status-partial {
+	background: #fef3c7;
+	color: #92400e;
+}
+
+.power-coupon-gc-status-expired {
+	background: #fee2e2;
+	color: #991b1b;
+}
+
+.power-coupon-gc-status-redeemed {
+	background: #f3f4f6;
+	color: #6b7280;
+}
+
+/* ==========================================================================
+   Copy Button — let the theme control button appearance via .button /
+   .wp-element-button classes. Only set size constraints here.
+   ========================================================================== */
+
+.power-coupon-gc-copy-btn {
+	white-space: nowrap;
+}
+
+/* ==========================================================================
+   Responsive
+   ========================================================================== */
+
+@media ( max-width: 768px ) {
+	.power-coupon-gc-table thead {
+		display: none;
+	}
+
+	.power-coupon-gc-table tr {
+		display: block;
+		margin-bottom: 16px;
+		border: 1px solid;
+		border-color: inherit;
+		border-radius: inherit;
+		padding: 12px;
+	}
+
+	.power-coupon-gc-table td {
+		display: block;
+		padding: 4px 0;
+		border: none;
+	}
+
+	.power-coupon-gc-table td::before {
+		content: attr( data-title ) ": ";
+		font-weight: 600;
+	}
+}

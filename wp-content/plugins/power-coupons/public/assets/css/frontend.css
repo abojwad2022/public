@@ -1,0 +1,285 @@
+/**
+ * Power Coupons Public Styles
+ *
+ * @package Power_Coupons
+ * @since 1.0.0
+ */
+
+/* Base Variables */
+.power-coupons-list {
+	--pc-primary: #2196f3;
+	--pc-secondary: #4caf50;
+	--pc-danger: #f44336;
+	--pc-accent: #e91e63;
+	--pc-bg: #fff;
+	--pc-text: #4b5563;
+	--pc-muted: #6b7280;
+	--pc-border: var( --pc-primary );
+	--pc-radius: 8px;
+	--pc-space: 15px;
+	--pc-font-base: 14px;
+	--pc-font-heading: 18px;
+	--pc-shadow: 0 4px 12px rgba( 0, 0, 0, 0.1 );
+	--pc-transition: all 0.3s ease;
+}
+
+/* Main container */
+.power-coupons-list {
+	margin: calc( var( --pc-space ) + 5px ) 0;
+	padding: calc( var( --pc-space ) + 5px ) 0;
+}
+
+.power-coupons-list .power-coupon-header,
+.power-coupons-list .power-coupon-content {
+	width: 100%;
+	padding: 0 16px;
+	border-left: 1px transparent solid;
+}
+
+.power-coupons-list .power-coupon-content {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+/* Section wrapper */
+.power-coupons-list .power-coupons-section {
+	margin-bottom: calc( var( --pc-space ) * 2 );
+}
+
+.power-coupons-list .power-coupons-section:last-child {
+	margin-bottom: 0;
+}
+
+.power-coupons-list .power-coupons-section h4 {
+	margin: 0 0 var( --pc-space );
+	font-size: var( --pc-font-heading );
+	font-weight: 500;
+	color: #555;
+}
+
+/* Coupon wrapper/grid */
+.power-coupons-list .power-coupons-wrapper {
+	display: flex;
+	gap: var( --pc-space );
+	flex-wrap: wrap;
+}
+
+.power-coupons-list .power-coupons-wrapper.power-coupons-list .power-coupon-card {
+	width: 30%;
+}
+
+/* Individual coupon card */
+.power-coupons-list .power-coupon-card {
+	display: flex;
+	flex: 1;
+	max-width: 32%;
+	min-width: 300px;
+	padding: calc( var( --pc-space ) );
+	background: var( --pc-bg );
+	border: 1px solid var( --pc-border );
+	border-radius: var( --pc-radius );
+	transition: var( --pc-transition );
+	align-items: center;
+	/* justify-content: space-between; */
+	cursor: pointer;
+}
+
+.power-coupons-list .power-coupon-card:hover {
+	box-shadow: var( --pc-shadow );
+	transform: translateY( -2px );
+}
+
+.power-coupons-list .power-coupon-card.expired {
+	border-color: #ccc;
+	background: #f5f5f5;
+	opacity: 0.7;
+}
+
+/* Coupon code */
+.power-coupons-list .coupon-code {
+	font-size: var( --pc-font-heading );
+	font-weight: 700;
+	color: var( --pc-text );
+	text-transform: uppercase;
+	padding: 5px 8px;
+	border-radius: 5px;
+	text-align: center;
+	border: 1px solid var( --pc-border );
+}
+
+/* Coupon description */
+.power-coupons-list .coupon-description {
+	font-size: var( --pc-font-base );
+	font-weight: 500;
+	color: #666;
+	/* margin-bottom: 12px; */
+	line-height: 1.5;
+}
+
+.power-coupons-list .power-coupon-expiry {
+	font-size: 12px;
+	line-height: 14px;
+	font-weight: 400;
+	margin: 10px 0 0 0;
+}
+
+/* Coupon amount/discount */
+.power-coupons-list .coupon-amount {
+	font-size: 22px;
+	line-height: 28px;
+	font-weight: 600;
+	/* color: var(--pc-accent); */
+	/* margin-bottom: 12px; */
+}
+.power-coupons-list .power-coupon-type {
+	font-size: 14px;
+	font-weight: 600;
+	line-height: 18px;
+}
+.power-coupons-list .power-coupon-status {
+	color: #15803d;
+	font-weight: 500;
+	font-size: 14px;
+	line-height: 20px;
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	margin: 10px 0 0 0;
+}
+.power-coupons-list .power-coupon-status > .pc-coupon-status-icon {
+	width: 16px;
+	height: 16px;
+}
+
+/* Coupon expiry */
+.power-coupons-list .coupon-expiry {
+	font-size: 12px;
+	color: var( --pc-muted );
+	margin-bottom: 12px;
+}
+
+.power-coupons-section {
+	display: grid;
+	grid-template-columns: repeat( auto-fit, minmax( 250px, 1fr ) );
+	gap: 16px;
+}
+
+/* Action buttons */
+.power-coupons-list .power-coupons-apply-coupon-btn {
+	all: unset;
+	font-family: Inter, sans-serif;
+	background: none;
+	border: none;
+	margin: 0;
+	padding: 0;
+	cursor: pointer;
+	color: #374151;
+	direction: ltr;
+	width: fit-content;
+	line-height: 0;
+}
+
+.power-coupons-list .power-coupons-apply-coupon-btn:hover,
+.power-coupons-list .power-coupons-apply-coupon-btn:active {
+	border: none;
+	background: none;
+	color: #374151;
+}
+
+.power-coupons-list .power-coupons-apply-coupon-btn:focus {
+	border: none;
+	background: none;
+	color: #374151;
+	outline: 2px solid #2196f3;
+	outline-offset: 2px;
+	border-radius: 4px;
+}
+
+.power-coupons-list .power-coupons-apply-coupon-btn:focus:not( :focus-visible ) {
+	outline: none;
+}
+
+.power-coupons-list .power-coupons-apply-coupon-btn:disabled {
+	cursor: not-allowed;
+	opacity: 0.6;
+}
+
+.power-coupons-list .power-coupons-apply-coupon-btn .power-coupons-coupon-status {
+	fill: #374151;
+	font-family: Inter, sans-serif;
+	font-weight: 400;
+	font-size: 12px;
+	line-height: 14px;
+}
+
+.power-coupons-list .power-coupons-apply-coupon-btn[data-coupon-status="applied"] .power-coupons-coupon-status {
+	fill: #15803d;
+	font-weight: 500 !important;
+	font-size: 14px !important;
+	line-height: 20px !important;
+}
+
+.power-coupons-apply-coupon-btn .power-coupons-coupon-code {
+	text-overflow: ellipsis;
+	overflow: hidden;
+	padding: 5px 8px;
+	line-height: normal;
+}
+
+.power-coupons-list .auto-applied-label,
+.power-coupons-list .auto-applied-label:hover,
+.power-coupons-list .auto-applied-label:active,
+.power-coupons-list .auto-applied-label:focus {
+	display: inline-block;
+	width: 100%;
+	padding: 10px calc( var( --pc-space ) + 5px );
+	background: var( --pc-secondary );
+	color: var( --pc-bg );
+	text-align: center;
+	border-radius: 4px;
+	font-size: var( --pc-font-base );
+	font-weight: 600;
+	border: none;
+	cursor: default;
+}
+
+/* Legacy/unused styles */
+.power-coupons-list .power-coupons-title {
+	margin: 0 0 calc( var( --pc-space ) + 5px );
+	font-size: 24px;
+	font-weight: 600;
+	color: var( --pc-text );
+}
+
+.power-coupons-list .coupon-status {
+	font-size: var( --pc-font-base );
+	color: var( --pc-muted );
+	font-weight: 500;
+}
+
+/* WooCommerce integration */
+.woocommerce-cart .cart_totals .woocommerce-remove-coupon[data-auto-apply="yes"],
+.woocommerce-checkout .woocommerce-remove-coupon[data-auto-apply="yes"] {
+	display: none !important;
+}
+
+/* Media queries */
+@media ( max-width: 768px ) {
+	.power-coupons-list .power-coupons-wrapper {
+		width: 100%;
+	}
+	.power-coupons-list .power-coupon-card {
+		max-width: 100%;
+	}
+}
+
+/* Reduced motion */
+@media ( prefers-reduced-motion: reduce ) {
+	.power-coupons-list .power-coupon-card,
+	.power-coupons-list .power-coupons-apply-coupon-btn {
+		transition: none;
+	}
+	.power-coupons-list .power-coupon-card:hover {
+		transform: none;
+	}
+}

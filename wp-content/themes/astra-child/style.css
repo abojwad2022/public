@@ -1,0 +1,19 @@
+/*
+Theme Name:   Yazan (Astra Child)
+Theme URI:    https://yazan.local
+Description:  Custom child theme for Yazan Luxury Jewelry — Yemeni agate & sterling silver rings. All custom code (CSS/JS, WooCommerce template overrides, presentational hooks) lives here. Parent: Astra.
+Author:       Yazan
+Author URI:   https://yazan.local
+Template:     astra
+Version:      2.6.0
+License:      GNU General Public License v2 or later
+License URI:  http://www.gnu.org/licenses/gpl-2.0.html
+Text Domain:  yazan
+Tags:         woocommerce, rtl-language-support, custom-colors, translation-ready
+*/
+
+/*
+ * This file only needs the header above — WordPress reads it to register the theme.
+ * Custom styles live in assets/css/main.css (enqueued in functions.php) to keep concerns
+ * separated and cache-busting clean. Add brand tokens / overrides there.
+ */

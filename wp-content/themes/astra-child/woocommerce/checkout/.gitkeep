@@ -1,0 +1,3 @@
+# Checkout template overrides (mirror: plugins/woocommerce/templates/checkout/).
+# e.g. form-checkout.php, review-order.php, thankyou.php. NOTE: only affects the SHORTCODE checkout.
+# Verify whether CartFlows owns the checkout before overriding here.

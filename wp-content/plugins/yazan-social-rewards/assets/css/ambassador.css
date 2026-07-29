@@ -1,0 +1,96 @@
+/**
+ * Yazan Rewards — Ambassador / member dashboard (My Account).
+ * On-brand, restrained; direction-agnostic (logical properties) for RTL + LTR.
+ */
+.yzrw-dash {
+	--yzrw-ink: #141210;
+	--yzrw-ivory: #f7f4ef;
+	--yzrw-agate: #9a3b2e;
+	--yzrw-silver: #d8d2c8;
+	--yzrw-muted: #8a8378;
+	color: var(--yzrw-ink);
+}
+
+.yzrw-dash__crosslink { margin: 0 0 0.75rem; font-size: 0.85rem; }
+.yzrw-dash__crosslink a { color: var(--yzrw-muted); text-decoration: none; }
+.yzrw-dash__crosslink a:hover { color: var(--yzrw-agate); }
+
+.yzrw-dash__header {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: space-between;
+	gap: 1rem;
+	align-items: center;
+	border: 1px solid var(--yzrw-silver);
+	background: var(--yzrw-ivory);
+	padding: 1.25rem 1.5rem;
+	margin-block-end: 1rem;
+}
+
+.yzrw-dash__level { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+
+.yzrw-level-badge {
+	display: inline-block;
+	padding: 0.3rem 0.9rem;
+	border-radius: 999px;
+	background: var(--yzrw-level, var(--yzrw-ink));
+	color: #fff;
+	font-weight: 600;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+	font-size: 0.8rem;
+}
+.yzrw-level-mult, .yzrw-level-disc {
+	font-size: 0.75rem;
+	color: var(--yzrw-muted);
+	border: 1px solid var(--yzrw-silver);
+	padding: 0.2rem 0.5rem;
+	border-radius: 999px;
+}
+
+.yzrw-dash__stats { display: flex; gap: 1.5rem; flex-wrap: wrap; }
+.yzrw-stat { display: flex; flex-direction: column; text-align: end; }
+.yzrw-stat__n { font-size: 1.6rem; line-height: 1.1; font-weight: 500; }
+.yzrw-stat__l { font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--yzrw-muted); }
+
+.yzrw-progress { margin-block-end: 1.5rem; }
+.yzrw-progress__bar { height: 6px; background: var(--yzrw-silver); border-radius: 999px; overflow: hidden; }
+.yzrw-progress__bar > span { display: block; height: 100%; background: var(--yzrw-agate); }
+.yzrw-progress__label { display: block; font-size: 0.78rem; color: var(--yzrw-muted); margin-block-start: 0.35rem; }
+
+.yzrw-dash__h {
+	font-size: 1.02rem;
+	margin-block: 1.5rem 0.75rem;
+	padding-block-end: 0.4rem;
+	border-block-end: 1px solid var(--yzrw-silver);
+}
+.yzrw-sub { font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--yzrw-muted); margin: 0.75rem 0 0.4rem; }
+.yzrw-muted { color: var(--yzrw-muted); }
+
+.yzrw-levels { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.6rem; }
+.yzrw-lvl { border: 1px solid var(--yzrw-silver); border-inline-start: 3px solid var(--yzrw-level, var(--yzrw-silver)); padding: 0.7rem 0.9rem; display: flex; flex-direction: column; gap: 0.15rem; }
+.yzrw-lvl.is-current { background: var(--yzrw-ivory); box-shadow: inset 0 0 0 1px var(--yzrw-level); }
+.yzrw-lvl__name { font-weight: 500; }
+.yzrw-lvl__req { font-size: 0.75rem; color: var(--yzrw-muted); }
+.yzrw-lvl__perk { font-size: 0.75rem; color: var(--yzrw-agate); }
+
+.yzrw-list { list-style: none; margin: 0 0 0.5rem; padding: 0; display: grid; gap: 0.35rem; }
+.yzrw-list li { display: flex; justify-content: space-between; gap: 1rem; border-block-end: 1px solid var(--yzrw-silver); padding-block-end: 0.35rem; }
+
+.yzrw-badges { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 0.5rem; }
+.yzrw-badge { border: 1px solid var(--yzrw-silver); padding: 0.6rem 0.8rem; display: flex; flex-direction: column; gap: 0.2rem; }
+.yzrw-badge.is-locked { opacity: 0.5; }
+.yzrw-badge__name { font-weight: 500; }
+.yzrw-badge__state { font-size: 0.72rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--yzrw-muted); }
+
+.yzrw-referral__link { display: flex; gap: 0.5rem; margin-block-end: 0.5rem; }
+.yzrw-referral__link input { flex: 1 1 auto; }
+.yzrw-referral__stats { display: flex; flex-wrap: wrap; gap: 1rem; font-size: 0.85rem; color: var(--yzrw-muted); }
+
+.yzrw-ambassador { border: 1px solid var(--yzrw-silver); padding: 1rem 1.25rem; background: var(--yzrw-ivory); }
+.yzrw-ambassador__status { font-weight: 500; margin-block-start: 0; }
+.yzrw-apply-msg { margin-inline-start: 0.6rem; color: var(--yzrw-agate); }
+
+.yzrw-history { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+.yzrw-history td { padding: 0.5rem; border-block-end: 1px solid var(--yzrw-silver); }
+.yzrw-history__amount { text-align: end; font-variant-numeric: tabular-nums; }

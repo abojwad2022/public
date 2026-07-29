@@ -1,0 +1,195 @@
+/* ==========================================================================
+   Yazan (Astra Child) — Verify a Ring (/verify-ring/)
+   Public serial lookup + certificate of authenticity card. Scoped, self-contained;
+   reuses site-wide tokens + .yz-btn-* + .yz-reveal. Enqueued only on this page.
+   Direction-agnostic (logical properties).
+   ========================================================================== */
+
+.yz-verify { overflow-x: clip; }
+.yz-verify .yz-auth-sec { padding-block: clamp(52px, 8vw, 104px); }
+
+.yz-verify .yz-section--ink .yz-eyebrow { color: var(--yz-gold); }
+
+/* ------------------------------------------------- Hero + search --------- */
+.yz-verify-hero__inner { max-width: 720px; margin-inline: auto; text-align: center; }
+.yz-verify-hero__title {
+	margin: 0.28em 0 0;
+	font-family: var(--yz-font-display, serif);
+	font-weight: 500;
+	font-size: clamp(34px, 5.6vw, 64px);
+	line-height: 1.04;
+	letter-spacing: -0.015em;
+}
+.yz-verify-hero__lede {
+	max-width: 54ch;
+	margin: clamp(16px, 2.2vw, 24px) auto 0;
+	font-size: clamp(15px, 2vw, 18px);
+	line-height: 1.68;
+	color: rgba(245, 241, 233, 0.74);
+}
+
+.yz-verify-form {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 12px;
+	justify-content: center;
+	max-width: 520px;
+	margin: clamp(24px, 3.4vw, 36px) auto 0;
+}
+.yz-verify-form input[type="text"] {
+	flex: 1 1 260px;
+	min-width: 0;
+	padding: 14px 18px;
+	font-family: var(--yz-font-body, sans-serif);
+	font-size: 15px;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	color: var(--yz-ivory);
+	background: rgba(245, 241, 233, 0.06);
+	border: 1px solid rgba(245, 241, 233, 0.28);
+	border-radius: 0;
+	transition: border-color 0.2s ease, background 0.2s ease;
+}
+.yz-verify-form input::placeholder { color: rgba(245, 241, 233, 0.4); letter-spacing: 0.04em; }
+.yz-verify-form input:focus {
+	outline: none;
+	border-color: var(--yz-gold);
+	background: rgba(245, 241, 233, 0.1);
+}
+.yz-verify-form .yz-btn-solid { flex: 0 0 auto; }
+.yz-verify-hint {
+	margin: 16px auto 0;
+	font-size: 13px;
+	color: rgba(245, 241, 233, 0.5);
+}
+
+/* ----------------------------------------------- Certificate card -------- */
+.yz-cert {
+	max-width: 780px;
+	margin-inline: auto;
+	background: #fff;
+	border: 1px solid var(--yz-hairline, rgba(20, 18, 16, 0.14));
+	box-shadow: 0 24px 60px rgba(20, 18, 16, 0.08);
+}
+.yz-cert__head {
+	display: flex;
+	align-items: center;
+	gap: 16px;
+	padding: clamp(20px, 3vw, 30px) clamp(22px, 3.5vw, 40px);
+	border-block-end: 1px solid var(--yz-hairline, rgba(20, 18, 16, 0.12));
+}
+.yz-cert__seal {
+	display: grid;
+	place-items: center;
+	inline-size: 46px;
+	block-size: 46px;
+	flex: 0 0 auto;
+	color: #fff;
+	background: var(--yz-agate, #8c2f24);
+	border-radius: 50%;
+}
+.yz-cert__seal svg { width: 24px; height: 24px; }
+.yz-cert__status {
+	margin: 0;
+	font-family: var(--yz-font-body, sans-serif);
+	font-size: 12px;
+	font-weight: 600;
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	color: var(--yz-agate, #8c2f24);
+}
+.yz-cert__serial {
+	margin: 3px 0 0;
+	font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+	font-size: clamp(16px, 2.4vw, 20px);
+	letter-spacing: 0.08em;
+	color: var(--yz-ink, #14120f);
+}
+
+.yz-cert__body {
+	display: grid;
+	grid-template-columns: 220px 1fr;
+	gap: clamp(22px, 3.5vw, 40px);
+	padding: clamp(24px, 3.5vw, 40px);
+}
+.yz-cert__media { display: block; border: 1px solid var(--yz-hairline, rgba(20, 18, 16, 0.1)); }
+.yz-cert__media img { display: block; width: 100%; height: 100%; object-fit: cover; aspect-ratio: 1; }
+
+.yz-cert__name {
+	margin: 0 0 18px;
+	font-family: var(--yz-font-display, serif);
+	font-weight: 500;
+	font-size: clamp(22px, 3vw, 30px);
+	line-height: 1.12;
+}
+.yz-cert__name a { color: inherit; text-decoration: none; }
+.yz-cert__name a:hover { color: var(--yz-agate, #8c2f24); }
+
+.yz-cert__grid { margin: 0; }
+.yz-cert__row {
+	display: flex;
+	justify-content: space-between;
+	gap: 20px;
+	padding-block: 10px;
+	border-block-end: 1px solid var(--yz-hairline, rgba(20, 18, 16, 0.09));
+}
+.yz-cert__row dt {
+	margin: 0;
+	font-size: 12px;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	color: var(--yz-muted, #6e6a63);
+}
+.yz-cert__row dd {
+	margin: 0;
+	font-size: 15px;
+	text-align: end;
+	color: var(--yz-ink, #14120f);
+}
+
+.yz-cert__marks {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin: 20px 0 0;
+	padding: 0;
+	list-style: none;
+}
+.yz-cert__marks li {
+	font-size: 12px;
+	letter-spacing: 0.04em;
+	color: var(--yz-ink, #14120f);
+	padding: 5px 12px;
+	border: 1px solid var(--yz-hairline, rgba(20, 18, 16, 0.16));
+}
+.yz-cert__foot {
+	padding: 16px clamp(22px, 3.5vw, 40px);
+	border-block-start: 1px solid var(--yz-hairline, rgba(20, 18, 16, 0.12));
+	font-size: 13px;
+	color: var(--yz-muted, #6e6a63);
+	text-align: center;
+}
+
+/* ------------------------------------------------- Messages -------------- */
+.yz-cert-msg {
+	max-width: 560px;
+	margin-inline: auto;
+	text-align: center;
+}
+.yz-cert-msg h2 {
+	margin: 0 0 10px;
+	font-family: var(--yz-font-display, serif);
+	font-weight: 500;
+	font-size: clamp(22px, 3.4vw, 32px);
+}
+.yz-cert-msg p { margin: 0 auto 20px; max-width: 46ch; color: var(--yz-muted, #6e6a63); line-height: 1.64; }
+.yz-cert-msg--idle p { margin-block-end: 0; }
+.yz-cert-msg--none h2 { color: var(--yz-agate, #8c2f24); }
+
+/* ------------------------------------------------- Responsive ------------ */
+@media (max-width: 620px) {
+	.yz-cert__body { grid-template-columns: 1fr; }
+	.yz-cert__media { max-width: 240px; margin-inline: auto; }
+	.yz-cert__row { flex-direction: column; gap: 2px; }
+	.yz-cert__row dd { text-align: start; }
+}

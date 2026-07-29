@@ -1,0 +1,588 @@
+/* ==========================================================================
+   Yazan (Astra Child) — CartFlows *Instant Checkout* THANK-YOU page.
+
+   HOW THIS IS DELIVERED: printed inline on wp_head by yazan_thankyou_inline_css()
+   in inc/enqueue.php — NOT wp_enqueue_style(). The CartFlows instant thank-you
+   template is its own HTML document and strips the theme's late enqueue callbacks,
+   so the child-theme stylesheets/tokens never load here. Inline-on-wp_head (pri 100)
+   lands AFTER wp_print_styles, so it wins the cascade over CartFlows' own
+   instant-thankyou-styles.css. Brand fonts are <link>ed alongside for the same reason.
+
+   THEMING: the --yz-* design tokens don't load on this template, so this sheet
+   declares its OWN local --ty-* palette twice — once for Black (default) and once
+   for Burgundy under html[data-yz-theme="burgundy"] (the pre-paint boot script
+   stamps that attribute here too). Every rule below reads --ty-*, so both identities
+   are covered without duplicating a single component rule.
+
+   DIRECTION-AGNOSTIC: logical properties (margin-inline / inset-inline / padding-block
+   / text-align:start) throughout, so it reads correctly LTR and RTL (Arabic names,
+   addresses) with no separate RTL sheet.
+   Palette mirrored from theme-tokens.css — Black: ink #141210 · ivory #F5F1E9 ·
+   agate #8C2F24 · gold #9A7B3F. Burgundy: bg #160709 · surface #221012 ·
+   primary #4A0F19 · accent #A50606 · gold #C9A24B · text #F7F3F2.
+   ========================================================================== */
+
+/* -------------------------------------------------- Local palette (Black) */
+.cartflows-instant-checkout,
+.wcf-instant-thankyou {
+	--ty-bg:            #F5F1E9;
+	--ty-surface:       #FFFFFF;
+	--ty-surface-2:     #FBF9F4;
+	--ty-text:          #141210;
+	--ty-text-2:        #4A4540;
+	--ty-muted:         #6E6A63;
+	--ty-border:        rgba(20, 18, 16, 0.12);
+	--ty-border-strong: rgba(20, 18, 16, 0.24);
+	--ty-accent:        #8C2F24;
+	--ty-accent-soft:   rgba(140, 47, 36, 0.20);
+	--ty-gold:          #9A7B3F;
+	--ty-primary:       #141210;
+	--ty-on-primary:    #F5F1E9;
+	--ty-primary-hover: #2A2622;
+	--ty-shadow:        0 26px 60px -36px rgba(20, 18, 16, 0.40);
+
+	--ty-serif: 'Cormorant Garamond', 'Amiri', Georgia, 'Times New Roman', serif;
+	--ty-sans:  'Jost', 'Cairo', system-ui, -apple-system, 'Segoe UI', sans-serif;
+	--ty-ease:  cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* -------------------------------------------------- Local palette (Burgundy) */
+html[data-yz-theme="burgundy"] .cartflows-instant-checkout,
+html[data-yz-theme="burgundy"] .wcf-instant-thankyou {
+	--ty-bg:            #160709;
+	--ty-surface:       #221012;
+	--ty-surface-2:     #1E0B0E;
+	--ty-text:          #F7F3F2;
+	--ty-text-2:        #D6CACA;
+	--ty-muted:         #9E8A8B;
+	--ty-border:        rgba(255, 255, 255, 0.09);
+	--ty-border-strong: rgba(255, 255, 255, 0.20);
+	--ty-accent:        #C0454B;   /* lifted so red reads on the dark ground */
+	--ty-accent-soft:   rgba(192, 69, 75, 0.24);
+	--ty-gold:          #C9A24B;
+	--ty-primary:       #4A0F19;
+	--ty-on-primary:    #F7F3F2;
+	--ty-primary-hover: #A50606;
+	--ty-shadow:        0 30px 66px -34px rgba(0, 0, 0, 0.72);
+}
+
+/* -------------------------------------------------- Canvas */
+.cartflows-instant-checkout .wrapper,
+.cartflows-instant-checkout .main-container {
+	background: var(--ty-bg);
+}
+.wcf-instant-thankyou {
+	/* Re-point CartFlows' own button variables into brand space so its blue defaults
+	   (Continue-Shopping button, qty badge, downloads button) recolour without a fight. */
+	--wcf-btn-bg-color: var(--ty-primary);
+	--wcf-btn-bg-hover-color: var(--ty-primary-hover);
+	--wcf-button-tx-color: var(--ty-on-primary);
+	--wcf-btn-text-color: var(--ty-on-primary);
+	--wcf-primary-color: var(--ty-text);
+
+	background: var(--ty-bg);
+	color: var(--ty-text);
+	font-family: var(--ty-sans);
+	-webkit-font-smoothing: antialiased;
+	min-height: 72vh;
+	padding: clamp(30px, 5vw, 76px) clamp(16px, 4vw, 40px) clamp(56px, 7vw, 100px);
+}
+.wcf-instant-thankyou .woocommerce-order {
+	max-width: 1140px;
+	margin-inline: auto;
+}
+
+/* -------------------------------------------------- Two-column layout
+   CartFlows styles the container at 3 classes with `height:100vh` + grid stretch, and paints the
+   right column with a background var. With the (now tall) left column that stretched the right
+   column into a big empty coloured box. We match its 3-class specificity: drop the 100vh, keep the
+   stretch (so the summary can stick), and make BOTH columns transparent so the stretch is invisible
+   — the summary panel then floats over the page background. */
+.cartflows-instant-checkout .wcf-instant-thankyou .wcf-ic-layout-container {
+	display: grid;
+	grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+	gap: clamp(24px, 4vw, 60px);
+	align-items: stretch;
+	width: 100%;
+	height: auto;
+	min-height: 0;
+	padding: 0;
+}
+.cartflows-instant-checkout .wcf-instant-thankyou .wcf-ic-layout-left-column,
+.cartflows-instant-checkout .wcf-instant-thankyou .wcf-ic-layout-right-column {
+	background: transparent;
+	min-width: 0;
+	padding: 0;
+}
+@media (max-width: 880px) {
+	.cartflows-instant-checkout .wcf-instant-thankyou .wcf-ic-layout-container {
+		grid-template-columns: 1fr;
+		gap: clamp(20px, 5vw, 32px);
+	}
+}
+
+/* ==========================================================================
+   LEFT — confirmation, updates, customer details
+   ========================================================================== */
+
+/* Hero: check mark + order number + "Thank you, <name>" */
+.wcf-instant-thankyou .wcf-ic-status {
+	margin-bottom: clamp(22px, 3vw, 34px);
+}
+.wcf-instant-thankyou .wcf-ic-status__left {
+	display: flex;
+	align-items: center;
+	gap: 18px;
+}
+.wcf-instant-thankyou .wcf-ic-status__left-icon {
+	flex: 0 0 auto;
+	inline-size: 60px;
+	block-size: 60px;
+	display: grid;
+	place-items: center;
+	border-radius: 999px;
+	color: var(--ty-accent);
+	background: var(--ty-surface);
+	border: 1px solid var(--ty-border-strong);
+	box-shadow: var(--ty-shadow);
+}
+.wcf-instant-thankyou .wcf-ic-status__icon-svg {
+	inline-size: 30px;
+	block-size: 30px;
+	stroke: var(--ty-accent);
+	stroke-width: 1.4;
+}
+.wcf-instant-thankyou .wcf-ic-status__left p {
+	margin: 0 0 3px;
+	font-size: 12px;
+	font-weight: 500;
+	letter-spacing: 0.2em;
+	text-transform: uppercase;
+	color: var(--ty-muted);
+}
+.wcf-instant-thankyou .wcf-ic-status__left h2 {
+	margin: 0;
+	font-family: var(--ty-serif);
+	font-weight: 500;
+	font-size: clamp(30px, 4.4vw, 48px);
+	line-height: 1.04;
+	letter-spacing: 0.005em;
+	color: var(--ty-text);
+}
+
+/* Cards (Order Updates + Contact/Address/Payment) */
+.wcf-instant-thankyou .wcf-ic-box {
+	background: var(--ty-surface);
+	border: 1px solid var(--ty-border);
+	padding: clamp(20px, 3vw, 32px);
+	margin: 0 0 clamp(16px, 2.4vw, 22px);
+}
+.wcf-instant-thankyou .wcf-ic-updates h2,
+.wcf-instant-thankyou .wcf-ic-updates .woocommerce-order-status {
+	margin: 0 0 8px;
+	font-family: var(--ty-serif);
+	font-weight: 600;
+	font-size: clamp(20px, 2.4vw, 26px);
+	line-height: 1.1;
+	color: var(--ty-text);
+}
+.wcf-instant-thankyou .wcf-ic-updates p {
+	margin: 0;
+	color: var(--ty-muted);
+	font-size: 15px;
+	line-height: 1.65;
+}
+
+/* Customer review rows: label column + content */
+.wcf-instant-thankyou .wcf-ic-review-customer__row {
+	display: grid;
+	grid-template-columns: 116px 1fr;
+	gap: 18px;
+	padding-block: 16px;
+	border-top: 1px solid var(--ty-border);
+}
+.wcf-instant-thankyou .wcf-ic-review-customer__row:first-child {
+	border-top: 0;
+	padding-top: 0;
+}
+.wcf-instant-thankyou .wcf-ic-review-customer__label label {
+	display: block;
+	font-size: 11.5px;
+	font-weight: 600;
+	letter-spacing: 0.15em;
+	text-transform: uppercase;
+	color: var(--ty-muted);
+	line-height: 1.5;
+}
+.wcf-instant-thankyou .wcf-ic-review-customer__content,
+.wcf-instant-thankyou .wcf-ic-review-customer__content p,
+.wcf-instant-thankyou .wcf-ic-review-customer__content address {
+	margin: 0;
+	font-style: normal;
+	font-size: 15px;
+	line-height: 1.7;
+	color: var(--ty-text-2);
+}
+.wcf-instant-thankyou .wcf-ic-review-customer__content address { white-space: normal; }
+
+@media (max-width: 480px) {
+	.wcf-instant-thankyou .wcf-ic-review-customer__row { grid-template-columns: 1fr; gap: 6px; }
+}
+
+/* Optional Google map + downloads */
+.wcf-instant-thankyou .wcf-ic-ty-map iframe {
+	display: block;
+	inline-size: 100%;
+	border: 1px solid var(--ty-border);
+	margin-block: 4px 18px;
+}
+
+/* Continue-shopping — primary brand button */
+.wcf-instant-thankyou .wcf-ic-footer {
+	margin-top: clamp(22px, 3vw, 30px);
+}
+/* Continue-shopping button. CartFlows styles it via a 5-class chain
+   (…woocommerce-order .wcf-ic-layout-container .wcf-ic-button) with a blue var background and an
+   !important text colour. We select both of the element's classes (.wcf-ic-button.wcf-ic-button--ty)
+   for 6 classes — strictly higher — and mark colour !important so it beats CartFlows' !important. */
+.cartflows-instant-checkout .wcf-instant-thankyou .woocommerce-order .wcf-ic-layout-container .wcf-ic-button.wcf-ic-button--ty {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	background-color: var(--ty-primary);
+	border: 1px solid var(--ty-primary);
+	color: var(--ty-on-primary) !important;
+	border-radius: 0;
+	font-family: var(--ty-sans);
+	font-size: 13px;
+	font-weight: 500;
+	letter-spacing: 0.16em;
+	text-transform: uppercase;
+	text-decoration: none;
+	padding: 16px 36px;
+	width: auto;
+	transition: background-color 0.28s var(--ty-ease), border-color 0.28s var(--ty-ease), transform 0.28s var(--ty-ease);
+}
+.cartflows-instant-checkout .wcf-instant-thankyou .woocommerce-order .wcf-ic-layout-container .wcf-ic-button.wcf-ic-button--ty:hover {
+	background-color: var(--ty-primary-hover);
+	border-color: var(--ty-primary-hover);
+	opacity: 1;
+	transform: translateY(-1px);
+}
+.cartflows-instant-checkout .wcf-instant-thankyou .woocommerce-order .wcf-ic-layout-container .wcf-ic-button.wcf-ic-button--ty:focus-visible {
+	outline: 2px solid var(--ty-gold);
+	outline-offset: 3px;
+}
+
+/* ==========================================================================
+   RIGHT — "Your Order" summary panel
+   ========================================================================== */
+/* Summary panel — owned at CartFlows' 5-class depth. Drop its forced min-height:400px (which left
+   grey space inside the panel) and keep it content-height; sticky on desktop so it trails the scroll
+   while the (transparent) right column stretches beneath it. */
+.cartflows-instant-checkout .wcf-instant-thankyou .wcf-ic-layout-container .wcf-ic-layout-right-column .wcf-ic-ty-product-details {
+	background: var(--ty-surface-2);
+	border: 1px solid var(--ty-border);
+	padding: clamp(22px, 3vw, 32px);
+	max-width: 34rem;
+	width: 100%;
+	min-height: 0;
+}
+@media (min-width: 881px) {
+	.cartflows-instant-checkout .wcf-instant-thankyou .wcf-ic-layout-container .wcf-ic-layout-right-column .wcf-ic-ty-product-details {
+		position: sticky;
+		top: 24px;
+	}
+}
+.wcf-instant-thankyou .wcf-ic-heading--cart-icon {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	margin: 0 0 6px;
+	padding-bottom: 18px;
+	border-bottom: 1px solid var(--ty-border);
+	font-family: var(--ty-serif);
+	font-weight: 600;
+	font-size: clamp(20px, 2.4vw, 26px);
+	color: var(--ty-text);
+}
+.wcf-instant-thankyou .wcf-ic-cart-icon {
+	inline-size: 22px;
+	block-size: 22px;
+	stroke: var(--ty-accent);
+	flex: 0 0 auto;
+}
+
+/* Line items.
+   CartFlows' child rules go SIX classes deep — they repeat `.wcf-ic-cart-order-item` in the chain
+   (e.g. `…product-details .wcf-ic-cart-order-item .wcf-ic-cart-order-item__content-wrapper`). A
+   5-class prefix therefore LOST, leaving `content-wrapper` a row and `.wcf-product-image{width:100%}`
+   in force — which squeezed the name to one character per line. We match the full 6-class chain so
+   our later source order wins every property and the layout is fully ours. */
+.cartflows-instant-checkout .wcf-instant-thankyou .wcf-ic-layout-right-column .wcf-ic-ty-product-details .wcf-ic-cart-order-item {
+	display: flex;
+	align-items: center;
+	gap: 14px;
+	padding: 18px 0;
+	border-bottom: 1px solid var(--ty-border);
+}
+.cartflows-instant-checkout .wcf-instant-thankyou .wcf-ic-layout-right-column .wcf-ic-ty-product-details .wcf-ic-cart-order-item .wcf-ic-cart-order-item__content-wrapper {
+	display: flex;
+	flex-direction: column;   /* image+name row, then variation below — NOT a single row */
+	gap: 4px;
+	flex: 1 1 auto;
+	min-width: 0;
+}
+.cartflows-instant-checkout .wcf-instant-thankyou .wcf-ic-layout-right-column .wcf-ic-ty-product-details .wcf-ic-cart-order-item .wcf-product-image {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	gap: 14px;
+	width: 100%;
+	min-width: 0;
+}
+.cartflows-instant-checkout .wcf-instant-thankyou .wcf-ic-layout-right-column .wcf-ic-ty-product-details .wcf-ic-cart-order-item .wcf-ic-cart-image {
+	position: relative;
+	flex: 0 0 auto;
+	width: 64px;
+	max-width: 64px;
+	margin: 0;
+}
+.cartflows-instant-checkout .wcf-instant-thankyou .wcf-ic-layout-right-column .wcf-ic-ty-product-details .wcf-ic-cart-order-item .wcf-ic-cart-image img {
+	width: 64px;
+	height: 64px;
+	object-fit: cover;
+	display: block;
+	background: var(--ty-surface);
+	border: 1px solid var(--ty-border);
+	border-radius: 0;
+}
+/* CartFlows makes the <strong> the badge (position:absolute) — recolour it to brand accent
+   rather than adding a second badge on the wrapping <span>. */
+.cartflows-instant-checkout .wcf-instant-thankyou .wcf-ic-layout-right-column .wcf-ic-ty-product-details .wcf-ic-cart-order-item .wcf-ic-cart-order-item__info-qty strong {
+	background-color: var(--ty-accent);
+	color: #FFFFFF;
+	box-shadow: 0 0 0 2px var(--ty-surface-2);
+}
+/* Name: flex-grow so it fills the row and wraps between words (never per character). */
+.cartflows-instant-checkout .wcf-instant-thankyou .wcf-ic-layout-right-column .wcf-ic-ty-product-details .wcf-ic-cart-order-item .wcf-ic-cart-order-item__info-name {
+	flex: 1 1 auto;
+	min-width: 0;
+	margin: 0;
+	font-family: var(--ty-serif);
+	font-weight: 600;
+	font-size: 18px;
+	line-height: 1.25;
+	color: var(--ty-text);
+	overflow-wrap: break-word;
+}
+.cartflows-instant-checkout .wcf-instant-thankyou .wcf-ic-layout-right-column .wcf-ic-ty-product-details .wcf-ic-cart-order-item .wcf-ic-cart-order-item__info-varient,
+.cartflows-instant-checkout .wcf-instant-thankyou .wcf-ic-layout-right-column .wcf-ic-ty-product-details .wcf-ic-cart-order-item .wcf-ic-cart-order-item__info-varient * {
+	color: var(--ty-muted);
+	font-size: 13px;
+	line-height: 1.5;
+}
+.cartflows-instant-checkout .wcf-instant-thankyou .wcf-ic-layout-right-column .wcf-ic-ty-product-details .wcf-ic-cart-order-item .wcf-ic-cart-order-item__price {
+	flex: 0 0 auto;
+	align-self: center;
+	width: auto;
+	white-space: nowrap;
+	font-family: var(--ty-sans);
+	font-size: 15px;
+	font-weight: 600;
+	color: var(--ty-text);
+	text-align: end;
+}
+
+/* Totals */
+.wcf-instant-thankyou .wcf-ic-cart-totals {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 16px;
+	padding-block: 7px;
+	font-size: 14px;
+	color: var(--ty-text-2);
+}
+.wcf-instant-thankyou .wcf-ic-cart-totals--cart_subtotal {
+	padding-top: 16px;
+}
+.wcf-instant-thankyou .wcf-ic-cart-totals__label span {
+	color: var(--ty-muted);
+}
+.wcf-instant-thankyou .wcf-ic-cart-totals__value {
+	display: inline-flex;
+	align-items: baseline;
+	gap: 6px;
+	color: var(--ty-text);
+}
+.wcf-instant-thankyou .wcf-ic-cart-totals__currency-badge {
+	display: inline-block;
+	font-family: var(--ty-sans);
+	font-size: 10px;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	color: var(--ty-muted);
+}
+.wcf-instant-thankyou .wcf-ic-cart-totals.total {
+	margin-top: 14px;
+	padding-top: 18px;
+	border-top: 1px solid var(--ty-border-strong);
+}
+.wcf-instant-thankyou .wcf-ic-cart-totals.total .wcf-ic-cart-totals__label span {
+	font-family: var(--ty-serif);
+	font-size: 22px;
+	color: var(--ty-text);
+}
+.wcf-instant-thankyou .wcf-ic-cart-totals.total .wcf-ic-cart-totals__value span:not(.wcf-ic-cart-totals__currency-badge) {
+	font-family: var(--ty-serif);
+	font-size: 26px;
+	font-weight: 600;
+	color: var(--ty-text);
+}
+
+/* ==========================================================================
+   Entrance motion — gentle rise, once (reduced-motion safe)
+   ========================================================================== */
+@keyframes yz-ty-rise {
+	from { opacity: 0; transform: translateY(14px); }
+	to   { opacity: 1; transform: none; }
+}
+.wcf-instant-thankyou .wcf-ic-layout-left-column  { animation: yz-ty-rise 0.6s var(--ty-ease) both; }
+.wcf-instant-thankyou .wcf-ic-layout-right-column { animation: yz-ty-rise 0.6s var(--ty-ease) 0.08s both; }
+
+@media (prefers-reduced-motion: reduce) {
+	.wcf-instant-thankyou .wcf-ic-layout-left-column,
+	.wcf-instant-thankyou .wcf-ic-layout-right-column { animation: none; }
+}
+
+/* ==========================================================================
+   "NEXT STEPS" — progress stepper, delivery estimate, brand note, support.
+   Injected on cartflows_instant_thankyou_after (inc/thankyou-enhancements.php).
+   ========================================================================== */
+.wcf-instant-thankyou .yz-ty-next {
+	margin-top: clamp(20px, 3vw, 28px);
+}
+
+/* --- Order progress stepper --- */
+.wcf-instant-thankyou .yz-ty-steps {
+	list-style: none;
+	display: flex;
+	margin: 0 0 clamp(20px, 3vw, 28px);
+	padding: 0;
+}
+.wcf-instant-thankyou .yz-ty-step {
+	flex: 1 1 0;
+	min-width: 0;
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 9px;
+	text-align: center;
+}
+/* connector line leading INTO each step (filled up to the current step) */
+.wcf-instant-thankyou .yz-ty-step::before {
+	content: "";
+	position: absolute;
+	top: 7px;
+	inset-inline-start: -50%;
+	inline-size: 100%;
+	block-size: 2px;
+	background: var(--ty-border-strong);
+	z-index: 0;
+}
+.wcf-instant-thankyou .yz-ty-step:first-child::before { display: none; }
+.wcf-instant-thankyou .yz-ty-step.is-done::before,
+.wcf-instant-thankyou .yz-ty-step.is-active::before { background: var(--ty-accent); }
+.wcf-instant-thankyou .yz-ty-step__dot {
+	position: relative;
+	z-index: 1;
+	inline-size: 16px;
+	block-size: 16px;
+	border-radius: 999px;
+	background: var(--ty-surface);
+	border: 2px solid var(--ty-border-strong);
+	box-sizing: border-box;
+}
+.wcf-instant-thankyou .yz-ty-step.is-done .yz-ty-step__dot {
+	background: var(--ty-accent);
+	border-color: var(--ty-accent);
+}
+.wcf-instant-thankyou .yz-ty-step.is-active .yz-ty-step__dot {
+	border-color: var(--ty-accent);
+	box-shadow: 0 0 0 4px var(--ty-accent-soft);
+}
+.wcf-instant-thankyou .yz-ty-step__label {
+	font-size: 11px;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	color: var(--ty-muted);
+	line-height: 1.35;
+}
+.wcf-instant-thankyou .yz-ty-step.is-done .yz-ty-step__label,
+.wcf-instant-thankyou .yz-ty-step.is-active .yz-ty-step__label {
+	color: var(--ty-text);
+	font-weight: 500;
+}
+
+/* --- Estimated delivery --- */
+.wcf-instant-thankyou .yz-ty-eta {
+	display: flex;
+	align-items: center;
+	gap: 14px;
+	padding: 16px 18px;
+	background: var(--ty-surface);
+	border: 1px solid var(--ty-border);
+}
+.wcf-instant-thankyou .yz-ty-eta__icon {
+	inline-size: 24px;
+	block-size: 24px;
+	stroke: var(--ty-accent);
+	fill: none;
+	flex: 0 0 auto;
+}
+.wcf-instant-thankyou .yz-ty-eta__label {
+	display: block;
+	font-size: 11.5px;
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	color: var(--ty-muted);
+	margin-bottom: 2px;
+}
+.wcf-instant-thankyou .yz-ty-eta__value {
+	display: block;
+	font-family: var(--ty-serif);
+	font-size: 19px;
+	line-height: 1.2;
+	color: var(--ty-text);
+}
+
+/* --- Brand note (pull-quote) --- */
+.wcf-instant-thankyou .yz-ty-note {
+	margin: clamp(18px, 2.4vw, 22px) 0 0;
+	padding-inline-start: 16px;
+	border-inline-start: 2px solid var(--ty-gold);
+	font-family: var(--ty-serif);
+	font-style: italic;
+	font-size: clamp(17px, 2vw, 19px);
+	line-height: 1.5;
+	color: var(--ty-text-2);
+}
+
+/* --- Support line --- */
+.wcf-instant-thankyou .yz-ty-support {
+	margin-top: clamp(16px, 2.2vw, 20px);
+	font-size: 14px;
+	line-height: 1.6;
+	color: var(--ty-muted);
+}
+.wcf-instant-thankyou .yz-ty-support a {
+	color: var(--ty-text);
+	text-decoration: none;
+	border-bottom: 1px solid var(--ty-gold);
+	padding-bottom: 1px;
+	transition: color 0.2s var(--ty-ease);
+}
+.wcf-instant-thankyou .yz-ty-support a:hover { color: var(--ty-accent); }
+.wcf-instant-thankyou .yz-ty-support__sep { margin-inline: 8px; opacity: 0.6; }

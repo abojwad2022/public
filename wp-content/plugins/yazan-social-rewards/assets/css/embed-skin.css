@@ -1,0 +1,562 @@
+/**
+ * Yazan Rewards — dashboard embed skin.
+ *
+ * When a rewards admin screen is shown chrome-less inside the standalone
+ * `/dashboard` (yazan-core) via `?yzrw_embed={screen}`, the raw wp-admin look
+ * (grey, blue buttons, square white cards) clashes with the luxury dashboard.
+ * This stylesheet re-skins the wp-admin markup to the dashboard's own design
+ * language by MIRRORING its native component styles (`.yz-card`, `.yz-btn-*`,
+ * `.yz-input`, `.yz-th`/`.yz-td`, `.yz-badge`) onto the wp-admin elements.
+ *
+ * SINGLE SOURCE OF TRUTH: it does NOT redeclare any design token. The tokens +
+ * fonts come from the shared `yz-tokens.css` + `yz-fonts.css` (yazan-core), which
+ * DashboardEmbed enqueues as dependencies so this sheet loads LAST and every rule
+ * (scoped under `body.yzrw-embed`) resolves the exact same `--yz-*` values, radii,
+ * shadows and typefaces (Inter / Cardo) as the dashboard itself — so the two can
+ * never drift again.
+ *
+ * Theme: `<html data-theme="dark|light">` is stamped by DashboardEmbed from the
+ * `theme` query param the iframe passes. ANALYTICS is pinned to `light` there,
+ * because its charts draw their palette from JS as inline SVG (CSS can't reach
+ * it) and that palette is validated for a light surface only — it reads as an
+ * intentional "report sheet" even inside a dark dashboard.
+ */
+
+/* ============================================================= *
+ *  Base document
+ * ============================================================= */
+html,
+body {
+	margin: 0;
+}
+body.yzrw-embed {
+	box-sizing: border-box;
+	/* No padding + the dashboard's own canvas background: the parent /dashboard
+	   supplies the page gutter and the iframe is auto-sized to content, so the
+	   embed reads as a native page with no seam. */
+	padding: 0;
+	margin: 0;
+	background: var(--yz-canvas);
+	color: var(--yz-fg);
+	font-family: var(--yz-font-sans);
+	font-size: var(--yz-text-base);
+	line-height: var(--yz-text-base--line-height);
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+}
+body.yzrw-embed .wrap,
+body.yzrw-embed .yzrw-admin-app,
+body.yzrw-embed .yzrw-admin-wrap {
+	max-width: none;
+	margin: 0;
+}
+
+/* Headings — Cardo display serif for a page title (integrity); Inter for the
+   in-card section titles, matching the dashboard's own card headings. */
+body.yzrw-embed h1,
+body.yzrw-embed h2,
+body.yzrw-embed h3 {
+	color: var(--yz-fg);
+}
+body.yzrw-embed .wrap > h1:first-of-type {
+	font-family: var(--yz-font-display);
+	font-weight: 400;
+	font-size: var(--yz-text-2xl);
+	line-height: var(--yz-text-2xl--line-height);
+	letter-spacing: var(--yz-tracking-tight);
+	margin: 0 0 1rem;
+}
+body.yzrw-embed .yzrw-card h2 {
+	font-family: var(--yz-font-sans);
+	font-weight: 600;
+	font-size: var(--yz-text-md);
+	line-height: var(--yz-text-md--line-height);
+	margin-top: 0;
+}
+body.yzrw-embed h3 {
+	font-size: var(--yz-text-xs);
+	text-transform: uppercase;
+	letter-spacing: var(--yz-tracking-wide);
+	color: var(--yz-muted);
+	font-weight: 600;
+}
+
+body.yzrw-embed p,
+body.yzrw-embed .description,
+body.yzrw-embed .yzrw-kpi-sub {
+	color: var(--yz-muted);
+}
+body.yzrw-embed a {
+	color: var(--yz-agate-fg);
+	text-decoration: none;
+}
+body.yzrw-embed a:hover {
+	color: var(--yz-agate);
+	text-decoration: underline;
+}
+body.yzrw-embed code {
+	background: var(--yz-sunken);
+	color: var(--yz-fg);
+	border-radius: var(--yz-radius-xs);
+	padding: 0.1em 0.4em;
+	font-family: var(--yz-font-mono);
+	font-size: 0.85em;
+}
+body.yzrw-embed strong {
+	color: var(--yz-fg);
+}
+
+/* Scrollbars to match the dashboard. */
+body.yzrw-embed ::-webkit-scrollbar {
+	width: 10px;
+	height: 10px;
+}
+body.yzrw-embed ::-webkit-scrollbar-track {
+	background: var(--yz-sunken);
+}
+body.yzrw-embed ::-webkit-scrollbar-thumb {
+	background: var(--yz-edge);
+	border-radius: var(--yz-radius-full);
+}
+body.yzrw-embed ::-webkit-scrollbar-thumb:hover {
+	background: var(--yz-faint);
+}
+
+/* Shared focus ring, mirroring the dashboard's unlayered focus rule. */
+body.yzrw-embed .button:focus-visible,
+body.yzrw-embed input:focus-visible,
+body.yzrw-embed select:focus-visible,
+body.yzrw-embed textarea:focus-visible,
+body.yzrw-embed a:focus-visible {
+	outline: 2px solid var(--yz-focus);
+	outline-offset: 1px;
+}
+
+/* ============================================================= *
+ *  Surfaces — cards (mirror .yz-card)
+ * ============================================================= */
+body.yzrw-embed .yzrw-card {
+	background: var(--yz-surface);
+	border: 1px solid var(--yz-edge);
+	border-radius: var(--yz-radius-lg);
+	box-shadow: var(--yz-shadow-1);
+	padding: 1.125rem 1.25rem;
+	margin-bottom: 1.25rem;
+	/* Screen CSS caps these at 900–960px; go full-bleed like the dashboard pages. */
+	max-width: none;
+}
+body.yzrw-embed .yzrw-card-head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.75rem;
+	border-bottom: 1px solid var(--yz-edge);
+	padding-bottom: 0.7rem;
+	margin-bottom: 0.9rem;
+}
+body.yzrw-embed .yzrw-section {
+	border-top: 1px solid var(--yz-divider);
+	margin-top: 1rem;
+	padding-top: 0.85rem;
+}
+
+/* ============================================================= *
+ *  Buttons — mirror .yz-btn-* (radius-md, control heights)
+ * ============================================================= */
+body.yzrw-embed .button,
+body.yzrw-embed .button-secondary,
+body.yzrw-embed input[type='submit'].button {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.4rem;
+	background: transparent;
+	border: 1px solid var(--yz-edge);
+	border-radius: var(--yz-radius-md);
+	color: var(--yz-fg);
+	box-shadow: none;
+	text-shadow: none;
+	min-height: var(--yz-control-md);
+	height: auto;
+	padding: 0.3rem 0.85rem;
+	font-size: var(--yz-text-sm);
+	font-weight: 500;
+	line-height: 1.3;
+	transition:
+		background-color var(--yz-duration-fast) var(--yz-ease),
+		border-color var(--yz-duration-fast) var(--yz-ease),
+		color var(--yz-duration-fast) var(--yz-ease);
+}
+body.yzrw-embed .button:hover,
+body.yzrw-embed .button-secondary:hover {
+	border-color: var(--yz-faint);
+	background: var(--yz-hover);
+	color: var(--yz-fg);
+}
+body.yzrw-embed .button-primary,
+body.yzrw-embed input[type='submit'].button-primary {
+	background: var(--yz-agate);
+	border: 1px solid var(--yz-agate);
+	border-radius: var(--yz-radius-md);
+	color: #fff;
+	box-shadow: none;
+	text-shadow: none;
+}
+body.yzrw-embed .button-primary:hover {
+	background: var(--yz-agate-hover);
+	border-color: var(--yz-agate-hover);
+	color: #fff;
+}
+body.yzrw-embed .button-primary:active {
+	background: var(--yz-agate-active);
+	border-color: var(--yz-agate-active);
+}
+body.yzrw-embed .button-small {
+	min-height: var(--yz-control-sm);
+	padding: 0.18rem 0.6rem;
+	font-size: var(--yz-text-xs);
+}
+/* Destructive: wp `button-link-delete` and the integrity `button.delete`. */
+body.yzrw-embed .button-link-delete,
+body.yzrw-embed .yzrw-remove {
+	background: transparent;
+	border: 0;
+	color: var(--yz-danger);
+	box-shadow: none;
+	min-height: 0;
+	padding: 0.18rem 0.35rem;
+	font-weight: 600;
+	text-decoration: none;
+}
+body.yzrw-embed .button-link-delete:hover,
+body.yzrw-embed .yzrw-remove:hover {
+	color: var(--yz-danger);
+	text-decoration: underline;
+}
+body.yzrw-embed .button.delete,
+body.yzrw-embed input[type='submit'].button.delete {
+	background: transparent;
+	border: 1px solid var(--yz-danger-border);
+	color: var(--yz-danger);
+	border-radius: var(--yz-radius-md);
+}
+body.yzrw-embed .button.delete:hover {
+	background: var(--yz-danger-solid);
+	border-color: var(--yz-danger-solid);
+	color: #fff;
+}
+body.yzrw-embed .button-link {
+	display: inline;
+	background: none;
+	border: 0;
+	box-shadow: none;
+	min-height: 0;
+	padding: 0;
+	color: var(--yz-agate-fg);
+}
+body.yzrw-embed .button:disabled,
+body.yzrw-embed .button[disabled] {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+/* ============================================================= *
+ *  Form fields — mirror .yz-input (sunken, edge-strong, radius-md)
+ * ============================================================= */
+body.yzrw-embed input[type='text'],
+body.yzrw-embed input[type='number'],
+body.yzrw-embed input[type='email'],
+body.yzrw-embed input[type='url'],
+body.yzrw-embed input[type='search'],
+body.yzrw-embed input[type='date'],
+body.yzrw-embed input[type='password'],
+body.yzrw-embed input[type='tel'],
+body.yzrw-embed select,
+body.yzrw-embed textarea {
+	background: var(--yz-sunken);
+	border: 1px solid var(--yz-edge-strong);
+	border-radius: var(--yz-radius-md);
+	color: var(--yz-fg);
+	box-shadow: none;
+	min-height: var(--yz-control-lg);
+	padding: 0.34rem 0.7rem;
+	font-size: var(--yz-text-base);
+	line-height: 1.4;
+}
+body.yzrw-embed textarea {
+	min-height: 5rem;
+}
+body.yzrw-embed input:hover:not(:disabled),
+body.yzrw-embed select:hover:not(:disabled),
+body.yzrw-embed textarea:hover:not(:disabled) {
+	border-color: var(--yz-faint);
+}
+body.yzrw-embed input:focus,
+body.yzrw-embed select:focus,
+body.yzrw-embed textarea:focus {
+	border-color: var(--yz-edge-strong);
+	box-shadow: none;
+	outline: 2px solid var(--yz-focus);
+	outline-offset: 1px;
+	color: var(--yz-fg);
+}
+body.yzrw-embed input::placeholder,
+body.yzrw-embed textarea::placeholder {
+	color: var(--yz-faint);
+}
+body.yzrw-embed select option {
+	background: var(--yz-surface);
+	color: var(--yz-fg);
+}
+body.yzrw-embed label {
+	color: var(--yz-fg);
+}
+/* wp-admin custom-draws checkboxes/radios (appearance:none) and their :checked
+   fill relies on --wp-admin-theme-color, which this embed never enqueues. Theme
+   the control explicitly — the agate fill carries wp-admin's built-in white check
+   on both themes. */
+body.yzrw-embed input[type='checkbox'],
+body.yzrw-embed input[type='radio'] {
+	background: var(--yz-sunken);
+	border: 1px solid var(--yz-edge-strong);
+	border-radius: var(--yz-radius-xs);
+	min-height: 0;
+}
+body.yzrw-embed input[type='radio'] {
+	border-radius: var(--yz-radius-full);
+}
+body.yzrw-embed input[type='checkbox']:checked,
+body.yzrw-embed input[type='radio']:checked {
+	background: var(--yz-agate);
+	border-color: var(--yz-agate);
+}
+body.yzrw-embed input[type='checkbox']:disabled,
+body.yzrw-embed input[type='radio']:disabled {
+	/* Dim only — don't override the background, so a disabled *checked* box keeps
+	   its agate fill (and its white check) instead of reading as unchecked. */
+	opacity: 0.55;
+}
+
+/* Selects: re-add wp-admin's stripped dropdown chevron (and mirror it under RTL). */
+body.yzrw-embed select {
+	-webkit-appearance: none;
+	appearance: none;
+	background-color: var(--yz-sunken);
+	background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20width%3D%2220%22%20height%3D%2220%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cpath%20d%3D%22M5%206l5%205%205-5%202%201-7%207-7-7%202-1z%22%20fill%3D%22%23888888%22%2F%3E%3C%2Fsvg%3E');
+	background-repeat: no-repeat;
+	background-position: right 9px center;
+	background-size: 15px 15px;
+	padding-right: 1.75rem;
+}
+[dir='rtl'] body.yzrw-embed select {
+	background-position: left 9px center;
+	padding-right: 0.7rem;
+	padding-left: 1.75rem;
+}
+/* Builder field rows + repeater rows. */
+body.yzrw-embed .yzrw-field > label {
+	color: var(--yz-fg);
+	font-weight: 500;
+}
+body.yzrw-embed .yzrw-row {
+	background: var(--yz-sunken);
+	border: 1px solid var(--yz-edge);
+	border-radius: var(--yz-radius-sm);
+}
+
+/* ============================================================= *
+ *  Tables — mirror .yz-th / .yz-td inside a rounded, shadowed card
+ * ============================================================= */
+body.yzrw-embed table.wp-list-table,
+body.yzrw-embed table.widefat,
+body.yzrw-embed table.yzrw-table {
+	background: var(--yz-surface);
+	border: 1px solid var(--yz-edge);
+	border-radius: var(--yz-radius-lg);
+	border-collapse: separate;
+	border-spacing: 0;
+	overflow: hidden;
+	box-shadow: var(--yz-shadow-1);
+}
+body.yzrw-embed .widefat th,
+body.yzrw-embed .wp-list-table th,
+body.yzrw-embed .yzrw-table th,
+body.yzrw-embed table.widefat thead td {
+	background: var(--yz-sunken);
+	color: var(--yz-muted);
+	font-weight: 600;
+	text-transform: none;
+	letter-spacing: var(--yz-tracking-normal);
+	font-size: var(--yz-text-xs);
+	text-align: start;
+	border-bottom: 1px solid var(--yz-edge);
+	padding: 0.6rem 0.875rem;
+}
+body.yzrw-embed .widefat td,
+body.yzrw-embed .wp-list-table td,
+body.yzrw-embed .yzrw-table td {
+	background: transparent;
+	color: var(--yz-fg);
+	border-bottom: 1px solid var(--yz-divider);
+	padding: 0.6875rem 0.875rem;
+	vertical-align: middle;
+}
+body.yzrw-embed .widefat tbody tr:last-child td,
+body.yzrw-embed .yzrw-table tbody tr:last-child td {
+	border-bottom: 0;
+}
+body.yzrw-embed .widefat tbody tr:hover td,
+body.yzrw-embed .yzrw-table tbody tr:hover td {
+	background: var(--yz-hover);
+}
+/* Neutralise wp-admin's zebra striping (we use hover instead). */
+body.yzrw-embed .striped > tbody > :nth-child(odd),
+body.yzrw-embed .widefat.striped > tbody > :nth-child(odd) {
+	background: transparent;
+}
+body.yzrw-embed .yzrw-actions-cell {
+	white-space: nowrap;
+}
+
+/* ============================================================= *
+ *  Status pills — mirror .yz-badge (soft-filled, radius-sm).
+ *  requested/pending/queued/scheduled/manual_review → warn
+ *  fulfilled/sent/approved                          → ok
+ *  cancelled/failed/rejected/suspicious             → danger
+ * ============================================================= */
+body.yzrw-embed .yzrw-pill {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.25rem;
+	padding: 0.125rem 0.4375rem;
+	border-radius: var(--yz-radius-sm);
+	border: 1px solid var(--yz-edge);
+	background: var(--yz-surface2);
+	color: var(--yz-muted);
+	font-size: var(--yz-text-xs);
+	font-weight: 500;
+	line-height: 1.125rem;
+	text-transform: none;
+	letter-spacing: var(--yz-tracking-normal);
+}
+body.yzrw-embed .yzrw-pill.fulfilled,
+body.yzrw-embed .yzrw-pill.sent,
+body.yzrw-embed .yzrw-pill--approved {
+	background: var(--yz-ok-bg);
+	border-color: var(--yz-ok-border);
+	color: var(--yz-ok);
+}
+body.yzrw-embed .yzrw-pill.requested,
+body.yzrw-embed .yzrw-pill.pending,
+body.yzrw-embed .yzrw-pill.queued,
+body.yzrw-embed .yzrw-pill.scheduled,
+body.yzrw-embed .yzrw-pill--manual_review {
+	background: var(--yz-warn-bg);
+	border-color: var(--yz-warn-border);
+	color: var(--yz-warn);
+}
+body.yzrw-embed .yzrw-pill.cancelled,
+body.yzrw-embed .yzrw-pill.failed,
+body.yzrw-embed .yzrw-pill--rejected,
+body.yzrw-embed .yzrw-pill--suspicious {
+	background: var(--yz-danger-bg);
+	border-color: var(--yz-danger-border);
+	color: var(--yz-danger);
+}
+
+/* Inline feedback messages (error red is the default; notifications overrides
+   the inline colour to a themed ok/danger via var() at runtime). */
+body.yzrw-embed .yzrw-msg {
+	color: var(--yz-danger);
+}
+body.yzrw-embed .yzrw-save {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	margin-top: 1rem;
+}
+
+/* ============================================================= *
+ *  Notices — mirror the dashboard Alert (surface + tone accent)
+ * ============================================================= */
+body.yzrw-embed .notice {
+	background: var(--yz-surface);
+	border: 1px solid var(--yz-edge);
+	/* Logical property so the accent bar flips to the right side under RTL. */
+	border-inline-start: 3px solid var(--yz-faint);
+	border-radius: var(--yz-radius-md);
+	box-shadow: none;
+	color: var(--yz-fg);
+	margin: 1rem 0;
+	padding: 0.5rem 0.9rem;
+}
+body.yzrw-embed .notice p {
+	color: var(--yz-fg);
+}
+body.yzrw-embed .notice-success {
+	background: var(--yz-ok-bg);
+	border-inline-start-color: var(--yz-ok);
+}
+body.yzrw-embed .notice-error {
+	background: var(--yz-danger-bg);
+	border-inline-start-color: var(--yz-danger);
+}
+body.yzrw-embed .notice-warning {
+	background: var(--yz-warn-bg);
+	border-inline-start-color: var(--yz-warn);
+}
+body.yzrw-embed .notice-info {
+	background: var(--yz-info-bg);
+	border-inline-start-color: var(--yz-info);
+}
+body.yzrw-embed .spinner {
+	opacity: 0.7;
+}
+
+/* ============================================================= *
+ *  Analytics — pinned light (data-theme="light" set by DashboardEmbed).
+ *  The chrome resolves the same tokens; the JS-drawn charts stay light.
+ * ============================================================= */
+body.yzrw-embed .yzrw-kpi {
+	background: var(--yz-sunken);
+	border: 1px solid var(--yz-edge);
+	border-radius: var(--yz-radius-md);
+}
+body.yzrw-embed .yzrw-kpi-label {
+	color: var(--yz-muted);
+}
+body.yzrw-embed .yzrw-kpi-value {
+	color: var(--yz-fg);
+}
+body.yzrw-embed .yzrw-legend-label {
+	color: var(--yz-fg);
+}
+body.yzrw-embed .yzrw-legend-val,
+body.yzrw-embed .yzrw-empty,
+body.yzrw-embed .yzrw-loading {
+	color: var(--yz-muted);
+}
+/* The floating chart tooltip stays dark on both themes (it reads well over the
+   light chart plate) — leave admin-analytics.css's .yzrw-tip untouched. */
+
+/* ============================================================= *
+ *  User typeahead dropdown (Points → Manual adjustment)
+ * ============================================================= */
+body.yzrw-embed .yzrw-user-results {
+	background: var(--yz-raised);
+	border: 1px solid var(--yz-edge);
+	border-radius: var(--yz-radius-md);
+	box-shadow: var(--yz-shadow-2);
+}
+body.yzrw-embed .yzrw-user-results li {
+	color: var(--yz-fg);
+	border-radius: var(--yz-radius-sm);
+}
+body.yzrw-embed .yzrw-user-results li:hover,
+body.yzrw-embed .yzrw-user-results li.is-active {
+	background: var(--yz-hover);
+}
+body.yzrw-embed .yzrw-user-meta {
+	color: var(--yz-muted);
+	opacity: 1;
+}

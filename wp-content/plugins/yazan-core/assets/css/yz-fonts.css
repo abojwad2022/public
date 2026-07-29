@@ -1,0 +1,64 @@
+/**
+ * Yazan self-hosted typefaces.
+ * ---------------------------------------------------------------------------
+ * DELIBERATELY SEPARATE from yz-tokens.css: this file contains url() references,
+ * and yz-tokens.css is bundled by Vite (which would rewrite those URLs into
+ * hashed copies inside the SPA bundle). Keeping @font-face here means every
+ * surface — the SPA, the Rewards iframes and wp-admin — links the SAME files at
+ * the SAME stable URLs, so the fonts are downloaded and cached exactly once.
+ *
+ * This stylesheet is only ever <link>ed, never @import'ed into the build.
+ *
+ * All three families are SIL Open Font Licence and already ship with WordPress
+ * core themes; they are copied into assets/fonts/ so the dashboard does not
+ * depend on a theme being installed.
+ *
+ *   Inter    — UI sans. Variable 100..900. Has real tabular figures, which is
+ *              why it replaced Jost: every price, quantity and KPI in this app
+ *              needs digits that line up in a column.
+ *   Cardo    — display serif for page titles and the wordmark. A Bembo-based
+ *              old-style face: the heritage, quietly-luxurious note the brand
+ *              asks for, and far more legible at UI sizes than a high-contrast
+ *              Garamond revival.
+ *   Beiruti  — Arabic UI face. Gated behind unicode-range, so an English
+ *              session never downloads it.
+ */
+
+/* --- Inter: UI sans ------------------------------------------------------ */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('../fonts/inter-var.woff2') format('woff2-variations');
+}
+
+/* --- Cardo: display serif ------------------------------------------------ */
+@font-face {
+  font-family: 'Cardo';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('../fonts/cardo-400.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Cardo';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('../fonts/cardo-700.woff2') format('woff2');
+}
+
+/* --- Beiruti: Arabic ------------------------------------------------------
+   unicode-range keeps this off the wire entirely unless Arabic glyphs are
+   actually rendered. */
+@font-face {
+  font-family: 'Beiruti';
+  font-style: normal;
+  font-weight: 200 900;
+  font-display: swap;
+  src: url('../fonts/beiruti-var.woff2') format('woff2-variations');
+  unicode-range: U+0600-06FF, U+0750-077F, U+0870-088E, U+08A0-08FF, U+FB50-FDFF,
+    U+FE70-FEFF, U+10E60-10E7E, U+1EC70-1ECB4, U+1ED00-1ED4F, U+1EE00-1EEFF;
+}

@@ -1,0 +1,324 @@
+/**
+ * Yazan Design Tokens — the single source of truth for every Yazan surface.
+ * ---------------------------------------------------------------------------
+ * Consumed by ALL of:
+ *   1. the /dashboard React SPA   — @import'ed into dashboard-app/src/styles.css
+ *   2. the Yazan Rewards iframes  — wp_enqueue_style('yz-tokens') as a dependency
+ *                                   of yzrw-embed-skin
+ *   3. yazan-core's wp-admin CSS  — same registered handle
+ *
+ * Nothing here may reference a file (no url()), because this stylesheet is both
+ * bundled by Vite and served raw by WordPress; @font-face therefore lives in the
+ * sibling yz-fonts.css, which is only ever linked, never bundled.
+ *
+ * Two themes, switched by the data-theme attribute on <html> (stamped before
+ * first paint by the PHP shell, so there is no flash of the wrong theme).
+ *
+ * CONTRAST: every foreground token below carries its measured WCAG ratio against
+ * the darkest background it is allowed to sit on. Text tokens are >= 4.5:1;
+ * non-text UI tokens are >= 3:1. Do not change a value without re-measuring.
+ */
+
+/* ==========================================================================
+   Light — also the DEFAULT.
+   ---------------------------------------------------------------------------
+   :root must carry the LIGHT values, not the dark ones. The SPA shell and the
+   Rewards embed both write an explicit data-theme on <html>, so they are never
+   affected by this default — but wp-admin ships no data-theme at all, and a dark
+   :root would paint dark tokens straight onto light WordPress admin screens.
+   ========================================================================== */
+
+:root,
+html[data-theme='light'],
+[data-yz-theme='light'] {
+  color-scheme: light;
+
+  --yz-canvas: #f4f1ea; /* warm ivory ground */
+  --yz-sunken: #fbf9f5;
+  --yz-surface: #ffffff;
+  --yz-surface2: #f0ede6;
+  --yz-raised: #ffffff;
+  --yz-scrim: rgb(38 32 26 / 44%);
+
+  --yz-edge: #ddd8ce;
+  --yz-edge-strong: #c6bfb2;
+  --yz-divider: #eae6de;
+
+  --yz-fg: #1a1714; /* 15.8:1 on canvas */
+  --yz-muted: #5f594f; /* 6.2:1 on canvas */
+  --yz-faint: #6e6961; /* 4.8:1 on canvas, 4.7:1 on surface2 */
+
+  --yz-agate: #8c2f24; /* 7.3:1 on canvas as text; white on it = 8.2:1 */
+  --yz-agate-hover: #73271e;
+  --yz-agate-active: #5d1f18;
+  --yz-agate-fg: #8c2f24;
+  --yz-agate-bg: rgb(140 47 36 / 10%);
+
+  --yz-gold: #7a5f22; /* 5.3:1 on canvas — darkened to stay legible on ivory */
+  --yz-gold-hover: #634d1b;
+  --yz-gold-bg: rgb(122 95 34 / 12%);
+
+  --yz-oncontrast: #ffffff;
+
+  --yz-hover: rgb(26 23 20 / 4%);
+  --yz-active: rgb(26 23 20 / 8%);
+  --yz-selected: rgb(140 47 36 / 10%);
+  --yz-focus: #7a5f22; /* 5.3:1 on canvas */
+  --yz-focus-inset: #ffffff;
+
+  --yz-ok: #356b43; /* 5.6:1 on canvas */
+  --yz-ok-solid: #356b43;
+  --yz-ok-bg: rgb(53 107 67 / 10%);
+  --yz-ok-border: rgb(53 107 67 / 30%);
+
+  --yz-warn: #7d5a12; /* 5.6:1 on canvas */
+  --yz-warn-solid: #7d5a12;
+  --yz-warn-bg: rgb(125 90 18 / 12%);
+  --yz-warn-border: rgb(125 90 18 / 30%);
+
+  --yz-danger: #a33a30; /* 5.8:1 on canvas; white on it = 6.6:1 */
+  --yz-danger-solid: #a33a30;
+  --yz-danger-bg: rgb(163 58 48 / 10%);
+  --yz-danger-border: rgb(163 58 48 / 30%);
+
+  --yz-info: #1d5fa8; /* 5.7:1 on canvas; white on it = 6.5:1 */
+  --yz-info-solid: #1d5fa8;
+  --yz-info-bg: rgb(29 95 168 / 10%);
+  --yz-info-border: rgb(29 95 168 / 30%);
+
+  /* Categorical series colours — assign in this fixed order, never cycled.
+     Validated on #ffffff: lightness band, chroma floor, colour-vision-deficiency
+     separation (worst adjacent pair ΔE 11.8 deutan), normal-vision separation
+     (ΔE 23.0) and 3:1 contrast all PASS. The previous ramp failed three of those
+     — its violet and blue were indistinguishable even to normal vision — so
+     re-measure with the validator before changing any value here. */
+  --yz-viz-1: #a8392c;
+  --yz-viz-2: #0088a8;
+  --yz-viz-3: #b5701c;
+  --yz-viz-4: #2f5fb5;
+  --yz-viz-5: #4f7d2f;
+  --yz-viz-6: #b5468f;
+  --yz-viz-grid: #e4e0d7;
+  --yz-viz-axis: #6e6961;
+
+  /* Warm-tinted rather than neutral black: a grey shadow on warm ivory reads
+     as a default framework, a warm one reads as considered. */
+  --yz-shadow-1: 0 1px 2px rgb(60 50 40 / 9%), 0 1px 3px rgb(60 50 40 / 6%);
+  --yz-shadow-2: 0 4px 12px rgb(60 50 40 / 13%), 0 2px 4px rgb(60 50 40 / 8%);
+  --yz-shadow-3: 0 24px 56px rgb(60 50 40 / 20%), 0 8px 16px rgb(60 50 40 / 11%);
+  --yz-shadow-4: 0 8px 28px rgb(60 50 40 / 17%);
+}
+
+/* ==========================================================================
+   Dark
+   The [data-yz-theme] hook lets a single element opt a subtree out of the
+   document theme — the Rewards Analytics screen pins itself light because its
+   charts draw their palette from JS and are only validated on a light surface.
+   ========================================================================== */
+
+html[data-theme='dark'],
+[data-yz-theme='dark'] {
+  color-scheme: dark;
+
+  /* --- Surfaces: WARM charcoal — the neutrals carry the same warmth as the
+     ivory/agate/gold brand instead of a cool blue-grey, and each step is lifted
+     wider than before so cards/menus clearly float (was flat + cool + too dark). */
+  --yz-canvas: #221f1b; /* app background — warm charcoal, deliberately not black */
+  --yz-sunken: #1a1714; /* sidebar, input wells, table headers (one step down) */
+  --yz-surface: #312d27; /* cards — clearly lifted above canvas (1.20:1) */
+  --yz-surface2: #3c372f; /* hover rows, subtle fills */
+  --yz-raised: #464039; /* dropdowns, popovers, tooltips — above cards */
+  --yz-scrim: rgb(16 12 8 / 72%); /* modal/drawer backdrop */
+
+  /* --- Lines ------------------------------------------------------------- */
+  --yz-edge: #4a443c; /* default border (warm) */
+  --yz-edge-strong: #5d554b; /* inputs and controls that need definition */
+  --yz-divider: #343029; /* row rules inside a card */
+
+  /* --- Text -------------------------------------------------------------- */
+  --yz-fg: #f1eee8; /* warm near-white — 14.2:1 on canvas, 11.8:1 on surface */
+  --yz-muted: #b7ac9d; /* warm grey — 7.4:1 on canvas — secondary copy, labels */
+  --yz-faint: #ada293; /* 4.7:1 on surface2 — help text, meta, timestamps */
+
+  /* --- Brand ------------------------------------------------------------- */
+  --yz-agate: #b8453a; /* solid fill; pairs with white text at 5.3:1 */
+  --yz-agate-hover: #c9564a;
+  --yz-agate-active: #a13a30;
+  --yz-agate-fg: #ec8577; /* 4.9:1 on surface2 — agate used as TEXT or icon */
+  --yz-agate-bg: rgb(184 69 58 / 16%); /* tinted fill behind agate-fg */
+
+  --yz-gold: #d4b05c; /* 6.8:1 on surface */
+  --yz-gold-hover: #e0bd6a;
+  --yz-gold-bg: rgb(212 176 92 / 15%);
+
+  --yz-oncontrast: #18140f; /* warm near-black — text on a gold/light accent fill */
+
+  /* --- Interaction state layers ------------------------------------------ */
+  --yz-hover: rgb(255 255 255 / 5%);
+  --yz-active: rgb(255 255 255 / 9%);
+  --yz-selected: rgb(184 69 58 / 18%);
+  --yz-focus: #d4b05c; /* 8.9:1 on canvas — the focus ring colour */
+  --yz-focus-inset: #18140f; /* inner ring, separates the outer ring from the control */
+
+  /* --- Status: -solid is a fill (white text), plain is TEXT on a surface --- */
+  --yz-ok: #6cb47c; /* 5.1:1 on surface2 */
+  --yz-ok-solid: #3f7f51;
+  --yz-ok-bg: rgb(108 180 124 / 15%);
+  --yz-ok-border: rgb(108 180 124 / 38%);
+
+  --yz-warn: #d9a45c; /* 5.6:1 on surface2 */
+  --yz-warn-solid: #8a6420;
+  --yz-warn-bg: rgb(217 164 92 / 15%);
+  --yz-warn-border: rgb(217 164 92 / 38%);
+
+  --yz-danger: #f0776a; /* 4.6:1 on surface2 */
+  --yz-danger-solid: #c8443a; /* white on this = 4.8:1 */
+  --yz-danger-bg: rgb(240 119 106 / 14%);
+  --yz-danger-border: rgb(240 119 106 / 38%);
+
+  --yz-info: #7db4f0; /* 5.8:1 on surface2 */
+  --yz-info-solid: #2f6fc4; /* white on this = 5.0:1 */
+  --yz-info-bg: rgb(125 180 240 / 14%);
+  --yz-info-border: rgb(125 180 240 / 38%);
+
+  /* --- Data visualisation ------------------------------------------------
+     The dark steps are SELECTED for the dark surface, not lightened copies of
+     the light ones: same six hues, re-stepped into the dark lightness band and
+     re-validated against #262a32. All five checks PASS (worst adjacent pair
+     ΔE 12.2 deutan, ΔE 21.9 normal). Assign in this fixed order, never cycled. */
+  --yz-viz-1: #cc5a49;
+  --yz-viz-2: #1793ae;
+  --yz-viz-3: #bf8330;
+  --yz-viz-4: #5886c9;
+  --yz-viz-5: #679439;
+  --yz-viz-6: #c0679f;
+  --yz-viz-grid: #333944; /* gridlines — intentionally recessive, non-essential */
+  --yz-viz-axis: #939bab;
+
+  /* --- Elevation --------------------------------------------------------
+     On a dark canvas a shadow has little room to darken, so elevation is
+     carried by TWO signals working together: the surface itself steps lighter
+     (surface -> raised), and the shadow is markedly deeper than its light-theme
+     counterpart. Tuned by eye in the gallery — at light-theme alphas these were
+     invisible on charcoal. */
+  --yz-shadow-1: 0 1px 2px rgb(12 8 4 / 48%);
+  --yz-shadow-2: 0 4px 10px rgb(12 8 4 / 58%), 0 1px 3px rgb(12 8 4 / 48%);
+  --yz-shadow-3: 0 20px 50px rgb(12 8 4 / 66%), 0 6px 16px rgb(12 8 4 / 52%);
+  --yz-shadow-4: 0 10px 30px rgb(12 8 4 / 60%);
+}
+
+/* ==========================================================================
+   Theme-independent scales
+   Space, radius, type, motion and layering do not change between themes, so
+   they are declared once. Tailwind re-exports these through @theme in the SPA;
+   the non-SPA surfaces use the custom properties directly.
+   ========================================================================== */
+
+:root {
+  /* --- Typography -------------------------------------------------------- */
+  --yz-font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --yz-font-display: 'Cardo', ui-serif, Georgia, 'Times New Roman', serif;
+  --yz-font-arabic: 'Beiruti', 'Segoe UI', Tahoma, sans-serif;
+  --yz-font-mono: ui-monospace, 'Cascadia Code', 'Segoe UI Mono', Menlo, monospace;
+
+  /* Size / line-height pairs. 14px is the UI base; anything smaller is for
+     metadata only and never for sustained reading. */
+  --yz-text-2xs: 0.6875rem; /* 11 */
+  --yz-text-2xs--line-height: 1rem;
+  --yz-text-xs: 0.75rem; /* 12 */
+  --yz-text-xs--line-height: 1.125rem;
+  --yz-text-sm: 0.8125rem; /* 13 */
+  --yz-text-sm--line-height: 1.25rem;
+  --yz-text-base: 0.875rem; /* 14 — body */
+  --yz-text-base--line-height: 1.375rem;
+  --yz-text-md: 1rem; /* 16 */
+  --yz-text-md--line-height: 1.5rem;
+  --yz-text-lg: 1.125rem; /* 18 */
+  --yz-text-lg--line-height: 1.625rem;
+  --yz-text-xl: 1.375rem; /* 22 */
+  --yz-text-xl--line-height: 1.875rem;
+  --yz-text-2xl: 1.75rem; /* 28 */
+  --yz-text-2xl--line-height: 2.125rem;
+  --yz-text-3xl: 2.125rem; /* 34 */
+  --yz-text-3xl--line-height: 2.5rem;
+
+  --yz-tracking-tight: -0.011em;
+  --yz-tracking-normal: 0em;
+  --yz-tracking-wide: 0.02em;
+
+  /* --- Radius ------------------------------------------------------------ */
+  --yz-radius-xs: 4px;
+  --yz-radius-sm: 6px;
+  --yz-radius-md: 8px; /* buttons, inputs */
+  --yz-radius-lg: 12px; /* cards */
+  --yz-radius-xl: 16px; /* modals, drawers */
+  --yz-radius-full: 9999px;
+
+  /* --- Control sizing ---------------------------------------------------- */
+  --yz-control-sm: 28px;
+  --yz-control-md: 32px;
+  --yz-control-lg: 36px;
+  --yz-touch-min: 44px; /* mobile minimum hit area */
+
+  /* --- Motion ------------------------------------------------------------ */
+  --yz-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --yz-ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --yz-duration-fast: 120ms;
+  --yz-duration: 180ms;
+  --yz-duration-slow: 240ms;
+
+  /* --- Layering -----------------------------------------------------------
+     RULE: a scrim ranks immediately BELOW the surface it dims — never above it.
+     `--yz-z-overlay` was 350 against a 300 drawer, which put the backdrop on top
+     of the mobile navigation: the menu rendered greyed out and the scrim
+     swallowed every tap, so no nav item could be reached. */
+  --yz-z-sticky: 200;
+  --yz-z-overlay: 290; /* mobile nav backdrop — must stay under --yz-z-drawer */
+  --yz-z-drawer: 300;
+  --yz-z-modal: 400;
+  --yz-z-popover: 450;
+  --yz-z-toast: 500;
+
+  /* --- Fixed-surface tokens ---------------------------------------------
+     The wp-admin new-order toast is deliberately dark on every screen, and
+     wp-admin carries no data-theme attribute for it to follow. These stay
+     theme-independent so the toast reads the same everywhere — but they are
+     Yazan tokens, not the private palette the toast used to carry. */
+  --yz-alert-surface: #1a1714;
+  --yz-alert-fg: #f0ece4;
+  --yz-gold-lift: #d8b675;
+
+  /* --- Direction --------------------------------------------------------
+     A closed disclosure caret points along the reading direction, so in RTL its
+     rest state is 180deg, not 0. Kept as a token rather than an rtl: variant so
+     the caret still animates from rest to open in both directions. */
+  --yz-caret-rest: 0deg;
+
+  /* Off-canvas slide distance for the mobile sidebar. This is a TOKEN rather
+     than an `rtl:` utility on purpose: `rtl:translate-x-full` and
+     `lg:translate-x-0` are both single-variant utilities, so their order in the
+     generated CSS decides the winner — and `rtl:` won, leaving the desktop
+     sidebar translated off-screen in Arabic. An unprefixed arbitrary value has
+     no such contest: `lg:translate-x-0` reliably overrides it. */
+  --yz-slide-out: -100%;
+
+  /* --- Focus ring -------------------------------------------------------- */
+  /* Two layers: an inner ring in the surface colour separates the outer ring
+     from the control, so the same ring stays visible on canvas, on a card, and
+     on top of an agate-filled button. */
+  --yz-ring: 0 0 0 2px var(--yz-focus-inset), 0 0 0 4px var(--yz-focus);
+}
+
+[dir='rtl'] {
+  --yz-caret-rest: 180deg;
+  --yz-slide-out: 100%;
+}
+
+/* Motion is opt-out, globally, for everyone who asks for less of it. */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --yz-duration-fast: 1ms;
+    --yz-duration: 1ms;
+    --yz-duration-slow: 1ms;
+  }
+}

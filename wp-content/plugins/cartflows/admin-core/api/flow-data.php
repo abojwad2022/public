@@ -1,0 +1,152 @@
+<?php
+/**
+ * CartFlows Flow data.
+ *
+ * @package CartFlows
+ */
+
+namespace CartflowsAdmin\AdminCore\Api;
+
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
+use CartflowsAdmin\AdminCore\Api\ApiBase;
+use CartflowsAdmin\AdminCore\Inc\AdminHelper;
+
+use CartflowsAdmin\AdminCore\Inc\FlowMeta;
+
+/**
+ * Class Admin_Query.
+ */
+class FlowData extends ApiBase {
+
+	/**
+	 * Route base.
+	 *
+	 * @var string
+	 */
+	protected $rest_base = '/admin/flow-data/';
+
+	/**
+	 * Instance
+	 *
+	 * @access private
+	 * @var object Class object.
+	 * @since 1.0.0
+	 */
+	private static $instance;
+
+	/**
+	 * Initiator
+	 *
+	 * @since 1.0.0
+	 * @return object initialized object of class.
+	 */
+	public static function get_instance() {
+		if ( ! isset( self::$instance ) ) {
+			self::$instance = new self();
+		}
+		return self::$instance;
+	}
+
+	/**
+	 * Init Hooks.
+	 *
+	 * @since 1.0.0
+	 * @return void
+	 */
+	public function register_routes() {
+
+		$namespace = $this->get_api_namespace();
+
+		register_rest_route(
+			$namespace,
+			$this->rest_base . '(?P<id>[\d-]+)',
+			array(
+				'args'   => array(
+					'id' => array(
+						'description' => __( 'Flow ID.', 'cartflows' ),
+						'type'        => 'integer',
+					),
+				),
+				array(
+					'methods'             => \WP_REST_Server::READABLE,
+					'callback'            => array( $this, 'get_item' ),
+					'permission_callback' => array( $this, 'get_item_permissions_check' ),
+				),
+
+				/*
+				Start - Not yet working but needed
+					array(
+						'methods'             => \WP_REST_Server::EDITABLE,
+						'callback'            => array( $this, 'update_item' ),
+						'permission_callback' => array( $this, 'update_items_permissions_check' ),
+					),
+					End - Not yet working but needed
+				*/
+				'schema' => array( $this, 'get_public_item_schema' ),
+			)
+		);
+	}
+
+	/**
+	 * Get flow data.
+	 *
+	 * @param  WP_REST_Request $request Full details about the request.
+	 * @return WP_Error|boolean
+	 */
+	public function get_item( $request ) {
+
+		$flow_id = absint( $request->get_param( 'id' ) );
+
+		// Validate the post type to prevent accessing non-flow posts.
+		if ( CARTFLOWS_FLOW_POST_TYPE !== get_post_type( $flow_id ) ) {
+			return new \WP_Error( 'cartflows_invalid_flow', __( 'Invalid flow ID.', 'cartflows' ), array( 'status' => 404 ) );
+		}
+
+		$meta_options = AdminHelper::get_flow_meta_options( $flow_id );
+
+		/* Setup steps data */
+		$steps = AdminHelper::prepare_step_data( $flow_id, $meta_options );
+
+		$first_step_url = \Cartflows_Flow_Post_Type::get_instance()->get_first_step_url( get_post( $flow_id ) );
+
+		$data = apply_filters(
+			'cartflows_admin_flow_data',
+			array(
+				'id'            => $flow_id,
+				// Use the raw stored title to avoid the_title filters (wptexturize) turning dashes into HTML entities.
+				'title'         => get_post_field( 'post_title', $flow_id, 'raw' ),
+				'slug'          => get_post_field( 'post_name', $flow_id, 'edit' ),
+				'link'          => $first_step_url ? $first_step_url : '#',
+				'status'        => get_post_status( $flow_id ),
+				'steps'         => $steps,
+				'options'       => $meta_options,
+				'settings_data' => FlowMeta::get_meta_settings( $flow_id ),
+			),
+			$flow_id
+		);
+
+		$response = new \WP_REST_Response( $data );
+		$response->set_status( 200 );
+
+		return $response;
+	}
+
+	/**
+	 * Check whether a given request has permission to read notes.
+	 *
+	 * @param  WP_REST_Request $request Full details about the request.
+	 * @return WP_Error|boolean
+	 */
+	public function get_item_permissions_check( $request ) {
+
+		if ( ! current_user_can( 'cartflows_manage_flows_steps' ) ) {
+			return new \WP_Error( 'cartflows_rest_cannot_view', __( 'Sorry, you cannot list resources.', 'cartflows' ), array( 'status' => rest_authorization_required_code() ) );
+		}
+
+		return true;
+	}
+}

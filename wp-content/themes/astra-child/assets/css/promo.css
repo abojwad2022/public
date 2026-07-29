@@ -1,0 +1,174 @@
+/* ==========================================================================
+   Yazan — first-order promo popup (email capture → discount code)
+   Responsive: mobile & desktop. Flat + hairlines luxury grammar; brand tokens.
+   ========================================================================== */
+
+.yz-promo {
+	position: fixed; inset: 0; z-index: 100000;
+	display: flex; align-items: center; justify-content: center;
+	padding: 20px;
+}
+.yz-promo[hidden] { display: none; }
+
+.yz-promo__overlay {
+	position: absolute; inset: 0;
+	background: rgba(20, 18, 16, 0.62);
+	opacity: 0; transition: opacity 320ms var(--mo-ease-out, ease);
+}
+.yz-promo.is-open .yz-promo__overlay { opacity: 1; }
+
+.yz-promo__dialog {
+	position: relative; z-index: 1;
+	width: min(94vw, 440px); max-height: calc(100vh - 40px); overflow: auto;
+	background: var(--yz-ivory, #f5f1e9);
+	box-shadow: 0 40px 90px -40px rgba(20, 18, 16, 0.7);
+	opacity: 0; transform: translateY(18px) scale(0.98);
+	transition: opacity 360ms var(--mo-ease-out, ease), transform 360ms var(--mo-ease-out, ease);
+}
+.yz-promo.is-open .yz-promo__dialog { opacity: 1; transform: none; }
+
+/* Plain semi-transparent X over the image (commafootball style): 70% opacity at rest, full on hover.
+   The drop-shadow keeps the white glyph legible over lighter photos. */
+.yz-promo__close {
+	position: absolute; top: 12px; inset-inline-end: 12px; z-index: 2;
+	display: inline-flex; align-items: center; justify-content: center;
+	width: 32px; height: 32px; padding: 0;
+	background: transparent; border: 0; border-radius: 0;
+	color: #fff; opacity: 0.7; cursor: pointer;
+	filter: drop-shadow(0 1px 3px rgba(20, 18, 16, 0.45));
+	transition: opacity 200ms ease, transform 200ms ease;
+}
+.yz-promo__close:hover,
+.yz-promo__close:focus-visible { opacity: 1; transform: scale(1.06); }
+
+.yz-promo__media {
+	height: 190px; background-size: cover; background-position: center;
+	background-color: var(--yz-ink, #141210);
+}
+
+.yz-promo__body { padding: 26px 28px 30px; text-align: center; }
+
+.yz-promo__eyebrow {
+	margin: 0 0 12px; font-family: var(--yz-font-body);
+	font-size: 10.5px; font-weight: 500; letter-spacing: 0.26em; text-transform: uppercase;
+	color: var(--yz-agate, #9e3b2f);
+}
+.yz-promo__kicker {
+	margin: 0; font-family: var(--yz-font-body);
+	font-size: 13px; letter-spacing: 0.04em; color: var(--yz-muted, #6b6259);
+}
+.yz-promo__title {
+	margin: 2px 0 2px; font-family: var(--yz-font-display, serif);
+	font-weight: 600; font-size: clamp(40px, 11vw, 56px); line-height: 1; letter-spacing: 0.01em;
+	color: var(--yz-ink, #141210);
+}
+.yz-promo__sub {
+	margin: 0 0 20px; font-family: var(--yz-font-body);
+	font-size: 14px; letter-spacing: 0.02em; color: var(--yz-muted, #6b6259);
+}
+
+.yz-promo__form { display: block; }
+.yz-promo__hp { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+.yz-promo__form input[type="email"] {
+	width: 100%; box-sizing: border-box; margin: 0 0 10px;
+	padding: 14px 16px; border: 1px solid rgba(20, 18, 16, 0.2); border-radius: 0;
+	background: #fff; color: var(--yz-ink, #141210);
+	font-family: var(--yz-font-body); font-size: 15px;
+}
+.yz-promo__form input[type="email"]:focus { outline: none; border-color: var(--yz-ink, #141210); }
+.yz-promo__submit {
+	width: 100%; padding: 15px 20px; border: 1px solid var(--yz-ink, #141210); border-radius: 0;
+	background: var(--yz-ink, #141210); color: var(--yz-ivory, #f5f1e9);
+	font-family: var(--yz-font-body); font-size: 12px; font-weight: 500;
+	letter-spacing: 0.16em; text-transform: uppercase; cursor: pointer;
+	transition: background 220ms var(--mo-ease-out, ease), color 220ms var(--mo-ease-out, ease);
+}
+.yz-promo__submit:hover { background: transparent; color: var(--yz-ink, #141210); }
+.yz-promo__submit[disabled] { opacity: 0.6; cursor: default; }
+
+.yz-promo__error {
+	margin: 10px 0 0; color: var(--yz-agate, #9e3b2f);
+	font-size: 13px; letter-spacing: 0.02em;
+}
+.yz-promo__error[hidden] { display: none; }
+
+.yz-promo__dismiss {
+	margin: 16px auto 0; padding: 4px; background: transparent; border: 0; cursor: pointer;
+	color: var(--yz-muted, #6b6259); font-family: var(--yz-font-body);
+	font-size: 12px; letter-spacing: 0.06em; text-decoration: underline; text-underline-offset: 3px;
+}
+.yz-promo__dismiss:hover { color: var(--yz-ink, #141210); }
+
+/* ---- Success state ---------------------------------------------------- */
+.yz-promo__success[hidden] { display: none; }
+.yz-promo__success-title {
+	margin: 0 0 8px; font-family: var(--yz-font-display, serif);
+	font-weight: 600; font-size: 26px; color: var(--yz-ink, #141210);
+}
+.yz-promo__success-lede {
+	margin: 0 0 16px; font-family: var(--yz-font-body);
+	font-size: 14px; color: var(--yz-muted, #6b6259);
+}
+.yz-promo__code {
+	margin: 0 auto 14px; display: inline-block;
+	padding: 12px 22px; border: 1px dashed var(--yz-ink, #141210);
+	font-family: var(--yz-font-body); font-size: 20px; font-weight: 600;
+	letter-spacing: 0.18em; color: var(--yz-ink, #141210);
+}
+.yz-promo__copy {
+	display: inline-block; margin: 0 0 12px; padding: 8px 16px;
+	background: transparent; border: 1px solid rgba(20, 18, 16, 0.3); border-radius: 0; cursor: pointer;
+	font-family: var(--yz-font-body); font-size: 11px; font-weight: 500;
+	letter-spacing: 0.12em; text-transform: uppercase; color: var(--yz-ink, #141210);
+	transition: background 200ms ease, color 200ms ease;
+}
+.yz-promo__copy:hover,
+.yz-promo__copy.is-copied { background: var(--yz-ink, #141210); color: var(--yz-ivory, #f5f1e9); }
+.yz-promo__note {
+	margin: 0 0 18px; font-family: var(--yz-font-body);
+	font-size: 12.5px; color: var(--yz-muted, #6b6259);
+}
+.yz-promo__continue {
+	width: 100%; padding: 14px 20px; border: 1px solid var(--yz-ink, #141210); border-radius: 0;
+	background: transparent; color: var(--yz-ink, #141210); cursor: pointer;
+	font-family: var(--yz-font-body); font-size: 12px; font-weight: 500;
+	letter-spacing: 0.16em; text-transform: uppercase;
+	transition: background 220ms ease, color 220ms ease;
+}
+.yz-promo__continue:hover { background: var(--yz-ink, #141210); color: var(--yz-ivory, #f5f1e9); }
+
+/* Compact height / short screens: trim the media band. */
+@media (max-width: 480px), (max-height: 720px) {
+	.yz-promo__media { height: 140px; }
+	.yz-promo__body { padding: 22px 22px 26px; }
+}
+
+/* ---- Minimised launcher tab (bottom corner) --------------------------- */
+.yz-promo-launcher {
+	position: fixed; z-index: 99999; bottom: 18px; inset-inline-start: 18px;
+	display: inline-flex; align-items: center; gap: 8px;
+	padding: 11px 16px; border: 0; cursor: pointer;
+	background: var(--yz-ink, #141210); color: var(--yz-ivory, #f5f1e9);
+	font-family: var(--yz-font-body); font-size: 11.5px; font-weight: 500;
+	letter-spacing: 0.14em; text-transform: uppercase; line-height: 1;
+	box-shadow: 0 16px 34px -18px rgba(20, 18, 16, 0.7);
+	opacity: 0; transform: translateY(14px);
+	transition: opacity 320ms var(--mo-ease-out, ease), transform 320ms var(--mo-ease-out, ease),
+	            background 220ms ease;
+}
+.yz-promo-launcher[hidden] { display: none; }
+.yz-promo-launcher.is-in { opacity: 1; transform: none; }
+.yz-promo-launcher:hover { background: var(--yz-agate, #9e3b2f); }
+.yz-promo-launcher__spark { flex: 0 0 auto; color: var(--yz-sand, #cbb78f); }
+@media (max-width: 480px) {
+	.yz-promo-launcher { bottom: 12px; inset-inline-start: 12px; padding: 10px 14px; font-size: 11px; }
+}
+
+/* Respect reduced-motion: no slide/scale, just appear. */
+@media (prefers-reduced-motion: reduce) {
+	.yz-promo__overlay,
+	.yz-promo__dialog,
+	.yz-promo-launcher { transition: none; }
+	.yz-promo__dialog,
+	.yz-promo-launcher { transform: none; }
+}

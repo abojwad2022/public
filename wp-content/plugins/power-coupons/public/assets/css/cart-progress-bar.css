@@ -1,0 +1,113 @@
+/**
+ * Power Coupons - Cart Progress Bar Styles
+ *
+ * @package Power_Coupons
+ * @since 1.0.0
+ */
+
+.power-coupons-progress-container {
+	margin: 0 0 20px;
+	clear: both;
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+}
+
+/* ─── Goal wrapper ────────────────────────────────────────────────────────── */
+
+.power-coupons-progress-goal {
+	border: 1px solid #e5e7eb;
+	border-radius: 8px;
+	padding: 16px;
+	background-color: #fff;
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+
+.power-coupons-progress-goal.complete {
+	border-color: var( --pc-success-color, #16a34a );
+	background-color: #f0fdf4;
+}
+
+/* ─── Message row ─────────────────────────────────────────────────────────── */
+
+.power-coupons-progress-message {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	font-size: 14px;
+	line-height: 20px;
+	color: #374151;
+}
+
+.power-coupons-progress-message.success {
+	color: var( --pc-success-color, #16a34a );
+	font-weight: 600;
+}
+
+.power-coupons-progress-icon {
+	display: flex;
+	align-items: center;
+	flex-shrink: 0;
+	color: var( --pc-bar-color, #f97316 );
+}
+
+.power-coupons-progress-message.success .power-coupons-progress-icon {
+	color: var( --pc-success-color, #16a34a );
+}
+
+.power-coupons-progress-text {
+	flex: 1;
+}
+
+.power-coupons-progress-text strong {
+	font-weight: 600;
+}
+
+/* ─── Progress track ──────────────────────────────────────────────────────── */
+
+.power-coupons-progress-track {
+	position: relative;
+	height: 8px;
+	border-radius: 100px;
+	background-color: var( --pc-bar-bg, #e5e7eb );
+	overflow: visible;
+}
+
+.power-coupons-progress-fill {
+	height: 100%;
+	border-radius: 100px;
+	background-color: var( --pc-bar-color, #f97316 );
+	min-width: 0;
+	max-width: 100%;
+}
+
+.power-coupons-progress-goal.animate .power-coupons-progress-fill {
+	transition: width 0.6s ease;
+}
+
+.power-coupons-progress-fill.complete {
+	background-color: var( --pc-success-color, #16a34a );
+}
+
+/* ─── Block cart/checkout fit ─────────────────────────────────────────────── */
+
+.wp-block-woocommerce-cart .power-coupons-progress-container,
+.wp-block-woocommerce-checkout .power-coupons-progress-container {
+	margin: 0;
+	padding: 16px 0;
+	border-bottom: 1px solid #e0e0e0;
+}
+
+/* ─── Responsive ──────────────────────────────────────────────────────────── */
+
+@media ( max-width: 768px ) {
+	.power-coupons-progress-goal {
+		padding: 12px;
+	}
+
+	.power-coupons-progress-message {
+		font-size: 13px;
+	}
+}

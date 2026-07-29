@@ -1,0 +1,1297 @@
+/* ==========================================================================
+   Yazan (Astra Child) — WooCommerce components
+   Implements Blueprint Parts 7 (cards), 8 (product page), 9 (collection),
+   10 (cart), 15 (mobile) at the CSS level. Pairs with inc/woocommerce.php.
+   Flat + hairlines is the luxury grammar — avoid drop shadows almost entirely.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   Product cards (Part 7)
+   -------------------------------------------------------------------------- */
+.yazan ul.products li.product.yz-card {
+	position: relative;
+	text-align: left;
+	box-shadow: none;
+	background: transparent;
+}
+
+/* Media wrapper: consistent 4:5 ratio, single background store-wide. */
+.yazan ul.products li.product.yz-card a img,
+.yazan ul.products li.product.yz-card .yz-card__img--alt {
+	aspect-ratio: 4 / 5;
+	object-fit: cover;
+	width: 100%;
+	margin: 0;
+	background: var(--yz-ivory);
+}
+
+/* Position the image link as the stacking context for hover crossfade + CTA bar.
+   The aspect-ratio guarantees the media box reserves its 4:5 height even if an <img> ever
+   fails to render — so the absolutely-positioned .yz-badges overlay never collapses/scatters. */
+.yazan ul.products li.product.yz-card > a:first-of-type,
+.yazan ul.products li.product.yz-card .woocommerce-LoopProduct-link {
+	position: relative;
+	display: block;
+	overflow: hidden;
+	aspect-ratio: 4 / 5;
+	background: var(--yz-ivory);
+}
+
+/* Slow zoom — light moving across the stone (Part 9).
+   Guard the pointer-driven zoom behind `@media (hover: hover)` so a tap on touch devices
+   (which emulates :hover) can't leave the image stuck zoomed until the next tap. */
+.yazan ul.products li.product.yz-card img { transition: transform 1.2s var(--mo-ease-out); }
+@media (hover: hover) {
+	.yazan ul.products li.product.yz-card:hover img { transform: scale(1.05); }
+}
+
+/* Crossfade to the second angle. Include `transform` in the transition so the alt image zooms in
+   sync with the primary — otherwise this rule clobbers the inherited `transition: transform 1.2s`
+   (transition is not additive) and the alt image snaps to scale(1.05) instantly on hover. */
+.yz-card__img--alt {
+	position: absolute; inset: 0;
+	opacity: 0;
+	transition: opacity var(--mo-med) var(--mo-ease-out),
+	            transform 1.2s var(--mo-ease-out);
+	pointer-events: none;
+}
+/* Keyboard focus reveals the alt angle on any device; pointer hover only where a real hover
+   exists (no sticky crossfade after a tap). */
+.yz-card:focus-within .yz-card__img--alt { opacity: 1; }
+@media (hover: hover) {
+	.yz-card:hover .yz-card__img--alt { opacity: 1; }
+}
+
+/* Subject line + title + price.
+   Rhythm mirrors the reference card (compact, tight vertical gaps: vendor line → title →
+   price), but the title keeps the brand's serif display face — the "balanced" direction. */
+.yz-subject {
+	display: block;
+	margin: 13px 0 5px;
+	font-family: var(--yz-font-body);
+	font-size: 10.5px;
+	font-weight: 500;
+	letter-spacing: 0.16em;
+	text-transform: uppercase;
+	color: var(--yz-muted);
+	line-height: 1.1;
+}
+.yazan ul.products li.product.yz-card .woocommerce-loop-product__title {
+	font-family: var(--yz-font-display);
+	font-weight: 500;
+	font-size: 17px;
+	line-height: 1.24;
+	letter-spacing: 0.01em;
+	margin: 0;
+	padding: 0;
+	color: var(--yz-ink);
+	transition: color var(--mo-med) var(--mo-ease-out);
+}
+/* On card hover the title warms gently from ink to a restrained aged gold — a single, intentional
+   on-brand accent, replacing Astra's global `a:hover` accent blue (--ast-global-color-1), which is
+   off-brand (no blue in the palette) and read as the title "fading". The title is a link
+   (.ast-loop-product__link) wrapping the <h2>, so we override the anchor at rest too. */
+.yazan ul.products li.product.yz-card .ast-loop-product__link,
+.yazan ul.products li.product.yz-card .ast-loop-product__link:hover,
+.yazan ul.products li.product.yz-card .ast-loop-product__link:focus {
+	color: inherit;
+}
+/* Aged gold — a darkened member of the brand's gold-sand (--yz-sand #CBB78F), which is too pale
+   to read as title text on the light card. This deeper tone keeps the gold hue but stays legible
+   and restrained (no shiny yellow). Keyboard focus warms the title on any device; pointer hover
+   only where a real hover exists, so a tap never leaves the title stuck gold. */
+.yazan ul.products li.product.yz-card:focus-within .woocommerce-loop-product__title {
+	color: #9A7B3F;
+}
+@media (hover: hover) {
+	.yazan ul.products li.product.yz-card:hover .woocommerce-loop-product__title {
+		color: #9A7B3F;
+	}
+}
+.yazan ul.products li.product.yz-card .price {
+	display: block;
+	margin-top: 6px;
+	color: var(--yz-ink);
+	font-family: var(--yz-font-body);
+	font-size: 14px;
+	font-weight: 400;
+	letter-spacing: 0.01em;
+}
+.yazan ul.products li.product.yz-card .price del {
+	color: var(--yz-muted);
+	opacity: 1;
+	margin-inline-start: 8px;
+	font-size: 13px;
+}
+.yazan ul.products li.product.yz-card .price ins {
+	text-decoration: none;
+	font-weight: 500;
+}
+
+/* Badges (top-left overlay). */
+.yz-badges {
+	position: absolute;
+	top: 12px; inset-inline-start: 12px;
+	z-index: 2;
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	pointer-events: none;
+}
+.yz-badge {
+	font-family: var(--yz-font-body);
+	font-size: 11px;
+	text-transform: uppercase;
+	letter-spacing: 0.1em;
+	padding: 5px 10px;
+	line-height: 1;
+	background: var(--yz-ink);
+	color: var(--yz-ivory);
+}
+/* Hide Astra's built-in on-sale badge (ast-onsale-card) — our badge system replaces it,
+   so only our "Offer" badge shows instead of a duplicate "Sale!" pill. */
+body.yazan .ast-onsale-card,
+body.yazan .ast-on-card-button.ast-onsale-card { display: none !important; }
+
+/* Hide Astra's default "Out of stock" bar (ast-shop-product-out-of-stock) — our .yz-badge--sold
+   prints for every out-of-stock product (see inc/woocommerce.php), so the bar is always a duplicate
+   in a clashing off-brand style. The on-brand SOLD badge is the single source of truth for stock. */
+body.yazan ul.products li.product .ast-shop-product-out-of-stock { display: none !important; }
+
+.yz-badge--rare      { background: var(--yz-agate); }
+/* Solid ink fill + ivory text so it stays legible over dark product photos; the silver hairline
+   keeps it visually distinct from the other (fill-only) badges. A transparent fill made it vanish
+   over dark imagery — showing only the border as an empty box. */
+.yz-badge--certified { background: var(--yz-ink); color: var(--yz-ivory); border: 1px solid var(--yz-silver); }
+.yz-badge--limited   { background: var(--yz-ink); }
+.yz-badge--sold      { background: var(--yz-muted); }
+.yz-badge--sale      { background: var(--yz-agate); }
+
+/* Optional signature sheen sweep on rare cards only (motion Part 9). */
+.yz-card--rare .woocommerce-LoopProduct-link::after,
+.yz-card--rare > a:first-of-type::after {
+	content: '';
+	position: absolute; inset: 0;
+	background: linear-gradient(105deg, transparent 40%, rgba(245, 241, 233, 0.18) 50%, transparent 60%);
+	transform: translateX(-120%);
+	pointer-events: none;
+}
+.yz-card--rare:hover .woocommerce-LoopProduct-link::after,
+.yz-card--rare:hover > a:first-of-type::after {
+	transition: transform 900ms var(--mo-ease-out);
+	transform: translateX(120%);
+}
+
+/* Quick-add bar (Part 9 — "hover unlocks function").
+   Restyle Astra's modern on-card trigger into the reference's full-width bar that RISES from the
+   bottom of the media on hover. We STYLE Astra's trigger and never remove it: in modern shop style
+   it is the only add-to-cart in the loop. The trigger <a> is a SIBLING of the image link inside
+   .astra-shop-thumbnail-wrap (nested <a> is invalid, so the parser splits them) — which is why the
+   wrap, not the link, is the positioning + clip context for the rising bar. */
+.yazan ul.products li.product.yz-card .astra-shop-thumbnail-wrap {
+	position: relative;
+	overflow: hidden;
+}
+.yazan .yz-card .ast-on-card-button:not(.ast-onsale-card) {
+	position: absolute;
+	overflow: hidden;          /* clips the gold shimmer sweep (::before) to the bar */
+	inset-inline: 0;
+	bottom: 0;
+	top: auto;                 /* cancel Astra's top:1em / inset-inline-end:1em icon pinning */
+	inset-inline-end: auto;
+	width: 100%;
+	min-height: 0;
+	margin: 0;
+	padding: 13px 16px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.55em;
+	background: rgba(20, 18, 16, 0.92);
+	color: var(--yz-ivory);
+	border-top: 1px solid transparent;   /* gold hairline lifts in on button hover (below) */
+	visibility: visible;       /* reveal is driven by transform, not opacity */
+	opacity: 1;
+	transform: translateY(100%);
+	transition: transform var(--mo-med) var(--mo-ease-inout),
+	            background var(--mo-fast) ease,
+	            border-color var(--mo-fast) ease,
+	            color var(--mo-fast) ease;
+	z-index: 5;
+}
+/* Keyboard focus lifts the buy bar on any device. */
+.yazan .yz-card:focus-within .ast-on-card-button:not(.ast-onsale-card) {
+	transform: translateY(0);
+	opacity: 1;
+	visibility: visible;
+}
+/* Pointer hover lifts it only where a real hover exists (desktop) — so a tap on touch can't leave
+   the bar stuck half-open. */
+@media (hover: hover) {
+	.yazan .yz-card:hover .ast-on-card-button:not(.ast-onsale-card) {
+		transform: translateY(0);
+		opacity: 1;
+		visibility: visible;
+	}
+}
+/* Touch devices have no hover, so the "rises on hover" bar would be permanently unreachable — and
+   it IS the only add-to-cart in the modern loop. Show it at rest instead: a standing buy bar per
+   card. (opacity/visibility are already 1 at the base rule; only the translate needs resetting.) */
+@media (hover: none) {
+	.yazan .yz-card .ast-on-card-button:not(.ast-onsale-card) {
+		transform: translateY(0);
+	}
+}
+/* Astra's hover-only tooltip becomes the bar's always-visible tracked-uppercase label. */
+.yazan .ast-on-card-button:not(.ast-onsale-card) .ast-card-action-tooltip {
+	position: static;
+	margin: 0;
+	padding: 0;
+	background: transparent;
+	color: inherit;
+	border-radius: 0;
+	visibility: visible;
+	opacity: 1;
+	font-family: var(--yz-font-body);
+	font-size: 12px;
+	font-weight: 500;
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	line-height: 1;
+	white-space: nowrap;
+}
+.yazan .ast-on-card-button:not(.ast-onsale-card) .ast-card-action-tooltip::after { display: none; }
+/* Strip Astra's circular icon chip → a small bag glyph sitting left of the label. */
+.yazan .ast-on-card-button:not(.ast-onsale-card) .ahfb-svg-iconset {
+	order: -1;
+	width: auto;
+	height: auto;
+	background: transparent;
+	border-radius: 0;
+	box-shadow: none;
+	opacity: 1;
+	color: inherit;
+}
+.yazan .ast-on-card-button:not(.ast-onsale-card) .ahfb-svg-iconset svg { width: 15px; height: 15px; }
+/* Button hover/focus: the whole bar flips to gold (gold-sand fill, ink text + glyph) — an
+   unmistakable but still restrained gold moment that echoes the title's aged-gold hover, so the
+   card shares one gold hover language. Ink-on-gold is high-contrast and reads clearly. */
+.yazan .ast-on-card-button:not(.ast-onsale-card):hover,
+.yazan .ast-on-card-button:not(.ast-onsale-card):focus {
+	background: #9A7B3F;       /* aged gold — same tone as the title hover, deeper than gold-sand */
+	color: var(--yz-ink);
+	border-top-color: #7C6231;  /* darker gold edge */
+}
+.yazan .ast-on-card-button:not(.ast-onsale-card):hover .ahfb-svg-iconset,
+.yazan .ast-on-card-button:not(.ast-onsale-card):focus .ahfb-svg-iconset { color: var(--yz-ink); }
+
+/* Hover motion: a single light sweep across the gold bar + a small lift of the bag glyph.
+   The sweep is a diagonal highlight that starts off-screen and glides across once (not looping),
+   matching the rare-card sheen grammar. Text/icon sit above it (relative + z-index). */
+.yazan .ast-on-card-button:not(.ast-onsale-card)::before {
+	content: '';
+	position: absolute;
+	inset: 0;
+	background: linear-gradient(105deg, transparent 42%, rgba(245, 241, 233, 0.55) 50%, transparent 58%);
+	transform: translateX(-125%);
+	pointer-events: none;
+	z-index: 1;
+}
+.yazan .ast-on-card-button:not(.ast-onsale-card):hover::before,
+.yazan .ast-on-card-button:not(.ast-onsale-card):focus::before {
+	transition: transform 950ms var(--mo-ease-out);
+	transform: translateX(125%);
+}
+.yazan .ast-on-card-button:not(.ast-onsale-card) .ast-card-action-tooltip,
+.yazan .ast-on-card-button:not(.ast-onsale-card) .ahfb-svg-iconset {
+	position: relative;
+	inset: auto;              /* cancel Astra's `right:100%` tooltip offset — under position:relative
+	                             it reactivates and would shove the label out of the (clipped) bar */
+	z-index: 2;               /* keep label + glyph above the sweep */
+}
+.yazan .ast-on-card-button:not(.ast-onsale-card) .ahfb-svg-iconset {
+	transition: transform var(--mo-med) var(--mo-ease-out);
+}
+.yazan .ast-on-card-button:not(.ast-onsale-card):hover .ahfb-svg-iconset,
+.yazan .ast-on-card-button:not(.ast-onsale-card):focus .ahfb-svg-iconset {
+	transform: translateY(-2px);   /* small bag lift */
+}
+
+/* --------------------------------------------------------------------------
+   Stone filter chips (Part 9) — row above the grid, not a sidebar.
+   Sharp corners + hairline = the brand's jewelry-case grammar (matches badges/buttons).
+   -------------------------------------------------------------------------- */
+.yazan .yz-chips {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin: 0 0 26px;
+	padding: 0;
+	list-style: none;
+}
+.yazan .yz-chip {
+	display: inline-flex;
+	align-items: baseline;
+	gap: 7px;
+	padding: 9px 16px;
+	border: 1px solid var(--yz-hairline, rgba(20, 18, 16, 0.14));
+	background: transparent;
+	color: var(--yz-ink);
+	font-family: var(--yz-font-body);
+	font-size: 11.5px;
+	font-weight: 500;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	line-height: 1;
+	white-space: nowrap;
+	transition: background 220ms var(--mo-ease-out),
+	            color 220ms var(--mo-ease-out),
+	            border-color 220ms var(--mo-ease-out);
+}
+.yazan .yz-chip:hover,
+.yazan .yz-chip:focus-visible {
+	border-color: var(--yz-ink);
+	color: var(--yz-ink);
+}
+.yazan .yz-chip.is-active {
+	background: var(--yz-ink);
+	border-color: var(--yz-ink);
+	color: var(--yz-ivory);
+}
+.yazan .yz-chip__n {
+	font-size: 10px;
+	letter-spacing: 0;
+	opacity: 0.5;
+}
+.yazan .yz-chip.is-active .yz-chip__n { opacity: 0.7; }
+
+/* Mobile: one horizontal scrolling rail rather than wrapping (reference behaviour). */
+@media (max-width: 600px) {
+	.yazan .yz-chips {
+		flex-wrap: nowrap;
+		overflow-x: auto;
+		scrollbar-width: none;
+		margin-inline: calc(-1 * var(--yz-gutter, 20px));
+		padding-inline: var(--yz-gutter, 20px);
+		-webkit-overflow-scrolling: touch;
+	}
+	.yazan .yz-chips::-webkit-scrollbar { display: none; }
+	.yazan .yz-chip { flex: 0 0 auto; }
+}
+
+/* --------------------------------------------------------------------------
+   Collection / shop grid (Part 9) — 3 cols desktop reads more premium
+   -------------------------------------------------------------------------- */
+@media (min-width: 993px) {
+	.yazan.woocommerce ul.products.columns-3,
+	.yazan.woocommerce ul.products.columns-4 {
+		gap: 32px;
+	}
+}
+
+/* ==========================================================================
+   SHOP FILTER SIDEBAR + TOOLBAR (commafootball-style two-column shop)
+   ========================================================================== */
+
+/* Store container fit: kill the boxed white-card feel + wasted top gap on product archives,
+   and give the content the full page-width gutters the reference uses. */
+.yazan.post-type-archive-product .ast-woocommerce-container,
+.yazan.tax-product_cat .ast-woocommerce-container {
+	background: transparent;
+	padding: 0 0 36px;   /* pull the whole store block up under the sticky header */
+}
+.yazan.post-type-archive-product #content .ast-container,
+.yazan.tax-product_cat #content .ast-container {
+	max-width: 100%;   /* fill the full page width (was capped at 1360px) */
+	padding-inline: clamp(16px, 3vw, 48px);
+}
+
+/* Left-aligned products header + intro lede (reference "All Products" band). */
+.yazan.woocommerce .woocommerce-products-header,
+.yazan.woocommerce-page .woocommerce-products-header {
+	text-align: left; margin: 0 0 clamp(12px, 1.6vw, 18px); padding: 0;
+}
+.yazan .woocommerce-breadcrumb { margin: 0 0 8px; }
+.yazan .woocommerce-products-header__title.page-title {
+	font-family: var(--yz-font-display); font-weight: 600;
+	font-size: clamp(28px, 3.4vw, 44px); line-height: 1.05; margin: 0;
+}
+.yazan .yz-shop-intro {
+	color: var(--yz-muted); max-width: 62ch; margin: 6px 0 0;
+	font-size: 0.98rem; line-height: 1.55;
+}
+
+/* Shell: full-width toolbar stacked above the sidebar+grid row, so the filter toggle stays put. */
+.yazan .yz-shop { display: block; }
+.yazan .yz-shop__body {
+	display: grid;
+	grid-template-columns: 240px minmax(0, 1fr);
+	gap: clamp(24px, 2.6vw, 40px);
+	align-items: start;
+}
+.yazan .yz-shop__main { min-width: 0; }
+
+/* Filters collapsed: hide only the filter form (groups); the toggle — the first child of the sidebar —
+   stays visible. On desktop the body drops to a single column and the sidebar (now just the toggle)
+   moves ABOVE the grid as a thin bar, so the sidebar reserves NO column and the grid spans full width
+   at 5-up. The toggle keeps its top-left position; only the groups disappear. */
+.yazan .yz-shop--nofilters .yz-filters { display: none; }
+@media (min-width: 992px) {
+	.yazan .yz-shop--nofilters .yz-shop__body { grid-template-columns: minmax(0, 1fr); }
+	.yazan .yz-shop--nofilters .yz-shop__sidebar { order: -1; margin-bottom: 4px; }
+	/* Closed filters: 5-up across the freed full width (open state stays 4-up). The boosted selector +
+	   !important is required to outrank the base `repeat(4, …) !important` open-state rule. */
+	.yazan.woocommerce .yz-shop--nofilters .yz-shop__main ul.products:not(.elementor-grid),
+	.yazan.woocommerce-page .yz-shop--nofilters .yz-shop__main ul.products:not(.elementor-grid) {
+		grid-template-columns: repeat(5, 1fr) !important; gap: 22px;
+	}
+}
+@media (min-width: 1600px) {
+	.yazan.woocommerce .yz-shop--nofilters .yz-shop__main ul.products:not(.elementor-grid),
+	.yazan.woocommerce-page .yz-shop--nofilters .yz-shop__main ul.products:not(.elementor-grid) {
+		grid-template-columns: repeat(6, 1fr) !important;
+	}
+}
+@media (min-width: 2000px) {
+	.yazan.woocommerce .yz-shop--nofilters .yz-shop__main ul.products:not(.elementor-grid),
+	.yazan.woocommerce-page .yz-shop--nofilters .yz-shop__main ul.products:not(.elementor-grid) {
+		grid-template-columns: repeat(7, 1fr) !important;
+	}
+}
+
+/* AJAX results region — dim briefly while the next filtered page is fetched. */
+.yazan .yz-shop__results { position: relative; transition: opacity 180ms ease; }
+.yazan .yz-shop__results.is-loading { opacity: 0.45; pointer-events: none; }
+
+/* ---- Toolbar (filter toggle · search · count · sort) -------------------- */
+.yazan .yz-shop__toolbar {
+	display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+	padding-bottom: 12px; margin-bottom: 16px;
+	border-bottom: 1px solid var(--yz-hairline, rgba(20, 18, 16, 0.14));
+}
+/* Toggle = the sidebar's header (first child of .yz-shop__sidebar). Fixed 240px wide so it reads the
+   same whether the sidebar is open (240px column) or collapsed (a thin left-aligned bar above the
+   full-width grid). A chevron flips when the groups collapse. */
+.yazan .yz-shop__filter-toggle {
+	box-sizing: border-box; display: inline-flex; align-items: center; gap: 8px;
+	width: 240px; max-width: 100%; margin-bottom: 16px;
+	padding: 12px 14px; border: 1px solid var(--yz-ink); background: transparent;
+	color: var(--yz-ink); font-family: var(--yz-font-body);
+	font-size: 11.5px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase;
+	cursor: pointer; line-height: 1; white-space: nowrap;
+	transition: background 200ms var(--mo-ease-out, ease), color 200ms var(--mo-ease-out, ease);
+}
+.yazan .yz-shop__filter-toggle:hover { background: var(--yz-ink); color: var(--yz-ivory); }
+.yazan .yz-shop__filter-icon { flex: 0 0 auto; }
+.yazan .yz-shop__filter-toggle-label { margin-inline-end: auto; }
+.yazan .yz-shop__filter-chevron { flex: 0 0 auto; transition: transform 240ms var(--mo-ease-out, ease); }
+.yazan .yz-shop--nofilters .yz-shop__filter-chevron { transform: rotate(-90deg); }
+.yazan .yz-shop__filter-count {
+	display: inline-grid; place-items: center; min-width: 18px; height: 18px; padding: 0 5px;
+	background: var(--yz-agate); color: var(--yz-ivory); font-size: 10px; border-radius: 9px;
+}
+.yazan .yz-shop__search {
+	position: relative; flex: 1 1 240px; display: flex; align-items: center;
+}
+.yazan .yz-shop__search input[type="search"] {
+	width: 100%; border: 1px solid var(--yz-hairline, rgba(20, 18, 16, 0.14));
+	background: transparent; padding: 12px 44px 12px 16px; border-radius: 0;
+	color: var(--yz-ink); font-size: 14px; font-family: var(--yz-font-body);
+}
+.yazan .yz-shop__search input[type="search"]:focus { outline: none; border-color: var(--yz-ink); }
+.yazan .yz-shop__search-btn {
+	position: absolute; inset-inline-end: 6px; top: 50%; transform: translateY(-50%);
+	background: transparent; border: 0; color: var(--yz-muted); cursor: pointer;
+	display: inline-flex; padding: 6px;
+}
+.yazan .yz-shop__search-btn:hover { color: var(--yz-ink); }
+/* Live search dropdown. */
+.yazan .yz-live-search {
+	position: absolute; top: calc(100% + 6px); inset-inline: 0; z-index: 40;
+	background: #fff; border: 1px solid var(--yz-hairline, rgba(20, 18, 16, 0.14));
+	box-shadow: 0 24px 48px -24px rgba(20, 18, 16, 0.4);
+	max-height: 68vh; overflow-y: auto;
+}
+.yazan .yz-live-search__state {
+	padding: 16px 18px; color: var(--yz-muted); font-size: 13px; letter-spacing: 0.02em;
+}
+.yazan .yz-live-search__list { list-style: none; margin: 0; padding: 6px; }
+.yazan .yz-live-search__item {
+	display: flex; align-items: center; gap: 14px; padding: 10px 12px;
+	text-decoration: none; color: var(--yz-ink); transition: background 160ms ease;
+}
+.yazan .yz-live-search__item:hover,
+.yazan .yz-live-search__item:focus-visible { background: rgba(20, 18, 16, 0.045); }
+.yazan .yz-live-search__thumb {
+	flex: 0 0 auto; width: 52px; height: 52px; background-size: cover; background-position: center;
+	background-color: var(--yz-ink); background-image: linear-gradient(160deg, #2a2320, var(--yz-ink));
+	border: 1px solid var(--yz-hairline, rgba(20, 18, 16, 0.1));
+}
+.yazan .yz-live-search__meta { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.yazan .yz-live-search__title {
+	font-family: var(--yz-font-display); font-size: 16px; font-weight: 600; line-height: 1.2;
+	overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.yazan .yz-live-search__price { font-size: 13px; color: var(--yz-muted); }
+.yazan .yz-live-search__price .amount { color: var(--yz-ink); }
+.yazan .yz-live-search__price del { opacity: 0.55; margin-inline-end: 6px; }
+.yazan .yz-live-search__all {
+	display: block; text-align: center; padding: 13px; text-decoration: none;
+	border-top: 1px solid var(--yz-hairline, rgba(20, 18, 16, 0.12));
+	color: var(--yz-ink); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+}
+.yazan .yz-live-search__all:hover { background: var(--yz-ink); color: var(--yz-ivory); }
+
+.yazan .yz-shop__tools { display: flex; align-items: center; gap: 14px; margin-inline-start: auto; }
+.yazan .yz-shop__tools .woocommerce-result-count {
+	margin: 0; color: var(--yz-muted); font-size: 12px; letter-spacing: 0.04em;
+}
+.yazan .yz-shop__tools .woocommerce-ordering { margin: 0; }
+.yazan .yz-shop__tools select.orderby {
+	border: 1px solid var(--yz-hairline, rgba(20, 18, 16, 0.14)); background: transparent;
+	padding: 10px 30px 10px 14px; border-radius: 0; font-size: 12px; letter-spacing: 0.06em;
+	text-transform: uppercase; color: var(--yz-ink); cursor: pointer;
+}
+
+/* ---- Sidebar ----------------------------------------------------------- */
+/* Normal document flow: the whole sidebar scrolls WITH the page (the standard store pattern),
+   so the bottom filters (Price) are always reachable and there is no internal scrollbar. */
+.yazan .yz-shop__sidebar { align-self: start; }
+
+/* With JS on, filtering is instant on change — the Apply button is redundant. */
+.yz-js .yazan .yz-filters__actions { display: none; }
+
+/* "View more / View less" toggle for long filter groups. */
+.yazan .yz-opt--extra { display: none; }
+.yazan .yz-filter-group.is-expanded .yz-opt--extra { display: block; }
+.yazan .yz-filter-more {
+	display: inline-flex; align-items: center; gap: 6px;
+	margin: 2px 0 16px; padding: 0; background: transparent; border: 0; cursor: pointer;
+	color: var(--yz-agate); font-family: var(--yz-font-body);
+	font-size: 12px; letter-spacing: 0.04em;
+}
+.yazan .yz-filter-more:hover { text-decoration: underline; }
+.yazan .yz-filter-more__hide { display: none; }
+.yazan .yz-filter-group.is-expanded .yz-filter-more__show { display: none; }
+.yazan .yz-filter-group.is-expanded .yz-filter-more__hide { display: inline; }
+
+/* ---- Applied-filter chips (AliExpress/Alibaba-style) ------------------- */
+.yazan .yz-applied {
+	display: flex; align-items: center; flex-wrap: wrap; gap: 8px;
+	margin: 0 0 22px; padding-bottom: 4px;
+}
+.yazan .yz-applied__label {
+	color: var(--yz-muted); font-size: 12px; letter-spacing: 0.08em;
+	text-transform: uppercase; margin-inline-end: 2px;
+}
+.yazan .yz-applied__chip {
+	display: inline-flex; align-items: center; gap: 8px;
+	padding: 7px 10px 7px 13px; text-decoration: none;
+	border: 1px solid var(--yz-ink); background: var(--yz-ink); color: var(--yz-ivory);
+	font-size: 12px; letter-spacing: 0.03em; line-height: 1;
+	transition: background 180ms ease, color 180ms ease;
+}
+.yazan .yz-applied__chip:hover,
+.yazan .yz-applied__chip:focus-visible { background: transparent; color: var(--yz-ink); }
+.yazan .yz-applied__x {
+	display: inline-flex; align-items: center; justify-content: center;
+	font-size: 15px; line-height: 1; opacity: 0.85;
+}
+.yazan .yz-applied__chip:hover .yz-applied__x { opacity: 1; }
+.yazan .yz-applied__clear {
+	margin-inline-start: 4px; color: var(--yz-agate); font-size: 12px;
+	letter-spacing: 0.04em; text-decoration: none;
+}
+.yazan .yz-applied__clear:hover { text-decoration: underline; }
+/* The single filter control is the toolbar toggle (Close filters ⇄ Filters); the sidebar's own
+   "Filter" header would read as a second, redundant button — so it is removed. "Clear all" still
+   lives in the applied-filter chip row above the grid. */
+.yazan .yz-filters__head { display: none; }
+.yazan .yz-filters__title {
+	font-family: var(--yz-font-body); font-size: 12px; font-weight: 500;
+	letter-spacing: 0.16em; text-transform: uppercase; color: var(--yz-ink);
+}
+.yazan .yz-filters__clear { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--yz-muted); }
+.yazan .yz-filters__clear:hover { color: var(--yz-agate); }
+
+.yazan .yz-filter-group { border-bottom: 1px solid var(--yz-hairline, rgba(20, 18, 16, 0.12)); }
+.yazan .yz-filter-group__head {
+	display: flex; align-items: center; justify-content: space-between; width: 100%;
+	padding: 16px 2px; background: transparent; border: 0; cursor: pointer;
+	font-family: var(--yz-font-body); font-size: 13px; font-weight: 500;
+	letter-spacing: 0.1em; text-transform: uppercase; color: var(--yz-ink);
+}
+.yazan .yz-filter-group__chevron { transition: transform 240ms var(--mo-ease-out, ease); flex: 0 0 auto; }
+.yazan .yz-filter-group[aria-collapsed="true"] .yz-filter-group__chevron { transform: rotate(-90deg); }
+.yazan .yz-filter-group__body { list-style: none; margin: 0; padding: 0 2px 18px; overflow: hidden; }
+.yazan .yz-filter-group[aria-collapsed="true"] .yz-filter-group__body { display: none; }
+.yazan .yz-filter-group__body li { margin: 0 0 11px; }
+
+.yazan .yz-filter-option {
+	display: flex; align-items: center; gap: 10px; cursor: pointer;
+	font-size: 13.5px; color: var(--yz-ink); line-height: 1.2;
+}
+.yazan .yz-filter-option input[type="checkbox"] {
+	appearance: none; -webkit-appearance: none; flex: 0 0 auto;
+	width: 16px; height: 16px; margin: 0; border: 1px solid var(--yz-muted);
+	background: transparent; border-radius: 0; cursor: pointer; position: relative;
+	transition: background 180ms, border-color 180ms;
+}
+.yazan .yz-filter-option input[type="checkbox"]:checked { background: var(--yz-ink); border-color: var(--yz-ink); }
+.yazan .yz-filter-option input[type="checkbox"]:checked::after {
+	content: ""; position: absolute; left: 5px; top: 2px; width: 4px; height: 8px;
+	border: solid var(--yz-ivory); border-width: 0 1.5px 1.5px 0; transform: rotate(45deg);
+}
+.yazan .yz-filter-option input[type="checkbox"]:focus-visible { outline: 2px solid var(--yz-sand); outline-offset: 2px; }
+.yazan .yz-filter-option__name { flex: 1 1 auto; }
+.yazan .yz-filter-option__n { color: var(--yz-muted); font-size: 11.5px; }
+
+/* Price range inputs. */
+.yazan .yz-price { padding-top: 4px; }
+.yazan .yz-price__inputs { display: flex; align-items: center; gap: 10px; }
+.yazan .yz-price__field {
+	flex: 1 1 0; display: flex; align-items: center; gap: 4px;
+	border: 1px solid var(--yz-hairline, rgba(20, 18, 16, 0.14)); padding: 8px 10px;
+}
+.yazan .yz-price__field:focus-within { border-color: var(--yz-ink); }
+.yazan .yz-price__cur { color: var(--yz-muted); font-size: 12px; }
+.yazan .yz-price__field input {
+	width: 100%; border: 0; background: transparent; padding: 0; font-size: 13px;
+	color: var(--yz-ink); -moz-appearance: textfield;
+}
+.yazan .yz-price__field input:focus { outline: none; }
+.yazan .yz-price__field input::-webkit-outer-spin-button,
+.yazan .yz-price__field input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.yazan .yz-price__dash { color: var(--yz-muted); }
+
+.yazan .yz-filters__actions { margin-top: 22px; }
+.yazan .yz-btn-solid {
+	display: inline-block; width: 100%; text-align: center; cursor: pointer;
+	padding: 13px 20px; border: 1px solid var(--yz-ink); background: var(--yz-ink);
+	color: var(--yz-ivory); font-family: var(--yz-font-body);
+	font-size: 11.5px; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase;
+	transition: background 220ms var(--mo-ease-out, ease), color 220ms var(--mo-ease-out, ease);
+}
+.yazan .yz-btn-solid:hover { background: transparent; color: var(--yz-ink); }
+
+/* Grid inside the shell — 4-up beside the sidebar (matches the reference density and the store's
+   own columns-4 setting), regardless of Astra's column class. */
+/* NOTE the `!important` + `.woocommerce`/`:not(.elementor-grid)` boost: Astra hard-codes the archive
+   grid to `repeat(3, …)` via `.woocommerce ul.products:not(.elementor-grid)` (same specificity as a
+   plain `.yz-shop__main ul.products`, so it wins on source order), and the store's own "columns-3"
+   setting reinforces it. This override guarantees our column counts win at every breakpoint. */
+.yazan.woocommerce .yz-shop__main ul.products:not(.elementor-grid),
+.yazan.woocommerce-page .yz-shop__main ul.products:not(.elementor-grid) {
+	display: grid; grid-template-columns: repeat(4, 1fr) !important; gap: 26px; margin: 0;
+}
+/* Keep 4-up beside the sidebar down to the tablet breakpoint (tighter gap so cards stay comfortable). */
+@media (min-width: 992px) and (max-width: 1200px) {
+	.yazan.woocommerce .yz-shop__main ul.products:not(.elementor-grid),
+	.yazan.woocommerce-page .yz-shop__main ul.products:not(.elementor-grid) {
+		grid-template-columns: repeat(4, 1fr) !important; gap: 18px;
+	}
+}
+/* Wide screens: add columns so the now full-width grid stays dense instead of ballooning cards. */
+@media (min-width: 1600px) {
+	.yazan.woocommerce .yz-shop__main ul.products:not(.elementor-grid),
+	.yazan.woocommerce-page .yz-shop__main ul.products:not(.elementor-grid) {
+		grid-template-columns: repeat(5, 1fr) !important;
+	}
+}
+@media (min-width: 2000px) {
+	.yazan.woocommerce .yz-shop__main ul.products:not(.elementor-grid),
+	.yazan.woocommerce-page .yz-shop__main ul.products:not(.elementor-grid) {
+		grid-template-columns: repeat(6, 1fr) !important;
+	}
+}
+.yazan .yz-shop__main ul.products::before,
+.yazan .yz-shop__main ul.products::after { content: none; }
+.yazan .yz-shop__main ul.products li.product {
+	width: auto !important; margin: 0 !important; float: none !important;
+}
+
+/* ---- Responsive: sidebar (with the toggle at its top) stacks above the grid; the toggle stays
+   visible and the filter form collapses/opens beneath it via the global .yz-filters rule ------ */
+@media (max-width: 991px) {
+	.yazan .yz-shop__body { grid-template-columns: 1fr; }
+	.yazan .yz-shop__sidebar { position: static; order: -1; margin-bottom: 20px; }
+	.yazan.woocommerce .yz-shop__main ul.products:not(.elementor-grid),
+	.yazan.woocommerce-page .yz-shop__main ul.products:not(.elementor-grid) { grid-template-columns: repeat(2, 1fr) !important; gap: 20px; }
+	.yazan .yz-shop__filter-toggle { width: 100%; margin-bottom: 0; }
+	.yazan .yz-shop:not(.yz-shop--nofilters) .yz-shop__filter-toggle { margin-bottom: 16px; }
+	.yazan .yz-shop__tools { flex-basis: 100%; margin-inline-start: 0; justify-content: space-between; }
+}
+@media (max-width: 480px) {
+	.yazan.woocommerce .yz-shop__main ul.products:not(.elementor-grid),
+	.yazan.woocommerce-page .yz-shop__main ul.products:not(.elementor-grid) { grid-template-columns: 1fr 1fr !important; gap: 14px; }
+}
+
+/* --------------------------------------------------------------------------
+   Single product page (Part 8)
+   -------------------------------------------------------------------------- */
+.yazan.single-product .yz-eyebrow { margin-bottom: 8px; }
+
+.yazan.single-product .product_title {
+	font-family: var(--yz-font-display);
+	font-weight: 600;
+	font-size: clamp(32px, 3.5vw, 40px);
+	line-height: 1.1;
+}
+
+/* Serial line — the "LICENSED" equivalent. */
+.yz-serial {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	font-size: 13px;
+	letter-spacing: 0.04em;
+	color: var(--yz-muted);
+	margin: 10px 0 18px;
+	padding-block: 10px;
+	border-top: 1px solid var(--yz-hairline);
+	border-bottom: 1px solid var(--yz-hairline);
+}
+.yz-serial strong { color: var(--yz-ink); font-weight: 500; }
+.yz-serial__icon { color: var(--yz-silver); }
+.yz-serial a { color: var(--yz-agate); text-decoration: underline; text-underline-offset: 3px; }
+
+/* Comma-style two-column with a STICKY info panel (Part 8).
+   `.yz-product-top` (opened/closed via hooks in inc/woocommerce.php) wraps ONLY the gallery + the
+   `.summary` — so `position: sticky` on the summary is now bounded to this row and stops before the
+   full-width tabs/related below. This is the template wrapper the previous note said pure CSS lacked. */
+.yazan.single-product .yz-product-top {
+	display: block; /* mobile: stacked, gallery over summary */
+}
+@media (min-width: 993px) {
+	.yazan.single-product .yz-product-top {
+		display: grid;
+		grid-template-columns: minmax(0, 58%) minmax(0, 42%);
+		gap: clamp(32px, 4vw, 64px);
+		align-items: start;
+	}
+	/* Gallery and summary are direct children of .yz-product-top; kill Astra/Woo float widths so the
+	   grid owns the columns. */
+	.yazan.single-product .yz-product-top .woocommerce-product-gallery,
+	.yazan.single-product .yz-product-top .summary.entry-summary {
+		width: auto !important;
+		float: none !important;
+		margin: 0 !important;
+	}
+	/* The sticky info column — rides down with the gallery, then releases at the row's end.
+	   Offset clears the (optionally sticky) header; tune --yz-header-h if the header height changes. */
+	.yazan.single-product .yz-product-top .summary.entry-summary {
+		position: sticky;
+		top: calc(var(--yz-header-h, 96px) + 24px);
+		align-self: start;
+	}
+}
+
+/* Size selector as button swatches rather than a dropdown (progressive — pairs with
+   variation-swatches-woo; this styles native selects as a fallback). */
+.yazan.single-product .single_add_to_cart_button { width: 100%; }
+
+/* Product gallery (Part 8) — zoom + lightbox + slider are enabled in functions.php; this is the
+   flat/hairline/sharp skin. Layout kept (main image + horizontal thumbs) so WooCommerce's flexslider
+   is untouched. */
+.yazan.single-product .woocommerce-product-gallery__image img {
+	background: var(--yz-ivory);
+}
+/* Zoom / lightbox trigger (magnifier) — minimal ink disc, top inline-end. */
+.yazan.single-product .woocommerce-product-gallery__trigger {
+	top: 14px;
+	inset-inline-end: 14px;
+	background: rgba(20, 18, 16, 0.85);
+	border-radius: 50%;
+	transition: background var(--mo-fast) ease, transform var(--mo-fast) ease;
+}
+.yazan.single-product .woocommerce-product-gallery__trigger:hover {
+	background: var(--yz-ink);
+	transform: scale(1.06);
+}
+/* Thumbnails — hairline, muted until active/hover, sharp corners, even gaps.
+   Mobile: a horizontal 4-up row below the main image. */
+.yazan.single-product .flex-control-thumbs {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10px;
+	margin: 12px 0 0;
+	padding: 0;
+	list-style: none;
+}
+.yazan.single-product .flex-control-thumbs li {
+	margin: 0;
+	flex: 0 0 calc((100% - 30px) / 4);
+	max-width: calc((100% - 30px) / 4);
+}
+.yazan.single-product .flex-control-thumbs img {
+	cursor: pointer;
+	opacity: 0.5;
+	aspect-ratio: 1 / 1;
+	object-fit: cover;
+	background: var(--yz-ivory);
+	border: 1px solid transparent;
+	transition: opacity var(--mo-fast) ease, border-color var(--mo-fast) ease;
+}
+.yazan.single-product .flex-control-thumbs img:hover { opacity: 0.85; }
+.yazan.single-product .flex-control-thumbs img.flex-active { opacity: 1; border-color: var(--yz-ink); }
+
+/* Thumbnails stay a HORIZONTAL strip below the main image — matching the Comma reference (its rail
+   sits under the image, not beside it) and keeping WooCommerce's flexslider untouched and robust. */
+
+/* Gallery carousel arrows (enabled via woocommerce_single_product_carousel_options in
+   inc/woocommerce.php) — minimal ink discs pinned to the vertical middle of the main image. */
+.yazan.single-product .woocommerce-product-gallery .flex-direction-nav {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+.yazan.single-product .flex-direction-nav a {
+	position: absolute;
+	top: 50%;
+	transform: translateY(-50%);
+	width: 40px;
+	height: 40px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: rgba(20, 18, 16, 0.85);
+	color: var(--yz-ivory);
+	opacity: 0;
+	text-indent: 0;
+	overflow: hidden;
+	transition: opacity var(--mo-fast) ease, background var(--mo-fast) ease;
+	z-index: 3;
+}
+.yazan.single-product .woocommerce-product-gallery:hover .flex-direction-nav a { opacity: 0.9; }
+.yazan.single-product .flex-direction-nav a:hover { background: var(--yz-ink); opacity: 1; }
+.yazan.single-product .flex-direction-nav .flex-prev { inset-inline-start: 14px; }
+.yazan.single-product .flex-direction-nav .flex-next { inset-inline-end: 14px; }
+/* Replace flexslider's icon-font glyphs with clean chevrons that respect writing direction. */
+.yazan.single-product .flex-direction-nav a::before {
+	content: "";
+	width: 10px;
+	height: 10px;
+	border: 2px solid currentColor;
+	border-inline-end: 0;
+	border-block-end: 0;
+}
+.yazan.single-product .flex-direction-nav .flex-prev::before { transform: rotate(-45deg); margin-inline-start: 4px; }
+.yazan.single-product .flex-direction-nav .flex-next::before { transform: rotate(135deg); margin-inline-end: 4px; }
+
+/* Price in the info column — sale strikes the original, live price warms to sand (Comma rhythm). */
+.yazan.single-product .summary .price {
+	font-family: var(--yz-font-display);
+	font-size: clamp(24px, 2.4vw, 30px);
+	color: var(--yz-ink);
+	margin: 4px 0 18px;
+}
+.yazan.single-product .summary .price del {
+	color: var(--yz-muted);
+	opacity: 0.7;
+	font-size: 0.7em;
+	margin-inline-end: 10px;
+	font-family: var(--yz-font-body);
+}
+.yazan.single-product .summary .price ins {
+	text-decoration: none;
+	color: var(--yz-agate);
+}
+/* "Save N%" pill inline with the sale price (Comma's SAVE 20% chip). */
+.yazan.single-product .summary .price .yz-save {
+	display: inline-block;
+	vertical-align: middle;
+	margin-inline-start: 10px;
+	padding: 3px 10px;
+	background: var(--yz-agate);
+	color: #fff;
+	font-family: var(--yz-font-body);
+	font-size: 11px;
+	font-weight: 600;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	border-radius: var(--yz-radius-pill);
+}
+
+/* Reassurance sub-line under the Add-to-Cart button (Comma's "Wait & Save…" line). */
+.yazan.single-product .yz-atc-note {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px;
+	margin: 12px 0 0;
+	font-size: 12.5px;
+	letter-spacing: 0.02em;
+	color: var(--yz-muted);
+}
+.yazan.single-product .yz-atc-note__sep { color: var(--yz-hairline); }
+
+/* Muted payment / trust strip after the cart form. */
+.yazan.single-product .yz-pay {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 10px;
+	margin: 16px 0 0;
+	padding-top: 16px;
+	border-top: 1px solid var(--yz-hairline);
+	color: var(--yz-muted);
+}
+.yazan.single-product .yz-pay__lock { display: inline-flex; color: var(--yz-silver); }
+.yazan.single-product .yz-pay__label {
+	font-size: 12px;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+}
+.yazan.single-product .yz-pay__marks {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+	margin-inline-start: auto;
+}
+.yazan.single-product .yz-pay__mark {
+	padding: 4px 8px;
+	border: 1px solid var(--yz-hairline);
+	border-radius: 4px;
+	font-size: 10px;
+	font-weight: 600;
+	letter-spacing: 0.04em;
+	color: var(--yz-text-2);
+	white-space: nowrap;
+}
+
+/* Variation swatches styled as Comma-style bordered size/colour buttons (variation-swatches-woo). */
+.yazan.single-product .variable-items-wrapper {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin: 6px 0 4px;
+}
+.yazan.single-product .variable-item {
+	min-width: 46px;
+	height: 44px;
+	padding: 0 14px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	border: 1px solid var(--yz-border);
+	background: var(--yz-surface);
+	box-shadow: none !important;
+	border-radius: 0;
+	font-size: 13px;
+	transition: border-color var(--mo-fast) ease, color var(--mo-fast) ease;
+}
+.yazan.single-product .variable-item:hover { border-color: var(--yz-border-strong); }
+.yazan.single-product .variable-item.selected,
+.yazan.single-product .variable-item.variable-item--selected {
+	border-color: var(--yz-ink);
+	color: var(--yz-ink);
+}
+
+/* Product tabs → Comma-style accordion (built by initProductAccordion in interactions.js). */
+.yazan.single-product .yz-accordion > ul.tabs,
+.yazan.single-product .yz-accordion > ul.wc-tabs { display: none; }
+.yazan.single-product .yz-accordion::before,
+.yazan.single-product .yz-accordion::after { display: none; }
+.yazan.single-product .yz-acc__head {
+	width: 100%;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 16px;
+	padding: 20px 2px;
+	margin: 0;
+	background: none;
+	border: 0;
+	border-top: 1px solid var(--yz-border);
+	color: var(--yz-ink);
+	font-family: var(--yz-font-body);
+	font-size: 15px;
+	letter-spacing: 0.02em;
+	text-align: start;
+	cursor: pointer;
+}
+.yazan.single-product .yz-acc__icon {
+	position: relative;
+	flex: none;
+	width: 12px;
+	height: 12px;
+}
+.yazan.single-product .yz-acc__icon::before,
+.yazan.single-product .yz-acc__icon::after {
+	content: "";
+	position: absolute;
+	background: var(--yz-muted);
+	transition: opacity var(--mo-fast) ease, transform var(--mo-fast) ease;
+}
+.yazan.single-product .yz-acc__icon::before { inset: 5px 0; height: 2px; }              /* horizontal bar */
+.yazan.single-product .yz-acc__icon::after  { inset: 0 5px; width: 2px; }               /* vertical bar (→ + sign) */
+.yazan.single-product .yz-acc__head[aria-expanded="true"] .yz-acc__icon::after { transform: scaleY(0); } /* becomes − */
+.yazan.single-product .yz-acc__panel {
+	padding: 4px 2px 24px;
+	color: var(--yz-text-2);
+	line-height: 1.7;
+}
+.yazan.single-product .yz-acc__panel[hidden] { display: none; }
+.yazan.single-product .yz-acc__panel:last-of-type { border-bottom: 1px solid var(--yz-border); }
+
+/* --------------------------------------------------------------------------
+   Related / up-sell products — Comma-style horizontal slider (CSS scroll-snap,
+   no Swiper dependency). WooCommerce prints these as `.related.products` /
+   `.up-sells.products` OUTSIDE .yz-product-top, so they run full-width.
+   -------------------------------------------------------------------------- */
+.yazan.single-product .related.products > ul.products,
+.yazan.single-product .up-sells.products > ul.products {
+	display: grid;
+	grid-auto-flow: column;
+	grid-auto-columns: minmax(220px, 1fr);
+	gap: 20px;
+	overflow-x: auto;
+	scroll-snap-type: x mandatory;
+	-webkit-overflow-scrolling: touch;
+	scrollbar-width: thin;
+	padding-bottom: 14px;
+	margin: 0;
+}
+.yazan.single-product .related.products > ul.products > li.product,
+.yazan.single-product .up-sells.products > ul.products > li.product {
+	scroll-snap-align: start;
+	width: auto !important;
+	margin: 0 !important;
+	float: none !important;
+}
+/* Desktop: show ~4 across, the rest scroll into view — the "slider" read. */
+@media (min-width: 993px) {
+	.yazan.single-product .related.products > ul.products,
+	.yazan.single-product .up-sells.products > ul.products {
+		grid-auto-columns: minmax(0, calc((100% - 60px) / 4));
+	}
+}
+
+/* --------------------------------------------------------------------------
+   Sticky mobile Add-to-Cart bar (Part 15) — highest-ROI mobile animation
+   -------------------------------------------------------------------------- */
+.yz-sticky-atc {
+	position: fixed;
+	inset-inline: 0;
+	bottom: 0;
+	z-index: 999;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 16px;
+	padding: 12px 16px;
+	background: rgba(20, 18, 16, 0.98);
+	color: var(--yz-ivory);
+	backdrop-filter: blur(8px);
+	-webkit-backdrop-filter: blur(8px);
+	transform: translateY(100%);
+	transition: transform var(--mo-med) var(--mo-ease-inout);
+	border-top: 1px solid rgba(245, 241, 233, 0.12);
+}
+.yz-sticky-atc.is-visible { transform: translateY(0); }
+.yz-sticky-atc[hidden] { display: none; }
+.yz-sticky-atc__info { display: flex; flex-direction: column; min-width: 0; }
+.yz-sticky-atc__name {
+	font-size: 13px;
+	white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.yz-sticky-atc__price { font-size: 13px; color: var(--yz-sand); }
+.yz-sticky-atc__price del { opacity: 0.6; }
+.yz-sticky-atc__btn {
+	flex: none;
+	background: var(--yz-ivory);
+	color: var(--yz-ink);
+	border: 0;
+	padding: 12px 22px;
+	text-transform: uppercase;
+	letter-spacing: 0.12em;
+	font-size: 12px;
+	font-weight: 500;
+	cursor: pointer;
+}
+/* Only ever show on small screens. */
+@media (min-width: 993px) { .yz-sticky-atc { display: none !important; } }
+
+/* --------------------------------------------------------------------------
+   Add-to-cart feedback label (motion Part 9)
+   -------------------------------------------------------------------------- */
+.add_to_cart_button.yz-adding,
+.single_add_to_cart_button.yz-adding { opacity: 0.75; }
+
+/* --------------------------------------------------------------------------
+   WooCommerce buttons — force the ink palette over Astra Global / Elementor Kit
+   colors that the starter demo sets with high specificity. !important is used
+   deliberately here: this is a store-wide brand override of an opinionated
+   starter theme, exactly the case where it is justified.
+   -------------------------------------------------------------------------- */
+body.yazan .single_add_to_cart_button,
+body.yazan .add_to_cart_button,
+body.yazan a.button,
+body.yazan button.button,
+body.yazan input.button,
+body.yazan .woocommerce a.button.alt,
+body.yazan .woocommerce button.button.alt,
+body.yazan .woocommerce #respond input#submit {
+	background-color: var(--yz-ink) !important;
+	border: 1px solid var(--yz-ink) !important;
+	color: var(--yz-ivory) !important;
+	border-radius: 0 !important;
+	text-transform: uppercase;
+	letter-spacing: 0.12em;
+	transition: background-color var(--mo-fast) ease, color var(--mo-fast) ease;
+}
+body.yazan .single_add_to_cart_button:hover,
+body.yazan .add_to_cart_button:hover,
+body.yazan a.button:hover,
+body.yazan button.button:hover,
+body.yazan input.button:hover,
+body.yazan .woocommerce a.button.alt:hover,
+body.yazan .woocommerce button.button.alt:hover,
+body.yazan .woocommerce #respond input#submit:hover {
+	background-color: transparent !important;
+	color: var(--yz-ink) !important;
+}
+
+/* --------------------------------------------------------------------------
+   Cart drawer (modern-cart) — Part 10. STYLE the plugin's slide-out, don't rebuild.
+   Class map (from the plugin templates): .moderncart-panel (sliding panel) ·
+   .moderncart-slide-out-header/-title/-close · .moderncart-slide-out-footer ·
+   .moderncart-free-shipping-progress-bar > .moderncart-progress-bar · .moderncart-cart-item-* ·
+   a.checkout-button. Conservative on-brand baseline (ivory ground, ink text, agate accent, sharp
+   corners, hairlines) — spacing/exact shades to be tuned against a screenshot of the OPEN drawer.
+   -------------------------------------------------------------------------- */
+/* Floating cart button — override the plugin's blue (#705aef) with the brand ink so the
+   bubble coordinates with the active theme (near-black in Black, deep burgundy in Burgundy),
+   matching the drawer's ink checkout CTA. The count badge takes the agate accent so the item
+   count stays legible on the dark button. */
+body.yazan #moderncart-floating-cart button {
+	background-color: var(--yz-ink) !important;
+	color: var(--yz-ivory) !important;
+	box-shadow: 0 6px 18px rgba(20, 18, 16, 0.28);
+}
+body.yazan #moderncart-floating-cart .moderncart-floating-cart-icon svg,
+body.yazan #moderncart-floating-cart .moderncart-floating-cart-icon {
+	color: var(--yz-ivory) !important;
+}
+body.yazan #moderncart-floating-cart .moderncart-floating-cart-count {
+	background-color: var(--yz-agate) !important;
+	color: var(--yz-ivory) !important;
+}
+body.yazan #moderncart-floating-cart .moderncart-floating-cart-button-notification {
+	border-color: var(--yz-ink) !important;
+}
+
+body.yazan .moderncart-panel,
+body.yazan .moderncart-slide-out-cart {
+	background: var(--yz-ivory);
+	color: var(--yz-ink);
+	font-family: var(--yz-font-body);
+}
+/* Header — serif title, hairline base, quiet close. */
+body.yazan .moderncart-slide-out-header {
+	border-bottom: 1px solid var(--yz-hairline, rgba(20, 18, 16, 0.12));
+}
+body.yazan .moderncart-slide-out-header-title {
+	font-family: var(--yz-font-display);
+	font-weight: 600;
+	letter-spacing: 0.01em;
+	color: var(--yz-ink);
+}
+body.yazan .moderncart-slide-out-header-close {
+	color: var(--yz-muted);
+	transition: color var(--mo-fast) ease;
+}
+body.yazan .moderncart-slide-out-header-close:hover { color: var(--yz-ink); }
+/* Free-shipping progress — hairline track, agate fill. */
+body.yazan .moderncart-free-shipping-progress-bar {
+	background: rgba(20, 18, 16, 0.08);
+	border-radius: 0;
+}
+body.yazan .moderncart-progress-bar {
+	background: var(--yz-agate) !important;
+	border-radius: 0;
+}
+/* Line items — serif product name, hairline dividers. */
+body.yazan .moderncart-cart-item-container {
+	border-bottom: 1px solid var(--yz-hairline, rgba(20, 18, 16, 0.08));
+}
+body.yazan .moderncart-cart-item-product-name,
+body.yazan .moderncart-cart-item-product-name a,
+body.yazan .moderncart-cart-item-product-link {
+	font-family: var(--yz-font-display);
+	font-weight: 500;
+	font-size: 15px;
+	color: var(--yz-ink) !important; /* beat the plugin's muted link colour for readability */
+}
+/* Footer — hairline top, ink checkout CTA (tracked-uppercase, sharp, full-width). */
+body.yazan .moderncart-slide-out-footer {
+	border-top: 1px solid var(--yz-hairline, rgba(20, 18, 16, 0.12));
+	background: var(--yz-ivory);
+}
+body.yazan a.checkout-button,
+body.yazan .moderncart-slide-out-footer a.checkout-button {
+	background: var(--yz-ink) !important;
+	color: var(--yz-ivory) !important;
+	border: 1px solid var(--yz-ink) !important;
+	border-radius: 0 !important;
+	text-transform: uppercase;
+	letter-spacing: 0.12em;
+	transition: background var(--mo-fast) ease, color var(--mo-fast) ease;
+}
+body.yazan a.checkout-button:hover {
+	background: transparent !important;
+	color: var(--yz-ink) !important;
+}
+/* Secure-checkout trust microcopy under the CTA (reference Part 10 "lock icon microcopy"). Injected
+   via ::after so no plugin template override is needed; decorative, so it degrades harmlessly. */
+body.yazan .moderncart-slide-out-footer::after {
+	content: "\01F512  Secure, encrypted checkout";
+	display: block;
+	margin-top: 12px;
+	text-align: center;
+	font-family: var(--yz-font-body);
+	font-size: 11px;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: var(--yz-muted);
+}
+
+/* Drawer recommendations / upsells (reference Part 10 "You may also like"). Only render when the
+   store has upsells/recommendations; styled on-brand: tracked-uppercase section header, hairline
+   separation, serif item names, compact ink "Add" control. */
+body.yazan .moderncart-slide-out-recommendations-header,
+body.yazan .moderncart-slide-out-empty-cart-recommendations-title {
+	font-family: var(--yz-font-body);
+	font-size: 11px;
+	font-weight: 500;
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	color: var(--yz-muted);
+	padding-top: 16px;
+	border-top: 1px solid var(--yz-hairline, rgba(20, 18, 16, 0.1));
+}
+body.yazan .moderncart-cart-item-recommended-image {
+	background: var(--yz-ivory);
+	border-radius: 0;
+}
+body.yazan .moderncart-cart-recommended-item-actions .moderncart-cart-item-product-name,
+body.yazan .moderncart-cart-recommended-item-actions .moderncart-cart-item-product-name a {
+	font-family: var(--yz-font-display);
+	font-weight: 500;
+	color: var(--yz-ink) !important;
+}
+/* Compact "Add" control on a recommended item — ink outline that fills on hover. */
+body.yazan .moderncart-add-to-cart {
+	border: 1px solid var(--yz-ink) !important;
+	background: transparent !important;
+	color: var(--yz-ink) !important;
+	border-radius: 0 !important;
+	text-transform: uppercase;
+	letter-spacing: 0.1em;
+	font-size: 11px;
+	transition: background var(--mo-fast) ease, color var(--mo-fast) ease;
+}
+body.yazan .moderncart-add-to-cart:hover {
+	background: var(--yz-ink) !important;
+	color: var(--yz-ivory) !important;
+}

@@ -1,0 +1,80 @@
+/**
+ * Yazan Rewards — rules admin builder.
+ */
+
+.yzrw-rules-app { margin-top: 1rem; }
+
+.yzrw-card {
+	background: #fff;
+	border: 1px solid #dcdcde;
+	border-radius: 4px;
+	padding: 1rem 1.25rem;
+	margin-bottom: 1.25rem;
+	max-width: 900px;
+}
+
+.yzrw-card h2 { margin-top: 0; }
+
+.yzrw-field {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	margin: 0.5rem 0;
+}
+
+.yzrw-field > label {
+	flex: 0 0 200px;
+	font-weight: 600;
+}
+
+.yzrw-section {
+	border-top: 1px solid #f0f0f1;
+	margin-top: 1rem;
+	padding-top: 0.75rem;
+}
+
+.yzrw-section h3 { margin: 0 0 0.5rem; }
+
+.yzrw-rows { margin-bottom: 0.5rem; }
+
+.yzrw-row {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+	padding: 0.5rem;
+	margin-bottom: 0.4rem;
+	background: #f6f7f7;
+	border: 1px solid #e0e0e0;
+	border-radius: 3px;
+}
+
+.yzrw-row select,
+.yzrw-row input,
+.yzrw-row textarea { margin: 0; }
+
+.yzrw-cond-input,
+.yzrw-act-params {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.4rem;
+	flex-wrap: wrap;
+}
+
+.yzrw-remove {
+	margin-inline-start: auto;
+	color: #b32d2e;
+	text-decoration: none;
+	font-weight: 700;
+}
+
+.yzrw-save {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	margin-top: 1rem;
+}
+
+.yzrw-msg { color: #b32d2e; }
+
+.yzrw-builder textarea { min-width: 260px; }

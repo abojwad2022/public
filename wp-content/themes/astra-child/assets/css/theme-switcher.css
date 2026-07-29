@@ -1,0 +1,332 @@
+/* ==========================================================================
+   Yazan — Floating Theme Switcher
+   --------------------------------------------------------------------------
+   A quiet, luxury toggle pinned bottom-inline-end on the homepage. Collapsed to
+   a small mark; expands to a radiogroup of themes, each with a live swatch.
+   Fully token-driven, so the switcher itself also re-tints with the active
+   theme. Active state is driven purely by the <html data-yz-theme> attribute
+   (CSS below) → correct on first paint, zero flash, no JS required to show it.
+   ========================================================================== */
+
+.yz-theme-switcher {
+	position: fixed;
+	inset-block-end: clamp(16px, 3vw, 28px);
+	/* Pinned bottom-LEFT so it never overlaps the modern-cart floating cart bubble
+	   (which sits bottom-right). Uses logical props → flips correctly under RTL. */
+	inset-inline-start: clamp(16px, 3vw, 28px);
+	z-index: 1000;
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 10px;
+	font-family: var(--yz-font-body, sans-serif);
+	/* The switcher never participates in the theme crossfade of the page body,
+	   but its own colours should still ease — handled by explicit transitions. */
+
+	/* Hidden until the controller has decided where to render it (header slot vs.
+	   floating fallback) — avoids a flash at the old fixed position. JS adds
+	   .is-ready in init() to reveal it instantly with no flash.
+	   FAILSAFE: a delayed keyframe reveals it anyway if the script never runs
+	   (e.g. a stale cached JS while the CSS is fresh), so the control can never
+	   be left permanently invisible. */
+	opacity: 0;
+	animation: yz-ts-reveal 1ms linear 1000ms forwards;
+	transition: opacity 200ms ease;
+}
+.yz-theme-switcher.is-ready { opacity: 1; animation: none; }
+@keyframes yz-ts-reveal { to { opacity: 1; } }
+
+/* ---- Toggle (collapsed FAB) --------------------------------------------- */
+.yz-theme-switcher__toggle {
+	display: inline-flex;
+	align-items: center;
+	gap: 9px;
+	padding: 11px 15px;
+	background: var(--yz-surface);
+	color: var(--yz-text);
+	border: 1px solid var(--yz-border-strong);
+	border-radius: var(--yz-radius-pill);
+	box-shadow: var(--yz-shadow-md);
+	cursor: pointer;
+	font-size: 11px;
+	font-weight: 500;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+	line-height: 1;
+	transition: background-color 250ms ease, color 250ms ease,
+	            border-color 250ms ease, box-shadow 250ms ease, transform 250ms ease;
+}
+.yz-theme-switcher__toggle:hover { transform: translateY(-1px); box-shadow: var(--yz-shadow-lg); }
+.yz-theme-switcher__toggle:focus-visible { outline: 2px solid var(--yz-focus); outline-offset: 2px; }
+
+/* Two-dot mark that mirrors the theme duo. */
+.yz-theme-switcher__mark {
+	display: inline-flex;
+	gap: 3px;
+}
+.yz-theme-switcher__mark i {
+	width: 10px; height: 10px; border-radius: 50%;
+	border: 1px solid var(--yz-border-strong);
+}
+.yz-theme-switcher__mark i:nth-child(1) { background: #141210; }
+.yz-theme-switcher__mark i:nth-child(2) { background: #4A0F19; }
+.yz-theme-switcher__label { display: inline; }
+
+/* ---- Panel (expanded) --------------------------------------------------- */
+.yz-theme-switcher__panel {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	padding: 10px;
+	min-width: 208px;
+	background: var(--yz-surface);
+	border: 1px solid var(--yz-border-strong);
+	box-shadow: var(--yz-shadow-lg);
+	/* Collapsed by default; opens on .is-open. */
+	transform-origin: bottom left;
+	opacity: 0;
+	transform: translateY(8px) scale(0.98);
+	pointer-events: none;
+	visibility: hidden;
+	transition: opacity 240ms var(--yz-theme-ease, ease),
+	            transform 240ms var(--yz-theme-ease, ease),
+	            visibility 0s linear 240ms;
+}
+.yz-theme-switcher.is-open .yz-theme-switcher__panel {
+	opacity: 1;
+	transform: translateY(0) scale(1);
+	pointer-events: auto;
+	visibility: visible;
+	transition-delay: 0s;
+}
+.yz-theme-switcher__title {
+	font-size: 10px;
+	letter-spacing: 0.16em;
+	text-transform: uppercase;
+	color: var(--yz-text-muted);
+	padding: 6px 8px 4px;
+}
+
+/* ---- Options ------------------------------------------------------------ */
+.yz-theme-option {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	width: 100%;
+	padding: 10px 10px;
+	background: transparent;
+	border: 1px solid transparent;
+	color: var(--yz-text-2);
+	cursor: pointer;
+	text-align: start;
+	font-size: 12px;
+	letter-spacing: 0.06em;
+	line-height: 1.2;
+	transition: background-color 200ms ease, color 200ms ease, border-color 200ms ease;
+}
+.yz-theme-option:hover { background: rgba(127, 127, 127, 0.10); color: var(--yz-text); }
+.yz-theme-option:focus-visible { outline: 2px solid var(--yz-focus); outline-offset: -2px; }
+
+/* Swatch preview — a two-tone chip showing the theme's ground + accent. */
+.yz-theme-option__swatch {
+	flex: 0 0 auto;
+	width: 30px; height: 30px;
+	border: 1px solid var(--yz-border-strong);
+	position: relative;
+	overflow: hidden;
+}
+.yz-theme-option__swatch::after {
+	content: "";
+	position: absolute;
+	inset-block: 0; inset-inline-end: 0;
+	width: 42%;
+}
+.yz-theme-option[data-yz-theme-option="black"] .yz-theme-option__swatch { background: #141210; }
+.yz-theme-option[data-yz-theme-option="black"] .yz-theme-option__swatch::after { background: #8C2F24; }
+.yz-theme-option[data-yz-theme-option="burgundy"] .yz-theme-option__swatch { background: #160709; }
+.yz-theme-option[data-yz-theme-option="burgundy"] .yz-theme-option__swatch::after { background: #A50606; }
+
+.yz-theme-option__text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.yz-theme-option__name { font-weight: 500; color: inherit; }
+.yz-theme-option__desc { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--yz-text-muted); }
+
+/* Check mark — hidden until the option is the active theme. */
+.yz-theme-option__check {
+	margin-inline-start: auto;
+	opacity: 0;
+	color: var(--yz-accent);
+	transition: opacity 200ms ease;
+}
+
+/* ---- Active state — CSS-driven from <html data-yz-theme> (no-flash) ------ */
+html[data-yz-theme="black"]    .yz-theme-option[data-yz-theme-option="black"],
+html[data-yz-theme="burgundy"] .yz-theme-option[data-yz-theme-option="burgundy"] {
+	border-color: var(--yz-border-strong);
+	background: rgba(127, 127, 127, 0.08);
+	color: var(--yz-text);
+}
+html[data-yz-theme="black"]    .yz-theme-option[data-yz-theme-option="black"]    .yz-theme-option__check,
+html[data-yz-theme="burgundy"] .yz-theme-option[data-yz-theme-option="burgundy"] .yz-theme-option__check {
+	opacity: 1;
+}
+
+/* ---- Motion / responsive ------------------------------------------------ */
+@media (max-width: 600px) {
+	.yz-theme-switcher__label { display: none; }        /* FAB shrinks to the mark on small screens */
+	.yz-theme-switcher__toggle { padding: 11px; }
+}
+@media (prefers-reduced-motion: reduce) {
+	.yz-theme-switcher__panel,
+	.yz-theme-switcher__toggle,
+	.yz-theme-option { transition: none; }
+}
+
+/* ==========================================================================
+   In-header mode — relocated into Astra's right icon cluster
+   --------------------------------------------------------------------------
+   When theme-switcher.js moves the switcher into .site-header-primary-section-
+   right, it flips from a fixed FAB to a native-looking header icon: a compact
+   two-dot mark that drops a panel BELOW itself (instead of rising from the
+   bottom-left corner). Everything is scoped to .yz-theme-switcher--in-header,
+   so the floating fallback is untouched.
+   ========================================================================== */
+
+/* The Astra slot wrapper we inject — vertically center within the header bar. */
+.yz-theme-slot {
+	display: flex;
+	align-items: center;
+}
+
+.yz-theme-switcher--in-header {
+	position: relative;      /* anchor the dropdown panel; drop the fixed pin */
+	inset: auto;
+	z-index: auto;
+	flex-direction: row;
+	align-items: center;
+	gap: 0;
+}
+
+/* ---- Toggle → minimal header icon --------------------------------------- */
+.yz-theme-switcher--in-header .yz-theme-switcher__toggle {
+	background: transparent;
+	border: 1px solid transparent;
+	border-radius: 50%;
+	box-shadow: none;
+	padding: 7px;
+	gap: 0;
+}
+.yz-theme-switcher--in-header .yz-theme-switcher__toggle:hover {
+	transform: none;
+	box-shadow: none;
+	background: rgba(127, 127, 127, 0.12);
+	border-color: var(--yz-border, rgba(127, 127, 127, 0.25));
+}
+.yz-theme-switcher--in-header .yz-theme-switcher__label { display: none; }
+.yz-theme-switcher--in-header .yz-theme-switcher__mark { gap: 3px; }
+.yz-theme-switcher--in-header .yz-theme-switcher__mark i { width: 9px; height: 9px; }
+
+/* ---- Panel → dropdown anchored below the icon --------------------------- */
+.yz-theme-switcher--in-header .yz-theme-switcher__panel {
+	position: absolute;
+	top: calc(100% + 10px);
+	inset-inline-end: 0;
+	z-index: 1001;
+	transform-origin: top right;
+	/* Opens downward from the icon rather than upward from a corner. */
+	transform: translateY(-8px) scale(0.98);
+}
+.yz-theme-switcher--in-header.is-open .yz-theme-switcher__panel {
+	transform: translateY(0) scale(1);
+}
+
+/* The always-dark "solid" header (checkout/cart) has a dark bar even in the
+   light "black" theme, where --yz-text is dark → the icon would vanish. Force a
+   light icon there so it stays legible, matching the header's inverted icons. */
+body.yz-solid-header .yz-theme-switcher--in-header .yz-theme-switcher__toggle {
+	color: var(--yz-ivory, #F7F3F2);
+}
+body.yz-solid-header .yz-theme-switcher--in-header .yz-theme-switcher__toggle:hover {
+	background: rgba(255, 255, 255, 0.14);
+}
+
+/* Belong to the header's UTILITY-ICON cluster. On the light "black" comma-header
+   the search + account icons are carnelian (--yz-accent), a colour that reads on
+   ANY header rendering. Tying the theme toggle to the same accent — instead of
+   --yz-text, which only stays legible while it happens to oppose the header bg —
+   keeps the icon visible even if the bar renders dark (transparent-header
+   fallback, a stale cache, etc.) and unifies it with its neighbours. Burgundy is
+   excluded: its cluster is light on the dark bar, so --yz-text is already right. */
+html:not([data-yz-theme="burgundy"]) .yazan.yz-comma-header .yz-theme-switcher--in-header .yz-theme-switcher__toggle {
+	color: var(--yz-accent);
+}
+html:not([data-yz-theme="burgundy"]) .yazan.yz-comma-header .yz-theme-switcher--in-header .yz-theme-switcher__toggle:hover {
+	background: rgba(140, 47, 36, 0.10);
+}
+
+/* On the mobile break-point the label is already hidden site-wide; keep the
+   icon compact so it fits beside the cart trigger. */
+@media (max-width: 600px) {
+	.yz-theme-switcher--in-header .yz-theme-switcher__toggle { padding: 6px; }
+}
+
+/* ==========================================================================
+   Binary mode — Sun / Moon switch (exactly two themes)
+   --------------------------------------------------------------------------
+   A single icon that morphs between a sun (light "black" theme) and a moon
+   (dark "burgundy" theme). One click flips to the other theme — no dropdown.
+   The visible icon is driven purely by <html data-yz-theme>, so it is correct
+   on first paint. Works both in the header and as the floating fallback.
+   ========================================================================== */
+
+/* In binary mode the two-dot mark, the text label and the panel all disappear;
+   only the day/night icon remains. */
+.yz-theme-switcher--binary .yz-theme-switcher__mark,
+.yz-theme-switcher--binary .yz-theme-switcher__label,
+.yz-theme-switcher--binary .yz-theme-switcher__panel {
+	display: none;
+}
+
+.yz-theme-switcher--binary .yz-theme-switcher__toggle {
+	padding: 8px;
+	border-radius: 50%;
+	gap: 0;
+}
+
+/* Icon stage — both glyphs stacked; the inactive one is rotated + scaled away. */
+.yz-theme-switcher__daynight {
+	display: none;
+	position: relative;
+	width: 20px;
+	height: 20px;
+}
+.yz-theme-switcher--binary .yz-theme-switcher__daynight { display: inline-block; }
+
+.yz-dn {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	color: inherit;
+	transition: opacity 300ms ease, transform 450ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+/* Hidden state — spun and shrunk toward the center. */
+.yz-dn--sun  { opacity: 0; transform: rotate(-90deg) scale(0.35); }
+.yz-dn--moon { opacity: 0; transform: rotate(90deg)  scale(0.35); }
+
+/* Active theme reveals its icon (sun ⇄ black/light, moon ⇄ burgundy/dark). */
+html[data-yz-theme="black"]    .yz-dn--sun,
+html[data-yz-theme="burgundy"] .yz-dn--moon {
+	opacity: 1;
+	transform: none;
+}
+
+/* Header-mode binary: match the neighbouring icon scale. */
+.yz-theme-switcher--in-header.yz-theme-switcher--binary .yz-theme-switcher__daynight {
+	width: 19px;
+	height: 19px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.yz-dn { transition: opacity 150ms ease; }
+	.yz-dn--sun, .yz-dn--moon { transform: none; }
+}

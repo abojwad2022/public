@@ -1,0 +1,153 @@
+/* ==========================================================================
+   Yazan (Astra Child) — Authentication page (/authentication/)
+   Scoped, self-contained luxury styling. Reuses site-wide tokens + utilities
+   (.yz-container / .yz-section--* / .yz-btn-*) and .yz-reveal motion.
+   Enqueued only on this page (inc/page-authentication.php). Direction-agnostic.
+   ========================================================================== */
+
+.yz-auth { overflow-x: clip; }
+
+/* Section rhythm (own padding — .yz-home-section only loads on the front page). */
+.yz-auth-sec { padding-block: clamp(56px, 9vw, 116px); }
+
+/* Eyebrow colour per band (main.css sets the type; we set the hue for contrast). */
+.yz-auth .yz-section--ivory .yz-eyebrow { color: var(--yz-agate); }
+.yz-auth .yz-section--ink   .yz-eyebrow { color: var(--yz-gold); }
+
+/* Shared centred header for interior sections. */
+.yz-auth-head { max-width: 680px; margin-inline: auto; margin-block-end: clamp(38px, 6vw, 64px); text-align: center; }
+.yz-auth-head h2 {
+	margin: 0.35em 0 0;
+	font-family: var(--yz-font-display, serif);
+	font-weight: 500;
+	font-size: clamp(27px, 4.4vw, 44px);
+	line-height: 1.08;
+	letter-spacing: -0.01em;
+}
+
+/* -------------------------------------------------- Hero (dark band) ----- */
+.yz-auth-hero__inner { max-width: 840px; margin-inline: auto; text-align: center; }
+.yz-auth-hero__title {
+	margin: 0.28em 0 0;
+	font-family: var(--yz-font-display, serif);
+	font-weight: 500;
+	font-size: clamp(40px, 6.6vw, 78px);
+	line-height: 1.02;
+	letter-spacing: -0.015em;
+}
+.yz-auth-hero__lede {
+	max-width: 60ch;
+	margin: clamp(18px, 2.4vw, 26px) auto 0;
+	font-size: clamp(16px, 2.1vw, 19px);
+	line-height: 1.7;
+	color: rgba(245, 241, 233, 0.74);
+}
+.yz-auth-hero__cta,
+.yz-auth-cta__row {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 14px;
+	justify-content: center;
+	margin-block-start: clamp(26px, 3.4vw, 40px);
+}
+
+/* Ghost button reads on the dark hero (light hairline → fills ivory on hover). */
+.yz-auth-hero__cta .yz-btn-ghost {
+	border-color: rgba(245, 241, 233, 0.5);
+	color: var(--yz-ivory);
+}
+.yz-auth-hero__cta .yz-btn-ghost:hover,
+.yz-auth-hero__cta .yz-btn-ghost:focus-visible {
+	background: var(--yz-ivory);
+	color: var(--yz-ink);
+	border-color: var(--yz-ivory);
+}
+
+/* -------------------------------------------- Pillars (five proofs) ------ */
+.yz-auth-pillars {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+	gap: clamp(24px, 3vw, 44px) clamp(24px, 3vw, 40px);
+}
+.yz-auth-pillar {
+	padding-block-start: 22px;
+	border-block-start: 1px solid var(--yz-hairline, rgba(20, 18, 16, 0.12));
+	scroll-margin-block-start: 120px; /* so #certificate / #warranty anchors clear the sticky header */
+}
+.yz-auth-pillar__icon { display: block; color: var(--yz-agate); }
+.yz-auth-pillar__icon svg { width: 32px; height: 32px; }
+.yz-auth-pillar__title {
+	margin: 16px 0 8px;
+	font-family: var(--yz-font-display, serif);
+	font-weight: 500;
+	font-size: 20px;
+	line-height: 1.2;
+}
+.yz-auth-pillar__desc {
+	margin: 0;
+	font-size: 15px;
+	line-height: 1.62;
+	color: var(--yz-muted, #6e6a63);
+}
+
+/* --------------------------------------- How it works (dark, numbered) --- */
+.yz-auth-steps__grid {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	gap: clamp(28px, 4vw, 56px);
+}
+.yz-auth-step { position: relative; }
+.yz-auth-step__n {
+	display: block;
+	font-family: var(--yz-font-display, serif);
+	font-size: clamp(34px, 4.4vw, 46px);
+	line-height: 1;
+	color: var(--yz-gold);
+	opacity: 0.9;
+}
+.yz-auth-step__title {
+	margin: 16px 0 8px;
+	font-family: var(--yz-font-display, serif);
+	font-weight: 500;
+	font-size: 20px;
+	color: var(--yz-ivory);
+}
+.yz-auth-step__desc {
+	margin: 0;
+	font-size: 15px;
+	line-height: 1.64;
+	color: rgba(245, 241, 233, 0.7);
+}
+
+/* ------------------------------------------------- Closing CTA panel ----- */
+.yz-auth-cta {
+	max-width: 760px;
+	margin-inline: auto;
+	padding: clamp(34px, 5vw, 66px) clamp(24px, 4vw, 56px);
+	text-align: center;
+	border: 1px solid var(--yz-hairline, rgba(20, 18, 16, 0.14));
+	background: linear-gradient(180deg, rgba(154, 123, 63, 0.05), transparent 70%);
+}
+.yz-auth-cta__title {
+	margin: 0;
+	font-family: var(--yz-font-display, serif);
+	font-weight: 500;
+	font-size: clamp(26px, 4vw, 40px);
+	line-height: 1.08;
+	letter-spacing: -0.01em;
+}
+.yz-auth-cta__lede {
+	max-width: 52ch;
+	margin: 0.6em auto 0;
+	font-size: clamp(15px, 2vw, 17px);
+	line-height: 1.66;
+	color: var(--yz-muted, #6e6a63);
+}
+
+/* ------------------------------------------------------- Responsive ------ */
+@media (max-width: 860px) {
+	.yz-auth-steps__grid { grid-template-columns: 1fr; gap: 28px; }
+}

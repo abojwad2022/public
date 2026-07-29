@@ -1,0 +1,75 @@
+/* ==========================================================================
+   Yazan (Astra Child) — RTL / Arabic overrides
+   Loaded ONLY when the site is in a right-to-left locale (is_rtl() → see
+   inc/enqueue.php). Most layout already flips automatically because the base
+   CSS uses logical properties (margin-inline-*, inset-inline-*, text-align:start);
+   this file handles the few things that don't auto-flip: Arabic typography and
+   directional transforms.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. Arabic typography — swap the Latin faces for the Arabic pairing.
+   -------------------------------------------------------------------------- */
+[dir="rtl"] body.yazan,
+body.rtl.yazan {
+	font-family: var(--yz-font-ar-body);
+}
+
+[dir="rtl"] .yazan h1,
+[dir="rtl"] .yazan h2,
+[dir="rtl"] .yazan h3,
+[dir="rtl"] .yazan h4,
+[dir="rtl"] .yazan .entry-title,
+[dir="rtl"] .yazan .product_title,
+[dir="rtl"] .yazan .woocommerce-loop-product__title {
+	font-family: var(--yz-font-ar-display);
+	letter-spacing: 0; /* Arabic script must never be letter-spaced */
+}
+
+/* Tracked-uppercase labels don't apply to Arabic — normalise them. */
+[dir="rtl"] .yazan .yz-label,
+[dir="rtl"] .yazan .yz-subject,
+[dir="rtl"] .yazan .yz-eyebrow,
+[dir="rtl"] .yazan .yz-badge,
+[dir="rtl"] .yazan .main-header-menu .menu-item > a,
+[dir="rtl"] .yazan .elementor-location-header .menu-item > a {
+	letter-spacing: 0;
+	text-transform: none;
+}
+
+/* --------------------------------------------------------------------------
+   2. Directional transforms — mirror what logical properties can't reach.
+   -------------------------------------------------------------------------- */
+/* Animated menu underline grows from the start (right) edge in RTL. */
+[dir="rtl"] .yazan .main-header-menu .menu-item > a::after,
+[dir="rtl"] .yazan .elementor-location-header .menu-item > a::after,
+[dir="rtl"] .yazan .hfe-nav-menu .menu-item > a::after,
+[dir="rtl"] .yazan .yz-header .menu-item > a::after {
+	transform-origin: right;
+}
+
+/* Product cards read right-aligned in RTL. */
+[dir="rtl"] .yazan ul.products li.product.yz-card {
+	text-align: right;
+}
+
+/* Sheen sweep travels start→end (right→left) in RTL. */
+[dir="rtl"] .yazan .yz-card--rare .woocommerce-LoopProduct-link::after,
+[dir="rtl"] .yazan .yz-card--rare > a:first-of-type::after {
+	transform: translateX(120%);
+}
+[dir="rtl"] .yazan .yz-card--rare:hover .woocommerce-LoopProduct-link::after,
+[dir="rtl"] .yazan .yz-card--rare:hover > a:first-of-type::after {
+	transform: translateX(-120%);
+}
+
+/* --------------------------------------------------------------------------
+   3. Numerals / prices stay LTR even inside RTL text (avoids reversed prices).
+   -------------------------------------------------------------------------- */
+[dir="rtl"] .yazan .price,
+[dir="rtl"] .yazan .yz-serial strong,
+[dir="rtl"] .yazan .woocommerce-Price-amount {
+	direction: ltr;
+	unicode-bidi: embed;
+	display: inline-block;
+}

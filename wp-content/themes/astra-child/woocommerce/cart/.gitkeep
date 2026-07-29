@@ -1,0 +1,2 @@
+# Cart template overrides (mirror: plugins/woocommerce/templates/cart/).
+# e.g. cart.php, mini-cart.php, cart-totals.php. NOTE: only affects the SHORTCODE cart, not Cart Blocks.

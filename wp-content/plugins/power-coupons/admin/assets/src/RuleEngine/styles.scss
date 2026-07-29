@@ -1,0 +1,225 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+#power_coupons_rules_tab {
+	$labelTextColor: #111827;
+	$descriptionTextColor: #4b5563;
+	$separatorColor: #c2c3c6;
+	$btnBgColor: #fff;
+
+	position: relative;
+	padding: 20px;
+
+	.power-coupons-rules {
+		&__toggle-rules {
+			&__header {
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+
+				&__title {
+					display: flex;
+					flex-direction: column;
+					gap: 4px;
+					width: 600px;
+
+					strong {
+						font-weight: 600;
+						font-size: 14px;
+						line-height: 24px;
+						color: $labelTextColor;
+					}
+
+					p {
+						font-weight: 400;
+						font-size: 13px;
+						line-height: 20px;
+						margin: 0;
+						padding: 0;
+						color: $descriptionTextColor;
+					}
+				}
+
+				&__control {
+					.components-form-toggle {
+						&__thumb {
+							top: 4px;
+							left: 4px;
+							width: 16px;
+							height: 16px;
+						}
+
+						&__track {
+							width: 44px;
+							height: 24px;
+							border-radius: 50px;
+						}
+
+						&.is-checked {
+							.components-form-toggle__thumb {
+								left: 8px;
+							}
+						}
+					}
+				}
+			}
+		}
+
+
+		&__separator {
+			display: flex;
+			align-items: center;
+			gap: 12px;
+			margin: 24px 0;
+			font-weight: 500;
+			font-size: 14px;
+			line-height: 18px;
+			text-align: center;
+
+			&-left,
+			&-right {
+				flex-grow: 1;
+				height: 1px;
+				background-color: $separatorColor;
+			}
+
+			/* Optional: style the center text */
+			> *:not( span ) {
+				font-weight: 600;
+				color: $separatorColor;
+				white-space: nowrap;
+			}
+		}
+
+		&__body {
+			padding: 0;
+			margin: 0;
+			border: none;
+
+			&__btn {
+				background-color: $btnBgColor;
+				padding: 8px 12px;
+				border: 1px solid #d1d5db;
+				box-shadow: 0 1px 2px 0 #0000000d;
+				cursor: pointer;
+				border-radius: 4px;
+				font-weight: 600;
+				font-size: 12px;
+				line-height: 16px;
+			}
+
+			.components-panel__body {
+				border: none;
+
+				&.is-opened {
+					padding: 0;
+				}
+
+				.components-panel__body-title {
+					padding: 0;
+					background-color: transparent;
+					border: none;
+					outline: none;
+
+					.components-panel__body-toggle {
+						padding: 15px 16px;
+						background-color: #fff;
+						font-weight: 600;
+						font-size: 14px;
+						line-height: 18px;
+						color: $labelTextColor;
+						border: 1px solid #d1d5db;
+						border-top-left-radius: 8px;
+						border-top-right-radius: 8px;
+					}
+				}
+
+				.components-panel__row {
+					display: block;
+					border: 1px solid #d1d5db;
+					border-top: none;
+					background-color: #f9fafb;
+				}
+			}
+
+			&__conditions {
+				&__fields {
+					display: flex;
+					gap: 14px;
+					flex-wrap: nowrap;
+					align-items: center;
+					padding: 20px;
+
+					&__remove-condition {
+						flex: 0 0 auto;
+						min-width: 24px;
+						padding: 0;
+						margin: 0;
+						height: 24px;
+						color: #6b7280;
+
+						svg {
+							fill: #fff;
+							width: 14px;
+							height: 16px;
+						}
+					}
+
+					&__input {
+						flex: 1 1 0;
+						min-width: 0;
+						padding: 12px;
+						border-radius: 8px;
+						font-weight: 400;
+						font-size: 13px;
+						line-height: 0;
+						color: $labelTextColor;
+					}
+
+					.power-coupons-rules-forceui-select-wrapper {
+						flex: 1 1 0;
+						min-width: 0;
+
+						> div {
+							padding: 0;
+							margin: 0;
+						}
+
+						svg.lucide-search {
+							display: none;
+						}
+					}
+
+					.power-coupons-rules-forceui-select-button {
+						padding: 12px;
+						border-radius: 8px;
+						font-weight: 400;
+						line-height: 24px;
+						color: $labelTextColor;
+
+						> div {
+							> span,
+							> div {
+								font-size: 13px;
+								padding: 0;
+								margin: 0;
+							}
+						}
+					}
+				}
+
+				&__add-new {
+					padding: 20px;
+					display: flex;
+					justify-content: center;
+				}
+
+				.power-coupons-rules__separator {
+					color: #9ca3af;
+					margin: 0;
+				}
+			}
+		}
+	}
+}

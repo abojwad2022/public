@@ -1,0 +1,282 @@
+<?php
+/**
+ * Yazan Dashboard — authentication & authorization.
+ *
+ * Same-origin, cookie-based. Login wraps wp_signon() and (because it runs over the site's own cookie)
+ * needs NO API keys in the browser. CSRF is handled by WordPress itself: a cookie-authenticated REST
+ * request is only accepted when it carries a valid `wp_rest` nonce in `X-WP-Nonce`; without it core
+ * treats the caller as logged-out and our capability checks return 401. Every privileged route below
+ * therefore just needs a capability check in its permission_callback.
+ *
+ * @package Yazan_Core
+ */
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
+/**
+ * Auth endpoints + shared permission helpers for the yazan/v1 namespace.
+ */
+class Yazan_Dashboard_Auth {
+
+	/** REST namespace shared by every dashboard controller. */
+	const NS = 'yazan/v1';
+
+	/** Capability required to reach the dashboard at all. */
+	const CAP = 'edit_products';
+
+	/** Max failed logins per IP before a temporary block. */
+	const MAX_ATTEMPTS = 6;
+
+	/** Lockout / attempt window in seconds. */
+	const WINDOW = 900; // 15 minutes.
+
+	/**
+	 * Register auth routes. Hook: rest_api_init.
+	 *
+	 * @return void
+	 */
+	public static function register_routes() {
+		register_rest_route(
+			self::NS,
+			'/auth/login',
+			array(
+				'methods'             => 'POST',
+				'callback'            => array( __CLASS__, 'login' ),
+				'permission_callback' => '__return_true', // Public — credentials are the secret; rate-limited below.
+				'args'                => array(
+					'username' => array( 'required' => true, 'type' => 'string' ),
+					'password' => array( 'required' => true, 'type' => 'string' ),
+					'remember' => array( 'required' => false, 'type' => 'boolean', 'default' => false ),
+				),
+			)
+		);
+
+		register_rest_route(
+			self::NS,
+			'/auth/logout',
+			array(
+				'methods'             => 'POST',
+				'callback'            => array( __CLASS__, 'logout' ),
+				'permission_callback' => array( __CLASS__, 'require_login' ),
+			)
+		);
+
+		register_rest_route(
+			self::NS,
+			'/auth/me',
+			array(
+				'methods'             => 'GET',
+				'callback'            => array( __CLASS__, 'me' ),
+				'permission_callback' => array( __CLASS__, 'require_login' ),
+			)
+		);
+	}
+
+	/* --------------------------------------------------------------------- */
+	/* Permission helpers (reused by every controller)                        */
+	/* --------------------------------------------------------------------- */
+
+	/**
+	 * permission_callback: caller must be logged in AND hold the dashboard capability.
+	 *
+	 * @return true|WP_Error
+	 */
+	public static function require_login() {
+		if ( ! current_user_can( self::CAP ) ) {
+			return new WP_Error( 'yazan_forbidden', __( 'You do not have access to the Yazan dashboard.', 'yazan' ), array( 'status' => rest_authorization_required_code() ) );
+		}
+		return true;
+	}
+
+	/**
+	 * Build a permission_callback that requires a specific capability.
+	 *
+	 * @param string $cap Capability.
+	 * @return callable
+	 */
+	public static function require_cap( $cap ) {
+		return static function () use ( $cap ) {
+			if ( ! current_user_can( $cap ) ) {
+				return new WP_Error( 'yazan_forbidden', __( 'Insufficient permissions.', 'yazan' ), array( 'status' => rest_authorization_required_code() ) );
+			}
+			return true;
+		};
+	}
+
+	/* --------------------------------------------------------------------- */
+	/* Endpoints                                                              */
+	/* --------------------------------------------------------------------- */
+
+	/**
+	 * POST /auth/login — authenticate and set the WordPress auth cookie.
+	 *
+	 * @param WP_REST_Request $request Request.
+	 * @return WP_REST_Response|WP_Error
+	 */
+	public static function login( WP_REST_Request $request ) {
+		$ip       = self::client_ip();
+		$username = sanitize_user( (string) $request->get_param( 'username' ) );
+
+		if ( self::is_locked_out( $ip, $username ) ) {
+			return new WP_Error(
+				'yazan_locked',
+				__( 'Too many attempts. Please try again in a few minutes.', 'yazan' ),
+				array( 'status' => 429 )
+			);
+		}
+
+		$creds = array(
+			'user_login'    => $username,
+			'user_password' => (string) $request->get_param( 'password' ), // Never sanitized/altered.
+			'remember'      => (bool) $request->get_param( 'remember' ),
+		);
+
+		$user = wp_signon( $creds, is_ssl() );
+
+		if ( is_wp_error( $user ) ) {
+			self::record_failure( $ip, $username );
+			// Generic message — never reveal whether the username exists.
+			return new WP_Error(
+				'yazan_login_failed',
+				__( 'Invalid username or password.', 'yazan' ),
+				array( 'status' => 401 )
+			);
+		}
+
+		if ( ! user_can( $user, self::CAP ) ) {
+			// Authenticated but not allowed here — don't leave them half-logged-into the dashboard.
+			return new WP_Error(
+				'yazan_forbidden',
+				__( 'This account cannot access the Yazan dashboard.', 'yazan' ),
+				array( 'status' => 403 )
+			);
+		}
+
+		self::clear_failures( $ip, $username );
+
+		// Make this same request "be" the user so the nonce we mint is valid for their next call.
+		wp_set_current_user( $user->ID );
+		Yazan_Dashboard_Audit::log( 'auth.login', 'auth', $user->ID );
+
+		return new WP_REST_Response(
+			array(
+				'user'  => self::user_payload( $user ),
+				'nonce' => wp_create_nonce( 'wp_rest' ),
+			),
+			200
+		);
+	}
+
+	/**
+	 * POST /auth/logout.
+	 *
+	 * @return WP_REST_Response
+	 */
+	public static function logout() {
+		Yazan_Dashboard_Audit::log( 'auth.logout', 'auth', get_current_user_id() );
+		wp_logout();
+		return new WP_REST_Response( array( 'ok' => true ), 200 );
+	}
+
+	/**
+	 * GET /auth/me — current user + capabilities + a fresh nonce.
+	 *
+	 * @return WP_REST_Response
+	 */
+	public static function me() {
+		$user = wp_get_current_user();
+		return new WP_REST_Response(
+			array(
+				'user'  => self::user_payload( $user ),
+				'nonce' => wp_create_nonce( 'wp_rest' ),
+			),
+			200
+		);
+	}
+
+	/* --------------------------------------------------------------------- */
+	/* Helpers                                                                */
+	/* --------------------------------------------------------------------- */
+
+	/**
+	 * Public-safe view of a user + the capabilities the UI branches on.
+	 *
+	 * @param WP_User $user User.
+	 * @return array
+	 */
+	public static function user_payload( $user ) {
+		return array(
+			'id'           => $user->ID,
+			'name'         => $user->display_name,
+			'email'        => $user->user_email,
+			'avatar'       => get_avatar_url( $user->ID, array( 'size' => 48 ) ),
+			'roles'        => array_values( (array) $user->roles ),
+			'capabilities' => array(
+				'edit_products'         => user_can( $user, 'edit_products' ),
+				'delete_products'       => user_can( $user, 'delete_products' ),
+				'upload_files'          => user_can( $user, 'upload_files' ),
+				'manage_woo'            => user_can( $user, 'manage_woocommerce' ),
+				'edit_shop_orders'      => user_can( $user, 'edit_shop_orders' ),
+				// Yazan Rewards plugin caps, so the dashboard can gate its embedded screens.
+				'manage_yazan_rewards'  => user_can( $user, 'manage_yazan_rewards' ),
+				'view_yazan_rewards'    => user_can( $user, 'view_yazan_rewards' ),
+			),
+		);
+	}
+
+	/**
+	 * Direct connection IP (proxy headers are spoofable and not trusted).
+	 *
+	 * @return string
+	 */
+	private static function client_ip() {
+		$ip = isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : '';
+		return filter_var( $ip, FILTER_VALIDATE_IP ) ? $ip : '0.0.0.0';
+	}
+
+	/**
+	 * Transient key for a failure counter, scoped to BOTH the IP and the submitted username.
+	 *
+	 * Scoping by username too means a shared upstream IP (a CDN/reverse proxy, where REMOTE_ADDR is
+	 * the proxy for everyone) no longer collapses all staff into one bucket — one account's failed
+	 * attempts can't lock every other operator out. Each (IP, username) pair throttles independently.
+	 *
+	 * @param string $ip       Client IP.
+	 * @param string $username Submitted username (may be '').
+	 * @return string
+	 */
+	private static function key( $ip, $username = '' ) {
+		return 'yazan_login_fail_' . md5( $ip . '|' . strtolower( (string) $username ) );
+	}
+
+	/**
+	 * @param string $ip       Client IP.
+	 * @param string $username Submitted username.
+	 * @return bool
+	 */
+	private static function is_locked_out( $ip, $username = '' ) {
+		return (int) get_transient( self::key( $ip, $username ) ) >= self::MAX_ATTEMPTS;
+	}
+
+	/**
+	 * @param string $ip       Client IP.
+	 * @param string $username Submitted username.
+	 * @return void
+	 */
+	private static function record_failure( $ip, $username = '' ) {
+		$key   = self::key( $ip, $username );
+		$count = (int) get_transient( $key ) + 1;
+		set_transient( $key, $count, self::WINDOW );
+	}
+
+	/**
+	 * @param string $ip       Client IP.
+	 * @param string $username Submitted username.
+	 * @return void
+	 */
+	private static function clear_failures( $ip, $username = '' ) {
+		delete_transient( self::key( $ip, $username ) );
+	}
+}

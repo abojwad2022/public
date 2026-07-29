@@ -1,0 +1,144 @@
+/**
+ * Yazan Core — in-dashboard new-order toast.
+ * Works on any origin (no secure-context / Notification permission needed).
+ * Direction-agnostic (logical properties) so it sits correctly in LTR & RTL admin.
+ */
+.yz-order-toast {
+	position: fixed;
+	inset-block-end: 28px;
+	inset-inline-end: 28px;
+	z-index: 999999;
+	display: flex;
+	align-items: center;
+	gap: 14px;
+	inline-size: min(360px, calc(100vw - 40px));
+	padding: 14px 16px;
+	background: var(--yz-alert-surface);
+	color: var(--yz-alert-fg);
+	border: 1px solid rgba(183, 147, 91, 0.5);
+	border-inline-start: 3px solid var(--yz-gold);
+	box-shadow: 0 14px 38px rgba(0, 0, 0, 0.36);
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+	transform: translateY(16px);
+	opacity: 0;
+	transition: opacity 0.28s ease, transform 0.28s ease;
+}
+.yz-order-toast.is-visible {
+	transform: none;
+	opacity: 1;
+}
+.yz-order-toast.is-pulse {
+	animation: yz-toast-pulse 0.5s ease;
+}
+@keyframes yz-toast-pulse {
+	0%,
+	100% {
+		transform: none;
+	}
+	50% {
+		transform: scale(1.035);
+	}
+}
+.yz-order-toast__icon {
+	flex: none;
+	display: inline-flex;
+	color: var(--yz-gold);
+}
+.yz-order-toast__icon svg {
+	inline-size: 26px;
+	block-size: 26px;
+}
+.yz-order-toast__body {
+	flex: 1 1 auto;
+	min-inline-size: 0;
+	line-height: 1.4;
+}
+.yz-order-toast__title {
+	display: block;
+	font-size: 14px;
+	font-weight: 600;
+	letter-spacing: 0.01em;
+}
+.yz-order-toast__link {
+	display: inline-block;
+	margin-block-start: 2px;
+	color: var(--yz-gold);
+	font-size: 12.5px;
+	text-decoration: none;
+}
+.yz-order-toast__link:hover,
+.yz-order-toast__link:focus {
+	color: var(--yz-gold-lift);
+	text-decoration: underline;
+}
+.yz-order-toast__min,
+.yz-order-toast__close {
+	flex: none;
+	background: none;
+	border: 0;
+	padding: 2px 4px;
+	color: rgba(245, 241, 233, 0.6);
+	font-size: 20px;
+	line-height: 1;
+	cursor: pointer;
+}
+.yz-order-toast__min {
+	font-size: 22px;
+}
+.yz-order-toast__min:hover,
+.yz-order-toast__min:focus,
+.yz-order-toast__close:hover,
+.yz-order-toast__close:focus {
+	color: var(--yz-alert-fg);
+}
+
+/* Count bubble — shown only in the collapsed state. */
+.yz-order-toast__icon {
+	position: relative;
+}
+.yz-order-toast__badge {
+	display: none;
+	position: absolute;
+	inset-block-start: -5px;
+	inset-inline-end: -6px;
+	min-inline-size: 18px;
+	block-size: 18px;
+	padding: 0 4px;
+	border-radius: 999px;
+	background: var(--yz-agate);
+	color: #fff;
+	font-size: 11px;
+	font-weight: 700;
+	line-height: 18px;
+	text-align: center;
+}
+
+/* Collapsed (minimized) — a small round button with the bag + count. */
+.yz-order-toast.is-min {
+	inline-size: auto;
+	gap: 0;
+	padding: 0;
+	border-radius: 50%;
+	border-inline-start-width: 1px;
+	cursor: pointer;
+}
+.yz-order-toast.is-min .yz-order-toast__icon {
+	padding: 13px;
+	cursor: pointer;
+}
+.yz-order-toast.is-min .yz-order-toast__badge {
+	display: block;
+}
+.yz-order-toast.is-min .yz-order-toast__body,
+.yz-order-toast.is-min .yz-order-toast__min,
+.yz-order-toast.is-min .yz-order-toast__close {
+	display: none;
+}
+@media (prefers-reduced-motion: reduce) {
+	.yz-order-toast {
+		transition: opacity 0.2s ease;
+	}
+	.yz-order-toast.is-pulse {
+		animation: none;
+	}
+}

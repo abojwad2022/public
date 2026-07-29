@@ -1,0 +1,18 @@
+/**
+ * Power Coupons Admin Styles
+ * Tailwind CSS imports
+ *
+ * @package Power_Coupons
+ * @since 1.0.0
+ */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/**
+ * Power Coupons Admin Wrapper
+ */
+.power-coupons-admin {
+	/* Admin-specific styles */
+}

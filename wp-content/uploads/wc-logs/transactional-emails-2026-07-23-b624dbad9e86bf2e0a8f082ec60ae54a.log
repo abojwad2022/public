@@ -1,0 +1,32 @@
+2026-07-23T01:48:05+00:00 INFO Email "admin_payment_gateway_enabled" sent CONTEXT: {"email_type":"admin_payment_gateway_enabled","status":"sent","recipient":"admin","WC_Gateway_Cheque":null}
+2026-07-23T01:48:14+00:00 INFO Email "admin_payment_gateway_enabled" sent CONTEXT: {"email_type":"admin_payment_gateway_enabled","status":"sent","recipient":"admin","WC_Gateway_BACS":null}
+2026-07-23T01:49:22+00:00 INFO Email "admin_payment_gateway_enabled" sent CONTEXT: {"email_type":"admin_payment_gateway_enabled","status":"sent","recipient":"admin","WC_Gateway_COD":null}
+2026-07-23T01:50:39+00:00 INFO Email "new_order" for order #7993 sent CONTEXT: {"email_type":"new_order","status":"sent","recipient":"admin","order":7993}
+2026-07-23T01:50:39+00:00 INFO Email "customer_on_hold_order" for order #7993 sent CONTEXT: {"email_type":"customer_on_hold_order","status":"sent","recipient":"admin","order":7993}
+2026-07-23T01:52:01+00:00 INFO Email "new_order" for order #7994 sent CONTEXT: {"email_type":"new_order","status":"sent","recipient":"admin","order":7994}
+2026-07-23T01:52:01+00:00 INFO Email "customer_processing_order" for order #7994 sent CONTEXT: {"email_type":"customer_processing_order","status":"sent","recipient":"admin","order":7994}
+2026-07-23T02:06:45+00:00 INFO Email "new_order" for order #7995 sent CONTEXT: {"email_type":"new_order","status":"sent","recipient":"admin","order":7995}
+2026-07-23T02:06:45+00:00 INFO Email "customer_processing_order" for order #7995 sent CONTEXT: {"email_type":"customer_processing_order","status":"sent","recipient":"admin","order":7995}
+2026-07-23T02:31:33+00:00 INFO Email "new_order" for order #7996 sent CONTEXT: {"email_type":"new_order","status":"sent","recipient":"admin, guest","order":7996}
+2026-07-23T02:31:33+00:00 INFO Email "customer_processing_order" for order #7996 sent CONTEXT: {"email_type":"customer_processing_order","status":"sent","recipient":"admin","order":7996}
+2026-07-23T02:45:24+00:00 INFO Email "new_order" for order #7997 sent CONTEXT: {"email_type":"new_order","status":"sent","recipient":"admin, guest","order":7997}
+2026-07-23T02:45:24+00:00 INFO Email "customer_processing_order" for order #7997 sent CONTEXT: {"email_type":"customer_processing_order","status":"sent","recipient":"admin","order":7997}
+2026-07-23T02:59:19+00:00 INFO Email "customer_invoice" for order #7997 sent CONTEXT: {"email_type":"customer_invoice","status":"sent","recipient":"admin","order":7997}
+2026-07-23T03:22:09+00:00 INFO Email "customer_completed_order" for order #7997 sent CONTEXT: {"email_type":"customer_completed_order","status":"sent","recipient":"admin","order":7997}
+2026-07-23T03:56:03+00:00 INFO Email "customer_completed_order" for order #7996 sent CONTEXT: {"email_type":"customer_completed_order","status":"sent","recipient":"admin","order":7996}
+2026-07-23T04:24:24+00:00 INFO Email "customer_completed_order" for order #7995 sent CONTEXT: {"email_type":"customer_completed_order","status":"sent","recipient":"admin","order":7995}
+2026-07-23T04:24:25+00:00 INFO Email "new_order" for order #7995 sent CONTEXT: {"email_type":"new_order","status":"sent","recipient":"admin, guest","order":7995}
+2026-07-23T04:27:39+00:00 INFO Email "customer_completed_order" for order #7994 sent CONTEXT: {"email_type":"customer_completed_order","status":"sent","recipient":"admin","order":7994}
+2026-07-23T04:27:39+00:00 INFO Email "new_order" for order #7994 sent CONTEXT: {"email_type":"new_order","status":"sent","recipient":"admin, guest","order":7994}
+2026-07-23T04:29:57+00:00 INFO Email "new_order" for order #7994 sent CONTEXT: {"email_type":"new_order","status":"sent","recipient":"admin, guest","order":7994}
+2026-07-23T07:38:37+00:00 INFO Email "customer_completed_order" for order #7997 sent CONTEXT: {"email_type":"customer_completed_order","status":"sent","recipient":"admin","order":7997}
+2026-07-23T07:45:25+00:00 INFO Email "customer_completed_order" for order #7997 sent CONTEXT: {"email_type":"customer_completed_order","status":"sent","recipient":"admin","order":7997}
+2026-07-23T07:45:25+00:00 INFO Email "customer_processing_order" for order #7996 sent CONTEXT: {"email_type":"customer_processing_order","status":"sent","recipient":"admin","order":7996}
+2026-07-23T08:00:55+00:00 INFO Email "new_order" for order #8004 sent CONTEXT: {"email_type":"new_order","status":"sent","recipient":"admin, guest","order":8004}
+2026-07-23T08:00:56+00:00 INFO Email "customer_processing_order" for order #8004 sent CONTEXT: {"email_type":"customer_processing_order","status":"sent","recipient":"guest","order":8004}
+2026-07-23T08:00:56+00:00 INFO Email "customer_partially_refunded_order" for order #8004 sent CONTEXT: {"email_type":"customer_partially_refunded_order","status":"sent","recipient":"guest","order":8004}
+2026-07-23T08:15:09+00:00 INFO Email "customer_refunded_order" for order #8006 sent CONTEXT: {"email_type":"customer_refunded_order","status":"sent","recipient":"guest","order":8006}
+2026-07-23T09:16:08+00:00 INFO Email "customer_completed_order" for order #8014 sent CONTEXT: {"email_type":"customer_completed_order","status":"sent","recipient":"guest","order":8014}
+2026-07-23T09:16:08+00:00 INFO Email "new_order" for order #8014 sent CONTEXT: {"email_type":"new_order","status":"sent","recipient":"admin, guest","order":8014}
+2026-07-23T09:16:57+00:00 INFO Email "new_order" for order #8017 sent CONTEXT: {"email_type":"new_order","status":"sent","recipient":"admin, guest","order":8017}
+2026-07-23T09:16:57+00:00 INFO Email "customer_processing_order" for order #8017 sent CONTEXT: {"email_type":"customer_processing_order","status":"sent","recipient":"admin","order":8017}

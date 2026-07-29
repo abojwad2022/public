@@ -1,0 +1,135 @@
+/**
+ * Power Coupons - Gift Card Frontend Styles
+ *
+ * Minimal layout-only styles. Visual properties (border, color, background,
+ * border-radius) are intentionally omitted so the active theme controls them.
+ *
+ * @package Power_Coupons
+ * @since 1.0.0
+ */
+
+/* ==========================================================================
+   Gift Card Fields Container
+   ========================================================================== */
+
+.power-coupon-gc-fields {
+	margin: 20px 0;
+	clear: both;
+	display: flex;
+	flex-direction: column;
+	gap: 24px;
+}
+
+/* ==========================================================================
+   Labels
+   ========================================================================== */
+
+.power-coupon-gc-label {
+	display: block;
+	font-weight: 600;
+	margin-bottom: 8px;
+}
+
+/* ==========================================================================
+   Amount Dropdown
+   ========================================================================== */
+
+.power-coupon-gc-amount-select {
+	width: 100%;
+	cursor: pointer;
+	appearance: auto;
+}
+
+/* ==========================================================================
+   Custom Amount Input
+   ========================================================================== */
+
+.power-coupon-gc-custom-input {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin-top: 12px;
+}
+
+.power-coupon-gc-currency {
+	font-weight: 600;
+}
+
+.power-coupon-gc-custom-amount-input {
+	width: 100%;
+}
+
+/* ==========================================================================
+   Recipient Section & Multi-Recipient
+   ========================================================================== */
+
+.power-coupon-gc-recipient-section {
+	padding-top: 4px;
+}
+
+.power-coupon-gc-recipients-container {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+}
+
+.power-coupon-gc-recipient-group {
+	border: 1px solid;
+	border-color: inherit;
+	border-radius: inherit;
+	padding: 16px;
+}
+
+.power-coupon-gc-recipient-group:only-child {
+	border: none;
+	padding: 0;
+	background: transparent;
+}
+
+/* Hide the "Recipient 1" header when there's only one recipient — no flash of content. */
+.power-coupon-gc-recipient-group:only-child .power-coupon-gc-recipient-header {
+	display: none;
+}
+
+.power-coupon-gc-recipient-header {
+	margin-bottom: 12px;
+}
+
+.power-coupon-gc-recipient-number {
+	font-weight: 600;
+	font-size: 13px;
+}
+
+.power-coupon-gc-recipient-fields {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+
+.power-coupon-gc-recipient-fields .form-row {
+	margin: 0;
+	padding: 0;
+}
+
+.power-coupon-gc-recipient-fields input.input-text,
+.power-coupon-gc-recipient-fields textarea.input-text {
+	width: 100%;
+	font-family: inherit;
+}
+
+.power-coupon-gc-recipient-fields textarea.input-text {
+	resize: vertical;
+	min-height: 80px;
+}
+
+/* ==========================================================================
+   Error Notices
+   ========================================================================== */
+
+ul.power-coupon-gc-notices {
+	margin: 0 0 16px;
+}
+
+/* ==========================================================================
+   Responsive
+   ========================================================================== */

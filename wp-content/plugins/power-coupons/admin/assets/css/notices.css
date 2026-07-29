@@ -1,0 +1,107 @@
+/**
+ * Power Coupons Admin Notices Styles
+ *
+ * @package Power_Coupons
+ * @since 1.0.2
+ */
+
+.power-coupons-5-star {
+	border-left-color: #ee5a2f;
+	border-left-width: 4px !important;
+	border-top-width: 0;
+	border-right-width: 0;
+	border-bottom-width: 0;
+	padding: 0;
+}
+
+.power-coupons-5-star .notice-image {
+	background-color: #fef3ee;
+	padding: 14px;
+}
+
+.power-coupons-5-star .astra-notice-container {
+	padding: 0;
+	align-items: unset;
+}
+
+.power-coupons-5-star img.custom-logo {
+	width: 48px;
+}
+
+.power-coupons-5-star .astra-review-notice-container {
+	padding-top: 16px;
+	gap: 12px;
+}
+
+.power-coupons-5-star .notice-content {
+	font-size: 16px;
+	line-height: 24px;
+	padding: 16px;
+	margin: 0 !important;
+	color: #1f2937;
+}
+
+.power-coupons-5-star .notice-heading {
+	margin-bottom: 8px;
+	padding-bottom: 0 !important;
+	font-weight: 500;
+}
+
+.power-coupons-5-star .notice-description {
+	font-size: 14px;
+	color: #4b5563;
+	font-weight: 400;
+}
+
+.power-coupons-5-star .astra-review-notice.button-primary {
+	background-color: #ee5a2f;
+	border-color: #ee5a2f;
+	/* Reset WP core .button-primary sizing so the primary matches the secondary button. */
+	line-height: 24px;
+	min-height: 0;
+	box-sizing: border-box;
+}
+
+.power-coupons-5-star .astra-review-notice.button-primary:hover {
+	background-color: #d94e28;
+	border-color: #d94e28;
+}
+
+.power-coupons-5-star .astra-review-notice {
+	font-size: 12px;
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	padding: 4px 10px;
+	border-radius: 6px;
+	/* Drop the default link underline so it doesn't run under the icon; the
+	   text label is underlined explicitly via its <u> wrapper instead. */
+	text-decoration: none;
+}
+
+.power-coupons-5-star .astra-review-notice .dashicons {
+	width: 16px;
+	height: 16px;
+	font-size: 16px;
+	line-height: 1;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.power-coupons-5-star .astra-review-notice:last-child {
+	padding: 0 !important;
+}
+
+.power-coupons-5-star .astra-review-notice:nth-child( 2 ) {
+	border: 1px solid #ee5a2f;
+}
+
+.power-coupons-5-star .astra-notice-close.astra-review-notice:not( .button-primary ) {
+	color: #ee5a2f;
+}
+
+.power-coupons-5-star .astra-review-notice-container .dashicons::before {
+	display: block;
+	line-height: 1;
+}

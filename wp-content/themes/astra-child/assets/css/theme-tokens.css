@@ -1,0 +1,203 @@
+/* ==========================================================================
+   Yazan (Astra Child) — Interchangeable Theme Tokens
+   --------------------------------------------------------------------------
+   The single source of truth for BOTH visual identities:
+     • "black"     — Classic Black Luxury (the existing light/ivory + ink system)
+     • "burgundy"  — Dark Burgundy Luxury  (new dark theme)
+
+   HOW IT WORKS
+   ------------
+   The active theme is selected by a `data-yz-theme` attribute on <html>, set
+   BEFORE first paint by the inline head script (inc/theme-switcher.php) from the
+   value saved in localStorage — so there is no flash of the wrong theme.
+
+   Existing components read the LEGACY tokens (--yz-ink, --yz-ivory, --yz-agate …).
+   We redefine those per theme so every legacy component adapts automatically.
+   New components read the SEMANTIC tokens (--yz-bg, --yz-surface, --yz-text …)
+   which resolve correctly in either theme.
+
+   ADDING A THEME (scalable, zero edits to existing code)
+   ------------------------------------------------------
+   1. Add a `html[data-yz-theme="<name>"]{…}` block here with the token values.
+   2. Add a scoped override sheet `theme-<name>.css` (only if the theme inverts
+      light↔dark; a same-family recolor needs no override sheet).
+   3. Add the theme to the THEMES array in assets/js/theme-switcher.js.
+   Nothing else changes.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   0. Cross-theme design system (shared by every theme)
+   Scale ramps, radii, shadows, type scale and motion live here once. Colour
+   scales are per-theme (below); these structural tokens are constant.
+   -------------------------------------------------------------------------- */
+:root {
+	/* Border radius — the brand is "sharp jewellery-case" (0), but the scale is
+	   exposed so a future theme can soften corners from one place. */
+	--yz-radius-none: 0;
+	--yz-radius-sm:   0px;
+	--yz-radius-md:   0px;
+	--yz-radius-lg:   0px;
+	--yz-radius-pill: 999px;   /* used only for count pills / dots */
+	--yz-radius:      var(--yz-radius-none);
+
+	/* Type scale (fluid) — shared; faces are set by the brand font tokens. */
+	--yz-fs-eyebrow: 12px;
+	--yz-fs-body:    16px;
+	--yz-fs-h3:      clamp(22px, 2.2vw, 28px);
+	--yz-fs-h2:      clamp(30px, 3.6vw, 44px);
+	--yz-fs-h1:      clamp(38px, 5vw, 64px);
+	--yz-fs-display: clamp(40px, 7vw, 88px);
+	--yz-tracking-label: 0.14em;
+
+	/* Motion — the theme-switch crossfade duration (spec: 300–500ms). */
+	--yz-theme-transition: 400ms;
+	--yz-theme-ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ==========================================================================
+   1. THEME — BLACK LUXURY  (default / existing light system)
+   --------------------------------------------------------------------------
+   The legacy tokens keep their original values (defined in main.css :root); we
+   only ADD the semantic aliases here so new components resolve in this theme.
+   Applied when data-yz-theme is "black" OR absent (safe default).
+   ========================================================================== */
+:root,
+html[data-yz-theme="black"] {
+	/* ---- Legacy tokens (unchanged — mirror main.css so the theme is self-describing) */
+	--yz-ink:    #141210;
+	--yz-ivory:  #F5F1E9;
+	--yz-agate:  #8C2F24;
+	--yz-silver: #B9BCC0;
+	--yz-sand:   #CBB78F;
+	--yz-muted:  #6E6A63;
+	--yz-hairline: rgba(185, 188, 192, 0.3);
+	--yz-header-bg: #FFFFFF;
+
+	/* ---- Semantic tokens (new — page-level roles) */
+	--yz-bg:         #F5F1E9;                 /* page background            */
+	--yz-surface:    #FFFFFF;                 /* cards, panels, dropdowns    */
+	--yz-surface-2:  #F5F1E9;                 /* raised / alternate surface  */
+	--yz-surface-inv:#141210;                 /* inverted (dark) surface     */
+	--yz-text:       #141210;                 /* primary text                */
+	--yz-text-2:     #4A4540;                 /* secondary text              */
+	--yz-text-muted: #6E6A63;                 /* muted / meta text           */
+	--yz-on-dark:    #F5F1E9;                 /* text on inverted surfaces   */
+	--yz-border:     rgba(20, 18, 16, 0.14);  /* hairlines / dividers        */
+	--yz-border-strong: rgba(20, 18, 16, 0.28);
+	--yz-primary:    #141210;                 /* brand fill (buttons)        */
+	--yz-on-primary: #F5F1E9;                 /* text on brand fill          */
+	--yz-accent:     #8C2F24;                 /* carnelian accent            */
+	--yz-gold:       #9A7B3F;                 /* aged-gold hover language    */
+	--yz-focus:      #8C2F24;                 /* focus ring                  */
+	--yz-scrim:      rgba(12, 11, 10, 0.55);  /* modal / overlay scrim       */
+
+	/* ---- Colour scale 50→950 (ink/graphite neutral ramp) */
+	--yz-50:  #F7F4EE;
+	--yz-100: #ECE7DD;
+	--yz-200: #D4CEC4;
+	--yz-300: #B0A99E;
+	--yz-400: #857F76;
+	--yz-500: #605B53;
+	--yz-600: #46423C;
+	--yz-700: #322F2A;
+	--yz-800: #201E1B;
+	--yz-900: #141210;
+	--yz-950: #0B0A09;
+
+	/* ---- Shadows (light theme: soft, low, warm) */
+	--yz-shadow-sm: 0 1px 2px rgba(20, 18, 16, 0.06);
+	--yz-shadow-md: 0 12px 30px -14px rgba(20, 18, 16, 0.22);
+	--yz-shadow-lg: 0 24px 48px -24px rgba(20, 18, 16, 0.40);
+	--yz-shadow-glow: 0 0 0 1px rgba(140, 47, 36, 0.28);
+}
+
+/* ==========================================================================
+   2. THEME — BURGUNDY LUXURY  (new dark system)
+   --------------------------------------------------------------------------
+   Legacy tokens are remapped SURFACE-CORRECT: --yz-ink becomes a deep burgundy
+   surface so every dark button / badge / section / footer / bar re-tints for
+   free. The places where the light system used --yz-ink as *text* are corrected
+   in theme-burgundy.css (the scoped override layer).
+
+   Palette (from the brief):
+     primary #4A0F19 · secondary #2C0A10 · background #160709 · surface #221012
+     accent  #A50606 · text #F7F3F2 · text-2 #D6CACA · border rgba(255,255,255,.08)
+   ========================================================================== */
+html[data-yz-theme="burgundy"] {
+	/* ---- Legacy tokens remapped into burgundy space */
+	--yz-ink:    #2C0A10;                      /* deep burgundy — dark surfaces */
+	--yz-ivory:  #F7F3F2;                      /* light foreground / on-dark    */
+	--yz-agate:  #A50606;                      /* accent red                    */
+	--yz-silver: #D6CACA;                      /* secondary light text          */
+	--yz-sand:   #C9A24B;                      /* refined gold (Cartier warmth) */
+	--yz-muted:  #9E8A8B;                      /* muted mauve text              */
+	--yz-hairline: rgba(255, 255, 255, 0.08);  /* light hairline on dark        */
+	--yz-header-bg: #160709;                   /* dark header bar               */
+
+	/* ---- Semantic tokens */
+	--yz-bg:         #160709;
+	--yz-surface:    #221012;
+	--yz-surface-2:  #2C0A10;
+	--yz-surface-inv:#F7F3F2;
+	--yz-text:       #F7F3F2;
+	--yz-text-2:     #D6CACA;
+	--yz-text-muted: #9E8A8B;
+	--yz-on-dark:    #F7F3F2;
+	--yz-border:     rgba(255, 255, 255, 0.08);
+	--yz-border-strong: rgba(255, 255, 255, 0.18);
+	--yz-primary:    #4A0F19;
+	--yz-on-primary: #F7F3F2;
+	--yz-accent:     #A50606;
+	--yz-gold:       #C9A24B;
+	--yz-focus:      #C9737B;                  /* lighter rose so the ring reads on dark */
+	--yz-scrim:      rgba(4, 2, 3, 0.72);
+
+	/* ---- Colour scale 50→950 (burgundy ramp) */
+	--yz-50:  #FBEAEC;
+	--yz-100: #F5D0D5;
+	--yz-200: #E7A6AE;
+	--yz-300: #D4737E;
+	--yz-400: #B94551;
+	--yz-500: #8E2530;
+	--yz-600: #6E1A24;
+	--yz-700: #4A0F19;   /* primary  */
+	--yz-800: #2C0A10;   /* secondary */
+	--yz-900: #1E080C;
+	--yz-950: #160709;   /* background */
+
+	/* ---- Shadows (dark theme: deeper black + optional accent glow) */
+	--yz-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.45);
+	--yz-shadow-md: 0 14px 34px -14px rgba(0, 0, 0, 0.60);
+	--yz-shadow-lg: 0 28px 60px -22px rgba(0, 0, 0, 0.75);
+	--yz-shadow-glow: 0 0 0 1px rgba(165, 6, 6, 0.35), 0 10px 34px -10px rgba(165, 6, 6, 0.28);
+
+	/* Give the dark canvas a colour scheme hint (native form controls, scrollbars). */
+	color-scheme: dark;
+}
+
+/* ==========================================================================
+   3. Smooth cross-theme transition (spec: 300–500ms, no layout shift)
+   --------------------------------------------------------------------------
+   Transitions are enabled ONLY during a switch: the switcher JS adds
+   `.yz-theme-animating` to <html> on toggle and removes it ~480ms later. So the
+   initial page load never animates (no entrance flicker), and only colour
+   properties transition — never layout properties — guaranteeing zero shift.
+   -------------------------------------------------------------------------- */
+html.yz-theme-animating,
+html.yz-theme-animating body.yazan *:not(.yz-no-theme-anim) {
+	transition:
+		background-color var(--yz-theme-transition) var(--yz-theme-ease),
+		background-image  var(--yz-theme-transition) var(--yz-theme-ease),
+		color             var(--yz-theme-transition) var(--yz-theme-ease),
+		border-color      var(--yz-theme-transition) var(--yz-theme-ease),
+		fill              var(--yz-theme-transition) var(--yz-theme-ease),
+		stroke            var(--yz-theme-transition) var(--yz-theme-ease),
+		box-shadow        var(--yz-theme-transition) var(--yz-theme-ease),
+		outline-color     var(--yz-theme-transition) var(--yz-theme-ease) !important;
+}
+
+/* Respect users who ask for less motion — switch instantly, no crossfade. */
+@media (prefers-reduced-motion: reduce) {
+	html.yz-theme-animating,
+	html.yz-theme-animating body.yazan * { transition: none !important; }
+}

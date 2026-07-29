@@ -1,0 +1,2 @@
+# Single-product add-to-cart overrides (mirror: plugins/woocommerce/templates/single-product/add-to-cart/).
+# e.g. simple.php, variable.php, quantity.php. Keep the @version header when you copy one.

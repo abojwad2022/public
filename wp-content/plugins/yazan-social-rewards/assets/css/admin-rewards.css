@@ -1,0 +1,95 @@
+/**
+ * Yazan Rewards — shared admin styling (rewards, service queue, points).
+ */
+
+.yzrw-admin-app { margin-top: 1rem; }
+
+.yzrw-card {
+	background: #fff;
+	border: 1px solid #dcdcde;
+	border-radius: 4px;
+	padding: 1rem 1.25rem;
+	margin-bottom: 1.25rem;
+	max-width: 960px;
+}
+
+.yzrw-card h2 { margin-top: 0; }
+
+.yzrw-field {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	margin: 0.5rem 0;
+}
+
+.yzrw-field > label {
+	flex: 0 0 190px;
+	font-weight: 600;
+}
+
+.yzrw-value-fields {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+	align-items: center;
+}
+
+.yzrw-msg { color: #b32d2e; }
+
+.yzrw-save { display: flex; align-items: center; gap: 0.75rem; margin-top: 1rem; }
+
+.yzrw-pill {
+	display: inline-block;
+	padding: 0.1rem 0.5rem;
+	border-radius: 999px;
+	font-size: 0.75rem;
+	background: #f0f0f1;
+	text-transform: capitalize;
+}
+.yzrw-pill.requested { background: #fcf3d7; }
+.yzrw-pill.scheduled { background: #d7e8fc; }
+.yzrw-pill.fulfilled { background: #d8f0d8; }
+.yzrw-pill.pending   { background: #fcf3d7; }
+
+.yzrw-actions-cell { white-space: nowrap; }
+.yzrw-actions-cell .button { margin-inline-end: 4px; }
+
+table.yzrw-table code { font-size: 0.85rem; }
+
+/* User typeahead (Points → Manual adjustment): search by name/username/email. */
+.yzrw-user-search {
+	position: relative;
+	display: inline-block;
+	vertical-align: top;
+}
+.yzrw-user-results {
+	position: absolute;
+	inset-inline-start: 0;
+	top: calc(100% + 2px);
+	z-index: 50;
+	margin: 0;
+	padding: 4px;
+	min-width: 100%;
+	max-width: 440px;
+	max-height: 264px;
+	overflow-y: auto;
+	list-style: none;
+	background: #fff;
+	border: 1px solid #dcdcde;
+	border-radius: 4px;
+	box-shadow: 0 8px 24px rgba( 0, 0, 0, 0.14 );
+}
+.yzrw-user-results li {
+	display: flex;
+	flex-direction: column;
+	gap: 1px;
+	padding: 6px 8px;
+	border-radius: 3px;
+	cursor: pointer;
+}
+.yzrw-user-results li:hover,
+.yzrw-user-results li.is-active {
+	background: #f0f0f1;
+}
+.yzrw-user-name { font-weight: 600; }
+.yzrw-user-meta { font-size: 0.82em; opacity: 0.7; }

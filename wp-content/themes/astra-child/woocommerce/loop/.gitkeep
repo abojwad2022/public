@@ -1,0 +1,2 @@
+# Loop template overrides go here (mirror: plugins/woocommerce/templates/loop/).
+# e.g. loop/add-to-cart.php, loop/price.php, loop/sale-flash.php. Prefer loop hooks first.

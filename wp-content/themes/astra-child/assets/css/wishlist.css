@@ -1,0 +1,170 @@
+/**
+ * Yazan — wishlist (favourites) hearts + account grid.
+ *
+ * Token-driven, so it re-tints for the Black & Burgundy themes; logical properties mirror under RTL.
+ * The heart is an outline that fills in carnelian when saved.
+ */
+
+.yz-wish {
+	display: inline-grid;
+	place-items: center;
+	background: transparent;
+	border: 0;
+	padding: 4px;
+	cursor: pointer;
+	line-height: 0;
+	color: var(--yz-muted, #6e6a63);
+	transition: color 180ms, transform 180ms;
+}
+
+.yz-wish:hover,
+.yz-wish.is-active {
+	color: var(--yz-agate, #8c2f24);
+}
+
+.yz-wish__icon {
+	fill: none;
+	stroke: currentColor;
+	stroke-width: 1.6;
+}
+
+.yz-wish.is-active .yz-wish__icon {
+	fill: currentColor;
+	stroke: currentColor;
+}
+
+.yz-wish:active .yz-wish__icon {
+	transform: scale(0.88);
+}
+
+.yz-wish.is-busy {
+	opacity: 0.5;
+	pointer-events: none;
+}
+
+/* Kill the browser/theme default (often blue) focus ring; show an on-brand ring for keyboard only. */
+.yz-wish:focus {
+	outline: none;
+}
+
+.yz-wish:focus-visible {
+	outline: 2px solid var(--yz-agate, #8c2f24);
+	outline-offset: 2px;
+}
+
+/* --- Loop / archive overlay (top-end of the product thumbnail) --- */
+.woocommerce ul.products li.product,
+ul.products li.product {
+	position: relative;
+}
+
+.yz-wish--overlay {
+	position: absolute;
+	inset-block-start: 0.6rem;
+	inset-inline-end: 0.6rem;
+	z-index: 3;
+	width: 34px;
+	height: 34px;
+	padding: 0;
+	border-radius: 50%;
+	background: color-mix(in srgb, var(--yz-surface, #fff) 90%, transparent);
+	box-shadow: var(--yz-shadow-sm, 0 1px 4px rgba(0, 0, 0, 0.2));
+	color: var(--yz-ink, #141210);
+}
+
+.yz-wish--overlay .yz-wish__icon {
+	width: 18px;
+	height: 18px;
+}
+
+.yz-wish--overlay:hover,
+.yz-wish--overlay.is-active {
+	color: var(--yz-agate, #8c2f24);
+	background: var(--yz-surface, #fff);
+}
+
+/* --- Single product row --- */
+.yz-wish-single {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.4rem;
+	margin-block-start: 1rem;
+}
+
+.yz-wish-single__label {
+	font-size: 0.78rem;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	color: var(--yz-muted, #6e6a63);
+}
+
+/* --- Account favourites grid --- */
+.yz-wish-title {
+	font-family: var(--yz-font-display, serif);
+	margin-block-end: 0.5rem;
+}
+
+.yz-wish-empty {
+	color: var(--yz-muted, #6e6a63);
+	margin-block-end: 1rem;
+}
+
+.yz-wish-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+	gap: 1.25rem;
+	margin-block-start: 1rem;
+}
+
+.yz-wish-card {
+	position: relative;
+	border: 1px solid var(--yz-hairline, rgba(185, 188, 192, 0.3));
+	background: var(--yz-surface, #fff);
+}
+
+.yz-wish-card__media {
+	display: block;
+}
+
+.yz-wish-card__media img {
+	display: block;
+	width: 100%;
+	height: auto;
+}
+
+.yz-wish-card__body {
+	display: flex;
+	flex-direction: column;
+	gap: 0.35rem;
+	padding: 0.75rem;
+}
+
+.yz-wish-card__name {
+	font-family: var(--yz-font-display, serif);
+	color: var(--yz-ink, #141210);
+	text-decoration: none;
+	line-height: 1.25;
+}
+
+.yz-wish-card__name:hover {
+	color: var(--yz-agate, #8c2f24);
+}
+
+.yz-wish-card__price {
+	color: var(--yz-agate, #8c2f24);
+	font-size: 0.9rem;
+}
+
+.yz-wish-card__actions {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-block-start: 0.4rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.yz-wish,
+	.yz-wish__icon {
+		transition: none;
+	}
+}

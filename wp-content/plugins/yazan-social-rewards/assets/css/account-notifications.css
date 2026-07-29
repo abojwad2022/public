@@ -1,0 +1,71 @@
+/**
+ * Yazan Rewards — My Account notifications panel (inbox + preferences).
+ * Direction-agnostic (logical properties) so it works in LTR and RTL.
+ */
+
+.yzrw-notif { margin: 0 0 1.5rem; }
+
+.yzrw-notif__head {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: 1rem;
+	margin-bottom: 0.5rem;
+}
+.yzrw-notif__head h4,
+.yzrw-notif__prefs h4 { margin: 0 0 0.25rem; font-size: 1rem; }
+
+.yzrw-notif__link {
+	background: none;
+	border: 0;
+	padding: 0;
+	color: #9a3b2e;
+	cursor: pointer;
+	text-decoration: underline;
+	font-size: 0.85rem;
+}
+
+.yzrw-notif__list { list-style: none; margin: 0 0 1.5rem; padding: 0; }
+
+.yzrw-notif__item {
+	display: flex;
+	align-items: flex-start;
+	gap: 0.6rem;
+	padding: 0.7rem 0.2rem;
+	border-block-end: 1px solid #ece7df;
+}
+.yzrw-notif__item.is-unread { cursor: pointer; }
+
+.yzrw-notif__dot {
+	inline-size: 8px;
+	block-size: 8px;
+	border-radius: 50%;
+	margin-block-start: 0.45rem;
+	flex: 0 0 8px;
+	background: transparent;
+}
+.yzrw-notif__item.is-unread .yzrw-notif__dot { background: #9a3b2e; }
+
+.yzrw-notif__body { display: flex; flex-direction: column; gap: 0.15rem; }
+.yzrw-notif__subject { font-weight: 600; color: #2b2622; }
+.yzrw-notif__text { color: #6a625a; font-size: 0.9rem; }
+.yzrw-notif__date { color: #9a9088; font-size: 0.75rem; }
+
+.yzrw-notif__empty,
+.yzrw-notif__hint,
+.yzrw-notif__note { color: #8a8178; font-size: 0.85rem; }
+
+.yzrw-notif__pref-table { inline-size: 100%; border-collapse: collapse; margin: 0.4rem 0; }
+.yzrw-notif__pref-table th,
+.yzrw-notif__pref-table td {
+	padding: 0.5rem 0.6rem;
+	border-block-end: 1px solid #ece7df;
+	text-align: start;
+	font-size: 0.9rem;
+}
+.yzrw-notif__pref-table thead th { color: #8a8178; font-weight: 600; }
+.yzrw-notif__center { text-align: center; }
+
+.yzrw-notif__save { display: flex; align-items: center; gap: 0.75rem; margin-top: 0.75rem; }
+.yzrw-notif__msg { color: #6a625a; font-size: 0.85rem; }
+.yzrw-notif__err { color: #b32d2e; }

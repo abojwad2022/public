@@ -1,0 +1,153 @@
+/**
+ * Yazan Rewards — Analytics dashboard.
+ *
+ * Renders on the always-light wp-admin content surface, so the palette is
+ * light-mode only (the admin colour scheme changes the menu chrome, not this
+ * content area). Series/ramp colours are dataviz-validated; text uses ink
+ * tokens, never a series colour.
+ */
+
+.yzrw-analytics-wrap {
+	--yzrw-ink: #1d2327;
+	--yzrw-ink-2: #50575e;
+	--yzrw-ink-3: #787c82;
+	--yzrw-grid: #e6e7e8;
+	--yzrw-surface: #fff;
+	--yzrw-border: #dcdcde;
+	--yzrw-accent: #1668a8;
+}
+
+.yzrw-analytics-wrap .yzrw-card {
+	background: var(--yzrw-surface);
+	border: 1px solid var(--yzrw-border);
+	border-radius: 6px;
+	padding: 1rem 1.25rem 1.25rem;
+	margin-bottom: 1.25rem;
+	max-width: none;
+}
+.yzrw-analytics-wrap .yzrw-card h2 { margin-top: 0; font-size: 1.05rem; }
+
+.yzrw-card-head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 1rem;
+	margin-bottom: 0.5rem;
+}
+.yzrw-card-head h2 { margin: 0; }
+
+/* Toolbar / range filter */
+.yzrw-toolbar {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	flex-wrap: wrap;
+	gap: 0.75rem;
+	margin: 1rem 0 1.25rem;
+}
+.yzrw-range { display: inline-flex; gap: 4px; }
+
+/* KPI cards */
+.yzrw-kpi-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+	gap: 0.85rem;
+}
+.yzrw-kpi {
+	border: 1px solid var(--yzrw-border);
+	border-radius: 6px;
+	padding: 0.85rem 1rem;
+	background: #fbfbfc;
+}
+.yzrw-kpi-label {
+	font-size: 0.72rem;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	color: var(--yzrw-ink-3);
+	margin-bottom: 0.35rem;
+}
+.yzrw-kpi-value {
+	font-size: 1.6rem;
+	line-height: 1.1;
+	font-weight: 700;
+	color: var(--yzrw-ink);
+}
+.yzrw-kpi-sub { font-size: 0.75rem; color: var(--yzrw-ink-3); margin-top: 0.3rem; }
+
+/* Charts */
+.yzrw-charts-row {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 1.25rem;
+}
+@media ( max-width: 1100px ) {
+	.yzrw-charts-row { grid-template-columns: 1fr; }
+}
+.yzrw-charts-row .yzrw-card { margin-bottom: 0; }
+.yzrw-charts { margin-bottom: 1.25rem; }
+.yzrw-charts > .yzrw-card { margin-bottom: 1.25rem; }
+
+.yzrw-chart { position: relative; }
+.yzrw-svg {
+	width: 100%;
+	height: auto;
+	overflow: visible;
+	font-family: inherit;
+}
+
+/* Donut + legend layout */
+.yzrw-donut-row {
+	display: flex;
+	align-items: center;
+	gap: 1rem;
+	flex-wrap: wrap;
+}
+.yzrw-donut-wrap { flex: 0 0 300px; max-width: 320px; }
+
+/* Legend */
+.yzrw-legend {
+	list-style: none;
+	margin: 0 0 0.75rem;
+	padding: 0;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.35rem 1.1rem;
+}
+.yzrw-legend li { display: flex; align-items: center; gap: 0.4rem; font-size: 0.82rem; color: var(--yzrw-ink-2); }
+.yzrw-legend-col { flex-direction: column; align-items: stretch; flex: 1; gap: 0.4rem; margin: 0; }
+.yzrw-legend-col li { justify-content: flex-start; }
+.yzrw-legend-label { color: var(--yzrw-ink); }
+.yzrw-legend-val { color: var(--yzrw-ink-3); margin-inline-start: auto; }
+.yzrw-swatch {
+	width: 12px;
+	height: 12px;
+	border-radius: 3px;
+	flex: 0 0 12px;
+	display: inline-block;
+}
+
+/* Tooltip */
+.yzrw-tip {
+	position: absolute;
+	transform: translate(-50%, -108%);
+	background: #1d2327;
+	color: #fff;
+	padding: 0.4rem 0.6rem;
+	border-radius: 5px;
+	font-size: 0.78rem;
+	line-height: 1.4;
+	pointer-events: none;
+	white-space: nowrap;
+	z-index: 5;
+	transition: opacity 0.08s;
+	box-shadow: 0 2px 8px rgba( 0, 0, 0, 0.25 );
+}
+.yzrw-tip-h { font-weight: 700; margin-bottom: 0.15rem; }
+.yzrw-tip-r { display: flex; align-items: center; gap: 0.4rem; }
+.yzrw-tip .yzrw-swatch { width: 10px; height: 10px; flex: 0 0 10px; }
+
+/* Tables */
+.yzrw-analytics-wrap .yzrw-table { margin-top: 0.25rem; }
+.yzrw-analytics-wrap .yzrw-table th { font-weight: 600; }
+
+.yzrw-empty, .yzrw-loading { color: var(--yzrw-ink-3); padding: 1rem 0; }

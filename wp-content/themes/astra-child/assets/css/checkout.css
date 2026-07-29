@@ -1,0 +1,173 @@
+/* ==========================================================================
+   Yazan (Astra Child) — CartFlows *Instant Checkout* header.
+
+   HOW THIS IS DELIVERED: printed inline on wp_head by yazan_checkout_inline_css()
+   in inc/enqueue.php — NOT wp_enqueue_style(). CartFlows Instant Checkout strips the
+   theme's late wp_enqueue_scripts callbacks, so the child-theme stylesheets never load
+   on this template (verified). Inline-on-wp_head sidesteps that and lands AFTER
+   wp_print_styles, so it wins the cascade over the plugin's checkout-template.css.
+
+   SPECIFICITY: CartFlows scopes its rules with `body.cartflows-instant-checkout …`
+   (e.g. the white header background at 0-2-1). We MATCH that lead (`body.cartflows-…`)
+   and rely on later source order to win — plain `.cartflows-instant-checkout …` (0-2-0)
+   would lose to the plugin. Layout (grid/flex, widths) is LEFT to CartFlows; we only
+   override colour, logo fit, and the stripped cart icon.
+
+   Colours inlined on purpose (main.css / the --yz-* tokens don't load here).
+   Tokens mirrored: --yz-ink #141210 · --yz-ivory #F5F1E9.
+   ========================================================================== */
+
+/* Light header band matching the MAIN site header (.yz-comma-header): white ground + a silver
+   hairline. Mirrors main.css tokens --yz-header-bg (#FFFFFF) and --yz-hairline
+   (rgba(185,188,192,0.3)); inlined because those tokens don't load on this stripped template. */
+body.cartflows-instant-checkout .main-header--wrapper {
+	background-color: #FFFFFF;
+	border-bottom-color: rgba(185, 188, 192, 0.3);
+}
+
+/* --------------------------------------------------------------------------
+   Logo — never distort. The fallback site logo is a square (e.g. 200x200) with no
+   CSS fit, so it stretches inside the fixed-height box. Cap the height and let width
+   scale; `object-fit: contain` guarantees no distortion for any logo. Matches the
+   plugin's own selector depth so this wins on source order.
+   -------------------------------------------------------------------------- */
+body.cartflows-instant-checkout .main-header--content .main-header--site-logo img,
+body.cartflows-instant-checkout .main-header--content img.custom-logo {
+	/* Proportional, never stretched (object-fit + width:auto), and 44px to match the main header.
+	   !important + max-width:none override any width CartFlows / Astra print inline for the logo. */
+	width: auto !important;
+	max-width: none !important;
+	height: auto !important;
+	max-height: 44px !important;
+	object-fit: contain;
+
+	/* Reveal the logo (the <img> ships with an inline `opacity:0` from yazan_checkout_logo_no_flash).
+	   A running CSS animation overrides an inline style, and this rule only takes effect once THIS
+	   stylesheet commits — the same beat the header band and checkout form paint — so the logo fades
+	   in WITH the page instead of flashing on ahead of it. `both` holds the final opacity:1. */
+	animation: yz-logo-fade-in 0.45s ease 0.05s both;
+}
+
+@keyframes yz-logo-fade-in {
+	from { opacity: 0; }
+	to   { opacity: 1; }
+}
+
+/* Render the logo BLACK on the light bar — same treatment as the main header
+   (header.css renders the gold YAZAN mark with `filter: brightness(0)`). This overrides the
+   whitening that the site-wide yz-invert-logo body class would otherwise apply on checkout. */
+body.cartflows-instant-checkout .main-header--content .main-header--site-logo img,
+body.cartflows-instant-checkout.yz-invert-logo .main-header--content .main-header--site-logo img {
+	filter: brightness(0);
+}
+
+/* Site-title fallback (when no logo is set). */
+body.cartflows-instant-checkout .main-header--site-title {
+	color: #141210;
+}
+
+/* --------------------------------------------------------------------------
+   Cart action — the light "back to cart" control.
+   -------------------------------------------------------------------------- */
+body.cartflows-instant-checkout .main-header--action a {
+	color: #141210;
+	display: inline-flex;
+	align-items: center;
+	opacity: 0.9;
+	transition: opacity 200ms ease;
+}
+body.cartflows-instant-checkout .main-header--action a:hover {
+	opacity: 1;
+}
+body.cartflows-instant-checkout .main-header--action svg {
+	stroke: currentColor;
+	fill: none;
+}
+
+/* CartFlows echoes its header template through wp_kses_post(), which STRIPS the
+   cart-icon <svg>/<path> — leaving the cart button empty (an invisible clickable gap).
+   Restore a cart glyph via a CSS mask so it inherits currentColor and matches the
+   original icon. Drawn only when the <svg> is actually absent, so it never doubles up
+   if CartFlows fixes the escaping later. */
+body.cartflows-instant-checkout {
+	--yz-cart-icon: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20fill='none'%20viewBox='0%200%2024%2024'%20stroke-width='1.5'%20stroke='black'%3E%3Cpath%20stroke-linecap='round'%20stroke-linejoin='round'%20d='M15.75%2010.5V6a3.75%203.75%200%201%200-7.5%200v4.5m11.356-1.993%201.263%2012c.07.665-.45%201.243-1.119%201.243H4.25a1.125%201.125%200%200%201-1.12-1.243l1.264-12A1.125%201.125%200%200%201%205.513%207.5h12.974c.576%200%201.059.435%201.119%201.007ZM8.625%2010.5a.375.375%200%201%201-.75%200%20.375.375%200%200%201%20.75%200Zm7.5%200a.375.375%200%201%201-.75%200%20.375.375%200%200%201%20.75%200Z'/%3E%3C/svg%3E");
+}
+body.cartflows-instant-checkout .main-header--action a:not(:has(svg))::before {
+	content: "";
+	display: inline-block;
+	width: 24px;
+	height: 24px;
+	background-color: currentColor;
+	-webkit-mask: var(--yz-cart-icon) center / contain no-repeat;
+	        mask: var(--yz-cart-icon) center / contain no-repeat;
+}
+
+/* --------------------------------------------------------------------------
+   Checkout FORM re-brand. CartFlows Instant Checkout themes the whole form via CSS custom
+   properties declared on `.wcf-embed-checkout-form` — its defaults are BLUE (#0084d6), which is
+   off-palette (no blue in Yazan). Rather than fight individual elements, we re-point those variables
+   to brand values, which recolours the Place Order button, headings, accents, and field text at once.
+   Hex is inlined because the --yz-* tokens don't load on this stripped template. Layout is still left
+   to CartFlows; this is colour only. (ink #141210 · ivory #F5F1E9 · agate #8C2F24)
+   -------------------------------------------------------------------------- */
+body.cartflows-instant-checkout .wcf-embed-checkout-form {
+	--wcf-primary-color: #141210;
+	--wcf-heading-color: #141210;
+	--wcf-btn-bg-color: #141210;
+	--wcf-btn-bg-hover-color: #2A2622;
+	--wcf-btn-text-color: #F5F1E9;
+	--wcf-btn-hover-text-color: #F5F1E9;
+	--wcf-field-text-color: #141210;
+	--wcf-gcp-primary-color: #141210;
+	--wcf-gcp-secondary-color: #2A2622;
+	--wcf-gcp-accent-color: #8C2F24;
+	--wcf-gcp-text-color: #141210;
+}
+
+/* ==========================================================================
+   BURGUNDY LUXURY — checkout override.
+   The theme sheets don't load on this stripped template, but the pre-paint boot
+   script DOES stamp <html data-yz-theme="burgundy"> here too — so we can theme
+   the CartFlows Instant Checkout by that attribute with inlined burgundy hex.
+   (bg #160709 · surface #221012 · primary #4A0F19 · accent #A50606 · text #F7F3F2)
+   ========================================================================== */
+html[data-yz-theme="burgundy"] body.cartflows-instant-checkout {
+	background-color: #160709;
+	color: #F7F3F2;
+}
+/* Dark header band + light hairline + white logo. */
+html[data-yz-theme="burgundy"] body.cartflows-instant-checkout .main-header--wrapper {
+	background-color: #160709;
+	border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+html[data-yz-theme="burgundy"] body.cartflows-instant-checkout .main-header--content .main-header--site-logo img,
+html[data-yz-theme="burgundy"] body.cartflows-instant-checkout.yz-invert-logo .main-header--content .main-header--site-logo img {
+	/* !important so it beats the inline `filter:brightness(0)` the child theme stamps on the <img>
+	   (yazan_checkout_logo_no_flash) — a stylesheet !important outranks a normal inline declaration,
+	   so Burgundy still settles to a WHITE logo while Black shows black from the first frame. */
+	filter: brightness(0) invert(1) !important;
+}
+html[data-yz-theme="burgundy"] body.cartflows-instant-checkout .main-header--site-title,
+html[data-yz-theme="burgundy"] body.cartflows-instant-checkout .main-header--action a {
+	color: #F7F3F2;
+}
+html[data-yz-theme="burgundy"] body.cartflows-instant-checkout {
+	--yz-cart-icon: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20fill='none'%20viewBox='0%200%2024%2024'%20stroke-width='1.5'%20stroke='white'%3E%3Cpath%20stroke-linecap='round'%20stroke-linejoin='round'%20d='M15.75%2010.5V6a3.75%203.75%200%201%200-7.5%200v4.5m11.356-1.993%201.263%2012c.07.665-.45%201.243-1.119%201.243H4.25a1.125%201.125%200%200%201-1.12-1.243l1.264-12A1.125%201.125%200%200%201%205.513%207.5h12.974c.576%200%201.059.435%201.119%201.007ZM8.625%2010.5a.375.375%200%201%201-.75%200%20.375.375%200%200%201%20.75%200Zm7.5%200a.375.375%200%201%201-.75%200%20.375.375%200%200%201%20.75%200Z'/%3E%3C/svg%3E");
+}
+/* Re-point the CartFlows form variables into burgundy space. */
+html[data-yz-theme="burgundy"] body.cartflows-instant-checkout .wcf-embed-checkout-form {
+	--wcf-primary-color: #F7F3F2;
+	--wcf-heading-color: #F7F3F2;
+	--wcf-btn-bg-color: #4A0F19;
+	--wcf-btn-bg-hover-color: #A50606;
+	--wcf-btn-text-color: #F7F3F2;
+	--wcf-btn-hover-text-color: #FFFFFF;
+	--wcf-field-bg-color: #221012;
+	--wcf-field-text-color: #F7F3F2;
+	--wcf-field-border-color: rgba(255, 255, 255, 0.14);
+	--wcf-input-color: #F7F3F2;
+	--wcf-gcp-primary-color: #4A0F19;
+	--wcf-gcp-secondary-color: #2C0A10;
+	--wcf-gcp-accent-color: #A50606;
+	--wcf-gcp-text-color: #F7F3F2;
+}
