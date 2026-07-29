@@ -626,16 +626,17 @@ body.yzrw-embed .yzrw-user-search {
 
 /* Wide tables FIT the frame and wrap their text (no horizontal scroll): wp-admin
    tables (table-layout:auto) overflow a phone because long unbreakable tokens
-   (emails/codes) inflate their min-content width. Letting cells break drops that,
-   so the table collapses to the frame width and long values wrap to new lines.
-   Auto layout is kept (not table-layout:fixed) so columns stay proportional and the
-   actions column keeps enough room for its buttons instead of being clipped. */
+   (emails/codes) inflate their min-content width. `table-layout:fixed` shares the
+   frame width across the columns and `overflow-wrap:break-word` wraps — short words
+   stay whole and only over-long values (emails/codes) break, so it never overflows
+   and never degrades into a character-per-line stack. */
 @media ( max-width: 640px ) {
 	body.yzrw-embed table.yzrw-table,
 	body.yzrw-embed table.widefat,
 	body.yzrw-embed table.wp-list-table {
 		width: 100%;
 		max-width: 100%;
+		table-layout: fixed;
 	}
 	body.yzrw-embed .yzrw-table th,
 	body.yzrw-embed .yzrw-table td,
@@ -644,16 +645,17 @@ body.yzrw-embed .yzrw-user-search {
 	body.yzrw-embed .wp-list-table th,
 	body.yzrw-embed .wp-list-table td {
 		white-space: normal;
-		overflow-wrap: anywhere;
+		overflow-wrap: break-word;
 		vertical-align: top;
 	}
-	/* Action buttons may stack (Approve above Reject) when cramped, but each
-	   button's label must stay intact — so allow wrapping BETWEEN buttons yet keep
-	   overflow-wrap normal so labels don't break mid-word. */
-	body.yzrw-embed td.yzrw-actions-cell {
-		overflow-wrap: normal;
-	}
+	/* Fixed columns are narrow, so the two action buttons stack full-width and
+	   compact (each label stays on one line) instead of being clipped by the cell. */
 	body.yzrw-embed td.yzrw-actions-cell .button {
+		display: block;
+		width: 100%;
+		margin: 0.15rem 0;
+		padding: 0.25rem 0.4rem;
+		font-size: var(--yz-text-xs);
 		white-space: nowrap;
 	}
 }
