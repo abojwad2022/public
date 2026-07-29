@@ -624,50 +624,26 @@ body.yzrw-embed .yzrw-user-search {
 	}
 }
 
-/* Wide tables scroll horizontally inside their own wrapper (added by
-   embed-enhance.js) instead of overflowing the card — only the table scrolls at its
-   natural width; the card, page and any absolutely-positioned menus are unaffected.
-   No effect on desktop where the table fits (no overflow → no scrollbar). */
-body.yzrw-embed .yzrw-tablewrap {
-	max-width: 100%;
-	overflow-x: auto;
-	-webkit-overflow-scrolling: touch;
-	border-radius: var(--yz-radius-lg);
-}
-body.yzrw-embed .yzrw-tablewrap > table.yzrw-table,
-body.yzrw-embed .yzrw-tablewrap > table.widefat,
-body.yzrw-embed .yzrw-tablewrap > table.wp-list-table {
-	/* Keep the table at its natural column widths and let it overflow (scroll)
-	   rather than being squeezed. */
-	min-width: max-content;
-}
-
-/* On a narrow frame, FREEZE the first column (usually the row's name/identity) so
-   it stays put while the rest scroll — the "pinned column" pattern used by
-   Stripe / Shopify / Airtable, with a soft shadow marking the frozen edge. */
-@media ( max-width: 782px ) {
-	body.yzrw-embed .yzrw-tablewrap > table.yzrw-table,
-	body.yzrw-embed .yzrw-tablewrap > table.widefat,
-	body.yzrw-embed .yzrw-tablewrap > table.wp-list-table {
-		/* The table's own overflow:hidden would make IT the sticky scrollport and
-		   break the freeze — hand the scrollport back to the .yzrw-tablewrap. */
-		overflow: visible;
+/* Wide tables FIT the frame and wrap their text (no horizontal scroll): wp-admin
+   tables (table-layout:auto) overflow a phone because long unbreakable tokens
+   (emails/codes) inflate their min-content width. Letting cells break drops that,
+   so the table collapses to the frame width and long values wrap to new lines. */
+@media ( max-width: 640px ) {
+	body.yzrw-embed table.yzrw-table,
+	body.yzrw-embed table.widefat,
+	body.yzrw-embed table.wp-list-table {
+		width: 100%;
+		max-width: 100%;
 	}
-	body.yzrw-embed .yzrw-tablewrap th:first-child,
-	body.yzrw-embed .yzrw-tablewrap td:first-child {
-		position: sticky;
-		inset-inline-start: 0;
-		z-index: 2;
-		/* Right-side depth cue: content scrolls beneath the frozen column. */
-		box-shadow: 8px 0 8px -8px rgba( 0, 0, 0, 0.45 );
-	}
-	body.yzrw-embed .yzrw-tablewrap thead th:first-child {
-		z-index: 3;
-		background: var(--yz-sunken);
-	}
-	body.yzrw-embed .yzrw-tablewrap tbody td:first-child,
-	body.yzrw-embed .yzrw-tablewrap tbody tr:hover td:first-child {
-		/* Opaque, so the scrolling columns don't bleed through the frozen cell. */
-		background: var(--yz-surface);
+	body.yzrw-embed .yzrw-table th,
+	body.yzrw-embed .yzrw-table td,
+	body.yzrw-embed .widefat th,
+	body.yzrw-embed .widefat td,
+	body.yzrw-embed .wp-list-table th,
+	body.yzrw-embed .wp-list-table td {
+		white-space: normal;
+		overflow-wrap: anywhere;
+		word-break: break-word;
+		vertical-align: top;
 	}
 }
