@@ -624,41 +624,120 @@ body.yzrw-embed .yzrw-user-search {
 	}
 }
 
-/* Wide tables FIT the frame and wrap their text (no horizontal scroll): wp-admin
-   tables (table-layout:auto) overflow a phone because long unbreakable tokens
-   (emails/codes) inflate their min-content width. `table-layout:fixed` shares the
-   frame width across the columns and `overflow-wrap:break-word` wraps — short words
-   stay whole and only over-long values (emails/codes) break, so it never overflows
-   and never degrades into a character-per-line stack. */
+/* On a phone every table becomes a stack of RECORD CARDS: one card per row, each
+   cell a "Label: value" line (label from data-label, set by embed-enhance.js), and
+   the action buttons as a full-width row at the bottom of the card. Long lists are
+   paged (embed-enhance.js) so the embed never becomes an endless table. Desktop
+   (>640px) keeps the normal wp-admin table untouched. */
 @media ( max-width: 640px ) {
 	body.yzrw-embed table.yzrw-table,
 	body.yzrw-embed table.widefat,
 	body.yzrw-embed table.wp-list-table {
-		width: 100%;
-		max-width: 100%;
-		table-layout: fixed;
-	}
-	body.yzrw-embed .yzrw-table th,
-	body.yzrw-embed .yzrw-table td,
-	body.yzrw-embed .widefat th,
-	body.yzrw-embed .widefat td,
-	body.yzrw-embed .wp-list-table th,
-	body.yzrw-embed .wp-list-table td {
-		white-space: normal;
-		overflow-wrap: break-word;
-		vertical-align: top;
-		/* Trim the roomy desktop padding — in a narrow fixed column it would eat
-		   most of the width and force text to break far more than necessary. */
-		padding: 0.45rem 0.4rem;
-	}
-	/* Fixed columns are narrow, so the two action buttons stack full-width and
-	   compact (each label stays on one line) instead of being clipped by the cell. */
-	body.yzrw-embed td.yzrw-actions-cell .button {
 		display: block;
 		width: 100%;
-		margin: 0.15rem 0;
-		padding: 0.2rem 0.15rem;
-		font-size: var(--yz-text-xs);
+		background: transparent;
+		border: 0;
+		border-radius: 0;
+		box-shadow: none;
+		overflow: visible;
+	}
+	/* Header row is conveyed per-cell via data-label; hide it but keep it for a11y. */
+	body.yzrw-embed .yzrw-table thead,
+	body.yzrw-embed .widefat thead,
+	body.yzrw-embed .wp-list-table thead {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		overflow: hidden;
+		clip: rect( 0 0 0 0 );
 		white-space: nowrap;
 	}
+	body.yzrw-embed .yzrw-table tbody,
+	body.yzrw-embed .widefat tbody,
+	body.yzrw-embed .wp-list-table tbody {
+		display: block;
+	}
+	/* Each row → a card. */
+	body.yzrw-embed .yzrw-table tbody tr,
+	body.yzrw-embed .widefat tbody tr,
+	body.yzrw-embed .wp-list-table tbody tr {
+		display: block;
+		background: var(--yz-surface);
+		border: 1px solid var(--yz-edge);
+		border-radius: var(--yz-radius-md);
+		box-shadow: var(--yz-shadow-1);
+		margin-bottom: 0.6rem;
+		padding: 0.35rem 0.85rem 0.6rem;
+	}
+	/* Each data cell → a "label : value" line. */
+	body.yzrw-embed .yzrw-table tbody td,
+	body.yzrw-embed .widefat tbody td,
+	body.yzrw-embed .wp-list-table tbody td {
+		display: flex;
+		justify-content: space-between;
+		align-items: baseline;
+		gap: 1rem;
+		text-align: end;
+		padding: 0.4rem 0;
+		border: 0;
+		border-bottom: 1px solid var(--yz-divider);
+		overflow-wrap: anywhere;
+	}
+	body.yzrw-embed .yzrw-table tbody td::before,
+	body.yzrw-embed .widefat tbody td::before,
+	body.yzrw-embed .wp-list-table tbody td::before {
+		content: attr( data-label );
+		flex: 0 0 auto;
+		margin-inline-end: 1rem;
+		font-size: var(--yz-text-xs);
+		font-weight: 600;
+		color: var(--yz-muted);
+		text-align: start;
+	}
+	/* The action cell (empty header) → a full-width row of buttons at the card
+	   bottom: no label, no divider, buttons share the width side by side. */
+	body.yzrw-embed td.yzrw-actions-cell,
+	body.yzrw-embed .yzrw-table tbody td[data-label=''],
+	body.yzrw-embed .widefat tbody td[data-label=''] {
+		border-bottom: 0;
+		padding-top: 0.6rem;
+	}
+	body.yzrw-embed td.yzrw-actions-cell::before,
+	body.yzrw-embed .yzrw-table tbody td[data-label='']::before,
+	body.yzrw-embed .widefat tbody td[data-label='']::before {
+		content: none;
+	}
+	body.yzrw-embed td.yzrw-actions-cell {
+		display: flex;
+		gap: 0.5rem;
+	}
+	body.yzrw-embed td.yzrw-actions-cell .button {
+		flex: 1 1 0;
+		justify-content: center;
+	}
+	/* Belt-and-braces: last cell of a card carries no divider. */
+	body.yzrw-embed .yzrw-table tbody tr td:last-child,
+	body.yzrw-embed .widefat tbody tr td:last-child,
+	body.yzrw-embed .wp-list-table tbody tr td:last-child {
+		border-bottom: 0;
+	}
+}
+
+/* Pager (embed-enhance.js) — shown only on mobile when a table has >5 records. */
+body.yzrw-embed .yzrw-pager {
+	display: none;
+	align-items: center;
+	justify-content: center;
+	gap: 0.85rem;
+	margin: 0.25rem 0 0.5rem;
+}
+body.yzrw-embed .yzrw-pager-info {
+	color: var(--yz-muted);
+	font-size: var(--yz-text-sm);
+	font-variant-numeric: tabular-nums;
+}
+body.yzrw-embed .yzrw-pager-btn {
+	min-width: 2.25rem;
+	font-size: var(--yz-text-md);
+	line-height: 1;
 }
