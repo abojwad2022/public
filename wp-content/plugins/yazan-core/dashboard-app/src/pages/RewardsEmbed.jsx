@@ -49,21 +49,23 @@ export default function RewardsEmbed() {
     if (!iframe) return undefined
 
     let contentObserver
+    let lastH = 0
 
     // Match the iframe height to its content so the whole dashboard scrolls as one
-    // page — no inner scrollbar, no fixed box height. Collapse to 0 first so the
-    // measurement is not floored by the frame's current height (otherwise the
-    // height only ever grows — a shrink, e.g. a queue row removed or a view
-    // switched, would leave a dead gap that never reclaims).
+    // page — no inner scrollbar, no fixed box height. The embed skin overrides
+    // wp-admin's `html,body{height:100%}` to `height:auto`, so the body is content-
+    // height and `body.scrollHeight` reflects the true content and shrinks as well
+    // as grows. We must NOT collapse the frame to 0 to measure (an old trick): the
+    // forced reflow while the frame is 0px clamps the parent scroll to the top,
+    // which — fired by a timer — read as "scrolling down jumps back up". Writing
+    // only on a real change means a plain scroll never touches the height at all.
     const fitHeight = () => {
       try {
         const doc = iframe.contentDocument
-        if (doc && doc.documentElement) {
-          iframe.style.height = '0px'
-          const h = Math.max(
-            doc.documentElement.scrollHeight,
-            doc.body ? doc.body.scrollHeight : 0
-          )
+        if (!doc || !doc.body) return
+        const h = doc.body.scrollHeight
+        if (h > 0 && Math.abs(h - lastH) > 1) {
+          lastH = h
           iframe.style.height = `${h}px`
         }
       } catch {
@@ -98,9 +100,10 @@ export default function RewardsEmbed() {
     }
 
     iframe.addEventListener('load', onLoad)
-    // Late async content (widgets fetching data) may resize after the observer
-    // window; a low-frequency poll is a cheap safety net.
-    const poll = window.setInterval(fitHeight, 1200)
+    // The ResizeObserver on the embed body (set up in onLoad) is the sole refit
+    // trigger — it fires on genuine content-size changes (late async data, a view
+    // switch, the user typeahead opening) but never on scroll, so it can't fight
+    // the user. No polling timer: that was what periodically yanked the page up.
 
     // React to the dashboard theme toggle without reloading the frame.
     const root = document.documentElement
@@ -111,7 +114,6 @@ export default function RewardsEmbed() {
       iframe.removeEventListener('load', onLoad)
       if (contentObserver) contentObserver.disconnect()
       themeObserver.disconnect()
-      window.clearInterval(poll)
     }
   }, [key])
 

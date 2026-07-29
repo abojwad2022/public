@@ -42,6 +42,9 @@ body.yzrw-embed {
 	   embed reads as a native page with no seam. */
 	padding: 0;
 	margin: 0;
+	/* Neutralise wp-admin common.css `body{min-width:600px}` — the frame can be as
+	   narrow as a phone (see the responsive block at the end of this file). */
+	min-width: 0;
 	background: var(--yz-canvas);
 	color: var(--yz-fg);
 	font-family: var(--yz-font-sans);
@@ -565,4 +568,58 @@ body.yzrw-embed .yzrw-user-results li.is-active {
 body.yzrw-embed .yzrw-user-meta {
 	color: var(--yz-muted);
 	opacity: 1;
+}
+
+/* ============================================================= *
+ *  Responsive — the embed frame can be as narrow as a phone
+ * ============================================================= *
+ * wp-admin ships desktop-only field sizing (`.regular-text` 25em, `.small-text`
+ * fixed px) and `.yzrw-field` is a fixed 190px label + control flex row, so on a
+ * narrow frame the controls overflow the card (and the iframe's `scrolling="no"`
+ * clips them). Let controls shrink, and stack the row on phones. */
+body.yzrw-embed input[type='text'],
+body.yzrw-embed input[type='number'],
+body.yzrw-embed input[type='email'],
+body.yzrw-embed input[type='url'],
+body.yzrw-embed input[type='search'],
+body.yzrw-embed input[type='date'],
+body.yzrw-embed input[type='password'],
+body.yzrw-embed input[type='tel'],
+body.yzrw-embed select,
+body.yzrw-embed textarea {
+	max-width: 100%;
+	box-sizing: border-box;
+}
+/* In the label+control flex row, let the control shrink below its fixed width
+   instead of pushing past the card edge (min-width:auto would forbid shrinking). */
+body.yzrw-embed .yzrw-field > input:not([type='checkbox']):not([type='radio']),
+body.yzrw-embed .yzrw-field > select,
+body.yzrw-embed .yzrw-field > textarea,
+body.yzrw-embed .yzrw-field > .yzrw-user-search {
+	min-width: 0;
+}
+body.yzrw-embed .yzrw-user-search {
+	max-width: 100%;
+}
+
+/* Phones: stack the label above the control and let controls fill the width. */
+@media ( max-width: 640px ) {
+	body.yzrw-embed .yzrw-field {
+		flex-direction: column;
+		align-items: stretch;
+		gap: 0.25rem;
+	}
+	body.yzrw-embed .yzrw-field > label {
+		flex-basis: auto;
+	}
+	body.yzrw-embed .yzrw-field > input:not([type='checkbox']):not([type='radio']),
+	body.yzrw-embed .yzrw-field > select,
+	body.yzrw-embed .yzrw-field > textarea,
+	body.yzrw-embed .yzrw-field > .yzrw-user-search,
+	body.yzrw-embed .yzrw-user-search > input {
+		width: 100%;
+	}
+	body.yzrw-embed .yzrw-card {
+		padding: 1rem;
+	}
 }
