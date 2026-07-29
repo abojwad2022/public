@@ -29,7 +29,9 @@
 	function typeLabel( t ) { var f = t; ( schema.types || [] ).forEach( function ( x ) { if ( x.value === t ) { f = x.label; } } ); return f; }
 	function typeDef( t ) { return ( schema.types || [] ).filter( function ( x ) { return x.value === t; } )[ 0 ] || { fields: [] }; }
 
-	function render() { root.innerHTML = ''; root.appendChild( list() ); root.appendChild( form() ); }
+	// New-reward/Edit FORM on top, then the Rewards list below it — so the create
+	// form is reached first and an Edit (which scrolls to top) reveals the form.
+	function render() { root.innerHTML = ''; root.appendChild( form() ); root.appendChild( list() ); }
 
 	function list() {
 		var w = el( 'div', { class: 'yzrw-card' } );
