@@ -28,6 +28,12 @@
 html,
 body {
 	margin: 0;
+	/* Override wp-admin common.css `html,body{height:100%}`: with the body stretched
+	   to the iframe viewport, its scrollHeight can never shrink, which forced the
+	   parent's auto-height JS to collapse the frame to 0 first (that reflow-at-0
+	   clamps the page scroll to the top — the "scrolling jumps up" bug). Content
+	   height lets the frame measure honestly, no collapse needed. */
+	height: auto;
 }
 body.yzrw-embed {
 	box-sizing: border-box;
