@@ -53,6 +53,27 @@ class Yazan_REST_Orders {
 			)
 		);
 
+		/*
+		 * New-order polling for the dashboard. Safe alongside `/orders/(?P<id>\d+)` below —
+		 * that route requires digits, so "alerts" can never be captured as an order id.
+		 */
+		register_rest_route(
+			$ns,
+			'/orders/alerts',
+			array(
+				'methods'             => WP_REST_Server::READABLE,
+				'callback'            => array( __CLASS__, 'alerts' ),
+				'permission_callback' => $perm,
+				'args'                => array(
+					'since' => array(
+						'type'              => 'integer',
+						'required'          => false,
+						'sanitize_callback' => 'absint',
+					),
+				),
+			)
+		);
+
 		register_rest_route(
 			$ns,
 			'/orders/(?P<id>\d+)',
@@ -86,6 +107,53 @@ class Yazan_REST_Orders {
 				),
 			)
 		);
+	}
+
+	/* --------------------------------------------------------------------- */
+	/* New-order alerts                                                       */
+	/* --------------------------------------------------------------------- */
+
+	/**
+	 * Report orders that arrived after the id the dashboard last saw.
+	 *
+	 * Two modes:
+	 *  - `since` omitted → SEED. Returns the newest order id with `count: 0`, so a dashboard that
+	 *    has just been opened alerts only on orders arriving from now on rather than announcing
+	 *    the entire existing order history. Same rule the wp-admin script uses.
+	 *  - `since=<id>`    → report everything newer.
+	 *
+	 * The query itself lives in Yazan_Core_Notifications::orders_since(), shared with the wp-admin
+	 * Heartbeat handler so the two surfaces cannot disagree.
+	 *
+	 * @param WP_REST_Request $request Request.
+	 * @return WP_REST_Response
+	 */
+	public static function alerts( $request ) {
+		if ( ! class_exists( 'Yazan_Core_Notifications' ) ) {
+			return rest_ensure_response(
+				array(
+					'latest' => 0,
+					'count'  => 0,
+					'orders' => array(),
+				)
+			);
+		}
+
+		$raw = $request->get_param( 'since' );
+
+		// Seed mode: no `since` at all. Note that `since=0` is NOT a seed — it is a genuine
+		// request for "everything", which is what a store with no orders yet should report.
+		if ( null === $raw ) {
+			return rest_ensure_response(
+				array(
+					'latest' => Yazan_Core_Notifications::latest_order_id(),
+					'count'  => 0,
+					'orders' => array(),
+				)
+			);
+		}
+
+		return rest_ensure_response( Yazan_Core_Notifications::orders_since( absint( $raw ) ) );
 	}
 
 	/* --------------------------------------------------------------------- */

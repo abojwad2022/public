@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { CircleAlert, CircleCheck, Info, X } from '../components/ui/icons.js'
 import { Icon } from '../components/ui/primitives.jsx'
 
@@ -12,17 +12,47 @@ export function ToastProvider({ children }) {
     setToasts((current) => current.filter((toast) => toast.id !== id))
   }, [])
 
-  const push = useCallback((message, tone = 'info') => {
+  /**
+   * `options` is additive — the success/error/info(message) signature used across the app is
+   * unchanged. It carries:
+   *   persist — skip auto-dismiss (an order alert must survive until it is acknowledged)
+   *   key     — identity. A repeat push with the same key REPLACES the live toast instead of
+   *             stacking a second one, which is how one alert accumulates a count rather than
+   *             becoming a pile of banners.
+   *   action  — { label, to } renders a router link.
+   *   icon    — override the tone icon.
+   */
+  const push = useCallback((message, tone = 'info', options = {}) => {
+    const { persist = false, key = null, action = null, icon = null } = options
+    // Allocate the id outside the updater: React may invoke an updater more than once
+    // (StrictMode, concurrent re-render) and that must not burn ids or return a stale one.
     const id = nextId++
-    setToasts((current) => [...current, { id, message, tone }])
+
+    setToasts((current) => {
+      if (key && current.some((toast) => toast.key === key)) {
+        return current.map((toast) =>
+          toast.key === key ? { ...toast, message, tone, persist, action, icon } : toast
+        )
+      }
+      return [...current, { id, message, tone, persist, key, action, icon }]
+    })
+
     return id
   }, [])
 
-  const value = {
-    success: (message) => push(message, 'success'),
-    error: (message) => push(message, 'error'),
-    info: (message) => push(message, 'info'),
-  }
+  const dismissKey = useCallback((key) => {
+    setToasts((current) => current.filter((toast) => toast.key !== key))
+  }, [])
+
+  const value = useMemo(
+    () => ({
+      success: (message, options) => push(message, 'success', options),
+      error: (message, options) => push(message, 'error', options),
+      info: (message, options) => push(message, 'info', options),
+      dismissKey,
+    }),
+    [push, dismissKey]
+  )
 
   return (
     <ToastContext.Provider value={value}>
@@ -65,16 +95,18 @@ const TONES = {
 
 function Toast({ toast, onDismiss }) {
   const [paused, setPaused] = useState(false)
-  const { icon, cls, label } = TONES[toast.tone] || TONES.info
+  const tone = TONES[toast.tone] || TONES.info
+  const icon = toast.icon || tone.icon
   const timer = useRef(null)
 
   // Auto-dismiss pauses on hover and on keyboard focus, so a message never
   // disappears while it is being read or while its close button is focused.
+  // A `persist` toast has no timer at all — it waits to be acknowledged.
   useEffect(() => {
-    if (paused) return undefined
+    if (paused || toast.persist) return undefined
     timer.current = setTimeout(onDismiss, toast.tone === 'error' ? 7000 : 4000)
     return () => clearTimeout(timer.current)
-  }, [paused, onDismiss, toast.tone])
+  }, [paused, onDismiss, toast.tone, toast.persist])
 
   return (
     <div
@@ -87,9 +119,26 @@ function Toast({ toast, onDismiss }) {
     >
       {/* The icon is not decoration: tone was previously carried by colour alone,
           which fails WCAG 1.4.1 for anyone who cannot distinguish the hues. */}
-      <Icon as={icon} size={16} className={`mt-px ${cls}`} />
-      <span className="sr-only">{label}: </span>
-      <span className="flex-1 text-sm text-fg">{toast.message}</span>
+      <Icon as={icon} size={16} className={`mt-px ${tone.cls}`} />
+      <span className="sr-only">{tone.label}: </span>
+      <div className="flex-1">
+        <span className="text-sm text-fg">{toast.message}</span>
+        {/* A callback, not a <Link>: ToastProvider is mounted ABOVE <BrowserRouter> in App.jsx,
+            so any router hook used in here would throw. The caller lives inside the router and
+            supplies its own navigate(). */}
+        {toast.action ? (
+          <button
+            type="button"
+            onClick={() => {
+              toast.action.onClick?.()
+              onDismiss()
+            }}
+            className="mt-1 block text-sm font-medium text-info underline-offset-2 hover:underline"
+          >
+            {toast.action.label}
+          </button>
+        ) : null}
+      </div>
       <button
         type="button"
         onClick={onDismiss}
