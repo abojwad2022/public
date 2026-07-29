@@ -57,3 +57,7 @@
 2026-07-29T08:11:07+00:00 INFO Email "customer_processing_order" for order #8330 sent CONTEXT: {"email_type":"customer_processing_order","status":"sent","recipient":"admin","order":8330}
 2026-07-29T08:19:26+00:00 INFO Email "new_order" for order #8331 sent CONTEXT: {"email_type":"new_order","status":"sent","recipient":"admin","order":8331}
 2026-07-29T08:19:26+00:00 INFO Email "customer_processing_order" for order #8331 sent CONTEXT: {"email_type":"customer_processing_order","status":"sent","recipient":"guest","order":8331}
+2026-07-29T08:22:08+00:00 INFO Email "new_order" for order #8332 sent CONTEXT: {"email_type":"new_order","status":"sent","recipient":"admin","order":8332}
+2026-07-29T08:22:08+00:00 INFO Email "customer_processing_order" for order #8332 sent CONTEXT: {"email_type":"customer_processing_order","status":"sent","recipient":"guest","order":8332}
+2026-07-29T08:22:53+00:00 INFO Email "new_order" for order #8333 sent CONTEXT: {"email_type":"new_order","status":"sent","recipient":"admin","order":8333}
+2026-07-29T08:22:53+00:00 INFO Email "customer_processing_order" for order #8333 sent CONTEXT: {"email_type":"customer_processing_order","status":"sent","recipient":"admin","order":8333}

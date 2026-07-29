@@ -102,3 +102,22 @@
 2026-07-29T08:19:26+00:00 INFO Start-Cartflows_Frontend::redirect_to_thankyou_page
 2026-07-29T08:19:26+00:00 INFO Only for thank you page
 2026-07-29T08:19:26+00:00 INFO End-Cartflows_Frontend::redirect_to_thankyou_page
+2026-07-29T08:22:05+00:00 INFO Webhook event: cartflows_step_visited - Step 10 (Type: checkout)
+2026-07-29T08:22:05+00:00 INFO Webhook dispatch: No webhooks found for event cartflows_step_visited
+2026-07-29T08:22:08+00:00 INFO Start-Cartflows_Frontend::redirect_to_thankyou_page
+2026-07-29T08:22:08+00:00 INFO Only for thank you page
+2026-07-29T08:22:08+00:00 INFO End-Cartflows_Frontend::redirect_to_thankyou_page
+2026-07-29T08:22:30+00:00 INFO Webhook event: cartflows_step_visited - Step 10 (Type: checkout)
+2026-07-29T08:22:30+00:00 INFO Webhook dispatch: No webhooks found for event cartflows_step_visited
+2026-07-29T08:22:34+00:00 INFO Webhook event: checkout_initiated - Step 10
+2026-07-29T08:22:34+00:00 INFO Webhook dispatch: No webhooks found for event checkout_initiated
+2026-07-29T08:22:52+00:00 INFO Webhook event: order_created - Order 8333 Flow 9
+2026-07-29T08:22:52+00:00 INFO Webhook dispatch: No webhooks found for event order_created
+2026-07-29T08:22:53+00:00 INFO Webhook event: order_completed - Order 8333 Flow 9 (status: pending -> processing)
+2026-07-29T08:22:53+00:00 INFO Webhook dispatch: No webhooks found for event order_completed
+2026-07-29T08:22:53+00:00 INFO Start-Cartflows_Frontend::redirect_to_thankyou_page
+2026-07-29T08:22:53+00:00 INFO Only for thank you page
+2026-07-29T08:22:53+00:00 INFO Checkout ID : 10
+2026-07-29T08:22:53+00:00 INFO End-Cartflows_Frontend::redirect_to_thankyou_page
+2026-07-29T08:22:54+00:00 INFO Webhook event: cartflows_step_visited - Step 11 (Type: thankyou)
+2026-07-29T08:22:54+00:00 INFO Webhook dispatch: No webhooks found for event cartflows_step_visited

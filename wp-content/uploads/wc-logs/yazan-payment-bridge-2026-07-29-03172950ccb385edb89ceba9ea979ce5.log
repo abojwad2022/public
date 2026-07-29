@@ -170,3 +170,7 @@
 2026-07-29T08:11:06+00:00 INFO Integration run finished. {"event_id":169,"event_uuid":"7d868384-5bb6-4563-87c6-e9879a213a5a","order_id":8330,"event_type":"payment_completed","integration_status":"skipped","source":"gateway"}
 2026-07-29T08:19:26+00:00 INFO Payment event recorded. {"event_id":171,"event_uuid":"b0a0435e-28ef-4f7b-a8ca-8b1452bffa26","order_id":8331,"event_type":"payment_completed","source":"gateway","gateway":"yz_test_card"}
 2026-07-29T08:19:26+00:00 INFO Integration run finished. {"event_id":171,"event_uuid":"b0a0435e-28ef-4f7b-a8ca-8b1452bffa26","order_id":8331,"event_type":"payment_completed","integration_status":"skipped","source":"gateway"}
+2026-07-29T08:22:08+00:00 INFO Payment event recorded. {"event_id":173,"event_uuid":"9e5c7dcc-f9cf-43e9-bd11-36b4c1ee526f","order_id":8332,"event_type":"payment_completed","source":"gateway","gateway":"yz_test_apple_pay"}
+2026-07-29T08:22:08+00:00 INFO Integration run finished. {"event_id":173,"event_uuid":"9e5c7dcc-f9cf-43e9-bd11-36b4c1ee526f","order_id":8332,"event_type":"payment_completed","integration_status":"skipped","source":"gateway"}
+2026-07-29T08:22:53+00:00 INFO Payment event recorded. {"event_id":175,"event_uuid":"c5c7efad-6d58-46c3-a307-6f78055d0bf6","order_id":8333,"event_type":"payment_completed","source":"gateway","gateway":"yz_test_google_pay"}
+2026-07-29T08:22:53+00:00 INFO Integration run finished. {"event_id":175,"event_uuid":"c5c7efad-6d58-46c3-a307-6f78055d0bf6","order_id":8333,"event_type":"payment_completed","integration_status":"skipped","source":"gateway"}
