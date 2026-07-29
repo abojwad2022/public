@@ -162,3 +162,5 @@
 2026-07-29T07:27:35+00:00 INFO Integration run finished. {"event_id":163,"event_uuid":"7d05f924-d1f7-4f5e-bfef-197260128656","order_id":8325,"event_type":"payment_partially_refunded","integration_status":"review","source":"gateway"}
 2026-07-29T07:27:36+00:00 INFO Payment event recorded. {"event_id":164,"event_uuid":"d0e92f24-d780-42bc-b500-f3a07c207665","order_id":8325,"event_type":"payment_refunded","source":"gateway","gateway":"yz_test_apple_pay"}
 2026-07-29T07:27:36+00:00 INFO Integration run finished. {"event_id":164,"event_uuid":"d0e92f24-d780-42bc-b500-f3a07c207665","order_id":8325,"event_type":"payment_refunded","integration_status":"skipped","source":"gateway"}
+2026-07-29T07:31:15+00:00 INFO Payment event recorded. {"event_id":166,"event_uuid":"164c0a38-ce32-4e44-bc15-5d42eab885a4","order_id":8328,"event_type":"payment_failed","source":"gateway","gateway":"yz_test_paypal"}
+2026-07-29T07:31:15+00:00 INFO Integration run finished. {"event_id":166,"event_uuid":"164c0a38-ce32-4e44-bc15-5d42eab885a4","order_id":8328,"event_type":"payment_failed","integration_status":"skipped","source":"gateway"}

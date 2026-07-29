@@ -49,3 +49,5 @@
 2026-07-29T07:25:54+00:00 INFO Email "customer_processing_order" for order #8325 sent CONTEXT: {"email_type":"customer_processing_order","status":"sent","recipient":"guest","order":8325}
 2026-07-29T07:27:35+00:00 INFO Email "customer_partially_refunded_order" for order #8325 sent CONTEXT: {"email_type":"customer_partially_refunded_order","status":"sent","recipient":"guest","order":8325}
 2026-07-29T07:27:36+00:00 INFO Email "customer_refunded_order" for order #8325 sent CONTEXT: {"email_type":"customer_refunded_order","status":"sent","recipient":"guest","order":8325}
+2026-07-29T07:31:15+00:00 INFO Email "customer_failed_order" for order #8328 sent CONTEXT: {"email_type":"customer_failed_order","status":"sent","recipient":"guest","order":8328}
+2026-07-29T07:31:15+00:00 INFO Email "failed_order" for order #8328 sent CONTEXT: {"email_type":"failed_order","status":"sent","recipient":"admin","order":8328}
