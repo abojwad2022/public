@@ -178,33 +178,53 @@ html[data-yz-theme="burgundy"] body.cartflows-instant-checkout .wcf-embed-checko
    tokens, but neither that stylesheet nor the tokens load on this stripped template,
    so the rules are restated here with literal colours.
    Mirrors: --yz-muted #6E6A63 · --yz-hairline rgba(185,188,192,.3) · --yz-silver #B9BCC0.
+
+   LAYOUT DECLARATIONS ARE !important ON PURPOSE. The row sits inside `.form-row.place-order`,
+   and this template stacks a lot of third-party CSS (CartFlows checkout-template.css, Astra's
+   WooCommerce compat, and wc-blocks.css — which loads AFTER this inline block, so source order
+   does NOT protect us here the way it does for the header rules above). Without the flags the
+   row collapsed into a vertical stack on the live page. Colour/spacing stay unflagged so they
+   remain easy to override.
    -------------------------------------------------------------------------- */
 body.cartflows-instant-checkout .yz-pay {
-	display: flex;
-	align-items: center;
-	flex-wrap: wrap;
+	display: flex !important;
+	flex-direction: row !important;
+	align-items: center !important;
+	flex-wrap: wrap !important;
+	width: 100%;
 	gap: 10px;
 	margin: 14px 0 0;
 	padding-top: 14px;
 	border-top: 1px solid rgba(185, 188, 192, 0.3);
 	color: #6E6A63;
 }
-body.cartflows-instant-checkout .yz-pay__lock { display: inline-flex; color: #B9BCC0; }
+body.cartflows-instant-checkout .yz-pay__lock {
+	display: inline-flex !important;
+	flex: none !important;
+	color: #B9BCC0;
+}
 body.cartflows-instant-checkout .yz-pay__label {
+	flex: none !important;
 	font-size: 12px;
 	letter-spacing: 0.06em;
 	text-transform: uppercase;
+	white-space: nowrap;
 }
 body.cartflows-instant-checkout .yz-pay__marks {
-	display: flex;
-	align-items: center;
-	flex-wrap: wrap;
+	display: flex !important;
+	flex-direction: row !important;
+	align-items: center !important;
+	flex-wrap: wrap !important;
+	width: auto !important;
 	gap: 6px;
 	margin-inline-start: auto;
 }
 body.cartflows-instant-checkout .yz-pay__mark {
-	display: inline-flex;
-	align-items: center;
+	display: inline-flex !important;
+	flex: none !important;
+	align-items: center !important;
+	width: auto !important;
+	float: none !important;
 	gap: 4px;
 	min-height: 24px;
 	padding: 4px 8px;
