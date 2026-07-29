@@ -36,9 +36,11 @@ Customer → WooCommerce Checkout → Official Gateway → WooCommerce verified 
 - PHP 8.3+ (developed and tested against 8.3.17)
 - MySQL 8+ / MariaDB
 
-> **Note for this project:** the sibling plugins `yazan-core` and `yazan-social-rewards` still declare
-> `Requires PHP: 8.1`, and the repo's `phpcs.xml` pins `testVersion 8.1-`. This plugin is the first to
-> require 8.3. If `phpcs` is run against it, raise `testVersion` or scope the rule per-directory.
+> **Note for this project:** `Requires PHP: 8.3` is a conservative floor matching the engine the site
+> standardised on. The source itself is 8.1-compatible, so the repo's `phpcs.xml` — which pins
+> `testVersion 8.1-` to protect `yazan-core` and `yazan-social-rewards`, both of which still declare
+> `Requires PHP: 8.1` — lints this plugin cleanly without any per-directory scoping. The plugin is
+> included in `phpcs.xml`'s `<file>` list.
 
 Orders are only ever read through `wc_get_order()` and the WooCommerce CRUD API. The plugin never
 touches `wp_posts` or `wp_postmeta` for order data.
