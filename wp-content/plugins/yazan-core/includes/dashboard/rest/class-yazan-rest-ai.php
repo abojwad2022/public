@@ -157,6 +157,24 @@ class Yazan_REST_AI {
 	/** Handoff rate-limit window (seconds). */
 	const HANDOFF_WINDOW = 600; // 10 minutes.
 
+	/**
+	 * Site-wide handoff ceiling per UTC day, across ALL IPs.
+	 *
+	 * The per-IP throttle bounds one abuser; it does nothing against a
+	 * distributed one, because a nonce is free to obtain and every fresh IP gets
+	 * its own allowance. /ai/chat is protected from that by the global AI budget
+	 * cap — handoff had no equivalent, so a botnet could send an unbounded number
+	 * of owner emails and CRM webhook POSTs. This is that missing ceiling.
+	 * Filterable via `yazan_ai_handoff_daily_max`; 0 disables the cap.
+	 */
+	const HANDOFF_DAILY_MAX = 50;
+
+	/** Chat-nonce dispenser: requests per IP per window. A real widget needs one or two. */
+	const NONCE_MAX = 30;
+
+	/** Chat-nonce dispenser window (seconds). */
+	const NONCE_WINDOW = 600; // 10 minutes.
+
 	/* --------------------------------------------------------------------- */
 	/* Settings                                                               */
 	/* --------------------------------------------------------------------- */
@@ -525,6 +543,20 @@ class Yazan_REST_AI {
 	 * @return WP_REST_Response
 	 */
 	public static function chat_nonce() {
+		// Throttle the dispenser too. A nonce is not a secret, but an unlimited
+		// supply of them makes it worthless as anything but a CSRF token — and
+		// leaves hammering this route free. A legitimate widget needs one nonce
+		// per session, so this ceiling is invisible to real shoppers.
+		$key = 'yz_ai_nonce_' . md5( self::client_ip() );
+		$hit = (int) get_transient( $key );
+		if ( $hit >= self::NONCE_MAX ) {
+			return new WP_REST_Response(
+				array( 'ok' => false, 'message' => __( 'Too many requests. Please try again shortly.', 'yazan' ), 'error' => array( 'code' => 'rate_limited' ) ),
+				429
+			);
+		}
+		set_transient( $key, $hit + 1, self::NONCE_WINDOW );
+
 		return new WP_REST_Response( array( 'ok' => true, 'nonce' => wp_create_nonce( self::CHAT_NONCE ) ), 200 );
 	}
 
@@ -554,6 +586,22 @@ class Yazan_REST_AI {
 			return new WP_REST_Response( array( 'ok' => false, 'message' => __( 'Too many requests. Please try again shortly.', 'yazan' ), 'error' => array( 'code' => 'rate_limited' ) ), 429 );
 		}
 		set_transient( $key, $hit + 1, self::HANDOFF_WINDOW );
+
+		// Site-wide daily ceiling. The per-IP limit above bounds a single abuser;
+		// this is what bounds a distributed one, since every new IP would
+		// otherwise get a fresh allowance of owner emails and CRM POSTs.
+		$day_max = (int) apply_filters( 'yazan_ai_handoff_daily_max', self::HANDOFF_DAILY_MAX );
+		if ( $day_max > 0 ) {
+			$day_key = 'yz_ai_handoff_day_' . gmdate( 'Ymd' );
+			$day_hit = (int) get_transient( $day_key );
+			if ( $day_hit >= $day_max ) {
+				return new WP_REST_Response(
+					array( 'ok' => false, 'message' => __( 'Live support has reached today\'s limit. Please try again tomorrow.', 'yazan' ), 'error' => array( 'code' => 'daily_limit' ) ),
+					429
+				);
+			}
+			set_transient( $day_key, $day_hit + 1, DAY_IN_SECONDS );
+		}
 
 		$name       = sanitize_text_field( (string) $request->get_param( 'name' ) );
 		$email      = sanitize_email( (string) $request->get_param( 'email' ) );
