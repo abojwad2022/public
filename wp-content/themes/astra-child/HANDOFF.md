@@ -247,6 +247,33 @@ Nothing outside `astra-child/` was touched. No products, no plugins, no parent t
   rows (kept cart items). Verified a fresh simulated cart auto-applies nothing and raises no errors. Both
   coupons still EXIST and work if entered manually — only the silent auto-discount was removed (right for a
   luxury store). If a coupon ever "sticks" again, check power-coupons auto-apply + clear session coupons.
+- **✅ DONE (v2.7.0) — accepted-payment marks (Apple Pay · Google Pay · PayPal · card · Link).**
+  New module `inc/payment-marks.php` is the single source of truth; `yazan_payment_strip()` in
+  inc/woocommerce.php is now a thin caller (it previously rendered plain TEXT pills while its docblock
+  claimed "pure inline SVG" — now true). Marks are inline monochrome SVG on `currentColor`, so zero
+  external requests still holds and both token sets read correctly.
+  • **The row is gateway-derived, not hardcoded** — `yazan_payment_marks_from_gateways()` maps live
+    gateway ids (`woocommerce_payments`, `ppcp-gateway`, `ppcp-credit-card-gateway`, …) plus the
+    WooPayments express sub-options to marks, so it can never advertise a method the store can't take.
+    Today that yields `[]` (only COD/bacs/cheque are enabled), so the filterable pre-launch set stands
+    in. Kill it for launch with `add_filter( 'yazan_payment_marks_prelaunch', '__return_false' )`;
+    verified that collapses the row to nothing. Final override: `yazan_payment_marks` (unknown slugs
+    dropped, canonical order enforced).
+  • **Placements:** product (`woocommerce_after_add_to_cart_form`), cart (`woocommerce_after_cart_totals`),
+    checkout (`woocommerce_review_order_after_submit`), and `[yazan_payment_marks]` for the Elementor/HFE
+    footer — shortcode ON PURPOSE, so the footer needs no second `_elementor_data` rewrite.
+  • ⚠️ **Checkout gotcha (cost real time):** the same rules that work everywhere else collapsed the row
+    into a VERTICAL STACK on the CartFlows Instant Checkout. Source order does NOT save you there —
+    `wc-blocks-style-css` loads AFTER `yazan_checkout_inline_css()`'s inline block. Fix: the layout
+    declarations in checkout.css (`display`/`flex-direction`/`align-items`/`flex-wrap`/`width`/`float`)
+    carry `!important`; colours deliberately do not. Verified by screenshot on the real checkout.
+  • ⚠️ **Before launch:** these are on-brand monochrome stand-ins. Apple/Google/PayPal/the card networks
+    each require their OWN official mark artwork under their brand guidelines — swap the SVG bodies in
+    `yazan_payment_mark_glyph()` (one function, one file).
+- **⚠️ REGRESSION spotted (not fixed — out of scope of the payment work): Google Fonts are back.**
+  `/product/…` serves 2 `fonts.googleapis.com` links (`elementor-gf-roboto`, `elementor-gf-robotoslab`).
+  The `elementor_google_font` option is now **unset** (it was set to `0`), so the zero-external-request
+  invariant recorded below no longer holds. Re-set the option and re-check `yazan_dequeue_foreign_fonts()`.
 - Cart drawer = style modern-cart, don't rebuild. Checkout = CartFlows.
 - **✅ DONE — GSAP hosted locally.** GSAP 3.12.5 + ScrollTrigger moved from cdnjs to
   `assets/js/vendor/` (inc/enqueue.php now enqueues `$js.'vendor/gsap.min.js'` / `ScrollTrigger.min.js`).
