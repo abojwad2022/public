@@ -925,8 +925,10 @@ body.yazan ul.products li.product .ast-shop-product-out-of-stock { display: none
 }
 .yazan.single-product .yz-atc-note__sep { color: var(--yz-hairline); }
 
-/* Muted payment / trust strip after the cart form. */
-.yazan.single-product .yz-pay {
+/* Muted payment / trust strip — product page, cart, checkout and the footer shortcode all share it,
+   so it is scoped to `.yazan` rather than to a single template. Marks are inline SVG on currentColor,
+   which keeps them legible in both the obsidian and burgundy token sets. */
+.yazan .yz-pay {
 	display: flex;
 	align-items: center;
 	flex-wrap: wrap;
@@ -936,19 +938,24 @@ body.yazan ul.products li.product .ast-shop-product-out-of-stock { display: none
 	border-top: 1px solid var(--yz-hairline);
 	color: var(--yz-muted);
 }
-.yazan.single-product .yz-pay__lock { display: inline-flex; color: var(--yz-silver); }
-.yazan.single-product .yz-pay__label {
+.yazan .yz-pay__lock { display: inline-flex; color: var(--yz-silver); }
+.yazan .yz-pay__label {
 	font-size: 12px;
 	letter-spacing: 0.06em;
 	text-transform: uppercase;
 }
-.yazan.single-product .yz-pay__marks {
+.yazan .yz-pay__marks {
 	display: flex;
+	align-items: center;
 	flex-wrap: wrap;
 	gap: 6px;
 	margin-inline-start: auto;
 }
-.yazan.single-product .yz-pay__mark {
+.yazan .yz-pay__mark {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	min-height: 24px;
 	padding: 4px 8px;
 	border: 1px solid var(--yz-hairline);
 	border-radius: 4px;
@@ -957,6 +964,33 @@ body.yazan ul.products li.product .ast-shop-product-out-of-stock { display: none
 	letter-spacing: 0.04em;
 	color: var(--yz-text-2);
 	white-space: nowrap;
+}
+.yazan .yz-pay__glyph {
+	display: block;
+	flex: none;
+	/* Optical balance: the drawn glyphs sit a touch heavier than the 10px caption beside them. */
+	opacity: 0.92;
+}
+/* The interlocking-circles mark is wider than it is tall — let it breathe less horizontally. */
+.yazan .yz-pay__mark--mastercard { padding-inline: 6px; }
+.yazan .yz-pay__name { line-height: 1; }
+
+/* Cart / checkout / footer variants: the row is a footnote there, not a panel edge. */
+.yazan .yz-pay--cart,
+.yazan .yz-pay--checkout {
+	margin-top: 14px;
+	padding-top: 14px;
+}
+.yazan .yz-pay--footer {
+	margin: 0;
+	padding-top: 0;
+	border-top: 0;
+	justify-content: center;
+}
+.yazan .yz-pay--footer .yz-pay__marks { margin-inline-start: 0; }
+
+@media (max-width: 600px) {
+	.yazan .yz-pay__marks { margin-inline-start: 0; }
 }
 
 /* Variation swatches styled as Comma-style bordered size/colour buttons (variation-swatches-woo). */
