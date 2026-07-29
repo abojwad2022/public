@@ -53,3 +53,5 @@
 2026-07-29T07:31:15+00:00 INFO Email "failed_order" for order #8328 sent CONTEXT: {"email_type":"failed_order","status":"sent","recipient":"admin","order":8328}
 2026-07-29T07:42:51+00:00 INFO Email "new_order" for order #8329 sent CONTEXT: {"email_type":"new_order","status":"sent","recipient":"admin","order":8329}
 2026-07-29T07:42:51+00:00 INFO Email "customer_processing_order" for order #8329 sent CONTEXT: {"email_type":"customer_processing_order","status":"sent","recipient":"admin","order":8329}
+2026-07-29T08:11:07+00:00 INFO Email "new_order" for order #8330 sent CONTEXT: {"email_type":"new_order","status":"sent","recipient":"admin","order":8330}
+2026-07-29T08:11:07+00:00 INFO Email "customer_processing_order" for order #8330 sent CONTEXT: {"email_type":"customer_processing_order","status":"sent","recipient":"admin","order":8330}

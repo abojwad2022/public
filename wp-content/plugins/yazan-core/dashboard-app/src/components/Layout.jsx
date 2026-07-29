@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
+import { useOrderAlerts } from '../context/OrderAlertsContext.jsx'
 import { boot } from '../api/client.js'
+import { isMuted, setMuted } from '../lib/chime.js'
 import { getTheme, toggleTheme } from '../lib/theme.js'
 import { Breadcrumbs, Dropdown, Icon, Tooltip } from './ui/index.js'
 import {
@@ -44,6 +46,84 @@ import {
   Wrench,
   X,
 } from './ui/icons.js'
+
+/**
+ * New-order bell.
+ *
+ * The toast is transient by nature — closed, or missed while the owner was on another tab. The
+ * bell is the durable record: it keeps the count until the orders are actually looked at, so an
+ * order can never be lost to a stray click. Right-click (or the caret) toggles the chime.
+ */
+function OrderBell() {
+  const { unread, clear } = useOrderAlerts()
+  const navigate = useNavigate()
+  const [muted, setMutedState] = useState(() => isMuted())
+
+  const label = unread > 0 ? `${unread} new ${unread === 1 ? 'order' : 'orders'}` : 'No new orders'
+
+  return (
+    <Dropdown
+      label="New orders"
+      trigger={({ toggle, open }) => (
+        <Tooltip label={label}>
+          <button
+            type="button"
+            onClick={() => {
+              if (unread > 0) {
+                clear()
+                navigate('/orders')
+              } else {
+                toggle()
+              }
+            }}
+            onContextMenu={(e) => {
+              e.preventDefault()
+              toggle()
+            }}
+            aria-haspopup="menu"
+            aria-expanded={open}
+            aria-label={label}
+            className="yz-btn yz-btn-quiet yz-btn-icon yz-btn-sm relative"
+          >
+            <Icon as={Bell} size={16} />
+            {unread > 0 ? (
+              <span
+                className="absolute -end-0.5 -top-0.5 grid min-w-4 place-items-center rounded-full bg-agate px-1 text-2xs font-medium text-white"
+                aria-hidden="true"
+              >
+                {unread > 99 ? '99+' : unread}
+              </span>
+            ) : null}
+          </button>
+        </Tooltip>
+      )}
+      items={[
+        {
+          key: 'count',
+          label,
+          icon: ShoppingCart,
+          disabled: true,
+        },
+        {
+          key: 'view',
+          label: 'View orders',
+          icon: Package,
+          onSelect: () => {
+            clear()
+            navigate('/orders')
+          },
+        },
+        {
+          key: 'mute',
+          label: muted ? 'Unmute chime' : 'Mute chime',
+          icon: Megaphone,
+          separatorBefore: true,
+          onSelect: () => setMutedState(setMuted(!muted)),
+        },
+      ]}
+    />
+  )
+}
 
 /**
  * Navigation is grouped by what the user is trying to DO, not by which feature

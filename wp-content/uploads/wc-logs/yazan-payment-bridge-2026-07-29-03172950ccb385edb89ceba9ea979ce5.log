@@ -166,3 +166,5 @@
 2026-07-29T07:31:15+00:00 INFO Integration run finished. {"event_id":166,"event_uuid":"164c0a38-ce32-4e44-bc15-5d42eab885a4","order_id":8328,"event_type":"payment_failed","integration_status":"skipped","source":"gateway"}
 2026-07-29T07:42:50+00:00 INFO Payment event recorded. {"event_id":167,"event_uuid":"12cdb0a6-b5ac-4a3c-81db-085080e5fbe1","order_id":8329,"event_type":"payment_completed","source":"gateway","gateway":"yz_test_google_pay"}
 2026-07-29T07:42:50+00:00 INFO Integration run finished. {"event_id":167,"event_uuid":"12cdb0a6-b5ac-4a3c-81db-085080e5fbe1","order_id":8329,"event_type":"payment_completed","integration_status":"skipped","source":"gateway"}
+2026-07-29T08:11:06+00:00 INFO Payment event recorded. {"event_id":169,"event_uuid":"7d868384-5bb6-4563-87c6-e9879a213a5a","order_id":8330,"event_type":"payment_completed","source":"gateway","gateway":"yz_test_google_pay"}
+2026-07-29T08:11:06+00:00 INFO Integration run finished. {"event_id":169,"event_uuid":"7d868384-5bb6-4563-87c6-e9879a213a5a","order_id":8330,"event_type":"payment_completed","integration_status":"skipped","source":"gateway"}
