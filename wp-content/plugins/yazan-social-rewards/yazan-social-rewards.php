@@ -3,7 +3,7 @@
  * Plugin Name:       YAZAN Social Rewards & Ambassador Platform
  * Plugin URI:        https://yazan.local
  * Description:       Independent, modular loyalty, ambassador, referral, and social-engagement platform for the YAZAN luxury store. Points, store-credit wallet, rewards, campaigns, achievements/tiers, referrals, UGC/social, anti-fraud, analytics and multi-channel notifications — all built on WooCommerce without touching core, WooCommerce, the theme, or other plugins.
- * Version:           1.12.5
+ * Version:           1.12.6
  * Requires at least: 6.5
  * Requires PHP:      8.1
  * Author:            Yazan
@@ -26,7 +26,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Constants
  * ---------------------------------------------------------------------- */
 
-define( 'YAZAN_REWARDS_VERSION', '1.12.5' );
+define( 'YAZAN_REWARDS_VERSION', '1.12.6' );
 define( 'YAZAN_REWARDS_FILE', __FILE__ );
 define( 'YAZAN_REWARDS_DIR', plugin_dir_path( __FILE__ ) );
 define( 'YAZAN_REWARDS_URL', plugin_dir_url( __FILE__ ) );

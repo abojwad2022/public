@@ -73,7 +73,7 @@ Neither `php` nor `wp` is on PATH; run plugin code via Local's PHP with the site
 (they return HTTP 403 if requested over the web). Example:
 
 ```bash
-PHP=".../Local/lightning-services/php-8.2.29+0/bin/win64/php.exe"
+PHP=".../Local/lightning-services/php-8.3.17+1/bin/win64/php.exe"
 INI=".../Local/run/<run-id>/conf/php/php.ini"     # re-derive <run-id> after each Local restart
 "$PHP" -c "$INI" -d opcache.enable_cli=0 -d zend.multibyte=0 \
   wp-content/plugins/yazan-social-rewards/scratchpad/verify-restapi.php

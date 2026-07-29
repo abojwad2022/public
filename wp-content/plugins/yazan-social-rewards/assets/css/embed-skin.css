@@ -641,3 +641,33 @@ body.yzrw-embed .yzrw-tablewrap > table.wp-list-table {
 	   rather than being squeezed. */
 	min-width: max-content;
 }
+
+/* On a narrow frame, FREEZE the first column (usually the row's name/identity) so
+   it stays put while the rest scroll — the "pinned column" pattern used by
+   Stripe / Shopify / Airtable, with a soft shadow marking the frozen edge. */
+@media ( max-width: 782px ) {
+	body.yzrw-embed .yzrw-tablewrap > table.yzrw-table,
+	body.yzrw-embed .yzrw-tablewrap > table.widefat,
+	body.yzrw-embed .yzrw-tablewrap > table.wp-list-table {
+		/* The table's own overflow:hidden would make IT the sticky scrollport and
+		   break the freeze — hand the scrollport back to the .yzrw-tablewrap. */
+		overflow: visible;
+	}
+	body.yzrw-embed .yzrw-tablewrap th:first-child,
+	body.yzrw-embed .yzrw-tablewrap td:first-child {
+		position: sticky;
+		inset-inline-start: 0;
+		z-index: 2;
+		/* Right-side depth cue: content scrolls beneath the frozen column. */
+		box-shadow: 8px 0 8px -8px rgba( 0, 0, 0, 0.45 );
+	}
+	body.yzrw-embed .yzrw-tablewrap thead th:first-child {
+		z-index: 3;
+		background: var(--yz-sunken);
+	}
+	body.yzrw-embed .yzrw-tablewrap tbody td:first-child,
+	body.yzrw-embed .yzrw-tablewrap tbody tr:hover td:first-child {
+		/* Opaque, so the scrolling columns don't bleed through the frozen cell. */
+		background: var(--yz-surface);
+	}
+}

@@ -35,7 +35,7 @@ The site runs under **Local by Flywheel**. Neither `php` nor `wp` (WP-CLI) is on
 is not on `localhost:3306`. Here is the working recipe.
 
 ### Paths & ports (⚠️ Local reassigns these on restart — re-derive if they stop working)
-- **PHP binary:** `C:/Users/Nebras/AppData/Roaming/Local/lightning-services/php-8.2.29+0/bin/win64/php.exe`
+- **PHP binary:** `C:/Users/Nebras/AppData/Roaming/Local/lightning-services/php-8.3.17+1/bin/win64/php.exe`
 - **Site php.ini (loads all extensions + sets the right DB port):**
   `C:/Users/Nebras/AppData/Roaming/Local/run/O2BtUtET-/conf/php/php.ini`
 - **Run dir for THIS site:** `.../Local/run/O2BtUtET-/` (find it by grepping the run dirs' nginx
@@ -51,7 +51,7 @@ so wp-config's `DB_HOST='localhost'` connects correctly. Without it you get
 `mysqli_connect(): undefined` or `MySQL server has gone away`.
 
 ```bash
-PHP="/c/Users/Nebras/AppData/Roaming/Local/lightning-services/php-8.2.29+0/bin/win64/php.exe"
+PHP="/c/Users/Nebras/AppData/Roaming/Local/lightning-services/php-8.3.17+1/bin/win64/php.exe"
 INI="/c/Users/Nebras/AppData/Roaming/Local/run/O2BtUtET-/conf/php/php.ini"
 # bootstrap.php: define('WP_USE_THEMES',false); require '.../app/public/wp-load.php'; ...WC APIs...
 "$PHP" -c "$INI" bootstrap.php 2>&1 | grep -v imagick   # (imagick warning is harmless)
@@ -97,7 +97,7 @@ pixels use this.
 
 ## 3. Project reality (verified against the DB/live site)
 
-- **WordPress 7.0.2 · WooCommerce 10.9.1 · PHP 8.2.29 · MySQL 8.4.0.**
+- **WordPress 7.0.2 · WooCommerce 10.9.1 · PHP 8.3.17 · MySQL 8.4.0.**
 - **Active theme:** `Yazan (Astra Child)` — already activated.
 - **44 published products already exist**, all `simple`, **all with featured image + gallery +
   attributes**, 5 on sale. Names like "The Sa'dah Carnelian", SKUs `YZ-DEMO-##`. They are good demo

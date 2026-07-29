@@ -29,3 +29,6 @@
 2026-07-29T06:07:00+00:00 INFO Email "admin_payment_gateway_enabled" sent CONTEXT: {"email_type":"admin_payment_gateway_enabled","status":"sent","recipient":"admin","WC_Gateway_Cheque":null}
 2026-07-29T06:07:13+00:00 INFO Email "admin_payment_gateway_enabled" sent CONTEXT: {"email_type":"admin_payment_gateway_enabled","status":"sent","recipient":"admin","WC_Gateway_BACS":null}
 2026-07-29T06:07:18+00:00 INFO Email "admin_payment_gateway_enabled" sent CONTEXT: {"email_type":"admin_payment_gateway_enabled","status":"sent","recipient":"admin","WC_Gateway_COD":null}
+2026-07-29T06:09:44+00:00 NOTICE Email "customer_partially_refunded_order" for order #8264 not sent: no_recipient CONTEXT: {"email_type":"customer_partially_refunded_order","status":"skipped","recipient":"guest","reason":"no_recipient","order":8264}
+2026-07-29T06:09:44+00:00 NOTICE Email "customer_partially_refunded_order" for order #8264 not sent: no_recipient CONTEXT: {"email_type":"customer_partially_refunded_order","status":"skipped","recipient":"guest","reason":"no_recipient","order":8264}
+2026-07-29T06:09:44+00:00 NOTICE Email "customer_refunded_order" for order #8264 not sent: no_recipient CONTEXT: {"email_type":"customer_refunded_order","status":"skipped","recipient":"guest","reason":"no_recipient","order":8264}
