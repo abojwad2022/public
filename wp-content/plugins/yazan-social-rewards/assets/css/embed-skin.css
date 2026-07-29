@@ -635,6 +635,13 @@ body.yzrw-embed .yzrw-user-search {
 		width: 100%;
 		max-width: 100%;
 	}
+	body.yzrw-embed table.yzrw-table,
+	body.yzrw-embed table.widefat,
+	body.yzrw-embed table.wp-list-table {
+		/* Share the frame width across columns and wrap — short words stay whole
+		   (only over-long tokens like emails break), so it never overflows. */
+		table-layout: fixed;
+	}
 	body.yzrw-embed .yzrw-table th,
 	body.yzrw-embed .yzrw-table td,
 	body.yzrw-embed .widefat th,
@@ -642,8 +649,7 @@ body.yzrw-embed .yzrw-user-search {
 	body.yzrw-embed .wp-list-table th,
 	body.yzrw-embed .wp-list-table td {
 		white-space: normal;
-		overflow-wrap: anywhere;
-		word-break: break-word;
+		overflow-wrap: break-word;
 		vertical-align: top;
 	}
 }
