@@ -179,11 +179,6 @@ final class DashboardEmbed implements Hookable {
 		// dashboard's native components.
 		wp_enqueue_style( 'yzrw-embed-skin', $this->assets->url( 'assets/css/embed-skin.css' ), $skin_deps, $this->assets->version( 'assets/css/embed-skin.css' ) );
 
-		// Shared embed enhancer for every screen (incl. the server-rendered integrity
-		// page): wraps wide tables in a horizontal-scroll container so they stay usable
-		// on a phone instead of overflowing the chrome-less frame.
-		wp_enqueue_script( 'yzrw-embed-enhance', $this->assets->url( 'assets/js/embed-enhance.js' ), array(), $this->assets->version( 'assets/js/embed-enhance.js' ), true );
-
 		// Analytics always renders on a light surface (its charts use a JS palette
 		// validated for light only), so paint its pre-skin ground light too.
 		$prepaint = ( 'analytics' === $key || 'light' === $theme ) ? '#f4f1ea' : '#1e2128';

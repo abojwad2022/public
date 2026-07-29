@@ -625,10 +625,9 @@ body.yzrw-embed .yzrw-user-search {
 }
 
 /* Wide tables scroll horizontally inside their own wrapper (added by
-   embed-enhance.js) instead of overflowing the card — so a many-column table
-   stays usable on a phone without clipping. Only the table scrolls; absolutely
-   positioned menus elsewhere on the card are unaffected. No effect on desktop
-   where the table fits (no overflow → no scrollbar). */
+   embed-enhance.js) instead of overflowing the card — only the table scrolls at its
+   natural width; the card, page and any absolutely-positioned menus are unaffected.
+   No effect on desktop where the table fits (no overflow → no scrollbar). */
 body.yzrw-embed .yzrw-tablewrap {
 	max-width: 100%;
 	overflow-x: auto;
@@ -638,7 +637,7 @@ body.yzrw-embed .yzrw-tablewrap {
 body.yzrw-embed .yzrw-tablewrap > table.yzrw-table,
 body.yzrw-embed .yzrw-tablewrap > table.widefat,
 body.yzrw-embed .yzrw-tablewrap > table.wp-list-table {
-	/* Don't let the rounded table be squeezed below its natural column widths —
-	   overflow (and scroll) instead. */
+	/* Keep the table at its natural column widths and let it overflow (scroll)
+	   rather than being squeezed. */
 	min-width: max-content;
 }

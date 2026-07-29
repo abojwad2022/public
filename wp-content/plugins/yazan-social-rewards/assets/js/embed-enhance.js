@@ -5,8 +5,9 @@
  * `/dashboard` iframe (which is `scrolling="no"`) a table with many columns would
  * overflow the card and get clipped. Rather than edit every `admin-*.js`, this shim
  * wraps each table in a `.yzrw-tablewrap` (overflow-x:auto) so ONLY the table scrolls
- * horizontally — the card, the page, and any absolutely-positioned menus (e.g. the
- * Points user typeahead) are untouched (wrapping the card instead would clip them).
+ * horizontally at its natural width — the card, the page, and any absolutely-
+ * positioned menus (e.g. the Points user typeahead) are untouched (wrapping the card
+ * itself would clip them).
  *
  * A MutationObserver re-wraps after a widget re-renders (they replace innerHTML on
  * every action). Wrapping is idempotent — an already-wrapped table is skipped — and
