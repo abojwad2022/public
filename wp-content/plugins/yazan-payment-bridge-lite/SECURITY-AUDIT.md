@@ -161,9 +161,12 @@ Log line format actually produced:
 1. **`src/` rather than `includes/`** — matches the project's documented modern architecture
    (`yazan-social-rewards`). All specified class names and sub-folders are preserved.
 2. ~~PHP 8.1 target, not 8.3~~ — **resolved.** The environment was upgraded to PHP 8.3.17, so the
-   plugin now declares `Requires PHP: 8.3` as the specification asked. The suite passes on it.
-   Remaining project-level mismatch: `yazan-core` and `yazan-social-rewards` still declare 8.1, and
-   `phpcs.xml` pins `testVersion 8.1-` — raise or scope that if phpcs is run against this plugin.
+   plugin declares `Requires PHP: 8.3` as the specification asked, and the suite passes on it.
+   The source itself uses no 8.2- or 8.3-only construct (no `readonly` class, typed class constant,
+   `#[\Override]`, `json_validate()`, or dynamic constant fetch — verified by scan, and all 35 files
+   parse on 8.2.27 as well). It is therefore linted cleanly by the repo's `phpcs.xml`, whose
+   `testVersion` stays at `8.1-` to keep protecting `yazan-core` and `yazan-social-rewards`, both of
+   which still declare `Requires PHP: 8.1`. The plugin has been added to `phpcs.xml`'s `<file>` list.
 3. **`integration_status` gains `skipped`** — the spec maps a missing dependency to `failed`. With no
    downstream YAZAN ownership or warranty system installed, *every* event would read `failed` and the
    dashboard would be uniformly red, hiding genuine faults. `skipped` means "no subscriber"; `failed`
