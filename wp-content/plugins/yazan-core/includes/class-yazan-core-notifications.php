@@ -214,10 +214,17 @@ class Yazan_Core_Notifications {
 			if ( ! $order instanceof WC_Order ) {
 				continue;
 			}
+			/*
+			 * wc_price() returns markup whose currency symbol is an HTML entity, so stripping the
+			 * tags alone leaves "&#36;770.00". This is consumed as JSON by a React client that
+			 * renders text, not HTML — decode so it reads "$770.00" rather than the raw entity.
+			 */
+			$total = wp_strip_all_tags( wc_price( $order->get_total(), array( 'currency' => $order->get_currency() ) ) );
+
 			$orders[] = array(
 				'id'       => (int) $order->get_id(),
 				'number'   => (string) $order->get_order_number(),
-				'total'    => wp_strip_all_tags( wc_price( $order->get_total(), array( 'currency' => $order->get_currency() ) ) ),
+				'total'    => html_entity_decode( $total, ENT_QUOTES, 'UTF-8' ),
 				'status'   => (string) $order->get_status(),
 				'customer' => trim( $order->get_formatted_billing_full_name() ),
 			);
