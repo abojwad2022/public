@@ -1,0 +1,88 @@
+/**
+ * YAZAN Payment Bridge — admin styles.
+ * Loaded only on this plugin's screens.
+ */
+
+.yazan-pb-cards {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 16px;
+	margin: 20px 0 24px;
+}
+
+.yazan-pb-card {
+	background: #fff;
+	border: 1px solid #dcdcde;
+	border-inline-start-width: 4px;
+	border-radius: 4px;
+	padding: 16px 20px;
+	min-width: 170px;
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+
+.yazan-pb-card--neutral { border-inline-start-color: #2c3338; }
+.yazan-pb-card--good    { border-inline-start-color: #00854a; }
+.yazan-pb-card--warn    { border-inline-start-color: #b26200; }
+.yazan-pb-card--bad     { border-inline-start-color: #b32d2e; }
+
+.yazan-pb-card__value {
+	font-size: 26px;
+	font-weight: 600;
+	line-height: 1.2;
+}
+
+.yazan-pb-card__label {
+	color: #50575e;
+	font-size: 12px;
+	text-transform: uppercase;
+	letter-spacing: .04em;
+}
+
+.yazan-pb-filters {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	align-items: center;
+	margin: 12px 0;
+}
+
+.yazan-pb-pill {
+	display: inline-block;
+	padding: 2px 8px;
+	border-radius: 10px;
+	font-size: 11px;
+	line-height: 1.7;
+	background: #f0f0f1;
+	color: #2c3338;
+	white-space: nowrap;
+}
+
+.yazan-pb-pill--completed { background: #edfaef; color: #00543a; }
+.yazan-pb-pill--failed    { background: #fcf0f1; color: #8a2424; }
+.yazan-pb-pill--review    { background: #fcf9e8; color: #7a5000; }
+.yazan-pb-pill--pending,
+.yazan-pb-pill--processing { background: #f0f6fc; color: #1d4b73; }
+.yazan-pb-pill--skipped   { background: #f0f0f1; color: #646970; }
+
+.yazan-pb-pill--manual  { background: #fcf9e8; color: #7a5000; }
+.yazan-pb-pill--system  { background: #f0f6fc; color: #1d4b73; }
+.yazan-pb-pill--gateway { background: #f0f0f1; color: #50575e; }
+
+.yazan-pb-uuid {
+	font-size: 10px;
+	color: #787c82;
+	background: none;
+	padding: 0;
+}
+
+.yazan-pb-error {
+	color: #8a2424;
+	font-size: 11px;
+	display: inline-block;
+	margin-top: 4px;
+	word-break: break-word;
+}
+
+.yazan-pb-table td { vertical-align: top; }

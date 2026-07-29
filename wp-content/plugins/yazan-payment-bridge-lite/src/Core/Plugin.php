@@ -10,6 +10,8 @@ declare( strict_types=1 );
 namespace Yazan\PaymentBridge\Core;
 
 use Yazan\PaymentBridge\Admin\AdminMenu;
+use Yazan\PaymentBridge\Admin\DashboardPage;
+use Yazan\PaymentBridge\Admin\EventsPage;
 use Yazan\PaymentBridge\Admin\RetryController;
 use Yazan\PaymentBridge\Admin\SettingsPage;
 use Yazan\PaymentBridge\Database\Database;
@@ -168,16 +170,27 @@ final class Plugin {
 		);
 
 		$c->singleton(
-			AdminMenu::class,
-			static fn ( Container $c ) => new AdminMenu(
-				$c->get( EventRepository::class ),
-				$c->get( Settings::class )
-			)
+			DashboardPage::class,
+			static fn ( Container $c ) => new DashboardPage( $c->get( EventRepository::class ) )
+		);
+
+		$c->singleton(
+			EventsPage::class,
+			static fn ( Container $c ) => new EventsPage( $c->get( EventRepository::class ) )
 		);
 
 		$c->singleton(
 			SettingsPage::class,
 			static fn ( Container $c ) => new SettingsPage( $c->get( Settings::class ) )
+		);
+
+		$c->singleton(
+			AdminMenu::class,
+			static fn ( Container $c ) => new AdminMenu(
+				$c->get( DashboardPage::class ),
+				$c->get( EventsPage::class ),
+				$c->get( SettingsPage::class )
+			)
 		);
 
 		$c->singleton(
@@ -222,15 +235,11 @@ final class Plugin {
 
 		Loader::register( $c->get( PaymentListener::class ) );
 
+		// admin-post.php sets is_admin() true, so the retry handler is reachable
+		// from inside this guard.
 		if ( is_admin() ) {
 			Loader::register( $c->get( AdminMenu::class ) );
 			Loader::register( $c->get( SettingsPage::class ) );
-		}
-
-		// admin-post handlers must register outside is_admin() guards only when
-		// they can be reached elsewhere; admin-post.php sets is_admin() true, so
-		// this is the right place.
-		if ( is_admin() ) {
 			Loader::register( $c->get( RetryController::class ) );
 		}
 
@@ -252,7 +261,7 @@ final class Plugin {
 			return false;
 		}
 
-		$version = defined( 'WC_VERSION' ) ? WC_VERSION : ( WC()->version ?? '0' );
+		$version = defined( 'WC_VERSION' ) ? constant( 'WC_VERSION' ) : ( WC()->version ?? '0' );
 
 		return version_compare( (string) $version, self::MIN_WC_VERSION, '>=' );
 	}
