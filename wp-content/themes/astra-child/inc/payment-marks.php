@@ -113,6 +113,36 @@ function yazan_payment_mark_glyph( $slug ) {
 }
 
 /**
+ * Which marks each known gateway id stands for.
+ *
+ * Filterable so a gateway this theme has never heard of can register itself rather than needing a
+ * change here — `yazan-test-gateways` uses exactly that to keep the row derived while developing.
+ *
+ * @return array<string,string[]> gateway id => mark slugs.
+ */
+function yazan_payment_gateway_mark_map() {
+	$card = array( 'visa', 'mastercard', 'amex' );
+
+	$map = array(
+		'woocommerce_payments'             => $card,   // WooPayments — cards.
+		'ppcp-credit-card-gateway'         => $card,   // PayPal Advanced Card Processing.
+		'ppcp-card-button-gateway'         => $card,
+		'ppcp-gateway'                     => array( 'paypal' ),
+		'paypal'                           => array( 'paypal' ), // Legacy PayPal Standard.
+		'woocommerce_payments_apple_pay'   => array( 'apple-pay' ),
+		'woocommerce_payments_google_pay'  => array( 'google-pay' ),
+		'woocommerce_payments_link'        => array( 'link' ),
+	);
+
+	/**
+	 * Filter the gateway-id → payment-mark map.
+	 *
+	 * @param array<string,string[]> $map Gateway id => mark slugs.
+	 */
+	return (array) apply_filters( 'yazan_payment_gateway_marks', $map );
+}
+
+/**
  * Marks derived from the gateways WooCommerce is actually offering right now.
  *
  * Returns an empty array when no electronic gateway is live — which is the honest answer, and what
@@ -130,33 +160,12 @@ function yazan_payment_marks_from_gateways() {
 		return array();
 	}
 
-	$card  = array( 'visa', 'mastercard', 'amex' );
+	$map   = yazan_payment_gateway_mark_map();
 	$marks = array();
 
 	foreach ( array_keys( $available ) as $id ) {
-		switch ( $id ) {
-			case 'woocommerce_payments':          // WooPayments — cards.
-			case 'ppcp-credit-card-gateway':      // PayPal Advanced Card Processing.
-			case 'ppcp-card-button-gateway':
-				$marks = array_merge( $marks, $card );
-				break;
-
-			case 'ppcp-gateway':                  // PayPal Payments.
-			case 'paypal':                        // Legacy PayPal Standard.
-				$marks[] = 'paypal';
-				break;
-
-			case 'woocommerce_payments_apple_pay':
-				$marks[] = 'apple-pay';
-				break;
-
-			case 'woocommerce_payments_google_pay':
-				$marks[] = 'google-pay';
-				break;
-
-			case 'woocommerce_payments_link':
-				$marks[] = 'link';
-				break;
+		if ( isset( $map[ $id ] ) ) {
+			$marks = array_merge( $marks, (array) $map[ $id ] );
 		}
 	}
 
