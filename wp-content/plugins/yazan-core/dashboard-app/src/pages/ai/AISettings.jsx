@@ -66,6 +66,8 @@ export default function AISettings() {
     setSettings((s) => ({ ...s, ai_core: { ...(s.ai_core || {}), [key]: value } }))
   const patchSupport = (key, value) =>
     setSettings((s) => ({ ...s, support: { ...(s.support || {}), [key]: value } }))
+  const patchCustom = (key, value) =>
+    setSettings((s) => ({ ...s, custom_provider: { ...(s.custom_provider || {}), [key]: value } }))
   const patchTaskModel = (task, provider, value) =>
     setSettings((s) => ({
       ...s,
@@ -342,6 +344,45 @@ export default function AISettings() {
           </div>
         </Card>
       )}
+
+      {/* Bring-your-own provider — add ANY other model without code */}
+      <Card title="Add another model (custom provider)" className="mt-5">
+        <p className="text-xs text-faint mb-4">
+          Plug in any service that speaks the OpenAI chat API — DeepSeek, Mistral, Together, a self-hosted
+          gateway, or a new vendor. Set the endpoint here, paste its key in the <b>Custom</b> card above, then
+          type the model id in the <b>Models per provider</b> table below. HTTPS required (except localhost).
+        </p>
+        <div className="grid sm:grid-cols-2 gap-4">
+          <Field label="Display name" help="Shown in the provider list, e.g. “DeepSeek”.">
+            <Input
+              value={settings.custom_provider?.label || ''}
+              onChange={(e) => patchCustom('label', e.target.value)}
+              placeholder="DeepSeek"
+            />
+          </Field>
+          <Field label="API base URL" help="Must end at /v1 (e.g. https://api.deepseek.com/v1).">
+            <Input
+              value={settings.custom_provider?.base_url || ''}
+              onChange={(e) => patchCustom('base_url', e.target.value)}
+              placeholder="https://api.deepseek.com/v1"
+            />
+          </Field>
+          <Field label="Accepts images (vision)">
+            <Select
+              value={settings.custom_provider?.vision ? '1' : '0'}
+              onChange={(e) => patchCustom('vision', e.target.value === '1')}
+            >
+              <option value="0">No — text only</option>
+              <option value="1">Yes — the model can read images</option>
+            </Select>
+          </Field>
+        </div>
+        <div className="mt-4">
+          <Button variant="primary" onClick={save} disabled={saving}>
+            {saving ? 'Saving…' : 'Save settings'}
+          </Button>
+        </div>
+      </Card>
 
       <AICoreCard data={data} settings={settings} patchCore={patchCore} onSave={save} saving={saving} toast={toast} onReload={load} />
 

@@ -250,6 +250,30 @@ class Yazan_AI_Settings {
 			}
 			$config['ai_core'] = $ac;
 		}
+		if ( array_key_exists( 'custom_provider', $incoming ) && is_array( $incoming['custom_provider'] ) ) {
+			$cp = $config['custom_provider'];
+			if ( array_key_exists( 'label', $incoming['custom_provider'] ) ) {
+				$cp['label'] = substr( sanitize_text_field( (string) $incoming['custom_provider']['label'] ), 0, 60 );
+			}
+			if ( array_key_exists( 'vision', $incoming['custom_provider'] ) ) {
+				$cp['vision'] = (bool) wc_string_to_bool( $incoming['custom_provider']['vision'] );
+			}
+			if ( array_key_exists( 'base_url', $incoming['custom_provider'] ) ) {
+				$raw_url = esc_url_raw( trim( (string) $incoming['custom_provider']['base_url'] ) );
+				if ( '' === $raw_url ) {
+					$cp['base_url'] = '';
+				} else {
+					// The API key is sent to this endpoint, so cleartext http is only safe on loopback.
+					$host        = strtolower( (string) wp_parse_url( $raw_url, PHP_URL_HOST ) );
+					$scheme      = strtolower( (string) wp_parse_url( $raw_url, PHP_URL_SCHEME ) );
+					$is_loopback = in_array( $host, array( '127.0.0.1', 'localhost', '::1' ), true );
+					if ( 'https' === $scheme || ( 'http' === $scheme && $is_loopback ) ) {
+						$cp['base_url'] = untrailingslashit( $raw_url );
+					}
+				}
+			}
+			$config['custom_provider'] = $cp;
+		}
 		if ( array_key_exists( 'support', $incoming ) && is_array( $incoming['support'] ) ) {
 			$sp = $config['support'];
 			if ( array_key_exists( 'enabled', $incoming['support'] ) ) {
