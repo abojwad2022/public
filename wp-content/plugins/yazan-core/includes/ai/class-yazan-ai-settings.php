@@ -69,6 +69,13 @@ class Yazan_AI_Settings {
 				'enabled' => false,
 				'url'     => '',
 			),
+			// Bring-your-own OpenAI-compatible endpoint, so ANY other model/service can be added without
+			// code (DeepSeek, Mistral, Together, a self-hosted gateway…). Model ids come from `models`.
+			'custom_provider'  => array(
+				'label'    => '',
+				'base_url' => '',
+				'vision'   => false, // does the owner's model accept images?
+			),
 			// Human-support handoff for the storefront concierge. When enabled, a "talk to a person"
 			// action emails the transcript to the owner, POSTs it to a CRM webhook (if set), and/or opens
 			// WhatsApp. All optional — empty channels are simply skipped.
@@ -107,6 +114,12 @@ class Yazan_AI_Settings {
 		$config['ai_core'] = array_merge(
 			self::defaults()['ai_core'],
 			isset( $stored['ai_core'] ) && is_array( $stored['ai_core'] ) ? $stored['ai_core'] : array()
+		);
+
+		// Custom-provider config merges over defaults too.
+		$config['custom_provider'] = array_merge(
+			self::defaults()['custom_provider'],
+			isset( $stored['custom_provider'] ) && is_array( $stored['custom_provider'] ) ? $stored['custom_provider'] : array()
 		);
 
 		// Support-handoff config merges over defaults so a partial save keeps the other keys.
