@@ -47,6 +47,8 @@ class Yazan_AI_Secrets {
 			'gemini'     => 'YAZAN_AI_GEMINI_KEY',
 			'groq'       => 'YAZAN_AI_GROQ_KEY',
 			'moonshot'   => 'YAZAN_AI_MOONSHOT_KEY',
+			// Bring-your-own OpenAI-compatible endpoint (any other model/service).
+			'custom'     => 'YAZAN_AI_CUSTOM_KEY',
 			// Not an LLM provider: the shared secret for the external AI Core service (Phase 3). Stored
 			// write-only like a key, overridable by the YAZAN_AI_CORE_SECRET constant.
 			'core'       => 'YAZAN_AI_CORE_SECRET',
