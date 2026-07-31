@@ -25,7 +25,7 @@ class Yazan_AI_Settings {
 	const OPTION = 'yazan_ai_settings';
 
 	/** Known provider ids, in the default fallback order. */
-	const PROVIDERS = array( 'openrouter', 'openai', 'claude', 'gemini', 'groq' );
+	const PROVIDERS = array( 'openrouter', 'openai', 'claude', 'gemini', 'groq', 'moonshot', 'custom' );
 
 	/**
 	 * Defaults. OpenRouter is the primary per the project decision (one key, many models).
