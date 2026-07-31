@@ -93,6 +93,18 @@ class Yazan_AI_Models {
 				'vision' => 'meta-llama/llama-4-scout-17b-16e-instruct',
 				'image'  => '', // Groq does not generate images.
 			),
+			// Moonshot AI (Kimi) — strong bilingual AR/EN writer with long context.
+			'moonshot'   => array(
+				'text'   => 'kimi-k2-0905-preview',
+				'vision' => 'moonshot-v1-8k-vision-preview',
+				'image'  => '', // Kimi does not generate images.
+			),
+			// Bring-your-own OpenAI-compatible endpoint: the owner sets the model ids in AI Settings.
+			'custom'     => array(
+				'text'   => '',
+				'vision' => '',
+				'image'  => '',
+			),
 		);
 	}
 
@@ -163,6 +175,8 @@ class Yazan_AI_Models {
 			'llama-4'            => array( 0.11, 0.34 ),
 			'llama-3.3-70b'      => array( 0.59, 0.79 ),
 			'llama-3.2-11b'      => array( 0.18, 0.18 ),
+			'kimi-k2'            => array( 0.60, 2.50 ),
+			'moonshot-v1'        => array( 0.20, 2.00 ),
 		);
 	}
 
