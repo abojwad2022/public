@@ -37,6 +37,10 @@ class Yazan_AI_Router {
 				return new Yazan_AI_Provider_Gemini();
 			case 'groq':
 				return new Yazan_AI_Provider_Groq();
+			case 'moonshot':
+				return new Yazan_AI_Provider_Moonshot();
+			case 'custom':
+				return new Yazan_AI_Provider_Custom();
 			default:
 				return null;
 		}
