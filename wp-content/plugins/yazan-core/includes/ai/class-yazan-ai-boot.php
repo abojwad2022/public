@@ -48,6 +48,8 @@ class Yazan_AI_Boot {
 		require_once $ai . 'providers/class-yazan-ai-provider-groq.php';
 		require_once $ai . 'providers/class-yazan-ai-provider-claude.php';
 		require_once $ai . 'providers/class-yazan-ai-provider-gemini.php';
+		require_once $ai . 'providers/class-yazan-ai-provider-moonshot.php';
+		require_once $ai . 'providers/class-yazan-ai-provider-custom.php';
 
 		// Routing + gateway + remote AI Core client (Phase 3 extraction seam).
 		require_once $ai . 'class-yazan-ai-router.php';
