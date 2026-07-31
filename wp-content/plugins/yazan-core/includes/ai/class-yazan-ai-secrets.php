@@ -46,6 +46,7 @@ class Yazan_AI_Secrets {
 			'claude'     => 'YAZAN_AI_CLAUDE_KEY',
 			'gemini'     => 'YAZAN_AI_GEMINI_KEY',
 			'groq'       => 'YAZAN_AI_GROQ_KEY',
+			'moonshot'   => 'YAZAN_AI_MOONSHOT_KEY',
 			// Not an LLM provider: the shared secret for the external AI Core service (Phase 3). Stored
 			// write-only like a key, overridable by the YAZAN_AI_CORE_SECRET constant.
 			'core'       => 'YAZAN_AI_CORE_SECRET',
