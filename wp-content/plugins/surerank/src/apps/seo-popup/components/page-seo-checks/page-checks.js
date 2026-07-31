@@ -11,7 +11,10 @@ import {
 	helpMeFixRedirect,
 } from '@/global/constants';
 import { STORE_NAME } from '@Store/constants';
-import { isUserContext } from '@SeoPopup/components/page-seo-checks/analyzer/utils/page-builder';
+import {
+	isUserContext,
+	isBlockEditor,
+} from '@SeoPopup/components/page-seo-checks/analyzer/utils/page-builder';
 
 const PageChecks = ( {
 	pageSeoChecks = {},
@@ -85,6 +88,20 @@ const PageChecks = ( {
 			return { show: false };
 		}
 
+		// Image alt: the AI grid handles the block editor (its own per-image
+		// buttons), so hide the generic link there. Everywhere else (Classic,
+		// page builders, server-sourced) we can't auto-fix, so show Help Me Fix.
+		if ( checkId === 'image_alt_text' ) {
+			if ( isBlockEditor() ) {
+				return { show: false };
+			}
+			return {
+				show: true,
+				locked: ! IS_HELP_ME_FIX_PRO_ACTIVE,
+				buttonLabel: __( 'Help Me Fix', 'surerank' ),
+			};
+		}
+
 		const isFixButton = isFixItForMeButton( checkId );
 		const locked = isFixButton
 			? PRO_PAGE_CHECKS_CONTENT_GENERATION_MAPPING.includes( checkId )
@@ -134,6 +151,7 @@ const PageChecks = ( {
 							label={ __( 'Critical', 'surerank' ) }
 							title={ check.title }
 							data={ check?.data }
+							checkId={ check.id }
 							showImages={ check?.showImages }
 							onIgnore={ handleIgnoreCheck( check.id ) }
 							showIgnoreButton={ true }
@@ -149,6 +167,7 @@ const PageChecks = ( {
 							label={ __( 'Warning', 'surerank' ) }
 							title={ check.title }
 							data={ check?.data }
+							checkId={ check.id }
 							showImages={ check?.showImages }
 							onIgnore={ handleIgnoreCheck( check.id ) }
 							onFix={ handleFixCheck( check.id ) }
@@ -163,6 +182,7 @@ const PageChecks = ( {
 							label={ __( 'Suggestion', 'surerank' ) }
 							title={ check.title }
 							data={ check?.data }
+							checkId={ check.id }
 							showImages={ check?.showImages }
 							onIgnore={ handleIgnoreCheck( check.id ) }
 							showIgnoreButton={ true }
@@ -196,6 +216,7 @@ const PageChecks = ( {
 							variant="green"
 							label={ __( 'Passed', 'surerank' ) }
 							title={ check.title }
+							checkId={ check.id }
 							onIgnore={ () => onIgnore( check.id ) }
 							{ ...getBrokenLinkProps( check ) }
 						/>

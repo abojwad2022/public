@@ -12,6 +12,7 @@ namespace SureRank\Inc\Schema;
 
 use SureRank\Inc\Functions\Helper;
 use SureRank\Inc\Schema\Types\Product;
+use SureRank\Inc\ThirdPartyIntegrations\Fluentcart;
 use SureRank\Inc\Traits\Get_Instance;
 
 /**
@@ -29,7 +30,7 @@ class Products {
 	 */
 	public function __construct() {
 
-		if ( ! Helper::woocommerce_enabled() && ! Helper::sc_status() ) {
+		if ( ! Helper::woocommerce_enabled() && ! Helper::sc_status() && ! Helper::fluentcart_enabled() ) {
 			return;
 		}
 
@@ -57,7 +58,7 @@ class Products {
 	 * @return array<string, mixed> Modified schema types.
 	 */
 	public function add_product_schema_type( $schema_types ) {
-		if ( Helper::woocommerce_enabled() || Helper::sc_status() ) {
+		if ( Helper::woocommerce_enabled() || Helper::sc_status() || Helper::fluentcart_enabled() ) {
 			$schema_types['Product'] = Product::class;
 		}
 
@@ -110,6 +111,21 @@ class Products {
 				 * Remove WooCommerce schema from SureCart product
 				 */
 				add_filter( 'sc_display_product_json_ld_schema', '__return_false', 10 );
+				break;
+
+			case 'fluent-products':
+				/**
+				 * Get product data from FluentCart.
+				 */
+				if ( ! Helper::fluentcart_enabled() ) {
+					return $data;
+				}
+
+				$product_data = $this->get_fluentcart_product_data( $post );
+
+				if ( empty( $product_data ) ) {
+					return $data;
+				}
 				break;
 
 			default:
@@ -182,11 +198,19 @@ class Products {
 	 */
 	public function add_product_schema( $schemas ) {
 
+		$rules = [];
+
 		if ( Helper::woocommerce_enabled() ) {
-			$rule = 'product|all';
-		} elseif ( Helper::sc_status() ) {
-			$rule = 'sc_product|all';
-		} else {
+			$rules[] = 'product|all';
+		}
+		if ( Helper::sc_status() ) {
+			$rules[] = 'sc_product|all';
+		}
+		if ( Helper::fluentcart_enabled() ) {
+			$rules[] = 'fluent-products|all';
+		}
+
+		if ( empty( $rules ) ) {
 			return $schemas;
 		}
 
@@ -194,9 +218,7 @@ class Products {
 			'title'   => 'Product',
 			'type'    => 'Product',
 			'show_on' => [
-				'rules'        => [
-					$rule,
-				],
+				'rules'        => $rules,
 				'specific'     => [],
 				'specificText' => [],
 			],
@@ -656,5 +678,80 @@ class Products {
 		}
 
 		return $product_data;
+	}
+
+	/**
+	 * Get detailed product data for schema from FluentCart.
+	 *
+	 * FluentCart does not store ratings/reviews, so those fields are left empty
+	 * and omitted from the rendered schema.
+	 *
+	 * @since 1.9.2
+	 * @param \WP_Post $post FluentCart product post.
+	 * @return array<string, mixed> Product data for schema, empty if unavailable.
+	 */
+	private function get_fluentcart_product_data( \WP_Post $post ) {
+		$data = Fluentcart::get_product_data( $post->ID );
+
+		if ( empty( $data ) ) {
+			return [];
+		}
+
+		$availability = 'https://schema.org/' . ( ! empty( $data['in_stock'] ) ? 'InStock' : 'OutOfStock' );
+		$image        = $this->get_post_thumbnail_data( $post->ID );
+		$description  = $post->post_excerpt ? $post->post_excerpt : wp_strip_all_tags( $post->post_content );
+
+		return [
+			'price'             => $data['price'],
+			'price_with_tax'    => $data['price'],
+			'low_price'         => $data['low_price'],
+			'high_price'        => $data['high_price'],
+			'offer_count'       => ! empty( $data['is_variable'] ) ? $data['offer_count'] : '',
+			'sale_from'         => '',
+			'sale_to'           => '',
+			'sku'               => $data['sku'],
+			'stock'             => $availability,
+			'currency'          => strtoupper( (string) $data['currency'] ),
+			'rating'            => '',
+			'review_count'      => '',
+			'image'             => $image['url'],
+			'image_width'       => $image['width'],
+			'image_height'      => $image['height'],
+			'description'       => $description,
+			'short_description' => $post->post_excerpt,
+		];
+	}
+
+	/**
+	 * Get featured-image URL and dimensions for a post.
+	 *
+	 * @since 1.9.2
+	 * @param int $post_id Post ID.
+	 * @return array{url: string, width: string|int, height: string|int}
+	 */
+	private function get_post_thumbnail_data( $post_id ) {
+		$empty = [
+			'url'    => '',
+			'width'  => '',
+			'height' => '',
+		];
+
+		$thumbnail_id = get_post_thumbnail_id( $post_id );
+
+		if ( ! $thumbnail_id ) {
+			return $empty;
+		}
+
+		$src = wp_get_attachment_image_src( $thumbnail_id, 'full' );
+
+		if ( ! is_array( $src ) ) {
+			return $empty;
+		}
+
+		return [
+			'url'    => $src[0],
+			'width'  => $src[1],
+			'height' => $src[2],
+		];
 	}
 }

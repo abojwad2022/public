@@ -39,7 +39,29 @@ class Utils {
 	 * @since 1.0.0
 	 */
 	public static function get_default_schemas() {
-		return self::build_final_schemas( apply_filters( 'surerank_default_schemas', self::build_schemas_from_types( self::get_default_schema_types() ) ) );
+		/*
+		 * Guard against re-entrancy. The surerank_schema_types and
+		 * surerank_default_schemas filters call Helper::woocommerce_enabled(),
+		 * which reads Settings::get(). When the settings cache is cold, that call
+		 * rebuilds the global defaults — which calls this method again, recursing
+		 * until memory is exhausted (only on sites with WooCommerce active, since
+		 * woocommerce_enabled() short-circuits before Settings::get() otherwise).
+		 *
+		 * While a build is already in progress, return an empty set: the
+		 * re-entrant caller only needs a scalar setting, not the schemas, and the
+		 * outer (first) call still produces the complete, filtered schema list.
+		 */
+		static $building = false;
+		if ( $building ) {
+			return [];
+		}
+
+		$building = true;
+		try {
+			return self::build_final_schemas( apply_filters( 'surerank_default_schemas', self::build_schemas_from_types( self::get_default_schema_types() ) ) );
+		} finally {
+			$building = false;
+		}
 	}
 
 	/**

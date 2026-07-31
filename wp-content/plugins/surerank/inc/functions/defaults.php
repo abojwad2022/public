@@ -179,6 +179,7 @@ class Defaults {
 	private $global_integrations_defaults = [
 		'enable_woocommerce_integration' => true,
 		'enable_angie_integration'       => true,
+		'enable_fluentcart_integration'  => true,
 	];
 
 	/**
@@ -529,6 +530,7 @@ class Defaults {
 		return [
 			'enable_woocommerce_integration' => $this->sanitize_boolean_default( $defaults['enable_woocommerce_integration'] ?? $this->global_integrations_defaults['enable_woocommerce_integration'] ),
 			'enable_angie_integration'       => $this->sanitize_boolean_default( $defaults['enable_angie_integration'] ?? $this->global_integrations_defaults['enable_angie_integration'] ),
+			'enable_fluentcart_integration'  => $this->sanitize_boolean_default( $defaults['enable_fluentcart_integration'] ?? $this->global_integrations_defaults['enable_fluentcart_integration'] ),
 		];
 	}
 

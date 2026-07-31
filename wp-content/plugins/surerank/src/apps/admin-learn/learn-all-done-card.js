@@ -1,8 +1,19 @@
 import { Button, Container, Title } from '@bsf/force-ui';
 import { __ } from '@wordpress/i18n';
-import { CheckCircle2 } from 'lucide-react';
+import { getSurerankUtmUrl } from '@/global/utils/utm';
 
 const LearnAllDoneCard = () => {
+	const docsFallbackUrl = getSurerankUtmUrl(
+		'https://surerank.com/docs/',
+		'admin_learn',
+		'all_done_docs'
+	);
+	const supportFallbackUrl = getSurerankUtmUrl(
+		'https://surerank.com/contact/',
+		'admin_learn',
+		'all_done_support'
+	);
+
 	return (
 		<Container
 			direction="column"
@@ -11,10 +22,9 @@ const LearnAllDoneCard = () => {
 			<Title
 				className="[&_h2]:text-text-primary"
 				title={ __( "You're all set!", 'surerank' ) }
-				icon={ <CheckCircle2 className="size-4 text-brand-800" /> }
 				size="sm"
 				description={ __(
-					'You’ve completed every recommended setup step. Visit the docs or reach out if you’d like to go deeper.',
+					"You've completed every recommended setup step. Visit the docs or reach out if you would like to go deeper.",
 					'surerank'
 				) }
 			/>
@@ -25,7 +35,7 @@ const LearnAllDoneCard = () => {
 					onClick={ () =>
 						window.open(
 							window?.surerank_globals?.help_link ||
-								'https://surerank.com/docs/',
+								docsFallbackUrl,
 							'_blank',
 							'noopener,noreferrer'
 						)
@@ -39,7 +49,7 @@ const LearnAllDoneCard = () => {
 					onClick={ () =>
 						window.open(
 							window?.surerank_globals?.support_link ||
-								'https://surerank.com/contact/',
+								supportFallbackUrl,
 							'_blank',
 							'noopener,noreferrer'
 						)

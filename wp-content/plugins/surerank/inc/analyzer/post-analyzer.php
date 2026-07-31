@@ -21,6 +21,7 @@ use SureRank\Inc\Functions\Settings;
 use SureRank\Inc\Functions\Update;
 use SureRank\Inc\Traits\Get_Instance;
 use SureRank\Inc\Traits\Logger;
+use WP_Http;
 use WP_Post;
 
 /**
@@ -307,18 +308,25 @@ class PostAnalyzer {
 	 */
 	private function analyze_images( $images ): array {
 		$analysis = [
-			'total'              => $images->length,
+			'total'              => 0,
 			'missing_alt'        => 0,
 			'missing_alt_images' => [],
 		];
 
 		foreach ( $images as $img ) {
+			$src = trim( $this->get_image_src( $img ) );
+
+			// Images with no source can't render a preview and shouldn't be
+			// flagged for missing alt text, so skip them entirely.
+			if ( '' === $src ) {
+				continue;
+			}
+
+			$analysis['total']++;
+
 			if ( $this->is_missing_alt_text( $img ) ) {
 				$analysis['missing_alt']++;
-				$src = $this->get_image_src( $img );
-				if ( $src ) {
-					$analysis['missing_alt_images'][] = $src;
-				}
+				$analysis['missing_alt_images'][] = $src;
 			}
 		}
 
@@ -408,7 +416,7 @@ class PostAnalyzer {
 		$base_message = __( 'One or more images are missing alt text attributes.', 'surerank' );
 
 		if ( Image_Seo::get_instance()->status() ) {
-			return $base_message . ' ' . __( 'But don\'t worry, we will add them automatically for you.', 'surerank' );
+			return $base_message . ' ' . __( 'But don\'t worry, we will add them automatically for you on the front end (using the file name). For more descriptive alt text, generate it with AI.', 'surerank' );
 		}
 
 		return $base_message . ' ' . __( 'You can add them manually or turn on auto-set image title and alt in the settings.', 'surerank' );
@@ -569,14 +577,11 @@ class PostAnalyzer {
 			return $empty_message;
 		}
 
-		$urls = [];
-		foreach ( $links as $link ) {
-			if ( $link instanceof DOMElement ) {
-				if ( ! in_array( $link->getAttribute( 'href' ), $urls ) ) {
-					$urls[] = $link->getAttribute( 'href' );
-				}
-			}
-		}
+		// Reconcile against the same normalized (absolute) URLs that
+		// get_all_links() produces. Stored broken links are saved as absolute
+		// URLs, so comparing them against raw relative hrefs here would never
+		// match and would wrongly clear valid broken-link results.
+		$urls = $this->get_all_links();
 
 		$broken_links = Get::post_meta( (int) $this->post_id, SURERANK_SEO_CHECKS, true );
 		$broken_links = $broken_links['broken_links'] ?? [];
@@ -611,19 +616,55 @@ class PostAnalyzer {
 			if ( $anchor instanceof DOMElement ) {
 				$href = trim( $anchor->getAttribute( 'href' ) );
 
-				// Skip empty hrefs and duplicates.
-				if ( $href === '' || in_array( $href, $links, true ) ) {
+				// Skip empty hrefs before normalization.
+				if ( $href === '' ) {
 					continue;
 				}
 
 				// Use the shared helper to decide if this URL should be skipped.
 				if ( ! self::should_skip_url( $href ) ) {
+					$href = $this->normalize_link_url( $href );
+
+					if ( in_array( $href, $links, true ) ) {
+						continue;
+					}
+
 					$links[] = $href;
 				}
 			}
 		}
 
 		return $links;
+	}
+
+	/**
+	 * Normalize a link URL to an absolute URL before it is checked remotely.
+	 *
+	 * Resolves scheme-relative, root-relative, and path-relative hrefs
+	 * (including dot segments) against the current post permalink using the
+	 * WordPress core resolver.
+	 *
+	 * @param string $href URL or href attribute value.
+	 * @return string
+	 */
+	private function normalize_link_url( string $href ): string {
+		$base = $this->post_permalink ? $this->post_permalink : home_url( '/' );
+		$url  = WP_Http::make_absolute_url( trim( $href ), $base );
+
+		// Core resolves "../" segments but leaves single-dot "./" segments in the path.
+		$parts = preg_split( '/(?=[?#])/', $url, 2 );
+
+		if ( ! is_array( $parts ) ) {
+			return $url;
+		}
+
+		$path = $parts[0];
+
+		while ( false !== strpos( $path, '/./' ) ) {
+			$path = str_replace( '/./', '/', $path );
+		}
+
+		return $path . ( $parts[1] ?? '' );
 	}
 
 	/**

@@ -9,6 +9,7 @@
 
 namespace SureRank\Inc\Admin;
 
+use SureRank\Inc\Functions\Cache_Purge;
 use SureRank\Inc\Functions\Helper as FunctionsHelper;
 use SureRank\Inc\Traits\Get_Instance;
 
@@ -132,16 +133,26 @@ class BulkEdit {
 		$no_follow  = isset( $_REQUEST['surerank_no_follow'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['surerank_no_follow'] ) ) : '-1';
 		$no_archive = isset( $_REQUEST['surerank_no_archive'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['surerank_no_archive'] ) ) : '-1';
 
+		$changed = false;
+
 		if ( '-1' !== $no_index ) {
 			Helper::update_robot_meta( $post_id, 'post_no_index', $no_index, false );
+			$changed = true;
 		}
 
 		if ( '-1' !== $no_follow ) {
 			Helper::update_robot_meta( $post_id, 'post_no_follow', $no_follow, false );
+			$changed = true;
 		}
 
 		if ( '-1' !== $no_archive ) {
 			Helper::update_robot_meta( $post_id, 'post_no_archive', $no_archive, false );
+			$changed = true;
+		}
+
+		// Refresh this page's cached output only when a robot setting changed.
+		if ( $changed ) {
+			Cache_Purge::purge_post( $post_id );
 		}
 	}
 }

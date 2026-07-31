@@ -58,8 +58,7 @@ const Notice = () => {
 									window.open(
 										getSurerankUtmUrl(
 											LEARN_MORE_URL,
-											'core_plugin',
-											'redirect_notice',
+											'admin_notice',
 											'redirect_notice_learn_more'
 										),
 										'_blank',

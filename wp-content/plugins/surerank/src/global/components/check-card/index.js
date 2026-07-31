@@ -8,7 +8,9 @@ import {
 	SeoPopupTooltip,
 } from '@/apps/admin-components/tooltip';
 import { Fragment } from '@wordpress/element';
+import { applyFilters } from '@wordpress/hooks';
 import { fetchImageDataByUrl } from '@/functions/api';
+import { isBlockEditor } from '@SeoPopup/components/page-seo-checks/analyzer/utils/page-builder';
 
 const IMAGE_ID_CACHE = new Map();
 
@@ -139,10 +141,7 @@ const renderItem = ( item, opts = {} ) => {
 							variant="link"
 							size="xs"
 							onClick={ () => opts.onIgnoreUrl( item.url ) }
-							aria-label={ __(
-								'Ignore this link',
-								'surerank'
-							) }
+							aria-label={ __( 'Ignore this link', 'surerank' ) }
 							className="hover:text-text-secondary min-w-fit shrink-0 text-text-secondary leading-4 no-underline hover:underline"
 						>
 							{ __( 'Ignore', 'surerank' ) }
@@ -173,6 +172,7 @@ export const CheckCard = ( {
 	label,
 	title,
 	data,
+	checkId,
 	showImages,
 	onIgnore,
 	showRestoreButton = false,
@@ -344,7 +344,39 @@ export const CheckCard = ( {
 							) ) }
 						</ul>
 					) }
-				{ showImages && <ImageGrid images={ descriptionData } /> }
+				{ showImages &&
+					( checkId === 'image_alt_text' && isBlockEditor() ? (
+						/* Block editor only: Pro injects the AI "Fix it for me"
+						   grid via this filter; free shows thumbnails + upgrade
+						   nudge. Classic / page builders / server-sourced contexts
+						   fall through to the plain grid (with a "Help Me Fix"
+						   link rendered by the check list). */
+						applyFilters(
+							'surerank-pro.image-alt-fix-ui',
+							<div className="flex flex-col gap-3">
+								<ImageGrid images={ descriptionData } />
+								<FixButton
+									variant="link"
+									size="xs"
+									className="[&>span]:p-0 mr-auto min-w-fit shrink-0 underline"
+									tooltipProps={ { className: 'z-999999' } }
+									hidden={ false }
+									title={ __(
+										'Fix image alt text with AI',
+										'surerank'
+									) }
+									description={ __(
+										'Upgrade to SureRank Pro and let AI generate meaningful, context-aware alt text for your images automatically.',
+										'surerank'
+									) }
+									utmContent="surerank_image_alt"
+								/>
+							</div>,
+							{ checkId, images: descriptionData }
+						)
+					) : (
+						<ImageGrid images={ descriptionData } />
+					) ) }
 				{ !! onRestoreUrl && ignoredBrokenLinks.length > 0 && (
 					<div className="flex flex-col gap-1 pt-3 border-0 border-t-0.5 border-solid border-border-subtle">
 						<p className="m-0 text-xs font-medium text-text-tertiary uppercase tracking-wide">

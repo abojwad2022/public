@@ -53,29 +53,48 @@ abstract class Api_Base extends WP_REST_Controller {
 	 * Validate the nonce for REST API requests, then apply the
 	 * capability + Pro filter chain via check_permission_for_action().
 	 *
+	 * The `wp_rest` nonce protects cookie-authenticated (browser) requests
+	 * against CSRF and is required for them. Requests authenticated with an
+	 * Application Password are not cookie-based and cannot be CSRF'd, so the
+	 * nonce does not apply to them; WordPress core itself exempts them in
+	 * rest_cookie_check_errors(). We detect that case via core's
+	 * rest_get_authenticated_app_password() (set during authentication, before
+	 * this callback runs) and skip the nonce only then, so a server-to-server
+	 * request with an Application Password can write while browser sessions
+	 * still require a valid nonce. The capability check always runs.
+	 *
 	 * @param WP_REST_Request<array<string, mixed>> $request The REST request object.
 	 * @return bool|WP_Error True if valid, WP_Error if invalid.
+	 * @since 1.9.0
 	 */
 	public function validate_permission( $request ) {
-		// Retrieve the nonce from the request header.
-		$nonce = $request->get_header( 'X-WP-Nonce' );
+		// Whether this request was authenticated with an Application Password.
+		$app_password_uuid = function_exists( 'rest_get_authenticated_app_password' )
+			? rest_get_authenticated_app_password()
+			: null;
 
-		// Check if nonce is null or empty.
-		if ( empty( $nonce ) || ! is_string( $nonce ) ) {
-			return new WP_Error(
-				'surerank_nonce_verification_failed',
-				__( 'Nonce is missing.', 'surerank' ),
-				[ 'status' => rest_authorization_required_code() ]
-			);
-		}
+		// Only enforce the nonce for non-Application-Password (e.g. browser/cookie) auth.
+		if ( empty( $app_password_uuid ) ) {
+			// Retrieve the nonce from the request header.
+			$nonce = $request->get_header( 'X-WP-Nonce' );
 
-		// Verify the nonce.
-		if ( ! wp_verify_nonce( $nonce, 'wp_rest' ) ) {
-			return new WP_Error(
-				'surerank_nonce_verification_failed',
-				__( 'Nonce is invalid.', 'surerank' ),
-				[ 'status' => rest_authorization_required_code() ]
-			);
+			// Check if nonce is null or empty.
+			if ( empty( $nonce ) || ! is_string( $nonce ) ) {
+				return new WP_Error(
+					'surerank_nonce_verification_failed',
+					__( 'Nonce is missing.', 'surerank' ),
+					[ 'status' => rest_authorization_required_code() ]
+				);
+			}
+
+			// Verify the nonce.
+			if ( ! wp_verify_nonce( $nonce, 'wp_rest' ) ) {
+				return new WP_Error(
+					'surerank_nonce_verification_failed',
+					__( 'Nonce is invalid.', 'surerank' ),
+					[ 'status' => rest_authorization_required_code() ]
+				);
+			}
 		}
 
 		return self::check_permission_for_action( $request );

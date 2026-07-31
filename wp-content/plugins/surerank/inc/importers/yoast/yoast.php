@@ -175,9 +175,11 @@ class Yoast extends BaseImporter {
 				$robot_data['noindex'] = 'yes';
 			}
 
-			// Apply settings.
+			// Only migrate an explicit "yes" (see apply_robot_settings()).
 			foreach ( $robot_data as $key => $value ) {
-				$this->default_surerank_meta[ Constants::ROBOTS_MAPPING[ $key ] ] = $value;
+				if ( 'yes' === $value ) {
+					$this->default_surerank_meta[ Constants::ROBOTS_MAPPING[ $key ] ] = 'yes';
+				}
 			}
 
 			return ImporterUtils::build_response(
@@ -512,8 +514,13 @@ class Yoast extends BaseImporter {
 	 * @return void
 	 */
 	private function apply_robot_settings( array $robot_data ): void {
+		// Only migrate an explicit "yes". Writing "no" would convert an
+		// inherited default into a per-post override and defeat the
+		// post-type-level no-index setting.
 		foreach ( $robot_data as $key => $value ) {
-			$this->default_surerank_meta[ Constants::ROBOTS_MAPPING[ $key ] ] = $value;
+			if ( 'yes' === $value ) {
+				$this->default_surerank_meta[ Constants::ROBOTS_MAPPING[ $key ] ] = 'yes';
+			}
 		}
 	}
 

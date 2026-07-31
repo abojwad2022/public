@@ -6,7 +6,7 @@ import {
 	startOfYesterday,
 } from 'date-fns';
 import clsx from 'clsx';
-import { createRoot } from 'react-dom';
+import { createRoot } from '@wordpress/element';
 import { twMerge } from 'tailwind-merge';
 import { CHECK_TYPES } from '@/global/constants';
 
@@ -758,7 +758,8 @@ export const getBrokenLinkItems = ( data ) => {
  * @param {string} url URL to normalize.
  * @return {string} Normalized URL.
  */
-const normalizeBrokenLinkUrl = ( url ) => ( url || '' ).trim().replace( /\/+$/, '' );
+const normalizeBrokenLinkUrl = ( url ) =>
+	( url || '' ).trim().replace( /\/+$/, '' );
 
 /**
  * Reconcile a post's broken_links check against the site-wide ignored URLs so

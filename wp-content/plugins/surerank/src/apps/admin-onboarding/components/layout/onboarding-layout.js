@@ -129,15 +129,13 @@ const OnboardingLayout = () => {
 											weight={ 400 }
 											color="primary"
 										>
-											{ __( 'Unlock', 'surerank' ) }
-											{ ' ' }
+											{ __( 'Unlock', 'surerank' ) }{ ' ' }
 											<span className="font-semibold">
 												{ __(
 													'SureRank Pro',
 													'surerank'
 												) }
-											</span>
-											{ ' ' }
+											</span>{ ' ' }
 											{ __(
 												'for AI-powered SEO fixes, advanced schema, instant indexing, and a lot more.',
 												'surerank'
@@ -157,7 +155,10 @@ const OnboardingLayout = () => {
 												)
 											}
 										>
-											{ __( 'Upgrade to Pro', 'surerank' ) }
+											{ __(
+												'Upgrade to Pro',
+												'surerank'
+											) }
 										</Button>
 									}
 								/>

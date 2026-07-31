@@ -190,8 +190,9 @@ class Api extends Api_Base {
 				'sanitize_callback' => 'absint',
 			],
 			'website_logo'         => [
-				'type'     => 'string',
-				'required' => false,
+				'type'              => 'string',
+				'required'          => false,
+				'sanitize_callback' => 'esc_url_raw',
 			],
 		];
 	}

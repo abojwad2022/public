@@ -12,6 +12,7 @@ namespace SureRank\Inc\Modules\Fix_Seo_Checks;
 
 use SureRank\Inc\API\Post;
 use SureRank\Inc\API\Term;
+use SureRank\Inc\Functions\Cache_Purge;
 use SureRank\Inc\Traits\Get_Instance;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -99,15 +100,34 @@ class Page {
 			if ( is_wp_error( $term ) || empty( $term ) ) {
 				return Utils::get_instance()->send_response( false, __( 'Term not found.', 'surerank' ), $response_type );
 			}
+			// Object-level authorization: this route shares the 'content_setting' role gate with /term/settings, so
+			// enforce the same per-term guard before writing meta via the lower-level update_term_meta_common() primitive.
+			if ( ! Term::can_manage_term_seo( $id ) ) {
+				return Utils::get_instance()->send_response( false, __( 'You are not allowed to manage SEO settings for this term.', 'surerank' ), $response_type );
+			}
 			Term::update_term_meta_common( $id, $data );
+
+			// Refresh this term archive's cached output across page-cache plugins.
+			$term_link = get_term_link( $term );
+			if ( is_string( $term_link ) ) {
+				Cache_Purge::purge_url( $term_link );
+			}
 		} else {
 			$post = get_post( $id );
 			if ( empty( $post ) ) {
 				return Utils::get_instance()->send_response( false, __( 'Post not found or not published.', 'surerank' ), $response_type );
 			}
+			// Object-level authorization: this route shares the 'content_setting' role gate with /post/settings, so
+			// enforce the same per-post guard before writing meta via the lower-level update_post_meta_common() primitive.
+			if ( ! Post::can_manage_post_seo( $id ) ) {
+				return Utils::get_instance()->send_response( false, __( 'You are not allowed to manage SEO settings for this post.', 'surerank' ), $response_type );
+			}
 			Post::update_post_meta_common( $id, $data );
+
+			// Refresh this page's cached output across page-cache plugins.
+			Cache_Purge::purge_post( $id );
 		}
-		
+
 		Utils::get_instance()->clear_cache( $id, $is_taxonomy );
 		
 		return Utils::get_instance()->send_response( true, $success_message, $response_type );

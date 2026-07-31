@@ -7,7 +7,7 @@
  *
  * Standard UTM set:
  *   utm_source   = surerank_plugin
- *   utm_medium   = wordpress_plugin
+ *   utm_medium   = in_product
  *   utm_campaign = <surface> (or core_plugin fallback)
  *   utm_content  = <context>   (e.g. 'learn_more', 'documentation')
  *
@@ -24,7 +24,7 @@
  * @param {string} content  UTM content value — CTA / context identifier using
  *                          lowercase letters, digits, and underscores
  *                          (e.g. 'learn_more', 'documentation').
- * @param {string} medium   UTM medium value. Defaults to 'wordpress_plugin';
+ * @param {string} medium   UTM medium value. Defaults to 'in_product';
  *                          pass a custom value to distinguish a CTA's
  *                          attribution (e.g. 'redirect_notice_learn_more').
  * @return {string} URL with UTM parameters appended, or the original URL if
@@ -34,7 +34,7 @@ export const getSurerankUtmUrl = (
 	url,
 	campaign,
 	content,
-	medium = 'wordpress_plugin'
+	medium = 'in_product'
 ) => {
 	// Guard: require all parameters.
 	if ( ! url || ! campaign || ! content ) {
@@ -57,16 +57,25 @@ export const getSurerankUtmUrl = (
 		return normalizedUrl;
 	}
 
+	// Only tag website links on surerank.com, not other subdomains such as API endpoints.
+	if (
+		urlObj.hostname !== 'surerank.com' &&
+		urlObj.hostname !== 'www.surerank.com'
+	) {
+		return normalizedUrl;
+	}
+
 	// Leave URLs that already carry any UTM parameter untouched.
 	if (
-		urlObj.searchParams.has( 'utm_source' ) ||
-		urlObj.searchParams.has( 'utm_medium' )
+		[ ...urlObj.searchParams.keys() ].some( ( key ) =>
+			key.startsWith( 'utm_' )
+		)
 	) {
 		return normalizedUrl;
 	}
 
 	urlObj.searchParams.set( 'utm_source', 'surerank_plugin' );
-	urlObj.searchParams.set( 'utm_medium', medium || 'wordpress_plugin' );
+	urlObj.searchParams.set( 'utm_medium', medium || 'in_product' );
 	urlObj.searchParams.set( 'utm_campaign', campaign || 'core_plugin' );
 	urlObj.searchParams.set( 'utm_content', content );
 

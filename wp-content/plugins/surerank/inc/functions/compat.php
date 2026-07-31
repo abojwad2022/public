@@ -92,12 +92,16 @@ class Compat {
 		add_action(
 			self::WEEKLY_CRON_HOOK,
 			static function (): void {
-				self::refresh_loopback_probe();
+				self::refresh_loopback_probe( true );
 			}
 		);
 		add_action( 'wp_ajax_' . self::PING_ACTION, [ self::class, 'ajax_ping' ] );
 		add_action( 'wp_ajax_nopriv_' . self::PING_ACTION, [ self::class, 'ajax_ping' ] );
-		add_action( 'init', [ self::class, 'ensure_weekly_probe_scheduled' ] );
+
+		// wp_loaded, not init: this class is constructed from Loader::setup()
+		// on init:999, so an init hook (priority 10) would never fire and the
+		// weekly probe would never be scheduled. Matches Cron::__construct.
+		add_action( 'wp_loaded', [ self::class, 'ensure_weekly_probe_scheduled' ] );
 	}
 
 	/**
@@ -183,8 +187,14 @@ class Compat {
 	}
 
 	/**
-	 * Pure probe: send a loopback GET to the given URL and return
+	 * Pure probe: send a loopback POST to the given URL and return
 	 * whether the response indicates success (2xx).
+	 *
+	 * POST, not GET: the probe must use the same HTTP verb as the real
+	 * async dispatch (Wp_Async_Request::dispatch() uses wp_remote_post).
+	 * WAF rules are frequently verb-specific — hosts have been observed
+	 * blocking POST to admin-ajax.php while allowing GET, which made a
+	 * GET probe report "reachable" for a path the worker could never use.
 	 *
 	 * Does not read or write any options. Callers that want to cache
 	 * the result are responsible for storing it.
@@ -204,13 +214,13 @@ class Compat {
 			]
 		);
 
-		// wp_remote_get (not wp_safe_remote_get): the probe targets an
+		// wp_remote_post (not wp_safe_remote_post): the probe targets an
 		// admin URL derived from home_url(), which on staging/local
-		// installs can resolve to a private IP. wp_safe_remote_get
+		// installs can resolve to a private IP. The safe variant
 		// would reject those and produce false-negative probe results.
 		// Core's own Site Health loopback test (`can_perform_loopback`)
 		// uses the unsafe variant for the same reason.
-		$response = wp_remote_get( esc_url_raw( $url ), $args ); // phpcs:ignore WordPressVIPMinimum.Functions.RestrictedFunctions.wp_remote_get_wp_remote_get -- intentional: self-loopback to admin URL which may be private on staging.
+		$response = wp_remote_post( esc_url_raw( $url ), $args );
 
 		if ( is_wp_error( $response ) ) {
 			return false;

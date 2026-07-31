@@ -102,7 +102,7 @@ class Sync_Archives extends Sitemap {
 	 * @since 1.9.0
 	 * @return array<int, array<string, string>>
 	 */
-	private function get_archive_entries() {
+	public function get_archive_entries() {
 		if ( apply_filters( 'surerank_exclude_archives_from_sitemap', false ) ) {
 			return [];
 		}

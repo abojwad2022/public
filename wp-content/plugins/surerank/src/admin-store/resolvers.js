@@ -177,17 +177,29 @@ const resolvers = {
 			updatedData.sites = sitesResponse.siteEntry;
 
 			if ( ! updatedData.selectedSite ) {
-				// Check with the current site is already in the list
-				const matchedSite = sitesResponse?.siteEntry?.find( ( site ) =>
-					site?.siteUrl?.includes( window.location.host )
+				// Pre-select the property that actually covers this site:
+				// exact URL-prefix property first, then a sc-domain property
+				// covering the host. Never fall back to an arbitrary property —
+				// a wrong pre-selection gets saved and every Search Console
+				// call then fails with an opaque 403 "Access denied".
+				const origin = window.location.origin.toLowerCase();
+				const host = window.location.host.toLowerCase();
+				const entries = sitesResponse?.siteEntry ?? [];
+				const prefixMatch = entries.find(
+					( site ) =>
+						site?.siteUrl?.toLowerCase()?.replace( /\/$/, '' ) ===
+						origin
 				);
-				if ( matchedSite ) {
-					updatedData.tempSelectedSite = matchedSite?.siteUrl ?? '';
-				} else {
-					// Select the first site
-					updatedData.tempSelectedSite =
-						sitesResponse?.siteEntry?.[ 0 ]?.siteUrl ?? '';
-				}
+				const domainMatch = entries.find( ( site ) => {
+					const url = site?.siteUrl?.toLowerCase() ?? '';
+					if ( ! url.startsWith( 'sc-domain:' ) ) {
+						return false;
+					}
+					const domain = url.slice( 'sc-domain:'.length );
+					return host === domain || host.endsWith( `.${ domain }` );
+				} );
+				updatedData.tempSelectedSite =
+					prefixMatch?.siteUrl ?? domainMatch?.siteUrl ?? '';
 			}
 		}
 		return yield actions.setSearchConsole( updatedData );

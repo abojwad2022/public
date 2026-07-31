@@ -265,11 +265,18 @@ class Divi {
 	 * @return string
 	 */
 	public function filter_bfb_editor_type( string $editor_type, $screen ): string {
-		if ( function_exists( 'et_builder_bfb_enabled' ) && et_builder_bfb_enabled() ) {
-			return 'divi';
+		if ( ! function_exists( 'et_builder_bfb_enabled' ) || ! et_builder_bfb_enabled() ) {
+			return $editor_type;
 		}
 
-		return $editor_type;
+		// BFB is a site-wide toggle, but it only replaces the editor for posts
+		// built with Divi — a plain block editor post must keep its real type.
+		$post = get_post();
+		if ( $post instanceof \WP_Post && ! $this->post_uses_divi_builder( $post ) ) {
+			return $editor_type;
+		}
+
+		return 'divi';
 	}
 
 	/**
@@ -306,6 +313,25 @@ class Divi {
 	 */
 	public function maybe_add_divi_admin_bar_menu( \WP_Admin_Bar $wp_admin_bar ): void {
 		Admin_Seo_Popup::get_instance()->add_admin_bar_menu( $wp_admin_bar );
+	}
+
+	/**
+	 * Whether a post is built with the Divi builder.
+	 *
+	 * Mirrors process_divi_content(): Divi 5 stores wp:divi/ block comments in
+	 * the content (the meta is not reliably set), Divi 4 writes the
+	 * _et_pb_use_builder meta.
+	 *
+	 * @since 1.9.3
+	 * @param \WP_Post $post Post to check.
+	 * @return bool
+	 */
+	private function post_uses_divi_builder( $post ): bool {
+		if ( false !== strpos( (string) $post->post_content, '<!-- wp:divi/' ) ) {
+			return true;
+		}
+
+		return 'on' === get_post_meta( $post->ID, '_et_pb_use_builder', true );
 	}
 
 	/**

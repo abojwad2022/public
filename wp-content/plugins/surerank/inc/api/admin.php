@@ -10,6 +10,7 @@
 namespace SureRank\Inc\API;
 
 use SureRank\Inc\Admin\Update_Timestamp;
+use SureRank\Inc\Functions\Cache_Purge;
 use SureRank\Inc\Functions\Get;
 use SureRank\Inc\Functions\Helper;
 use SureRank\Inc\Functions\Send_Json;
@@ -280,6 +281,24 @@ class Admin extends Api_Base {
 		if ( Update::option( SURERANK_SETTINGS, $data ) ) {
 			Update_Timestamp::timestamp_option();
 		}
+
+		// Global SEO defaults affect every page — purge cached output when they change.
+		if ( ! empty( $updated_options ) ) {
+			Cache_Purge::purge_all();
+		}
+		/**
+		 * Fires after admin settings are saved.
+		 *
+		 * Lets other features react to specific setting changes — e.g. the Pro
+		 * sitemap module triggers a cache rebuild when the sitemap include/
+		 * exclude settings change, so changes reflect without waiting for cron.
+		 *
+		 * @param array<string, mixed> $data            Full saved settings.
+		 * @param array<string, mixed> $db_options      Settings as they were before the save.
+		 * @param array<int, string>   $updated_options List of top-level keys that changed.
+		 * @since 1.9.2
+		 */
+		do_action( 'surerank_admin_settings_updated', $data, $db_options, $updated_options );
 
 		return [
 			'success' => true,

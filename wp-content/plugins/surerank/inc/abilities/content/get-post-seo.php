@@ -126,6 +126,16 @@ class Get_Post_Seo extends Ability_Base {
 			);
 		}
 
+		// Object-level authorization: the ability framework already gates this at manage_options, but guard the per-post read here too so the shared
+		// helper is never reached without an edit_post check (parity with the REST/AJAX save paths, and defense-in-depth if the capability is lowered).
+		if ( ! Post::can_manage_post_seo( $post_id ) ) {
+			return new \WP_Error(
+				'surerank_forbidden',
+				__( 'You are not allowed to view SEO settings for this post.', 'surerank' ),
+				[ 'status' => 403 ]
+			);
+		}
+
 		return Post::get_post_data_by_id( $post_id, $post_type, false );
 	}
 }

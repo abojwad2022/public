@@ -17,6 +17,7 @@ import {
 	getPageCheckStatus,
 	handleRefreshWithBrokenLinks,
 } from './page-checks';
+import { startEditorTour } from '@SeoPopup/components/editor-tour/start-tour';
 
 /* global jQuery */
 
@@ -281,6 +282,15 @@ const createStatusIndicator = ( $ ) => {
 			$button[ 0 ],
 			getTooltipText( counts )
 		);
+
+		// First-run guided tour, anchored to the button we just injected. The
+		// spotlight padding adapts to the button's icon size automatically (see
+		// start-tour.js), so Elementor's compact icon gets a proportional highlight.
+		startEditorTour( {
+			trigger: $button[ 0 ],
+			getStatusEl: () =>
+				$wrapper[ 0 ].querySelector( '.surerank-status-indicator' ),
+		} );
 	};
 
 	// Function to wait for store initialization before setting up Elementor integration

@@ -149,8 +149,9 @@ class Onboarding extends Api_Base {
 						),
 					],
 					'website_logo'         => [
-						'type'     => 'string',
-						'required' => false,
+						'type'              => 'string',
+						'required'          => false,
+						'sanitize_callback' => 'esc_url_raw',
 					],
 					'first_name'           => [
 						'type'              => 'string',

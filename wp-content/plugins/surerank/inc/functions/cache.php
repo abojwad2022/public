@@ -24,6 +24,24 @@ class Cache {
 	use Get_Instance;
 
 	/**
+	 * Sitemap cache schema version. Bump when the on-disk chunk semantics
+	 * change (ordering, naming, pagination math) so existing caches built
+	 * under the old semantics are discarded instead of silently mixing
+	 * with new-style chunks.
+	 *
+	 * Version 2 switched chunk queries from ID DESC to ID ASC for stable
+	 * pagination.
+	 *
+	 * @since 1.9.3
+	 */
+	public const SITEMAP_CACHE_SCHEMA_VERSION = 2;
+
+	/**
+	 * Option storing the schema version the current cache was built with.
+	 */
+	private const SCHEMA_VERSION_OPTION = 'surerank_sitemap_cache_schema_version';
+
+	/**
 	 * Cache directory path
 	 *
 	 * @var string
@@ -164,6 +182,68 @@ class Cache {
 		}
 
 		return $wp_filesystem->delete( self::$cache_dir, true );
+	}
+
+	/**
+	 * Discard the sitemap cache when its on-disk schema is outdated.
+	 *
+	 * Runs on wp_loaded (one autoloaded option read on the happy path).
+	 * On mismatch: clears only the sitemap subtree, records the new
+	 * version, and schedules a one-shot forced rebuild so the site is
+	 * not left serving the 503 miss response until the 6-hourly cron.
+	 *
+	 * @since 1.9.3
+	 * @return void
+	 */
+	public static function maybe_upgrade(): void {
+		$stored = (int) get_option( self::SCHEMA_VERSION_OPTION, 1 );
+		if ( self::SITEMAP_CACHE_SCHEMA_VERSION === $stored ) {
+			return;
+		}
+
+		self::clear_prefix( 'sitemap' );
+		self::clear_prefix( 'sitemap.old' );
+		update_option( self::SCHEMA_VERSION_OPTION, self::SITEMAP_CACHE_SCHEMA_VERSION );
+
+		// Only cron mode needs a forced rebuild; auto mode rebuilds inline on
+		// the next request, so scheduling a cron event there is pointless.
+		if ( \SureRank\Inc\Sitemap\Generation_Mode::cron_prebuild_enabled()
+			&& ! wp_next_scheduled( Cron::SITEMAP_CRON_EVENT, [ 'yes' ] ) ) {
+			wp_schedule_single_event( time() + MINUTE_IN_SECONDS, Cron::SITEMAP_CRON_EVENT, [ 'yes' ] );
+		}
+	}
+
+	/**
+	 * Clear one cache subtree (e.g. "sitemap") without touching sibling
+	 * caches under uploads/surerank/.
+	 *
+	 * The clear_all() method deletes the entire cache root, which also
+	 * destroys unrelated feature caches (Pro link-suggestion embeddings,
+	 * tokenizer vocab, OG-image templates). Rebuild fallbacks must scope
+	 * their clear to the sitemap subtree only.
+	 *
+	 * @param string $prefix Subdirectory to clear. Dots are allowed so the
+	 *                       "{prefix}.old" backup slot is addressable, but
+	 *                       any ".." sequence is rejected outright.
+	 * @since 1.9.3
+	 * @return bool True when the subtree is gone (or never existed).
+	 */
+	public static function clear_prefix( string $prefix ): bool {
+		if ( empty( self::$cache_dir ) ) {
+			self::init();
+		}
+
+		$prefix = preg_replace( '/[^A-Za-z0-9_.-]/', '', $prefix );
+		if ( '' === $prefix || null === $prefix || false !== strpos( $prefix, '..' ) ) {
+			return false;
+		}
+
+		$target = self::$cache_dir . $prefix;
+		if ( ! file_exists( $target ) ) {
+			return true;
+		}
+
+		return self::recursive_remove( $target );
 	}
 
 	/**
@@ -446,6 +526,32 @@ class Cache {
 		);
 
 		return array_values( $json_files );
+	}
+
+	/**
+	 * Chunk numbers that exist on disk for one chunk base, ascending.
+	 *
+	 * Lazy (build-on-miss) caches can have sparse chunk numbers, so
+	 * consumers must enumerate what exists instead of probing
+	 * sequentially and stopping at the first gap.
+	 *
+	 * @param string $base Chunk filename base, e.g. "post-type-post".
+	 * @since 1.9.3
+	 * @return array<int, int>
+	 */
+	public static function get_chunk_numbers( string $base ): array {
+		$numbers = [];
+		$pattern = '/^' . preg_quote( $base, '/' ) . '-chunk-(\d+)\.json$/';
+
+		foreach ( self::get_all_files( 'sitemap' ) as $file ) {
+			if ( preg_match( $pattern, (string) $file, $matches ) ) {
+				$numbers[] = (int) $matches[1];
+			}
+		}
+
+		sort( $numbers );
+
+		return $numbers;
 	}
 
 	/**

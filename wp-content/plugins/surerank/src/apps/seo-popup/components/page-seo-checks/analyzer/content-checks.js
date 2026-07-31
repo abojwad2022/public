@@ -91,12 +91,12 @@ export const checkImageAlt = async ( doc ) => {
 	);
 
 	let title = `${ baseMessage } ${ __(
-		'You can add them manually or turn on auto-set image title and alt in the settings.',
+		'You can add them manually, or generate descriptive alt text with AI.',
 		'surerank'
 	) }`;
 	if ( image_seo ) {
 		title = `${ baseMessage } ${ __(
-			"But don't worry, we will add them automatically for you.",
+			"But don't worry, we will add them automatically for you on the front end (using the file name). For more descriptive alt text, generate it with AI.",
 			'surerank'
 		) }`;
 	}

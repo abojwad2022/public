@@ -101,12 +101,18 @@ class Url_Inspection {
 	}
 
 	/**
-	 * Whether the selected GSC property matches the current WordPress site.
+	 * Whether the selected GSC property actually covers the current site.
 	 *
 	 * Inspection results are only meaningful when the connected property
-	 * actually covers this site. If the user connected GSC but selected a
-	 * different property (different domain), inspection is suppressed so
-	 * stale or irrelevant data can't surface.
+	 * covers the URLs this site generates, using Google's own coverage rules:
+	 *
+	 * - Domain properties (`sc-domain:example.com`) cover every scheme and
+	 *   subdomain, so the site host only needs to equal the domain or be a
+	 *   subdomain of it.
+	 * - URL-prefix properties are exact prefixes. `https://example.com/` does
+	 *   NOT cover `https://www.example.com/…`, so scheme and `www.` must not
+	 *   be normalized away — doing so let mismatched properties through, and
+	 *   every inspection then failed with Google's opaque 403 "Access denied".
 	 *
 	 * @return bool
 	 * @since 1.7.5
@@ -116,27 +122,20 @@ class Url_Inspection {
 		if ( '' === $selected ) {
 			return false;
 		}
-		return self::normalize_site_url( $selected ) === self::normalize_site_url( (string) get_site_url() );
-	}
 
-	/**
-	 * Normalize a Search Console / WP site URL for comparison.
-	 *
-	 * Strips an `sc-domain:` prefix (domain properties), otherwise strips
-	 * scheme/`www.`/trailing slashes so a property like
-	 * `https://www.example.com/` matches a WP install at `https://example.com`.
-	 *
-	 * @param string $url Raw URL or `sc-domain:` property value.
-	 * @return string Normalized comparable string.
-	 * @since 1.7.5
-	 */
-	public static function normalize_site_url( string $url ): string {
-		if ( 0 === strpos( $url, 'sc-domain:' ) ) {
-			return rtrim( substr( $url, strlen( 'sc-domain:' ) ), '/' );
+		$site_url = strtolower( rtrim( (string) get_site_url(), '/' ) );
+
+		// Domain property: covers all schemes and subdomains of the domain.
+		if ( 0 === strpos( $selected, 'sc-domain:' ) ) {
+			$domain = strtolower( rtrim( substr( $selected, strlen( 'sc-domain:' ) ), '/' ) );
+			$host   = strtolower( (string) wp_parse_url( $site_url, PHP_URL_HOST ) );
+			return '' !== $domain && ( $host === $domain || substr( $host, -strlen( '.' . $domain ) ) === '.' . $domain );
 		}
-		$stripped = (string) preg_replace( '#^https?://#i', '', $url );
-		$stripped = (string) preg_replace( '#^www\.#i', '', $stripped );
-		return rtrim( $stripped, '/' );
+
+		// URL-prefix property: must be the site URL itself or a prefix of it
+		// (subdirectory installs live under the root property).
+		$prefix = strtolower( rtrim( $selected, '/' ) );
+		return '' !== $prefix && ( $site_url === $prefix || 0 === strpos( $site_url, $prefix . '/' ) );
 	}
 
 	/**
@@ -265,7 +264,12 @@ class Url_Inspection {
 	 * @since 1.7.5
 	 */
 	private function call_api( string $url ): array {
-		$site_url = (string) Auth::get_instance()->get_credentials( 'site_url' );
+		// Self-heal credentials written by older versions, which could store a
+		// raw origin (`https://example.com`) instead of the exact URL-prefix
+		// property string (`https://example.com/`) — Google 403s on the former.
+		$site_url = Utils::ensure_property_format(
+			(string) Auth::get_instance()->get_credentials( 'site_url' )
+		);
 
 		if ( '' === $site_url ) {
 			return [
@@ -285,6 +289,17 @@ class Url_Inspection {
 
 		if ( isset( $response['error'] ) && $response['error'] ) {
 			return $response;
+		}
+
+		// A 2xx with an empty/malformed body decodes to null (or a scalar),
+		// which would fatal in normalize()'s array type-hint. Surface it as a
+		// mapped error instead so the UI shows a failure, not "Checking…".
+		if ( ! is_array( $response ) ) {
+			return [
+				'error'   => true,
+				'message' => __( 'Unexpected response from Search Console.', 'surerank' ),
+				'code'    => 'invalid_response',
+			];
 		}
 
 		return $this->normalize( $response );

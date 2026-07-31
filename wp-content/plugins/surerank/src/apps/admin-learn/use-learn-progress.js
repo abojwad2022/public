@@ -151,6 +151,14 @@ const useLearnProgress = () => {
 				return;
 			}
 
+			// Locked steps (Pro cards for free users) can't be toggled.
+			const targetStep = chapters
+				.find( ( c ) => c.id === chapterId )
+				?.steps.find( ( s ) => s.id === stepId );
+			if ( targetStep?.locked ) {
+				return;
+			}
+
 			const currentlyDone = Boolean(
 				progress?.chapters?.[ chapterId ]?.[ stepId ]
 			);
@@ -216,7 +224,13 @@ const useLearnProgress = () => {
 				);
 			}
 		},
-		[ progress, isStepAutoDetected, applyProgress, applyAutoDetected ]
+		[
+			chapters,
+			progress,
+			isStepAutoDetected,
+			applyProgress,
+			applyAutoDetected,
+		]
 	);
 
 	const getChapterStats = useCallback(
@@ -225,8 +239,11 @@ const useLearnProgress = () => {
 			if ( ! chapter ) {
 				return { done: 0, total: 0 };
 			}
-			const total = chapter.steps.length;
-			const done = chapter.steps.filter( ( s ) =>
+			// Locked steps (e.g. Pro cards for free users) aren't tracked.
+			// Unlocked Pro steps count just like free steps.
+			const trackable = chapter.steps.filter( ( s ) => ! s.locked );
+			const total = trackable.length;
+			const done = trackable.filter( ( s ) =>
 				isStepComplete( chapterId, s.id )
 			).length;
 			return { done, total };

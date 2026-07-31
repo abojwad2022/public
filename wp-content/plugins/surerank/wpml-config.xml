@@ -143,13 +143,25 @@
     <admin-texts>
 
         <!--
-            Global settings bag — site title template, description template,
-            home-page SEO overrides, separator, social defaults, etc.
-            Wildcard mirrors the programmatic PLL_Translate_Option registration
-            already present in inc/third-party-integrations/multilingual/init.php.
+            Global settings bag — only the title/description templates and
+            social text defaults are translatable. A wildcard ( <key name="*" /> )
+            must NOT be used: it makes the translation layer process every key,
+            including booleans/arrays such as enable_xml_sitemap, which then
+            resolve to an empty/false value on the front end and disable the
+            sitemap. Keep this list in sync with translatable_settings_keys()
+            in inc/third-party-integrations/multilingual/init.php.
         -->
         <key name="surerank_settings">
-            <key name="*" />
+            <key name="separator" />
+            <key name="page_title" />
+            <key name="page_description" />
+            <key name="focus_keyword" />
+            <key name="home_page_title" />
+            <key name="home_page_description" />
+            <key name="home_page_facebook_title" />
+            <key name="home_page_facebook_description" />
+            <key name="home_page_twitter_title" />
+            <key name="home_page_twitter_description" />
         </key>
 
         <!--

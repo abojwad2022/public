@@ -108,13 +108,21 @@ class Sync_Posts extends Sitemap {
 		$no_index_settings = $this->get_noindex_settings();
 
 		$args = [
-			'post_type'           => $post_type,
-			'post_status'         => 'publish',
-			'posts_per_page'      => $chunk_size,
-			'offset'              => $offset,
-			'orderby'             => 'ID',
-			'order'               => 'DESC',
-			'ignore_sticky_posts' => true,
+			'post_type'              => $post_type,
+			'post_status'            => 'publish',
+			'posts_per_page'         => $chunk_size,
+			'offset'                 => $offset,
+			// ASC: an immutable, append-only order. New posts land only in
+			// the last chunk, so previously built chunk files stay valid.
+			// DESC shifted every offset on each publish, producing duplicate
+			// or missing URLs across separately built sitemap pages.
+			'orderby'                => 'ID',
+			'order'                  => 'ASC',
+			'ignore_sticky_posts'    => true,
+			// Read only the fields the chunk builder needs per post, not every
+			// post's full meta (avoids priming heavy page-builder blobs per chunk).
+			'update_post_meta_cache' => false,
+			'update_post_term_cache' => false,
 		];
 
 		$args['meta_query'] = Utils::get_indexable_meta_query( $post_type ); //phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query

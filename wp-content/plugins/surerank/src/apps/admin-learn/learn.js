@@ -24,9 +24,24 @@ const Learn = () => {
 		const s = getChapterStats( c.id );
 		return s.done < s.total;
 	} );
-	const defaultValue = firstIncomplete
-		? [ firstIncomplete.id ]
-		: chapters.map( ( c ) => c.id );
+	// The "Do More with SureRank Premium" chapter is locked in the free plugin, so
+	// it has no trackable steps (total === 0). Pro unlocks it, giving it real
+	// steps that count toward progress.
+	const lockedProChapter = chapters.find(
+		( c ) => c.isPro && getChapterStats( c.id ).total === 0
+	);
+	// Open only the first chapter that still has work left. Once everything
+	// trackable is complete:
+	//   • Free plugin — keep the locked Pro chapter open as an upsell instead
+	//     of collapsing everything.
+	//   • Pro active — that chapter has real steps and is itself complete here,
+	//     so collapse all (the "all done" card already celebrates completion).
+	let defaultValue = [];
+	if ( firstIncomplete ) {
+		defaultValue = [ firstIncomplete.id ];
+	} else if ( lockedProChapter ) {
+		defaultValue = [ lockedProChapter.id ];
+	}
 
 	return (
 		<div className="w-full p-5 pb-8 xl:p-8 max-w-[920px] mx-auto flex flex-col gap-7">

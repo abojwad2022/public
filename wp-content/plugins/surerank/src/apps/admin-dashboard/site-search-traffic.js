@@ -62,7 +62,7 @@ const ClicksAndImpressions = ( { item, isLoading } ) => {
 	return (
 		<Container.Item
 			key={ item.label }
-			className="px-3 py-5 space-y-4 w-full h-full bg-background-primary rounded-md shadow-sm"
+			className="px-3 py-5 space-y-4 w-full h-full min-w-0 bg-background-primary rounded-md shadow-sm"
 		>
 			<Container
 				align="center"
@@ -82,7 +82,7 @@ const ClicksAndImpressions = ( { item, isLoading } ) => {
 				className="p-1"
 			>
 				{ isLoading ? (
-					<Skeleton variant="rectangular" className="w-24 h-10" />
+					<Skeleton variant="rectangular" className="h-10 w-full max-w-[96px]" />
 				) : (
 					<Label
 						tag="p"
@@ -96,7 +96,7 @@ const ClicksAndImpressions = ( { item, isLoading } ) => {
 					</Label>
 				) }
 				{ isLoading ? (
-					<Skeleton variant="rectangular" className="w-16 h-6" />
+					<Skeleton variant="rectangular" className="h-6 w-full max-w-[64px]" />
 				) : (
 					<Tooltip
 						content={ sprintf(
@@ -534,9 +534,9 @@ const SiteSearchTraffic = () => {
 				gap="none"
 				justify="between"
 				align="center"
-				className="p-1"
+				className="p-1 flex-wrap gap-2"
 			>
-				<div className="flex items-center gap-3">
+				<div className="flex items-center gap-3 min-w-0">
 					<Title
 						title={ __( 'Site Search Traffic', 'surerank' ) }
 						tag="h4"
@@ -552,7 +552,7 @@ const SiteSearchTraffic = () => {
 					gap="xs"
 					justify="between"
 					align="center"
-					className="p-1"
+					className="p-1 min-w-0 flex-wrap"
 				>
 					{ selectedSite && (
 						<span
@@ -572,7 +572,7 @@ const SiteSearchTraffic = () => {
 							<Badge
 								size="md"
 								label={ updateURL( selectedSite ) }
-								className="cursor-pointer"
+								className="cursor-pointer max-w-[150px] sm:max-w-[260px] lg:max-w-none [&>span]:truncate"
 							/>
 						</span>
 					) }

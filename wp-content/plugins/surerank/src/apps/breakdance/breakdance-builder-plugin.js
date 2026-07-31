@@ -105,7 +105,9 @@ const __ =
 		button.innerHTML = SURERANK_SVG;
 
 		// Status indicator dot (positioned top-right of the button icon).
+		// The class lets the first-run tour locate the dot (see breakdance/index.js).
 		indicator = document.createElement( 'span' );
+		indicator.className = 'surerank-status-indicator';
 		indicator.style.cssText =
 			'position: absolute;' +
 			'top: 9px;' +
@@ -118,11 +120,15 @@ const __ =
 		button.appendChild( indicator );
 
 		// Tooltip — Breakdance-style dark pill below the button.
+		// Appended to <body> with position:fixed — inside the toolbar it gets
+		// trapped in the toolbar's stacking context and the canvas iframe layer
+		// paints over it, leaving only a dark sliver (a stray horizontal line).
+		if ( tooltipEl && tooltipEl.parentNode ) {
+			tooltipEl.parentNode.removeChild( tooltipEl );
+		}
 		tooltipEl = document.createElement( 'div' );
 		tooltipEl.style.cssText =
-			'position: absolute;' +
-			'top: calc(100% + 8px);' +
-			'left: 50%;' +
+			'position: fixed;' +
 			'transform: translateX(-50%);' +
 			'background: rgba(0,0,0,0.85);' +
 			'color: #fff;' +
@@ -140,6 +146,9 @@ const __ =
 		tooltipEl.textContent = 'SureRank SEO';
 
 		button.addEventListener( 'mouseenter', function () {
+			const rect = button.getBoundingClientRect();
+			tooltipEl.style.left = rect.left + rect.width / 2 + 'px';
+			tooltipEl.style.top = rect.bottom + 8 + 'px';
 			tooltipEl.style.opacity = '1';
 		} );
 		button.addEventListener( 'mouseleave', function () {
@@ -152,7 +161,7 @@ const __ =
 		} );
 
 		section.appendChild( button );
-		section.appendChild( tooltipEl );
+		document.body.appendChild( tooltipEl );
 
 		// Insert before the undo/redo section.
 		undoRedoSection.parentNode.insertBefore( section, undoRedoSection );

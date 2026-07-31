@@ -6,6 +6,7 @@ import {
 	handleRefreshWithBrokenLinks,
 } from '../elementor/page-checks';
 import { getTooltipText } from '@/apps/seo-popup/utils/page-checks-status-tooltip-text';
+import { startEditorTour } from '@SeoPopup/components/editor-tour/start-tour';
 
 /**
  * Breakdance editor page integration.
@@ -82,6 +83,19 @@ const waitForStoreInit = () => {
 		// Subscribe to store changes and forward status updates to toolbar button.
 		wp?.data?.subscribe?.( () => {
 			sendStatusToToolbar();
+		} );
+
+		// First-run guided tour. The toolbar button is injected (in this same
+		// document) by the builder-plugin script, so target it by id; the status
+		// dot is shown only once a status arrives, so gate on its visibility.
+		startEditorTour( {
+			triggerSelectors: [ '#surerank-breakdance-toolbar-button' ],
+			getStatusEl: () => {
+				const dot = document.querySelector(
+					'#surerank-breakdance-toolbar-button .surerank-status-indicator'
+				);
+				return dot && dot.style.display !== 'none' ? dot : null;
+			},
 		} );
 	};
 

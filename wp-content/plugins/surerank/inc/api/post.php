@@ -9,6 +9,7 @@
 
 namespace SureRank\Inc\API;
 
+use SureRank\Inc\Functions\Cache_Purge;
 use SureRank\Inc\Functions\Defaults;
 use SureRank\Inc\Functions\Get;
 use SureRank\Inc\Functions\Helper;
@@ -77,9 +78,19 @@ class Post extends Api_Base {
 	 */
 	public function get_post_seo_data( $request ) {
 
-		$post_id     = $request->get_param( 'post_id' );
-		$post_type   = $request->get_param( 'post_type' );
-		$is_taxonomy = $request->get_param( 'is_taxonomy' );
+		$post_id     = (int) $request->get_param( 'post_id' );
+		$post_type   = (string) $request->get_param( 'post_type' );
+		$is_taxonomy = rest_sanitize_boolean( (string) $request->get_param( 'is_taxonomy' ) );
+
+		if ( ! self::can_manage_post_seo( $post_id ) ) {
+			wp_send_json(
+				[
+					'success' => false,
+					'message' => __( 'You are not allowed to manage SEO settings for this post.', 'surerank' ),
+				],
+				403
+			);
+		}
 
 		$data        = self::get_post_data_by_id( $post_id, $post_type, $is_taxonomy );
 		$decode_data = Utils::decode_html_entities_recursive( $data ) ?? $data;
@@ -125,6 +136,16 @@ class Post extends Api_Base {
 		$post_id = (int) $request->get_param( 'post_id' );
 		$data    = (array) $request->get_param( 'metaData' );
 
+		if ( ! self::can_manage_post_seo( $post_id ) ) {
+			wp_send_json(
+				[
+					'success' => false,
+					'message' => __( 'You are not allowed to manage SEO settings for this post.', 'surerank' ),
+				],
+				403
+			);
+		}
+
 		$result = self::save_post_seo_meta( $post_id, $data );
 
 		if ( $result['success'] ) {
@@ -134,6 +155,20 @@ class Post extends Api_Base {
 		}
 
 		Send_Json::error( [ 'message' => $result['message'] ] );
+	}
+
+	/**
+	 * Determine whether the current user can manage SEO for a specific post.
+	 *
+	 * @param int $post_id Target post ID.
+	 * @return bool True when the current user can edit the target post.
+	 */
+	public static function can_manage_post_seo( $post_id ) {
+		if ( $post_id <= 0 || ! get_post( $post_id ) instanceof \WP_Post ) {
+			return false;
+		}
+
+		return current_user_can( 'edit_post', $post_id );
 	}
 
 	/**
@@ -160,6 +195,13 @@ class Post extends Api_Base {
 	 * @since 1.x.x
 	 */
 	public static function save_post_seo_meta( int $post_id, array $data ): array {
+		if ( ! self::can_manage_post_seo( $post_id ) ) {
+			return [
+				'success' => false,
+				'message' => __( 'You are not allowed to manage SEO settings for this post.', 'surerank' ),
+			];
+		}
+
 		if ( isset( $data['schemas'] ) ) {
 			$validation = apply_filters(
 				'surerank_validate_schemas_payload',
@@ -191,6 +233,9 @@ class Post extends Api_Base {
 		$current_time = time();
 		Update::option( 'surerank_last_optimized_on', $current_time ); // Site-wide last optimisation.
 		Update::post_meta( $post_id, 'surerank_post_optimized_at', $current_time ); // Per-post optimisation timestamp.
+
+		// Refresh this page's cached output across page-cache plugins.
+		Cache_Purge::purge_post( $post_id );
 
 		return [
 			'success' => true,

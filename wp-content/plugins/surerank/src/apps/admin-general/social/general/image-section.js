@@ -10,6 +10,7 @@ import MediaPreview from '@/apps/admin-components/media-preview';
 import { createMediaFrame, getSiteDetails } from '@/global/utils/utils';
 import { applyFilters } from '@wordpress/hooks';
 import { getSurerankUtmUrl } from '@/global/utils/utm';
+import OgImageUpgradeButton from '@/global/components/og-image-upgrade-button';
 
 const ImageTab = memo( () => {
 	const { setMetaSettings, updateAppSettings } = useDispatch( STORE_NAME );
@@ -126,6 +127,12 @@ const ImageTab = memo( () => {
 											setImageGenModalOpen( true ),
 									}
 								) }
+								<OgImageUpgradeButton
+									description={ __(
+										'Upgrade to SureRank Pro to generate branded, AI-powered Open Graph images for your site.',
+										'surerank'
+									) }
+								/>
 							</div>
 						</div>
 						<Input

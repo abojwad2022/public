@@ -14,6 +14,7 @@ use SureRank\Inc\Functions\Cache;
 use SureRank\Inc\Functions\Cron;
 use SureRank\Inc\Functions\Helper;
 use SureRank\Inc\Functions\Send_Json;
+use SureRank\Inc\Sitemap\Generation_Mode;
 use SureRank\Inc\Traits\Get_Instance;
 use WP_REST_Request;
 use WP_REST_Server;
@@ -93,6 +94,16 @@ class Sitemap extends Api_Base {
 	 * @return void
 	 */
 	public function prepare_cache( $request ) {
+		if ( Generation_Mode::allows_inline_build() ) {
+			Send_Json::error(
+				[
+					'code'    => 'auto_mode',
+					'message' => __( 'Manual cache generation is only used in cron mode. The sitemap builds automatically on request in the default mode.', 'surerank' ),
+				]
+			);
+			return;
+		}
+
 		// Rotate the current sitemap cache to a backup slot. A failed
 		// manual rebuild leaves the previous cache available to serve
 		// requests via stale-while-revalidate. See #2361.
@@ -105,7 +116,8 @@ class Sitemap extends Api_Base {
 		// Cleanup class, whose import() fires surerank_batch_process_complete
 		// → Sync::batch_process_complete() → Cache::commit_atomic_rebuild().
 		if ( ! Cache::begin_atomic_rebuild( 'sitemap' ) ) {
-			Cache::clear_all();
+			Cache::clear_prefix( 'sitemap' );
+			Cache::clear_prefix( 'sitemap.old' );
 		}
 		$classes    = Sync::get_instance()->generate_classes();
 		$chunk_size = apply_filters( 'surerank_sitemap_json_chunk_size', 20 );
@@ -163,6 +175,16 @@ class Sitemap extends Api_Base {
 	 * @return void
 	 */
 	public function generate_cache( $request ) {
+		if ( Generation_Mode::allows_inline_build() ) {
+			Send_Json::error(
+				[
+					'code'    => 'auto_mode',
+					'message' => __( 'Manual cache generation is only used in cron mode. The sitemap builds automatically on request in the default mode.', 'surerank' ),
+				]
+			);
+			return;
+		}
+
 		try {
 			if ( Helper::are_crons_available() ) {
 				wp_schedule_single_event( time() + 10, Cron::SITEMAP_CRON_EVENT, [ 'yes' ] );
@@ -202,6 +224,10 @@ class Sitemap extends Api_Base {
 	 * @return \WP_Error|void
 	 */
 	public function generate_cache_manual( $request ) {
+		if ( Generation_Mode::allows_inline_build() ) {
+			return new \WP_Error( 'auto_mode', __( 'Manual cache generation is only used in cron mode.', 'surerank' ) );
+		}
+
 		$page       = $request->get_param( 'page' );
 		$type       = $request->get_param( 'type' );
 		$slug       = $request->get_param( 'slug' );

@@ -32,6 +32,22 @@ export const PAGE_CONTENT = [
 				content: [
 					{
 						type: 'switch',
+						id: 'enable_fluentcart_integration',
+						storeKey: 'enable_fluentcart_integration',
+						dataType: 'boolean',
+						label: __( 'FluentCart', 'surerank' ),
+						description: __(
+							'Enable SureRank support for FluentCart store content, including product schema and Open Graph metadata used across product pages. Turn this off only if you do not want SureRank to load FluentCart-specific SEO compatibility.',
+							'surerank'
+						),
+					},
+				],
+			},
+			{
+				container: null,
+				content: [
+					{
+						type: 'switch',
 						id: 'enable_angie_integration',
 						storeKey: 'enable_angie_integration',
 						dataType: 'boolean',

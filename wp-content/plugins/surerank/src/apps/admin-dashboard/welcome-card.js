@@ -3,9 +3,22 @@ import { useState, useEffect } from '@wordpress/element';
 import { X, ArrowRight } from 'lucide-react';
 import { Text, Button } from '@bsf/force-ui';
 import { cn } from '@/functions/utils';
+import { getSurerankUtmUrl } from '@/global/utils/utm';
+import { redirectToPricingPage } from '@/functions/nudges';
+
+const UPGRADE_CTA_MIN_DAYS = 3;
 
 const WelcomeCard = ( { className = '', isProActive = false } ) => {
 	const [ popupVideo, setPopupVideo ] = useState( null );
+	const daysSinceInstall =
+		parseInt( window?.surerank_admin_common?.days_since_install, 10 ) || 0;
+	const showUpgradeCta =
+		! isProActive && daysSinceInstall >= UPGRADE_CTA_MIN_DAYS;
+	const learnMoreUrl = getSurerankUtmUrl(
+		'https://surerank.com/docs/',
+		'admin_dashboard',
+		'welcome_card_learn_more'
+	);
 
 	// Get video data from localized script
 	const welcomeVideo = window?.surerank_admin_common?.welcome_video || {};
@@ -31,7 +44,7 @@ const WelcomeCard = ( { className = '', isProActive = false } ) => {
 			<div
 				className={ cn(
 					'w-full h-fit bg-background-primary border-0.5 border-solid border-border-subtle rounded-xl p-5 shadow-sm flex overflow-hidden',
-					isProActive ? 'flex-col gap-3' : 'flex-row gap-4',
+					isProActive ? 'flex-col gap-3' : 'flex-col sm:flex-row gap-4',
 					! isProActive && className
 				) }
 			>
@@ -59,24 +72,35 @@ const WelcomeCard = ( { className = '', isProActive = false } ) => {
 								) }
 							</Text>
 						</div>
-						<div className="w-fit">
+						<div className="flex gap-3 w-fit">
+							{ showUpgradeCta && (
+								<Button
+									variant="primary"
+									size="md"
+									onClick={ () =>
+										redirectToPricingPage(
+											'welcome_card_upgrade'
+										)
+									}
+								>
+									{ __(
+										'Upgrade to SureRank Pro',
+										'surerank'
+									) }
+								</Button>
+							) }
 							<Button
 								variant="outline"
 								size="md"
 								icon={ <ArrowRight className="size-4" /> }
 								iconPosition="right"
-								onClick={ () => {
-									const utmParams = new URLSearchParams( {
-										utm_source: 'plugin',
-										utm_medium: 'dashboard',
-										utm_campaign: 'welcome_card',
-									} );
+								onClick={ () =>
 									window.open(
-										`https://surerank.com/docs/?${ utmParams.toString() }`,
+										learnMoreUrl,
 										'_blank',
 										'noopener,noreferrer'
-									);
-								} }
+									)
+								}
 							>
 								{ __( 'Learn More', 'surerank' ) }
 							</Button>
@@ -90,7 +114,7 @@ const WelcomeCard = ( { className = '', isProActive = false } ) => {
 						'relative bg-gray-100 rounded-md overflow-hidden cursor-pointer group',
 						isProActive
 							? 'w-full aspect-video'
-							: 'w-[45%] max-w-[390px] flex-shrink-0 aspect-video'
+							: 'w-full sm:w-[45%] sm:max-w-[390px] sm:flex-shrink-0 aspect-video'
 					) }
 					onClick={ () => setPopupVideo( videoUrl ) }
 					role="button"
@@ -152,18 +176,13 @@ const WelcomeCard = ( { className = '', isProActive = false } ) => {
 								size="md"
 								icon={ <ArrowRight className="size-4" /> }
 								iconPosition="right"
-								onClick={ () => {
-									const utmParams = new URLSearchParams( {
-										utm_source: 'plugin',
-										utm_medium: 'dashboard',
-										utm_campaign: 'welcome_card',
-									} );
+								onClick={ () =>
 									window.open(
-										`https://surerank.com/docs/?${ utmParams.toString() }`,
+										learnMoreUrl,
 										'_blank',
 										'noopener,noreferrer'
-									);
-								} }
+									)
+								}
 							>
 								{ __( 'Learn More', 'surerank' ) }
 							</Button>

@@ -20,6 +20,7 @@ use SureRank\Inc\Functions\Update;
 use SureRank\Inc\GoogleSearchConsole\Controller;
 use SureRank\Inc\Importers\ImporterUtils;
 use SureRank\Inc\Modules\Nudges\Utils as Nudge_Utils;
+use SureRank\Inc\Sitemap\Generation_Mode;
 use SureRank\Inc\Traits\Get_Instance;
 use SureRank\Inc\Traits\Logger;
 use WP_Error;
@@ -137,6 +138,13 @@ class Analyzer extends Api_Base {
 
 		$data = [];
 		foreach ( $post_ids as $p_id ) {
+			// Object-level guard (parity with get_user_seo_checks and the SEO save endpoints): the
+			// route-level permission gates the endpoint; skip posts the caller cannot edit so SEO
+			// check data (title, meta, content analysis) for other objects is not disclosed.
+			if ( ! Post::can_manage_post_seo( (int) $p_id ) ) {
+				continue;
+			}
+
 			$checks = $this->get_post_checks_data( $p_id );
 			if ( is_wp_error( $checks ) ) {
 				continue;
@@ -174,6 +182,13 @@ class Analyzer extends Api_Base {
 
 		$data = [];
 		foreach ( $term_ids as $p_id ) {
+			// Object-level guard (parity with get_user_seo_checks and the SEO save endpoints): the
+			// route-level permission gates the endpoint; skip terms the caller cannot edit so SEO
+			// check data for other objects is not disclosed.
+			if ( ! Term::can_manage_term_seo( (int) $p_id ) ) {
+				continue;
+			}
+
 			$checks = $this->get_term_checks_data( $p_id );
 			if ( is_wp_error( $checks ) ) {
 				continue;
@@ -402,7 +417,7 @@ class Analyzer extends Api_Base {
 		$post_id    = $request->get_param( 'post_id' );
 		$check_type = $request->get_param( 'check_type' );
 
-		$guard = $this->guard_user_check_access( $post_id, $check_type );
+		$guard = $this->guard_object_check_access( $post_id, $check_type );
 		if ( is_wp_error( $guard ) ) {
 			return $guard;
 		}
@@ -435,7 +450,7 @@ class Analyzer extends Api_Base {
 		$post_id    = $request->get_param( 'post_id' );
 		$check_type = $request->get_param( 'check_type' );
 
-		$guard = $this->guard_user_check_access( $post_id, $check_type );
+		$guard = $this->guard_object_check_access( $post_id, $check_type );
 		if ( is_wp_error( $guard ) ) {
 			return $guard;
 		}
@@ -468,7 +483,7 @@ class Analyzer extends Api_Base {
 		$post_id    = (int) $request->get_param( 'post_id' );
 		$check_type = $request->get_param( 'check_type' );
 
-		$guard = $this->guard_user_check_access( $post_id, $check_type );
+		$guard = $this->guard_object_check_access( $post_id, $check_type );
 		if ( is_wp_error( $guard ) ) {
 			return $guard;
 		}
@@ -908,6 +923,17 @@ class Analyzer extends Api_Base {
 		$not_working_heading = __( 'XML sitemap is missing or inaccessible.', 'surerank' );
 		$not_working_label   = __( 'The XML sitemap for this site is missing or cannot be accessed.', 'surerank' );
 
+		$sitemap_steps = [
+			__( 'Go to SureRank ⇾ General ⇾ Sitemaps', 'surerank' ),
+			__( 'Enable the XML Sitemap toggle', 'surerank' ),
+		];
+		// The Regenerate button only exists in cron mode; in the default auto
+		// mode the sitemap builds on the fly, so enabling the toggle is enough.
+		if ( ! Generation_Mode::allows_inline_build() ) {
+			$sitemap_steps[] = __( 'Click on Regenerate Button', 'surerank' );
+		}
+		$sitemap_steps[] = __( 'Save your changes', 'surerank' );
+
 		$helptext = [
 			__( 'An XML sitemap helps search engines discover and understand the pages on your site.', 'surerank' ),
 			__( 'When the sitemap is missing or cannot be accessed, search engines may take longer to find new or updated pages.', 'surerank' ),
@@ -920,12 +946,7 @@ class Analyzer extends Api_Base {
 			),
 			__( 'You can enable and manage your XML sitemap directly from SureRank.', 'surerank' ),
 			[
-				'list' => [
-					__( 'Go to SureRank ⇾ General ⇾ Sitemaps', 'surerank' ),
-					__( 'Enable the XML Sitemap toggle', 'surerank' ),
-					__( 'Click on Regenerate Button', 'surerank' ),
-					__( 'Save your changes', 'surerank' ),
-				],
+				'list' => $sitemap_steps,
 			],
 
 			sprintf(
@@ -1013,6 +1034,12 @@ class Analyzer extends Api_Base {
 			return $this->create_broken_link_error_response( __( 'Post not found', 'surerank' ) );
 		}
 
+		// Object-level guard: the status paths below persist per-post broken-link
+		// state, so require edit access to the target post.
+		if ( ! Post::can_manage_post_seo( (int) $post_id ) ) {
+			return $this->create_broken_link_error_response( __( 'You are not allowed to manage SEO checks for this post.', 'surerank' ) );
+		}
+
 		if ( $this->is_broken_link_ignored( $url ) ) {
 			$this->remove_broken_links( $url, $post_id, $urls );
 			return rest_ensure_response(
@@ -1052,7 +1079,14 @@ class Analyzer extends Api_Base {
 	 * @return void
 	 */
 	public function remove_broken_links( $url, $post_id, $urls ) {
-		$seo_checks   = Get::post_meta( $post_id, SURERANK_SEO_CHECKS, true );
+		$seo_checks = Get::post_meta( $post_id, SURERANK_SEO_CHECKS, true );
+		// Legacy/empty meta can be a string (e.g. unanalysed posts return '' or
+		// older versions stored a non-array). Normalise before the offset write
+		// below, otherwise PHP 8 throws "Cannot access offset of type string on string".
+		if ( ! is_array( $seo_checks ) ) {
+			$seo_checks = [];
+		}
+
 		$broken_links = $seo_checks['broken_links'] ?? [];
 
 		$existing_broken_links = Utils::existing_broken_links( $broken_links, $urls );
@@ -1080,6 +1114,12 @@ class Analyzer extends Api_Base {
 		$url     = (string) $request->get_param( 'url' );
 		$post_id = (int) $request->get_param( 'post_id' );
 		$urls    = (array) $request->get_param( 'urls' );
+
+		// Object-level guard: remove_broken_links() below mutates the per-post SEO
+		// checks cache, so require edit access to the target post before any write.
+		if ( $post_id > 0 && ! Post::can_manage_post_seo( $post_id ) ) {
+			return $this->create_broken_link_error_response( __( 'You are not allowed to manage SEO checks for this post.', 'surerank' ) );
+		}
 
 		$ignored_urls = $this->get_broken_link_ignored_urls();
 
@@ -1237,6 +1277,19 @@ class Analyzer extends Api_Base {
 	}
 
 	/**
+	 * Sanitize an array of URLs.
+	 *
+	 * @param array<int, string>                    $params URLs.
+	 * @param WP_REST_Request<array<string, mixed>> $request Request object.
+	 * @param string                                $key Key.
+	 * @return array<int, string>
+	 * @since 1.9.2
+	 */
+	public static function sanitize_urls( $params, $request, $key ) {
+		return array_map( 'esc_url_raw', $params );
+	}
+
+	/**
 	 * Parse robots.txt content into user-agent groups and directives (RFC 9309).
 	 *
 	 * @param string $content Robots.txt content.
@@ -1382,21 +1435,32 @@ class Analyzer extends Api_Base {
 	/**
 	 * Object-level guard for the shared ignore-check routes.
 	 *
-	 * These routes accept check_type=user, so the route-level
+	 * These routes accept check_type=post|taxonomy|user, so the route-level
 	 * validate_permission alone would let any role that passes the gate
-	 * read/write another user's ignored checks. Enforce the same per-user
-	 * object guard used by the dedicated user SEO routes.
+	 * read/write another object's ignored checks. Enforce the same per-object
+	 * guard used by the dedicated post/term/user SEO routes, matching the ID
+	 * type to the check_type (post ID, term ID, or user ID).
 	 *
-	 * @param int|string $post_id    Target ID (user ID when $check_type is 'user').
+	 * @param int|string $post_id    Target ID (post, term, or user ID per $check_type).
 	 * @param string     $check_type Check type ('post', 'taxonomy', 'user').
 	 * @since 1.9.0
 	 * @return WP_Error|null WP_Error when denied, null when allowed.
 	 */
-	private function guard_user_check_access( $post_id, $check_type ) {
-		if ( 'user' === $check_type && ! User_Seo::can_manage_user_seo( (int) $post_id ) ) {
+	private function guard_object_check_access( $post_id, $check_type ) {
+		// Map each check type to its object-level capability check and denial
+		// message; unknown types fall back to the post guard (fail-safe).
+		$guards = [
+			'user'     => [ [ User_Seo::class, 'can_manage_user_seo' ], __( 'You are not allowed to manage SEO checks for this user.', 'surerank' ) ],
+			'taxonomy' => [ [ Term::class, 'can_manage_term_seo' ], __( 'You are not allowed to manage SEO checks for this term.', 'surerank' ) ],
+			'post'     => [ [ Post::class, 'can_manage_post_seo' ], __( 'You are not allowed to manage SEO checks for this post.', 'surerank' ) ],
+		];
+
+		[ $capability_check, $message ] = $guards[ $check_type ] ?? $guards['post'];
+
+		if ( ! call_user_func( $capability_check, (int) $post_id ) ) {
 			return new WP_Error(
-				'surerank_cannot_manage_user',
-				__( 'You are not allowed to manage SEO checks for this user.', 'surerank' ),
+				'surerank_cannot_manage_object',
+				$message,
 				[ 'status' => rest_authorization_required_code() ]
 			);
 		}
@@ -2495,6 +2559,7 @@ class Analyzer extends Api_Base {
 				'validate_callback' => static function ( $param, $request, $key ) {
 					return filter_var( $param, FILTER_VALIDATE_URL );
 				},
+				'sanitize_callback' => 'esc_url_raw',
 				'required'          => true,
 			],
 		];
@@ -2522,12 +2587,14 @@ class Analyzer extends Api_Base {
 	private function get_broken_links_args() {
 		return [
 			'url'        => [
-				'type'     => 'string',
-				'required' => true,
+				'type'              => 'string',
+				'required'          => true,
+				'sanitize_callback' => 'esc_url_raw',
 			],
 			'user_agent' => [
-				'type'     => 'string',
-				'required' => true,
+				'type'              => 'string',
+				'required'          => true,
+				'sanitize_callback' => 'sanitize_text_field',
 			],
 			'post_id'    => [
 				'type'              => 'integer',
@@ -2535,10 +2602,15 @@ class Analyzer extends Api_Base {
 				'validate_callback' => static function ( $param, $request, $key ) {
 					return $param > 0;
 				},
+				'sanitize_callback' => 'absint',
 			],
 			'urls'       => [
-				'type'     => 'array',
-				'required' => true,
+				'type'              => 'array',
+				'required'          => true,
+				'sanitize_callback' => [ self::class, 'sanitize_urls' ],
+				'items'             => [
+					'type' => 'string',
+				],
 			],
 		];
 	}
@@ -2563,9 +2635,13 @@ class Analyzer extends Api_Base {
 				'sanitize_callback' => 'absint',
 			],
 			'urls'    => [
-				'type'     => 'array',
-				'required' => false,
-				'default'  => [],
+				'type'              => 'array',
+				'required'          => false,
+				'default'           => [],
+				'sanitize_callback' => [ self::class, 'sanitize_urls' ],
+				'items'             => [
+					'type' => 'string',
+				],
 			],
 		];
 	}
@@ -2633,8 +2709,9 @@ class Analyzer extends Api_Base {
 	private function get_id_args() {
 		return [
 			'id' => [
-				'type'     => 'string',
-				'required' => true,
+				'type'              => 'string',
+				'required'          => true,
+				'sanitize_callback' => 'sanitize_text_field',
 			],
 		];
 	}
@@ -2667,8 +2744,9 @@ class Analyzer extends Api_Base {
 				'sanitize_callback' => 'sanitize_text_field',
 			],
 			'post_id'    => [
-				'type'     => 'integer',
-				'required' => true,
+				'type'              => 'integer',
+				'required'          => true,
+				'sanitize_callback' => 'absint',
 			],
 			'check_type' => [
 				'type'        => 'string',
@@ -2691,8 +2769,9 @@ class Analyzer extends Api_Base {
 	private function get_post_id_with_check_type_args() {
 		return [
 			'post_id'    => [
-				'type'     => 'integer',
-				'required' => true,
+				'type'              => 'integer',
+				'required'          => true,
+				'sanitize_callback' => 'absint',
 			],
 			'check_type' => [
 				'type'        => 'string',

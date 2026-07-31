@@ -32,6 +32,7 @@ import { applyFilters } from '@wordpress/hooks';
 import AdminMagicButton from './magic-button';
 import AIModal from './ai-modal';
 import useAIModal from '@/global/hooks/use-ai-modal';
+import OgImageUpgradeButton from '@/global/components/og-image-upgrade-button';
 
 const socialMedia = [
 	{
@@ -365,6 +366,12 @@ const SocialSettings = () => {
 												setImageGenModalOpen( true ),
 										}
 									) }
+									<OgImageUpgradeButton
+										description={ __(
+											'Upgrade to SureRank Pro to generate branded, AI-powered Open Graph images for your site.',
+											'surerank'
+										) }
+									/>
 								</div>
 							</div>
 							{ /* Input */ }

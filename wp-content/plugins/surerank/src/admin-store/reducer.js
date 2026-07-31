@@ -186,6 +186,7 @@ const dataSettings = {
 		// when the corresponding third-party plugin is active.
 		enable_woocommerce_integration: true, // Enables WooCommerce SEO compatibility.
 		enable_angie_integration: true, // Enables Angie integration compatibility.
+		enable_fluentcart_integration: true, // Enables FluentCart SEO compatibility.
 
 		// MCP defaults to disabled so the integration is opt-in; the actual MCP
 		// endpoint also requires the MCP Adapter plugin to be installed.

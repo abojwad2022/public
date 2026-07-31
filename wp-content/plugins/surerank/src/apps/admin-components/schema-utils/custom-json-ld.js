@@ -6,13 +6,15 @@ const SMART_TAG_PATTERN = /%[\w\-_.]+%/;
 const normalizeNodes = ( decoded ) => {
 	if ( Array.isArray( decoded?.[ '@graph' ] ) ) {
 		return decoded[ '@graph' ].filter(
-			( node ) => node && typeof node === 'object' && ! Array.isArray( node )
+			( node ) =>
+				node && typeof node === 'object' && ! Array.isArray( node )
 		);
 	}
 
 	if ( Array.isArray( decoded ) ) {
 		return decoded.filter(
-			( node ) => node && typeof node === 'object' && ! Array.isArray( node )
+			( node ) =>
+				node && typeof node === 'object' && ! Array.isArray( node )
 		);
 	}
 

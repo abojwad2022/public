@@ -9,6 +9,7 @@
 
 namespace SureRank\Inc\API;
 
+use SureRank\Inc\Functions\Cache_Purge;
 use SureRank\Inc\Functions\Defaults;
 use SureRank\Inc\Functions\Get;
 use SureRank\Inc\Functions\Send_Json;
@@ -64,9 +65,19 @@ class Term extends Api_Base {
 	 */
 	public function get_term_seo_data( $request ) {
 
-		$term_id     = $request->get_param( 'term_id' );
-		$post_type   = $request->get_param( 'post_type' );
-		$is_taxonomy = $request->get_param( 'is_taxonomy' );
+		$term_id     = (int) $request->get_param( 'term_id' );
+		$post_type   = (string) $request->get_param( 'post_type' );
+		$is_taxonomy = rest_sanitize_boolean( (string) $request->get_param( 'is_taxonomy' ) );
+
+		if ( ! self::can_manage_term_seo( $term_id ) ) {
+			wp_send_json(
+				[
+					'success' => false,
+					'message' => __( 'You are not allowed to manage SEO settings for this term.', 'surerank' ),
+				],
+				403
+			);
+		}
 
 		$data = self::get_term_data_by_id( $term_id, $post_type, $is_taxonomy );
 
@@ -113,6 +124,16 @@ class Term extends Api_Base {
 		$term_id = (int) $request->get_param( 'term_id' );
 		$data    = (array) $request->get_param( 'metaData' );
 
+		if ( ! self::can_manage_term_seo( $term_id ) ) {
+			wp_send_json(
+				[
+					'success' => false,
+					'message' => __( 'You are not allowed to manage SEO settings for this term.', 'surerank' ),
+				],
+				403
+			);
+		}
+
 		$result = self::save_term_seo_meta( $term_id, $data );
 
 		if ( $result['success'] ) {
@@ -121,6 +142,34 @@ class Term extends Api_Base {
 		}
 
 		Send_Json::error( [ 'message' => $result['message'] ] );
+	}
+
+	/**
+	 * Object-level capability guard.
+	 *
+	 * @param int $term_id Target term ID.
+	 * @return bool
+	 */
+	public static function can_manage_term_seo( $term_id ) {
+		if ( $term_id <= 0 ) {
+			return false;
+		}
+
+		$term = get_term( $term_id );
+		if ( ! $term instanceof \WP_Term ) {
+			return false;
+		}
+
+		$taxonomy = get_taxonomy( $term->taxonomy );
+		if ( ! $taxonomy || empty( $taxonomy->cap->edit_terms ) ) {
+			return false;
+		}
+
+		/*
+		 * Check both the taxonomy-wide edit capability and the specific term so
+		 * custom term capability mappings cannot bypass object-level auth.
+		 */
+		return current_user_can( $taxonomy->cap->edit_terms ) && current_user_can( 'edit_term', $term_id );
 	}
 
 	/**
@@ -142,6 +191,13 @@ class Term extends Api_Base {
 	 * @since 1.x.x
 	 */
 	public static function save_term_seo_meta( int $term_id, array $data ): array {
+		if ( ! self::can_manage_term_seo( $term_id ) ) {
+			return [
+				'success' => false,
+				'message' => __( 'You are not allowed to manage SEO settings for this term.', 'surerank' ),
+			];
+		}
+
 		if ( isset( $data['schemas'] ) ) {
 			$validation = apply_filters(
 				'surerank_validate_schemas_payload',
@@ -172,6 +228,15 @@ class Term extends Api_Base {
 		$current_time = time();
 		Update::option( 'surerank_last_optimized_on', $current_time ); // Site-wide last optimisation.
 		Update::term_meta( $term_id, 'surerank_term_optimized_at', $current_time ); // Per-term optimisation timestamp.
+
+		// Refresh this term archive's cached output across page-cache plugins.
+		$term = get_term( $term_id );
+		if ( $term instanceof \WP_Term ) {
+			$term_link = get_term_link( $term );
+			if ( is_string( $term_link ) ) {
+				Cache_Purge::purge_url( $term_link );
+			}
+		}
 
 		return [
 			'success' => true,

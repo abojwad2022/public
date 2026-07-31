@@ -70,7 +70,7 @@ class Content_Seo {
 			return $content;
 		}
 
-		if ( $this->is_divi5_rendered_content( $content ) ) {
+		if ( $this->should_skip_content( $content ) ) {
 			return $content;
 		}
 
@@ -97,7 +97,7 @@ class Content_Seo {
 			return $content;
 		}
 
-		if ( $this->is_divi5_rendered_content( $content ) ) {
+		if ( $this->should_skip_content( $content ) ) {
 			return $content;
 		}
 
@@ -131,7 +131,7 @@ class Content_Seo {
 			return $content;
 		}
 
-		if ( $this->is_divi5_rendered_content( $content ) ) {
+		if ( $this->should_skip_content( $content ) ) {
 			return $content;
 		}
 
@@ -246,6 +246,73 @@ class Content_Seo {
 		foreach ( $filters as $hook => $priority ) {
 			add_filter( $hook, [ $this, 'enhance_content' ], $priority, 2 );
 		}
+	}
+
+	/**
+	 * Decide whether the_content rewriting must be skipped for this content.
+	 *
+	 * Some page builders inject fully-rendered, JS-hydrated markup into
+	 * the_content. Regex-rewriting their <img>/<a> tags corrupts that markup and
+	 * the affected block renders blank (Divi 5 React hydration, Breakdance Woo
+	 * cart). We also skip WooCommerce cart/checkout pages outright, since those
+	 * carry hydrated block markup regardless of the builder in use.
+	 *
+	 * @param string $content Rendered content.
+	 * @return bool
+	 * @since 1.9.3
+	 */
+	private function should_skip_content( $content ): bool {
+		// Cheapest first: the cart/checkout bail needs no content scan, so it
+		// short-circuits before the md5-backed builder detectors below.
+		if ( function_exists( 'is_cart' ) && function_exists( 'is_checkout' )
+			&& ( is_cart() || is_checkout() ) ) {
+			return true;
+		}
+
+		if ( $this->is_divi5_rendered_content( $content ) ) {
+			return true;
+		}
+
+		return $this->is_breakdance_rendered_content( $content );
+	}
+
+	/**
+	 * Detect Breakdance rendered output. Breakdance hooks the_content at
+	 * PHP_INT_MIN and returns its full page HTML wrapped in <div class="breakdance">
+	 * (Render\renderer.php), stripping core content filters (wpautop,
+	 * wp_filter_content_tags) because they corrupt that output. SureRank's filter
+	 * is not stripped, so rewriting the emitted <img>/<a> tags breaks hydrated
+	 * blocks (e.g. the WooCommerce cart block goes blank). We bail entirely.
+	 *
+	 * Detection markers, all absent in normal post content:
+	 *   - bde-section CSS class. Every Breakdance layout's root element is a
+	 *     Section that emits the bde-section class (renderer.php element classes),
+	 *     so this matches the common theme-enabled case where no wrapper is added.
+	 *   - class='breakdance' / class="breakdance" wrapper, only emitted by
+	 *     maybeWrapInMainTag() in theme-disabled / zero-theme mode.
+	 *   - data-breakdance-foreign-document (header/footer documents).
+	 *
+	 * Result is memoized per content to avoid repeated strpos scans.
+	 *
+	 * @param string $content Rendered content.
+	 * @return bool
+	 * @since 1.9.3
+	 */
+	private function is_breakdance_rendered_content( $content ): bool {
+		static $cache = [];
+
+		$key = md5( $content );
+		if ( isset( $cache[ $key ] ) ) {
+			return $cache[ $key ];
+		}
+
+		$is_breakdance = strpos( $content, 'bde-section' ) !== false
+			|| strpos( $content, "class='breakdance'" ) !== false
+			|| strpos( $content, 'class="breakdance"' ) !== false
+			|| strpos( $content, 'data-breakdance-foreign-document' ) !== false;
+
+		$cache[ $key ] = (bool) apply_filters( 'surerank_is_breakdance_content', $is_breakdance, $content );
+		return $cache[ $key ];
 	}
 
 	/**

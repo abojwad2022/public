@@ -20,6 +20,8 @@ namespace SureRank\Inc\API;
 
 use SureRank\Inc\Functions\Cache;
 use SureRank\Inc\Functions\Settings;
+use SureRank\Inc\Sitemap\Generation_Mode;
+use SureRank\Inc\Sitemap\Providers\Registry;
 use SureRank\Inc\Sitemap\Xml_Sitemap;
 use SureRank\Inc\Traits\Get_Instance;
 use WP_Error;
@@ -136,7 +138,14 @@ class Headless_Sitemap extends Api_Base {
 
 		$index = $this->read_json( self::INDEX_FILE );
 		if ( ! is_array( $index ) ) {
-			return $this->not_built();
+			// Auto mode: synthesize the index on the fly, matching the XML path.
+			if ( Generation_Mode::allows_inline_build() ) {
+				Registry::get_instance()->build_index();
+				$index = $this->read_json( self::INDEX_FILE );
+			}
+			if ( ! is_array( $index ) ) {
+				return $this->not_built();
+			}
 		}
 
 		$sitemaps = [];

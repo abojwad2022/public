@@ -12,6 +12,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit; // Exit if accessed directly.
 }
 
+use SureRank\Inc\Sitemap\Generation_Mode;
 use SureRank\Inc\Traits\Get_Instance;
 use SureRank\Inc\Traits\Logger;
 
@@ -127,6 +128,13 @@ class Cron {
 	 * @return void
 	 */
 	public function ensure_cron_scheduled() {
+		// Auto mode builds on the fly and needs no scheduled cron; drop any
+		// event a previous cron-mode session (or activation) left behind.
+		if ( ! Generation_Mode::cron_prebuild_enabled() ) {
+			$this->unschedule_sitemap_generation();
+			return;
+		}
+
 		if ( ! wp_next_scheduled( self::SITEMAP_CRON_EVENT ) ) {
 			$this->schedule_sitemap_generation();
 		}

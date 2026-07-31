@@ -38,16 +38,25 @@ class Schema_Render {
 	private $variable_renderer;
 
 	/**
+	 * The schema registry key used to resolve field definitions.
+	 *
+	 * @var string
+	 */
+	private $registry_key;
+
+	/**
 	 * Schema_Render constructor.
 	 *
 	 * @param string               $type              The schema type.
 	 * @param array<string, mixed> $fields            The fields to render.
 	 * @param Render               $variable_renderer The renderer for processing placeholders.
+	 * @param string               $registry_key      The key the schema is registered under (e.g. LocalBusiness). May differ from $type when a sub-type is selected.
 	 */
-	public function __construct( string $type, array $fields, Render $variable_renderer ) {
+	public function __construct( string $type, array $fields, Render $variable_renderer, string $registry_key = '' ) {
 		$this->type              = $type;
 		$this->fields            = $fields;
 		$this->variable_renderer = $variable_renderer;
+		$this->registry_key      = $registry_key;
 	}
 
 	/**
@@ -107,7 +116,7 @@ class Schema_Render {
 	 */
 	private function get_schema_field_definitions() {
 		$schema_types = Utils::get_schema_types();
-		$schema_class = $schema_types[ $this->type ] ?? null;
+		$schema_class = $schema_types[ $this->registry_key ] ?? $schema_types[ $this->type ] ?? null;
 
 		if ( ! $schema_class || ! class_exists( $schema_class ) ) {
 			return [];

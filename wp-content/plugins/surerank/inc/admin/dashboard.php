@@ -442,6 +442,7 @@ class Dashboard {
 						'robots_data'                 => Helper::get_robots_data(),
 						'wp_reading_settings_url'     => admin_url( 'options-reading.php' ),
 						'welcome_video'               => $this->get_welcome_video(),
+						'days_since_install'          => $this->get_days_since_install(),
 						'learn_progress'              => Learn::get_user_progress(),
 						'learn_auto_detected'         => Learn::compute_auto_detected(),
 					]
@@ -465,6 +466,7 @@ class Dashboard {
 				'version'                    => SURERANK_VERSION,
 				'help_link'                  => FunctionsUtils::get_utm_url( 'https://surerank.com/docs/', 'admin_dashboard', 'help_link' ),
 				'support_link'               => FunctionsUtils::get_utm_url( 'https://surerank.com/contact/', 'admin_dashboard', 'support_link' ),
+				'free_vs_pro_link'           => FunctionsUtils::get_utm_url( 'https://surerank.com/surerank-free-vs-pro/', 'admin_dashboard', 'free_vs_pro_link' ),
 				'rating_link'                => esc_url( 'https://wordpress.org/support/plugin/surerank/reviews/#new-post' ),
 				'community_link'             => esc_url( 'https://www.facebook.com/groups/surecrafted' ),
 				'pricing_link'               => Helper::get_marketing_link( 'pricing/', 'pricing_link' ),
@@ -567,6 +569,22 @@ class Dashboard {
 			}
 		</style>
 		<?php
+	}
+
+	/**
+	 * Get number of days since plugin install.
+	 *
+	 * @since 1.9.3
+	 * @return int Days since install, 0 if install time is not recorded.
+	 */
+	private function get_days_since_install() {
+		$install_time = (int) get_option( 'surerank_usage_installed_time', 0 );
+
+		if ( $install_time <= 0 ) {
+			return 0;
+		}
+
+		return (int) floor( ( time() - $install_time ) / DAY_IN_SECONDS );
 	}
 
 	/**

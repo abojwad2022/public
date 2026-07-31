@@ -3,6 +3,7 @@ import { Breadcrumb, Button, Container, Title } from '@bsf/force-ui';
 import { useDispatch, useSuspenseSelect, useSelect } from '@wordpress/data';
 import { Suspense } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
+import { applyFilters } from '@wordpress/hooks';
 import { Home, RefreshCw } from 'lucide-react';
 import SiteSeoChecksTableSkeleton, {
 	SiteSeoChecksInnerTableSkeleton,
@@ -66,6 +67,11 @@ const SiteSeoChecksHeader = () => {
 
 // Title section component
 const SiteSeoChecksTitle = ( { isLoading, handleRunChecksAgain } ) => {
+	const headerActionComponents = applyFilters(
+		'surerank-pro.dashboard.site-seo-checks-header-actions',
+		[]
+	);
+
 	return (
 		<Container align="center" justify="between" className="p-2">
 			<Title
@@ -73,22 +79,30 @@ const SiteSeoChecksTitle = ( { isLoading, handleRunChecksAgain } ) => {
 				title={ __( 'Site SEO Audit', 'surerank' ) }
 				size="md"
 			/>
-			<div></div>
-			<Button
-				variant="outline"
-				size="sm"
-				icon={
-					<RefreshCw
-						className={ cn( 'size-4', {
-							'animate-spin': isLoading,
-						} ) }
+			<div className="flex items-center gap-2">
+				{ headerActionComponents.map( ( HeaderAction, index ) => (
+					<HeaderAction
+						key={ `site-seo-action-${ index }` }
+						isLoading={ isLoading }
+						handleRunChecksAgain={ handleRunChecksAgain }
 					/>
-				}
-				onClick={ handleRunChecksAgain }
-				disabled={ isLoading }
-			>
-				{ __( 'Run Checks', 'surerank' ) }
-			</Button>
+				) ) }
+				<Button
+					variant="outline"
+					size="sm"
+					icon={
+						<RefreshCw
+							className={ cn( 'size-4', {
+								'animate-spin': isLoading,
+							} ) }
+						/>
+					}
+					onClick={ handleRunChecksAgain }
+					disabled={ isLoading }
+				>
+					{ __( 'Run Checks', 'surerank' ) }
+				</Button>
+			</div>
 		</Container>
 	);
 };
@@ -134,7 +148,7 @@ const SuspendedContent = () => {
 // Main component
 const SiteSeoChecks = () => {
 	return (
-		<div className="w-full p-5 pb-8 xl:p-8 max-[1920px]:max-w-full mx-auto space-y-8">
+		<div className="w-full p-5 pb-8 xl:p-8 max-w-[1920px] mx-auto space-y-8">
 			<SiteSeoChecksHeader />
 			<SuspendedContent />
 			<SaveAuthToken />

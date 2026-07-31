@@ -14,7 +14,7 @@ export const getPricingLink = ( utmContent = '' ) => {
 	try {
 		const parsed = new URL( pricingLink );
 		parsed.searchParams.set( 'utm_source', 'surerank_plugin' );
-		parsed.searchParams.set( 'utm_medium', 'wordpress_plugin' );
+		parsed.searchParams.set( 'utm_medium', 'in_product' );
 		parsed.searchParams.set( 'utm_campaign', 'core_plugin' );
 		if ( utmContent ) {
 			parsed.searchParams.set( 'utm_content', utmContent );

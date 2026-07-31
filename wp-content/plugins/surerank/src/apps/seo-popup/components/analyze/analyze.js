@@ -13,6 +13,7 @@ import PageChecksHoc from '@SeoPopup/components/page-seo-checks/page-checks-hoc'
 import PageBuilderPageSeoChecksHoc from '@SeoPopup/components/page-seo-checks/page-builder-page-checks-hoc';
 import KeywordInput from '@SeoPopup/components/keyword-input';
 import { ENABLE_PAGE_LEVEL_SEO } from '@Global/constants';
+import { LinkSuggestionUpgradeNudge } from '@GlobalComponents/nudges';
 import {
 	isPageBuilderActive,
 	isElementorBuilder,
@@ -291,6 +292,9 @@ const Analyze = () => {
 				</Accordion.Item>
 				{ /* Pro Accordions - Link Manager, etc. */ }
 				{ applyFilters( 'surerank.analyze.pro_accordions', null ) }
+				{ /* Free-side upgrade nudge for the Link Suggestions Pro feature;
+				   returns null when Pro is active so the real Pro accordion renders. */ }
+				<LinkSuggestionUpgradeNudge value="link-suggestions-pro" />
 			</Accordion>
 		</div>
 	);

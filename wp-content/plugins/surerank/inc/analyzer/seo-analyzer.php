@@ -557,19 +557,30 @@ class SeoAnalyzer {
 			];
 		}
 
-		$total              = $images->length;
+		$total              = 0;
 		$missing_alt        = 0;
 		$missing_alt_images = [];
 
 		foreach ( $images as $img ) {
-			if ( $img instanceof DOMElement ) {
-				$src = $img->hasAttribute( 'src' )
-					? trim( $img->getAttribute( 'src' ) )
-					: '';
-				if ( ! $img->hasAttribute( 'alt' ) || empty( trim( $img->getAttribute( 'alt' ) ) ) ) {
-					$missing_alt++;
-					$missing_alt_images[] = $src;
-				}
+			if ( ! $img instanceof DOMElement ) {
+				continue;
+			}
+
+			$src = $img->hasAttribute( 'src' )
+				? trim( $img->getAttribute( 'src' ) )
+				: '';
+
+			// Images with no source can't render a preview and shouldn't be
+			// flagged for missing alt text, so skip them entirely.
+			if ( '' === $src ) {
+				continue;
+			}
+
+			$total++;
+
+			if ( ! $img->hasAttribute( 'alt' ) || empty( trim( $img->getAttribute( 'alt' ) ) ) ) {
+				$missing_alt++;
+				$missing_alt_images[] = $src;
 			}
 		}
 

@@ -35,10 +35,37 @@ class Init {
 	 * @since 1.5.0
 	 */
 	public function __construct() {
+		// Register integration setting keys with the Role Manager allowlist in all
+		// contexts (incl. REST), so the keys are not stripped on Pro Role Manager sites.
+		add_filter( 'surerank_role_manager_option_mappings', [ $this, 'register_role_manager_mappings' ] );
+
 		if ( is_admin() ) {
 			$this->load_admin_integrations();
 		}
 		$this->load_frontend_integrations();
+	}
+
+	/**
+	 * Register integration setting keys with the Role Manager option mappings.
+	 *
+	 * SureRank Pro's Role Manager strips any settings key not in its allowlist
+	 * from the settings API (read and save). Registering the FluentCart key here
+	 * keeps the free plugin self-contained — it is a no-op when Pro is not active.
+	 *
+	 * @since 1.9.2
+	 * @param mixed $mappings Role Manager option mappings keyed by capability.
+	 * @return mixed
+	 */
+	public function register_role_manager_mappings( $mappings ) {
+		if ( ! is_array( $mappings ) || ! isset( $mappings['surerank_global_setting'] ) || ! is_array( $mappings['surerank_global_setting'] ) ) {
+			return $mappings;
+		}
+
+		if ( ! in_array( 'enable_fluentcart_integration', $mappings['surerank_global_setting'], true ) ) {
+			$mappings['surerank_global_setting'][] = 'enable_fluentcart_integration';
+		}
+
+		return $mappings;
 	}
 
 	/**
@@ -67,6 +94,7 @@ class Init {
 	public function load_frontend_integrations(): void {
 		$enable_woocommerce_integration = $this->is_integration_enabled( 'enable_woocommerce_integration' );
 		$enable_angie_integration       = $this->is_integration_enabled( 'enable_angie_integration' );
+		$enable_fluentcart_integration  = $this->is_integration_enabled( 'enable_fluentcart_integration' );
 
 		if ( defined( 'BRICKS_VERSION' ) ) {
 			Bricks::get_instance();
@@ -74,6 +102,10 @@ class Init {
 
 		if ( class_exists( 'WooCommerce' ) && $enable_woocommerce_integration ) {
 			Woocommerce::get_instance();
+		}
+
+		if ( defined( 'FLUENTCART_VERSION' ) && $enable_fluentcart_integration ) {
+			Fluentcart::get_instance();
 		}
 
 		if ( defined( 'ANGIE_VERSION' ) && $enable_angie_integration ) {

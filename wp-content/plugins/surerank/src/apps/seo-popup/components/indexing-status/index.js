@@ -8,14 +8,14 @@ import {
 	useState,
 } from '@wordpress/element';
 import { __, sprintf } from '@wordpress/i18n';
-import { useDispatch, useSelect } from '@wordpress/data';
+import { useSelect } from '@wordpress/data';
 import apiFetch from '@wordpress/api-fetch';
 import { addQueryArgs } from '@wordpress/url';
 import { RefreshCw } from 'lucide-react';
 import { SeoPopupTooltip } from '@AdminComponents/tooltip';
 import { cn } from '@/functions/utils';
 import { STORE_NAME } from '@/store/constants';
-import { isSeoAnalysisDisabled } from '@SeoPopup/components/page-seo-checks/analyzer/utils/page-builder';
+import { errorMessageFor, errorLabelFor } from './status-messages';
 
 const DEFAULT_FRESH_TTL_SECONDS = 12 * 60 * 60;
 const ENDPOINT = '/surerank/v1/google-search-console/url-inspection';
@@ -74,36 +74,6 @@ const formatRelative = ( unixSeconds ) => {
 	return sprintf( __( '%d d ago', 'surerank' ), d );
 };
 
-const errorMessageFor = ( code ) => {
-	switch ( code ) {
-		case 'RESOURCE_EXHAUSTED':
-		case 429:
-			return __(
-				'Search Console quota reached. Try again later.',
-				'surerank'
-			);
-		case 'forbidden':
-		case 403:
-		case 'forbidden_object':
-			return __(
-				'You do not have permission to view this indexing status.',
-				'surerank'
-			);
-		case 'no_permalink':
-			return __(
-				'Save the post as published to inspect its URL.',
-				'surerank'
-			);
-		case 'no_site_selected':
-			return __(
-				'Connect a Search Console property to see indexing status.',
-				'surerank'
-			);
-		default:
-			return __( 'Unable to fetch indexing status.', 'surerank' );
-	}
-};
-
 const buildTooltipText = ( { data, errorCode, isRefreshing } ) => {
 	if ( isRefreshing ) {
 		return __( 'Checking indexing status…', 'surerank' );
@@ -141,19 +111,12 @@ const IndexingStatus = () => {
 		( select ) => select( STORE_NAME ).getActivePostId(),
 		[]
 	);
-	const currentMetaTab = useSelect(
-		( select ) => select( STORE_NAME ).getAppSettings()?.currentMetaTab,
-		[]
-	);
-	const { updateAppSettings } = useDispatch( STORE_NAME );
-
 	const kind = isTaxonomy ? 'term' : 'post';
 	const localizedId = isTaxonomy ? localizedTermId : localizedPostId;
 	// Prefer the store's activePostId (listing page sets this per row);
 	// fall back to localized data for single-post/term edit screens.
 	const objectId = activePostId || localizedId || 0;
 	const enabled = isGscConnected && isGscSiteMatching && !! objectId;
-	const canOpenAnalyze = useMemo( () => ! isSeoAnalysisDisabled(), [] );
 
 	// Seed from the per-page memory cache when available; otherwise from
 	// localized data only when it belongs to THIS object (single-post
@@ -202,6 +165,22 @@ const IndexingStatus = () => {
 				const response = await apiFetch( {
 					path: addQueryArgs( ENDPOINT, args ),
 				} );
+				// Send_Json::error() returns HTTP 200 with a
+				// { success: false, error_code } envelope, so apiFetch
+				// resolves (never throws) here. Surface it as an error
+				// state explicitly — otherwise the badge stays stuck on
+				// "Checking…" forever.
+				if (
+					response?.success === false ||
+					( ! response?.status && response?.error_code )
+				) {
+					setErrorCode(
+						response?.error_code ??
+							response?.code ??
+							'unknown_error'
+					);
+					return;
+				}
 				if ( response?.status ) {
 					setData( response );
 					setErrorCode( null );
@@ -247,13 +226,15 @@ const IndexingStatus = () => {
 	const hasError = !! errorCode;
 
 	let variant = 'neutral';
-	if ( ! hasError && status ) {
+	if ( hasError ) {
+		variant = 'red';
+	} else if ( status ) {
 		variant = STATUS_VARIANT[ status ] || 'neutral';
 	}
 
 	let label = __( 'Checking…', 'surerank' );
 	if ( hasError ) {
-		label = __( 'Not available', 'surerank' );
+		label = errorLabelFor( errorCode );
 	} else if ( status ) {
 		label = labelFor( status );
 	}
@@ -263,26 +244,6 @@ const IndexingStatus = () => {
 	const handleRefresh = ( e ) => {
 		e.stopPropagation();
 		fetchStatus( { manual: true } );
-	};
-
-	const handleOpenAnalyze = () => {
-		if ( ! canOpenAnalyze ) {
-			return;
-		}
-		if ( 'analyze' === currentMetaTab ) {
-			return;
-		}
-		updateAppSettings( {
-			currentTab: 'optimize',
-			currentMetaTab: 'analyze',
-		} );
-	};
-
-	const handleOpenAnalyzeKey = ( e ) => {
-		if ( e.key === 'Enter' || e.key === ' ' ) {
-			e.preventDefault();
-			handleOpenAnalyze();
-		}
 	};
 
 	const badgeLabel = (
@@ -309,21 +270,7 @@ const IndexingStatus = () => {
 			arrow
 			className="z-[99999]"
 		>
-			<span
-				role={ canOpenAnalyze ? 'button' : undefined }
-				tabIndex={ canOpenAnalyze ? 0 : undefined }
-				onClick={ canOpenAnalyze ? handleOpenAnalyze : undefined }
-				onKeyDown={ canOpenAnalyze ? handleOpenAnalyzeKey : undefined }
-				aria-label={
-					canOpenAnalyze
-						? __( 'Open Analyze tab', 'surerank' )
-						: undefined
-				}
-				className={ cn(
-					'inline-flex rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-border-interactive',
-					canOpenAnalyze && 'cursor-pointer'
-				) }
-			>
+			<span className="inline-flex rounded-full">
 				<Badge
 					label={ badgeLabel }
 					size="xs"

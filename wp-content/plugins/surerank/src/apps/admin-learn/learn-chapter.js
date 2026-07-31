@@ -1,6 +1,5 @@
-import { Accordion } from '@bsf/force-ui';
+import { Accordion, Badge } from '@bsf/force-ui';
 import { __, sprintf } from '@wordpress/i18n';
-import { Check } from 'lucide-react';
 import LearnTaskCard from './learn-task-card';
 
 const LearnChapter = ( {
@@ -46,30 +45,32 @@ const LearnChapter = ( {
 				<span className="text-base font-semibold text-text-primary text-left">
 					{ chapter.title }
 				</span>
-				<span
-					className="relative inline-flex items-center justify-center gap-1 min-w-[2.75rem] h-5 px-2 rounded-full overflow-hidden bg-background-secondary border border-solid border-brand-border-300"
-					aria-label={ sprintf(
-						// translators: %d: percent complete
-						__( 'Chapter progress: %d%%', 'surerank' ),
-						pct
-					) }
-				>
-					<span
-						aria-hidden="true"
-						className="absolute inset-y-0 left-0 bg-brand-200"
-						style={ { width: `${ pct }%` } }
+				{ chapter.isPro && stats.total === 0 ? (
+					<Badge
+						size="sm"
+						type="pill"
+						variant="blue"
+						label={ __( 'Pro', 'surerank' ) }
 					/>
-					{ stats.total > 0 && stats.done === stats.total && (
-						<Check
+				) : (
+					<span
+						className="relative inline-flex items-center justify-center gap-1 min-w-[2.75rem] h-5 px-2 rounded-full overflow-hidden bg-background-secondary border border-solid border-brand-border-300"
+						aria-label={ sprintf(
+							// translators: %d: percent complete
+							__( 'Chapter progress: %d%%', 'surerank' ),
+							pct
+						) }
+					>
+						<span
 							aria-hidden="true"
-							className="relative size-3 shrink-0 text-text-primary"
-							strokeWidth={ 3 }
+							className="absolute inset-y-0 left-0 bg-brand-200"
+							style={ { width: `${ pct }%` } }
 						/>
-					) }
-					<span className="relative text-xs font-medium text-text-primary leading-none">
-						{ countLabel }
+						<span className="relative text-xs font-medium text-text-primary leading-none">
+							{ countLabel }
+						</span>
 					</span>
-				</span>
+				) }
 			</Accordion.Trigger>
 			<Accordion.Content>
 				<div className="flex flex-col gap-4 pt-2">
@@ -86,10 +87,10 @@ const LearnChapter = ( {
 									chapter.id,
 									step.id
 								) }
-								autoDetected={ isStepAutoDetected(
-									chapter.id,
-									step.id
-								) }
+								autoDetected={
+									! step.locked &&
+									isStepAutoDetected( chapter.id, step.id )
+								}
 								onToggle={ markStep }
 								onCta={ onCta }
 							/>

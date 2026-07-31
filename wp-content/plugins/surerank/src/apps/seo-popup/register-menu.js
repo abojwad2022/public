@@ -1,11 +1,12 @@
 /**
  * Meta Options build.
  */
-import { __ } from '@wordpress/i18n';
+import { __, _n, sprintf } from '@wordpress/i18n';
 import { useDispatch, useSelect } from '@wordpress/data';
 import {
 	PluginMoreMenuItem,
 	PluginPostPublishPanel,
+	PluginPrePublishPanel,
 	PluginDocumentSettingPanel,
 } from '@wordpress/editor';
 import {
@@ -21,6 +22,7 @@ import PageCheckStatusIndicator from '@AdminComponents/page-check-status-indicat
 import usePageCheckStatus from './hooks/usePageCheckStatus';
 import { getTooltipText } from './utils/page-checks-status-tooltip-text';
 import { isPageBuilderActive } from '@SeoPopup/components/page-seo-checks/analyzer/utils/page-builder';
+import EditorTour from '@SeoPopup/components/editor-tour/editor-tour';
 
 // Inject a toolbar button directly into the Gutenberg header via a React portal.
 const SureRankToolbarButtonPortal = () => {
@@ -224,6 +226,33 @@ const PostPublishSEOMessage = () => {
 	return __( 'Your page is live, but not yet SEO optimized.', 'surerank' );
 };
 
+// Component to show SEO status message in the pre-publish panel.
+const PrePublishSEOMessage = () => {
+	const { status, initializing, counts } = usePageCheckStatus();
+
+	if ( initializing ) {
+		return null;
+	}
+
+	if ( status === 'success' || counts.errorAndWarnings === 0 ) {
+		return __(
+			'Your SEO looks good. You are ready to publish.',
+			'surerank'
+		);
+	}
+
+	return sprintf(
+		/* translators: %d: number of SEO issues found on the post. */
+		_n(
+			'%d SEO issue found.',
+			'%d SEO issues found.',
+			counts.errorAndWarnings,
+			'surerank'
+		),
+		counts.errorAndWarnings
+	);
+};
+
 const SpectraPageSettingsPopup = () => {
 	const { updateModalState } = useDispatch( storeName );
 	const { initializing, counts, status } = usePageCheckStatus();
@@ -274,6 +303,29 @@ const SpectraPageSettingsPopup = () => {
 				</PluginDocumentSettingPanel>
 			) }
 
+			{ /* Pre-Publish Panel Message - Gutenberg only */ }
+			{ isNotPageBuilder && ! initializing && (
+				<PluginPrePublishPanel
+					title={ __( 'SureRank SEO', 'surerank' ) }
+					icon={ false }
+					initialOpen={ true }
+					className="surerank-root"
+				>
+					<div className="flex gap-4 flex-col">
+						<p className="m-0 text-[13px] leading-[1.4] text-text-primary">
+							<PrePublishSEOMessage />
+						</p>
+						<WPButton
+							variant="primary"
+							onClick={ handleMenuClick }
+							className="w-fit"
+						>
+							{ getButtonText() }
+						</WPButton>
+					</div>
+				</PluginPrePublishPanel>
+			) }
+
 			{ /* Post-Publish Panel Message - Gutenberg only */ }
 			{ isNotPageBuilder && ! initializing && (
 				<PluginPostPublishPanel
@@ -287,7 +339,7 @@ const SpectraPageSettingsPopup = () => {
 								{ __( 'Manage your SEO', 'surerank' ) }
 							</h3>
 						</div>
-						<p className="m-0 text-[13px] leading-[1.4] text-[#1e1e1e]">
+						<p className="m-0 text-[13px] leading-[1.4] text-text-primary">
 							<PostPublishSEOMessage />
 						</p>
 						<WPButton
@@ -303,6 +355,9 @@ const SpectraPageSettingsPopup = () => {
 
 			{ /* Portal-injected toolbar button */ }
 			<SureRankToolbarButtonPortal />
+
+			{ /* First-run guided tour (Gutenberg) */ }
+			<EditorTour />
 		</>
 	);
 };

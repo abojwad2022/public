@@ -163,7 +163,7 @@ class Stylesheet {
 						<h2 style="color: <?php echo esc_html( $top_bar_data['heading_color'] ); ?>;"><?php echo esc_html( $top_bar_data['title'] ); ?></h2>
 						<p style="color: <?php echo esc_html( $top_bar_data['description_color'] ); ?>;"><?php echo esc_html( $top_bar_data['description_prefix'] ); ?> <a target="_blank" href="<?php echo esc_url( $top_bar_data['plugin_url'] ); ?>"><?php echo esc_html( $top_bar_data['plugin_label'] ); ?></a>. <?php echo esc_html( $top_bar_data['description_suffix'] ); ?></p>
 						<p><a target="_blank" href="<?php echo esc_url( $top_bar_data['learn_more_url'] ); ?>"><?php echo esc_html( $top_bar_data['learn_more_label'] ); ?></a></p>
-						<?php if ( ! $crons_available ) { ?>
+						<?php if ( ! Generation_Mode::allows_inline_build() && ! $crons_available ) { ?>
 							<p>Note: Cron is not enabled on your site. You can use the <a href="<?php echo esc_url( admin_url( 'admin.php?page=surerank#/general/sitemaps' ) ); ?>">Regenerate</a> button to generate the sitemap cache manually.</p>
 						<?php } ?>
 					</div>

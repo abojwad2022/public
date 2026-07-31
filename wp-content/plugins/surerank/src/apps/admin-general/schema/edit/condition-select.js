@@ -195,6 +195,17 @@ const ConditionSelect = ( {
 					} }
 				/>
 			) }
+
+			{ item.condition === 'specifics' &&
+				( ! Array.isArray( item.specificPosts ) ||
+					item.specificPosts.length === 0 ) && (
+					<p className="m-0 text-xs text-text-error">
+						{ __(
+							'Select at least one page/post/taxonomy for this condition to apply.',
+							'surerank'
+						) }
+					</p>
+				) }
 		</div>
 	) );
 };

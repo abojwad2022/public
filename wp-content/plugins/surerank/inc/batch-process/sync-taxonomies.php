@@ -108,8 +108,9 @@ class Sync_Taxonomies extends Sitemap {
 			'hide_empty' => true,
 			'number'     => $chunk_size,
 			'offset'     => $offset,
+			// ASC for stable, append-only pagination (see Sync_Posts).
 			'orderby'    => 'term_id',
-			'order'      => 'DESC',
+			'order'      => 'ASC',
 		];
 
 		$args['meta_query'] = Utils::get_indexable_meta_query( $taxonomy ); //phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query

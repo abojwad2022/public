@@ -22,6 +22,7 @@
 
 import apiFetch from '@wordpress/api-fetch';
 import { __ } from '@wordpress/i18n';
+import { getSurerankUtmUrl } from '@/global/utils/utm';
 
 const SURERANK_NAMESPACE = '/surerank/';
 
@@ -34,8 +35,11 @@ const AJAX_FALLBACK_ACTIONS = {
 
 const NETWORK_TIMEOUT_MS = 15000;
 
-const COMPAT_HELP_URL_FALLBACK =
-	'https://surerank.com/docs/security-plugin-firewall-compatibility/';
+const COMPAT_HELP_URL_FALLBACK = getSurerankUtmUrl(
+	'https://surerank.com/docs/security-plugin-firewall-compatibility/',
+	'compatibility_guide',
+	'rest_api_help'
+);
 
 /**
  * Rewrite transport-level failures into actionable messages. Structured

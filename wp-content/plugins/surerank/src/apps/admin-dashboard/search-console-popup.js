@@ -45,7 +45,7 @@ const SearchConsolePopup = ( { isOpen = true } ) => {
 							as="a"
 							href={ getSurerankUtmUrl(
 								'https://surerank.com/docs/google-search-console-surerank/',
-								'dashboard',
+								'admin_dashboard',
 								'learn_more_gsc'
 							) }
 							target="_blank"

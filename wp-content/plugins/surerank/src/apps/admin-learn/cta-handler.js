@@ -1,4 +1,5 @@
 import { useCallback } from '@wordpress/element';
+import { redirectToPricingPage } from '@/functions/nudges';
 
 const buildUrl = ( cta ) => {
 	const adminBase = window?.surerank_globals?.wp_dashboard_url || '';
@@ -24,11 +25,22 @@ const buildUrl = ( cta ) => {
 const useCtaHandler = ( markStep ) => {
 	return useCallback(
 		( chapterId, step, isAutoDetected ) => {
+			// Locked Pro steps route to pricing; never marked complete.
+			if ( step.locked ) {
+				redirectToPricingPage( `learn_${ step.id }` );
+				return;
+			}
+
+			// Unlocked steps (including Pro cards) mark complete and open their
+			// target. Pro cards use the proCta injected by the Pro plugin.
 			if ( ! isAutoDetected && markStep ) {
 				markStep( chapterId, step.id, true );
 			}
 
-			const cta = ( isAutoDetected && step.autoDetectedCta ) || step.cta;
+			const cta =
+				( step.pro && step.proCta ) ||
+				( isAutoDetected && step.autoDetectedCta ) ||
+				step.cta;
 			if ( ! cta?.target ) {
 				return;
 			}

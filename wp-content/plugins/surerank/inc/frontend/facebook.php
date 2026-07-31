@@ -360,7 +360,7 @@ class Facebook {
 		$this->add_common_tags( $meta_data );
 
 		// Add product-specific Open Graph tags if applicable.
-		if ( Helper::woocommerce_enabled() && Helper::is_product() ) {
+		if ( Helper::is_ecommerce_product_page() ) {
 			$this->add_product_tags( $meta_data );
 		}
 	}
@@ -610,7 +610,7 @@ class Facebook {
 		} elseif ( is_author() ) {
 			$type = 'profile';
 		} else {
-			$type = Helper::woocommerce_enabled() && Helper::is_product() ? 'product' : 'article';
+			$type = Helper::is_ecommerce_product_page() ? 'product' : 'article';
 		}
 
 		$post_id = get_the_ID();
@@ -635,7 +635,7 @@ class Facebook {
 				'is_front_page' => is_front_page(),
 				'is_home'       => is_home(),
 				'is_author'     => is_author(),
-				'is_product'    => Helper::woocommerce_enabled() && Helper::is_product(),
+				'is_product'    => Helper::is_ecommerce_product_page(),
 				'post_id'       => $post_id,
 				'post_type'     => $post_id ? get_post_type( $post_id ) : get_post_type(),
 			]

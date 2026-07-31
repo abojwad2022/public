@@ -65,9 +65,13 @@ class Sync {
 	 * @return array<string, mixed> Localization variables.
 	 */
 	public function add_localization_vars( $vars ) {
-		$vars['crons_available']    = Helper::are_crons_available();
-		$vars['sitemap_cpts']       = array_keys( Sync::get_instance()->get_included_post_types() );
-		$vars['sitemap_taxonomies'] = array_map(
+		$vars['crons_available'] = Helper::are_crons_available();
+		// Cron warning + Regenerate button are cron-mode only; auto mode builds
+		// on the fly and needs neither (see Xml_Sitemap::show_cron_warning()).
+		$vars['show_cron_warning']      = \SureRank\Inc\Sitemap\Xml_Sitemap::get_instance()->show_cron_warning();
+		$vars['show_regenerate_button'] = \SureRank\Inc\Sitemap\Xml_Sitemap::get_instance()->show_regenerate_button();
+		$vars['sitemap_cpts']           = array_keys( Sync::get_instance()->get_included_post_types() );
+		$vars['sitemap_taxonomies']     = array_map(
 			static function( $taxonomy ) {
 				return $taxonomy['slug'];
 			},
@@ -94,6 +98,16 @@ class Sync {
 	public function batch_process_complete() {
 		Checksum::get_instance()->update_cache_checksum( Checksum::get_instance()->get_checksum() );
 
+		// A rebuild with no indexable URLs writes no chunk files, so the
+		// unified index is never created. Without it the cold-cache state
+		// never resolves: every request re-enters the on-the-fly build and
+		// falls through to the 503 miss handler indefinitely. Persist a valid
+		// empty index so the site serves an empty <sitemapindex/> with HTTP
+		// 200 instead, and the cache stops rebuilding on every request.
+		if ( ! Cache::file_exists( 'sitemap/sitemap_index.json' ) ) {
+			Cache::store_file( 'sitemap/sitemap_index.json', (string) wp_json_encode( [] ) );
+		}
+
 		Cache::commit_atomic_rebuild( 'sitemap' );
 
 		update_option( 'surerank_sitemap_last_successful_rebuild', time(), false );
@@ -109,6 +123,9 @@ class Sync {
 	public function start_building_cache( $force = '' ) {
 
 		if ( empty( $force ) && ! $this->should_initiate_batch_process() ) {
+			// Cache verified current — record it so Site Health doesn't flag it as stale. See #2592.
+			update_option( 'surerank_sitemap_last_successful_rebuild', time(), false );
+
 			if ( defined( 'WP_CLI' ) ) {
 				WP_CLI::line( 'Checksums match; no data available to sync.' );
 			} else {
@@ -131,7 +148,8 @@ class Sync {
 		// still regenerate its sitemap — just without stale-while-revalidate.
 		if ( ! Cache::begin_atomic_rebuild( 'sitemap' ) ) {
 			self::log( 'Atomic rebuild unavailable; falling back to cache clear.' );
-			Cache::clear_all();
+			Cache::clear_prefix( 'sitemap' );
+			Cache::clear_prefix( 'sitemap.old' );
 		}
 
 		$classes = $this->generate_classes();

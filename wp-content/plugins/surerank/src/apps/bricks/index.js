@@ -12,6 +12,7 @@ import {
 	getPageCheckStatus,
 	handleRefreshWithBrokenLinks,
 } from '../elementor/page-checks';
+import { startEditorTour } from '@SeoPopup/components/editor-tour/start-tour';
 
 /* global jQuery */
 /* eslint-disable */
@@ -99,6 +100,13 @@ import {
 			}
 
 			updateStatusIndicator( button );
+
+			// First-run guided tour, anchored to the button we just injected.
+			startEditorTour( {
+				trigger: button[ 0 ],
+				getStatusEl: () =>
+					button[ 0 ].querySelector( '.surerank-status-indicator' ),
+			} );
 
 			unsubscribeStatus = wp?.data?.subscribe?.( () => {
 				updateStatusIndicator( button );

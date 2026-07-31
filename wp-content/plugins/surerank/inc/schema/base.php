@@ -49,8 +49,12 @@ abstract class Base {
 	public function render_schema( $schema, $renderer ) {
 		$fields = Data::get_schema_type( $schema );
 		$type   = $schema['fields']['@type'] ?? $schema['type'] ?? 'Thing';
+		// The registry key (e.g. LocalBusiness) differs from $type when a
+		// sub-type such as RealEstateAgent is selected; field definitions can
+		// only be resolved through the registry key.
+		$registry_key = $schema['title'] ?? '';
 
-		$schema_render = new Schema_Render( $type, $fields, $renderer );
+		$schema_render = new Schema_Render( $type, $fields, $renderer, is_string( $registry_key ) ? $registry_key : '' );
 		return $schema_render->render();
 	}
 

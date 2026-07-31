@@ -1,4 +1,4 @@
-import { useDispatch, useSelect } from '@wordpress/data';
+import { useDispatch, useSelect, select as selectStore } from '@wordpress/data';
 import { STORE_NAME } from '@AdminStore/constants';
 import apiFetch from '@wordpress/api-fetch';
 import { addQueryArgs } from '@wordpress/url';
@@ -21,11 +21,24 @@ export const useRunSeoChecks = ( options = {} ) => {
 		false;
 	const { setSiteSeoAnalysis } = dispatch;
 
-	const handleRunChecksAgain = async () => {
+	/**
+	 * Refresh the audit checks for the configured categories.
+	 *
+	 * @param {Object}  options        - Refresh options.
+	 * @param {boolean} options.silent - When true, skip toggling the page-level
+	 *                                 loading state (used by background flows
+	 *                                 such as the Fix It All For Me wizard).
+	 * @return {Promise<Object|null>} The merged report, or null when a refresh is
+	 *                                already in progress.
+	 * @since x.x.x
+	 */
+	const refreshChecks = async ( { silent = false } = {} ) => {
 		if ( runningChecks ) {
-			return;
+			return null;
 		}
-		setSiteSeoAnalysis( { runningChecks: true } );
+		if ( ! silent ) {
+			setSiteSeoAnalysis( { runningChecks: true } );
+		}
 		const url = surerank_globals.site_url;
 		const force = true;
 
@@ -84,18 +97,31 @@ export const useRunSeoChecks = ( options = {} ) => {
 			Object.keys( otherResponse ).length > 0 ||
 			Object.keys( generalResponse ).length > 0;
 
+		// Read the latest report fresh so repeated background refreshes merge
+		// onto current state instead of a stale render-time snapshot.
+		const currentReport =
+			selectStore( STORE_NAME ).getSiteSeoAnalysis()?.report ||
+			report ||
+			{};
+
 		const payload = {
 			runningChecks: false,
 		};
 		if ( hasAnyData ) {
 			payload.report = {
-				...report,
+				...currentReport,
 				...generalResponse,
 				...settingsResponse,
 				...otherResponse,
 			};
 		}
 		setSiteSeoAnalysis( payload );
+
+		return payload.report || currentReport;
+	};
+
+	const handleRunChecksAgain = async () => {
+		await refreshChecks();
 	};
 
 	// Auto-trigger checks if pending action exists
@@ -127,5 +153,5 @@ export const useRunSeoChecks = ( options = {} ) => {
 		}
 	}, [ runningChecks, handleRunChecksAgain ] );
 
-	return { isLoading: runningChecks, handleRunChecksAgain };
+	return { isLoading: runningChecks, handleRunChecksAgain, refreshChecks };
 };

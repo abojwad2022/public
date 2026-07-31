@@ -1,4 +1,5 @@
 import { __ } from '@wordpress/i18n';
+import { applyFilters } from '@wordpress/hooks';
 import {
 	ENABLE_GOOGLE_CONSOLE,
 	ENABLE_SCHEMAS,
@@ -332,5 +333,148 @@ const allChapters = () => [
 	},
 ];
 
-export const getLearnChapters = () =>
-	allChapters().filter( ( ch ) => ch.steps.length > 0 );
+/**
+ * Pro feature chapter.
+ *
+ * These steps are presentational (`pro: true`): they are never marked complete,
+ * never count toward progress, and never POST to the REST endpoint, so they are
+ * intentionally NOT mirrored in Learn::get_allowed_steps() in inc/api/learn.php.
+ *
+ * Steps are locked by default: no docs link, and the card renders a default
+ * Upgrade to Pro CTA that routes to the pricing page. The Pro plugin hooks the
+ * `surerank-pro.learn-chapter` filter to unlock them and attach a `proCta`
+ * that opens the relevant feature page when active + licensed.
+ */
+const proChapter = () => ( {
+	id: 'pro',
+	isPro: true,
+	title: __( 'Do More with SureRank Premium', 'surerank' ),
+	description: __(
+		'Advanced SEO tools that take your site further with SureRank Pro.',
+		'surerank'
+	),
+	steps: [
+		{
+			id: 'pro_redirection',
+			pro: true,
+			locked: true,
+			title: __( 'Redirect old URLs without losing SEO', 'surerank' ),
+			description: __(
+				'Set up 301/302 redirects, auto-redirect deleted posts, and import your existing rules from Yoast or Rank Math.',
+				'surerank'
+			),
+			learnMoreUrl:
+				'https://surerank.com/docs/managing-url-redirection-in-surerank/',
+		},
+		{
+			id: 'pro_broken_links',
+			pro: true,
+			locked: true,
+			title: __( 'Catch and fix broken links automatically', 'surerank' ),
+			description: __(
+				'Scan every internal and external link on your site and get alerted the moment one breaks.',
+				'surerank'
+			),
+			learnMoreUrl:
+				'https://surerank.com/docs/page-level-seo-broken-links-detected/',
+		},
+		{
+			id: 'pro_link_suggestions',
+			pro: true,
+			locked: true,
+			title: __( 'Get AI-powered internal link suggestions', 'surerank' ),
+			description: __(
+				'SureRank reads your content and suggests the most relevant internal links as you write.',
+				'surerank'
+			),
+			learnMoreUrl:
+				'https://surerank.com/docs/surerank-pro-link-suggestions/',
+		},
+		// Schema Pro steps share the FREE `enable_schemas` flag: when schema is
+		// disabled the whole engine is off, so hide these for everyone (free and
+		// licensed) — same visibility rule as the free schema card above. All
+		// enrichment (Learn More, action CTA, auto-detect) is added Pro-side.
+		ENABLE_SCHEMAS && {
+			id: 'pro_advanced_schema',
+			pro: true,
+			locked: true,
+			title: __( 'Unlock 15+ advanced schema types', 'surerank' ),
+			description: __(
+				'Add Recipe, Event, FAQ, HowTo, Course, Video, and more rich-result schema to the right pages.',
+				'surerank'
+			),
+			learnMoreUrl: 'https://surerank.com/docs-category/schema/',
+		},
+		ENABLE_SCHEMAS && {
+			id: 'pro_custom_schema',
+			pro: true,
+			locked: true,
+			title: __( 'Build custom schema for any content', 'surerank' ),
+			description: __(
+				'Map your own fields to any schema type for full control over how Google reads your pages.',
+				'surerank'
+			),
+			learnMoreUrl:
+				'https://surerank.com/docs/custom-json-ld-schema-in-surerank/',
+		},
+		{
+			id: 'pro_meta_generation',
+			pro: true,
+			locked: true,
+			title: __(
+				'Generate meta titles and descriptions with AI',
+				'surerank'
+			),
+			description: __(
+				'Bulk-create optimized titles and descriptions across all your posts and pages in one pass.',
+				'surerank'
+			),
+			learnMoreUrl: 'https://surerank.com/docs/editing-meta-box/',
+		},
+		{
+			id: 'pro_bulk_alt_text',
+			pro: true,
+			locked: true,
+			title: __( 'Auto-generate image alt text in bulk', 'surerank' ),
+			description: __(
+				'Let AI write descriptive alt text across your entire media library to boost image SEO and accessibility.',
+				'surerank'
+			),
+			learnMoreUrl: 'https://surerank.com/docs/image-seo-surerank/',
+		},
+		{
+			id: 'pro_instant_indexing',
+			pro: true,
+			locked: true,
+			title: __( 'Get indexed instantly', 'surerank' ),
+			description: __(
+				'Push new and updated URLs to Google and Bing the moment you publish via the Indexing and IndexNow APIs.',
+				'surerank'
+			),
+			learnMoreUrl:
+				'https://surerank.com/docs/instant-indexing-in-surerank-pro/',
+		},
+		{
+			id: 'pro_advanced_sitemaps',
+			pro: true,
+			locked: true,
+			title: __( 'Add Video and News sitemaps', 'surerank' ),
+			description: __(
+				'Help Google surface your videos and news content with dedicated, auto-generated sitemaps.',
+				'surerank'
+			),
+			learnMoreUrl: 'https://surerank.com/docs/sitemaps/',
+		},
+	].filter( Boolean ),
+} );
+
+export const getLearnChapters = () => {
+	const chapters = allChapters().filter( ( ch ) => ch.steps.length > 0 );
+	// Always show the Pro chapter. The free plugin renders it as a locked list
+	// (no Learn More, no auto-detect) whose cards carry an Upgrade to Pro CTA
+	// pointing at the pricing page. The Pro plugin hooks
+	// `surerank-pro.learn-chapter` to unlock the cards and attach Learn More +
+	// feature-page action CTAs when the site is active + licensed.
+	chapters.push( applyFilters( 'surerank-pro.learn-chapter', proChapter() ) );
+	return chapters;
+};

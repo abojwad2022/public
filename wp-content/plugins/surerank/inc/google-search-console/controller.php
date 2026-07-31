@@ -751,12 +751,77 @@ class Controller {
 	}
 
 	/**
+	 * Resolve a submitted URL to the exact Search Console property it belongs to.
+	 *
+	 * Google APIs only accept the exact property string (URL-prefix properties
+	 * include a trailing slash, domain properties use the `sc-domain:` prefix),
+	 * so anything stored in credentials must come from the user's property
+	 * list, never from a raw site URL. Matching order:
+	 *
+	 * 1. Exact string (trailing-slash and case-of-host insensitive) — covers
+	 *    values the UI read from the property list and `window.location.origin`.
+	 * 2. A `sc-domain:` property covering the URL's host (equal, or the host is
+	 *    a subdomain of it) — domain properties cover every scheme/subdomain.
+	 *
+	 * Scheme and `www.` are deliberately NOT stripped for URL-prefix matching:
+	 * a `https://example.com/` property does not cover `https://www.example.com/…`
+	 * URLs, and selecting it would make every URL Inspection call fail with 403.
+	 *
+	 * @param string                                 $url   URL or property string to resolve.
+	 * @param array<int, array<string, mixed>>| null $sites Optional property list (from get_sites()['siteEntry']); fetched when null.
+	 * @since 1.9.3
+	 * @return string|null The exact property `siteUrl`, or null when the user has no property covering the URL.
+	 */
+	public function resolve_property_for_site( string $url, ?array $sites = null ) {
+		if ( null === $sites ) {
+			$response = $this->get_sites();
+			if ( isset( $response['error'] ) && $response['error'] ) {
+				return null;
+			}
+			$sites = $response['siteEntry'] ?? [];
+		}
+
+		if ( empty( $sites ) ) {
+			return null;
+		}
+
+		$normalized = strtolower( rtrim( trim( $url ), '/' ) );
+		$host       = strtolower( (string) wp_parse_url( $url, PHP_URL_HOST ) );
+
+		// Pass 1: exact property string (URL-prefix or sc-domain).
+		foreach ( $sites as $site ) {
+			$site_url = (string) ( $site['siteUrl'] ?? '' );
+			if ( '' !== $site_url && strtolower( rtrim( $site_url, '/' ) ) === $normalized ) {
+				return $site_url;
+			}
+		}
+
+		// Pass 2: a domain property covering the URL's host.
+		if ( '' === $host ) {
+			return null;
+		}
+		foreach ( $sites as $site ) {
+			$site_url = (string) ( $site['siteUrl'] ?? '' );
+			if ( 0 !== strpos( $site_url, 'sc-domain:' ) ) {
+				continue;
+			}
+			$domain = strtolower( substr( $site_url, strlen( 'sc-domain:' ) ) );
+			if ( $host === $domain || substr( $host, -strlen( '.' . $domain ) ) === '.' . $domain ) {
+				return $site_url;
+			}
+		}
+
+		return null;
+	}
+
+	/**
 	 * Get Site URL
 	 *
 	 * @param string $site_url The site URL to get.
 	 * @return string The formatted site URL.
 	 */
 	private function get_site_url( $site_url ) {
+		$site_url = Utils::ensure_property_format( $site_url );
 		if ( strpos( $site_url, 'sc-domain' ) === false ) {
 			$site_url = urlencode( $site_url );
 		}

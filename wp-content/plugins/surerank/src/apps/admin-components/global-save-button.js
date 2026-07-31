@@ -8,6 +8,7 @@ import { useSelect, useDispatch } from '@wordpress/data';
 import apiFetch from '@wordpress/api-fetch';
 import { DotIcon } from '@/global/components/icons';
 import { validateCustomJsonLdSchemas } from './schema-utils/custom-json-ld';
+import { validateSchemaDisplayConditions } from './schema-utils/display-conditions';
 
 /* global toast */
 
@@ -103,6 +104,13 @@ export const SaveSettingsButton = ( { onSuccess } ) => {
 		);
 		if ( ! schemaValidation.valid ) {
 			throw new Error( schemaValidation.message );
+		}
+
+		const displayConditionValidation = validateSchemaDisplayConditions(
+			unsavedSettings?.schemas
+		);
+		if ( ! displayConditionValidation.valid ) {
+			throw new Error( displayConditionValidation.message );
 		}
 
 		const queryParams = { data: unsavedSettings };

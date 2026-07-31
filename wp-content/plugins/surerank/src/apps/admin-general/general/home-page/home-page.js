@@ -58,8 +58,7 @@ const HomePage = () => {
 				{ __(
 					'A static page is set as the home page of your website under WordPress Dashboard > Settings > Reading.',
 					'surerank'
-				) }
-				{ ' ' }
+				) }{ ' ' }
 				<a
 					href={ home_page_edit_url }
 					className="text-color-sky"
@@ -67,8 +66,7 @@ const HomePage = () => {
 					rel="noreferrer noopener"
 				>
 					{ __( 'Edit the home page', 'surerank' ) }
-				</a>
-				{ ' ' }
+				</a>{ ' ' }
 				{ __(
 					'to set its search engine and social settings.',
 					'surerank'

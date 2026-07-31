@@ -49,7 +49,7 @@ class Utils {
 	 *
 	 * Standard UTM set:
 	 *   utm_source   = surerank_plugin
-	 *   utm_medium   = wordpress_plugin
+	 *   utm_medium   = in_product
 	 *   utm_campaign = <surface>   (e.g. 'admin_dashboard', 'sitemap')
 	 *   utm_content  = <context>   (e.g. 'help_link', 'support_link')
 	 *
@@ -69,21 +69,36 @@ class Utils {
 		// Normalize to https.
 		$url = (string) preg_replace( '#^http://#i', 'https://', $url );
 
+		$parsed_url = wp_parse_url( $url );
+		$host       = isset( $parsed_url['host'] ) ? strtolower( (string) $parsed_url['host'] ) : '';
+		$path       = isset( $parsed_url['path'] ) ? (string) $parsed_url['path'] : '';
+
+		// Only tag website links on surerank.com, not other subdomains such as API endpoints.
+		if ( ! in_array( $host, [ 'surerank.com', 'www.surerank.com' ], true ) ) {
+			return esc_url_raw( $url );
+		}
+
 		// Leave asset URLs untouched.
-		if ( strpos( $url, '/wp-content/uploads' ) !== false ) {
+		if ( strpos( $path, '/wp-content/uploads' ) !== false ) {
 			return esc_url_raw( $url );
 		}
 
 		// Leave URLs that already carry any UTM parameter untouched.
-		if ( strpos( $url, 'utm_source' ) !== false || strpos( $url, 'utm_medium' ) !== false ) {
-			return esc_url_raw( $url );
+		if ( ! empty( $parsed_url['query'] ) ) {
+			parse_str( (string) $parsed_url['query'], $query_args );
+
+			foreach ( array_keys( $query_args ) as $query_key ) {
+				if ( 0 === strpos( (string) $query_key, 'utm_' ) ) {
+					return esc_url_raw( $url );
+				}
+			}
 		}
 
 		return esc_url_raw(
 			add_query_arg(
 				[
 					'utm_source'   => 'surerank_plugin',
-					'utm_medium'   => 'wordpress_plugin',
+					'utm_medium'   => 'in_product',
 					'utm_campaign' => sanitize_key( $campaign ),
 					'utm_content'  => sanitize_key( $content ),
 				],

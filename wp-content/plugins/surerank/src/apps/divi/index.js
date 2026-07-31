@@ -17,6 +17,7 @@ import {
 	getPageCheckStatus,
 	handleRefreshWithBrokenLinks,
 } from '../elementor/page-checks';
+import { startEditorTour } from '@SeoPopup/components/editor-tour/start-tour';
 
 const DIVI_TARGET_SELECTOR = '.et-vb-page-bar-tools-action-buttons';
 
@@ -232,6 +233,16 @@ const setupDiviIntegration = () => {
 		// Add tooltip to the button and store cleanup function
 		const { counts } = getPageCheckStatus();
 		tooltipCleanup = createSureRankTooltip( btn, getTooltipText( counts ) );
+
+		// First-run guided tour. Divi re-injects its page-bar button on re-render,
+		// so target it by selector (resolved live) rather than the captured node.
+		startEditorTour( {
+			triggerSelectors: [ '.surerank-divi-btn-wrapper button' ],
+			getStatusEl: () =>
+				document.querySelector(
+					'.surerank-divi-btn-wrapper .surerank-status-indicator'
+				),
+		} );
 	};
 
 	// Try injecting immediately

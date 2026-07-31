@@ -18,6 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 use SureRank\Inc\Functions\Compat;
+use SureRank\Inc\Sitemap\Generation_Mode;
 use SureRank\Inc\Traits\Get_Instance;
 
 /**
@@ -61,10 +62,15 @@ class Site_Health {
 			$tests['direct'] = [];
 		}
 
-		$tests['direct']['surerank_sitemap_freshness'] = [
-			'label' => __( 'SureRank sitemap rebuild is recent', 'surerank' ),
-			'test'  => [ $this, 'test_sitemap_freshness' ],
-		];
+		// The rebuild-freshness check only makes sense in cron mode, where a
+		// scheduled batch owns the cache. In auto mode every sitemap builds on
+		// the fly, so "not rebuilt recently" is normal, not a health problem.
+		if ( Generation_Mode::cron_prebuild_enabled() ) {
+			$tests['direct']['surerank_sitemap_freshness'] = [
+				'label' => __( 'SureRank sitemap rebuild is recent', 'surerank' ),
+				'test'  => [ $this, 'test_sitemap_freshness' ],
+			];
+		}
 
 		$tests['direct']['surerank_loopback'] = [
 			'label' => __( 'SureRank admin-ajax loopback is reachable', 'surerank' ),

@@ -1,7 +1,7 @@
 import { Container, Label, toast } from '@bsf/force-ui';
 import { __ } from '@wordpress/i18n';
 import { useEffect } from '@wordpress/element';
-import { Ticket, MessageSquare, Star, Info } from 'lucide-react';
+import { Ticket, MessageSquare, Star, Info, Crown } from 'lucide-react';
 import { SureRankMonoLogo } from '@/global/components/icons';
 import { SiteSeoChecksSummary } from './site-seo-checks';
 import { useNavigate } from '@tanstack/react-router';
@@ -34,6 +34,16 @@ const quickLinks = [
 		label: __( 'Enjoying SureRank? Leave a Review', 'surerank' ),
 		icon: <Star className="size-4" />,
 		link: surerank_globals.rating_link,
+		external: true,
+	},
+	// Relabel this entry based on the active version: "Explore SureRank Pro"
+	// for Pro users, "Compare Free vs Pro" for free users.
+	{
+		label: isProActive()
+			? __( 'Explore SureRank Pro', 'surerank' )
+			: __( 'Compare Free vs Pro', 'surerank' ),
+		icon: <Crown className="size-4" />,
+		link: surerank_globals.free_vs_pro_link,
 		external: true,
 	},
 ];
@@ -145,7 +155,7 @@ const Dashboard = () => {
 	return (
 		<>
 			<Container
-				className="h-full p-4 sm:p-5 pb-6 sm:pb-8 xl:p-8 max-[1920px]:max-w-full mx-auto box-content bg-background-secondary gap-4 sm:gap-6"
+				className="h-full p-4 sm:p-5 pb-6 sm:pb-8 xl:p-8 max-w-[1920px] mx-auto box-content bg-background-secondary gap-4 sm:gap-6"
 				cols={ 12 }
 				containerType="grid"
 				gap="2xl"
@@ -158,7 +168,7 @@ const Dashboard = () => {
 						{ /* Show WelcomeCard above SEO checks when pro is not active */ }
 						{ ! isProActive() && (
 							<WelcomeCard
-								className="max-h-[220px]"
+								className="max-h-fit lg:max-h-[220px]"
 								isProActive={ isProActive() }
 							/>
 						) }

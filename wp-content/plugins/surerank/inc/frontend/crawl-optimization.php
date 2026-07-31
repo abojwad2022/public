@@ -87,6 +87,21 @@ class Crawl_Optimization {
 		 */
 		if ( apply_filters( 'surerank_remove_replytocom', true ) ) {
 			add_filter( 'comment_reply_link', [ $this, 'remove_replytocom_from_reply_link' ], 10, 1 );
+			add_action( 'template_redirect', [ $this, 'redirect_replytocom_request' ], 1 );
+		}
+
+		/**
+		 * Filter to add rel="nofollow noopener noreferrer" to the post comments
+		 * link (the theme's "Leave a comment" / "N Comments" link output by
+		 * comments_popup_link(), pointing at #respond). WordPress core adds rel
+		 * to comment author and reply links, but not to this one, so crawlers may
+		 * otherwise follow it. Defaults to enabled; disable with the filter below,
+		 * or customise the rel value via `surerank_comment_form_link_rel`.
+		 *
+		 * @since 1.9.2
+		 */
+		if ( apply_filters( 'surerank_nofollow_comment_form_link', true ) ) {
+			add_filter( 'comments_popup_link_attributes', [ $this, 'add_rel_to_comment_form_link' ], 10, 1 );
 		}
 	}
 
@@ -114,6 +129,79 @@ class Crawl_Optimization {
 		);
 
 		return $updated !== null ? $updated : $link;
+	}
+
+	/**
+	 * Redirect legacy ?replytocom request URLs to the canonical comment anchor.
+	 *
+	 * The link filter above keeps new reply links clean, but URLs already indexed
+	 * or linked externally (e.g. example.com/post/?replytocom=10#respond) still
+	 * resolve and stay duplicate content. This issues a 301 to the clean URL with
+	 * a #comment-<id> fragment so crawlers consolidate the duplicates and humans
+	 * still land on the referenced comment. No-op when the argument is absent, so
+	 * sites without comments are unaffected.
+	 *
+	 * @since 1.9.2
+	 * @return void
+	 */
+	public function redirect_replytocom_request() {
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only canonical redirect; no state is changed.
+		if ( ! isset( $_GET['replytocom'] ) ) {
+			return;
+		}
+
+		if ( is_feed() || wp_doing_ajax() || ( defined( 'REST_REQUEST' ) && REST_REQUEST ) ) {
+			return;
+		}
+
+		$request_uri = isset( $_SERVER['REQUEST_URI'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REQUEST_URI'] ) ) : '';
+		if ( '' === $request_uri ) {
+			return;
+		}
+
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only canonical redirect; no state is changed.
+		$comment_id = absint( wp_unslash( $_GET['replytocom'] ) );
+
+		$clean = remove_query_arg( 'replytocom', $request_uri );
+		$clean = strtok( $clean, '#' );
+		if ( ! is_string( $clean ) ) {
+			return;
+		}
+
+		$location = $comment_id > 0 ? home_url( $clean ) . '#comment-' . $comment_id : home_url( $clean );
+
+		wp_safe_redirect( $location, 301 );
+		exit;
+	}
+
+	/**
+	 * Add rel tokens to the post comments link without clobbering existing attributes.
+	 *
+	 * Unlike a blanket attribute replacement, this preserves any attributes the
+	 * theme already set and merges the rel tokens (de-duplicated) into an existing
+	 * rel attribute when one is present. The rel value is filterable via
+	 * `surerank_comment_form_link_rel`.
+	 *
+	 * @param string $attributes Existing anchor attributes for the comments link.
+	 * @return string Attributes with the rel tokens merged in.
+	 * @since 1.9.2
+	 */
+	public function add_rel_to_comment_form_link( $attributes ) {
+		$rel = apply_filters( 'surerank_comment_form_link_rel', 'nofollow noopener noreferrer' );
+		if ( ! is_string( $rel ) || '' === trim( $rel ) ) {
+			return $attributes;
+		}
+
+		$rel_tokens = array_filter( explode( ' ', $rel ) );
+
+		if ( preg_match( '/(^|\s)rel\s*=\s*([\'"])(.*?)\2/i', $attributes, $matches ) ) {
+			$existing    = array_filter( explode( ' ', $matches[3] ) );
+			$merged      = array_unique( array_merge( $existing, $rel_tokens ) );
+			$replacement = $matches[1] . 'rel=' . $matches[2] . esc_attr( implode( ' ', $merged ) ) . $matches[2];
+			return str_replace( $matches[0], $replacement, $attributes );
+		}
+
+		return trim( $attributes . ' rel="' . esc_attr( implode( ' ', array_unique( $rel_tokens ) ) ) . '"' );
 	}
 
 	/**

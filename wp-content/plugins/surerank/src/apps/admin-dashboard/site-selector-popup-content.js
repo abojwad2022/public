@@ -126,6 +126,7 @@ const ConnectSiteButton = ( { setForceSelectMode } ) => {
 	const [ isCreatingProperty, setIsCreatingProperty ] = useState( false );
 	const currentSiteUrl = getCurrentSiteUrl();
 	const {
+		currentSiteEntry,
 		currentSiteInList,
 		isSelectedSiteVerified,
 		currentSiteInListButNotVerified,
@@ -158,10 +159,13 @@ const ConnectSiteButton = ( { setForceSelectMode } ) => {
 				data = {};
 
 			if ( currentSiteInList && isSelectedSiteVerified ) {
-				// Site is verified, just select it
+				// Site is verified, just select it. Send the exact property
+				// string from the Search Console list — Google identifies
+				// properties by exact string (trailing slash included), so the
+				// raw origin would break every subsequent API call with a 403.
 				endpoint = ENDPOINTS.SELECT_SITE;
 				method = 'PUT';
-				data = { url: currentSiteUrl };
+				data = { url: currentSiteEntry?.siteUrl ?? currentSiteUrl };
 			} else if ( currentSiteInListButNotVerified ) {
 				// Site exists but not verified
 				endpoint = ENDPOINTS.VERIFY_SITE;

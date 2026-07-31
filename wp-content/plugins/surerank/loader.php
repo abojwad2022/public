@@ -50,6 +50,7 @@ use SureRank\Inc\Frontend\Content_Seo;
 use SureRank\Inc\Frontend\Crawl_Optimization;
 use SureRank\Inc\Frontend\Facebook;
 use SureRank\Inc\Frontend\Feed;
+use SureRank\Inc\Frontend\Hentry;
 use SureRank\Inc\Frontend\Meta_Data;
 use SureRank\Inc\Frontend\Meta_Tag_Injection;
 use SureRank\Inc\Frontend\Product;
@@ -80,6 +81,7 @@ use SureRank\Inc\Nps_Notice;
 use SureRank\Inc\Routes;
 use SureRank\Inc\Schema\Schemas;
 use SureRank\Inc\Sitemap\Checksum;
+use SureRank\Inc\Sitemap\Invalidator;
 use SureRank\Inc\Sitemap\Xml_Sitemap;
 use SureRank\Inc\ThirdPartyIntegrations\Init as Integrations_Init;
 
@@ -118,6 +120,7 @@ class Loader {
 		add_action( 'init', [ $this, 'flush_rules' ], 999 );
 
 		add_action( 'wp_loaded', [ $this, 'track_cron_run' ], 0 );
+		add_action( 'wp_loaded', [ \SureRank\Inc\Functions\Cache::class, 'maybe_upgrade' ], 0 );
 
 		register_activation_hook( SURERANK_FILE, [ $this, 'activation' ] );
 		register_deactivation_hook( SURERANK_FILE, [ $this, 'deactivation' ] );
@@ -216,6 +219,7 @@ class Loader {
 
 		Abilities_Registrar::get_instance();
 		Routes::get_instance();
+		Invalidator::get_instance();
 		Analytics::get_instance();
 		Admin_Notice::get_instance();
 		Review_Notice::get_instance();
@@ -316,7 +320,12 @@ class Loader {
 	public function activation() {
 		Update::option( 'surerank_flush_required', 1 );
 		Update::option( 'surerank_redirect_on_activation', 'yes' );
-		Cron::get_instance()->schedule_sitemap_generation();
+		// Only schedule the sitemap cron in cron mode; auto mode (default)
+		// builds on the fly. ensure_cron_scheduled() also self-corrects per
+		// request if the mode changes later.
+		if ( \SureRank\Inc\Sitemap\Generation_Mode::cron_prebuild_enabled() ) {
+			Cron::get_instance()->schedule_sitemap_generation();
+		}
 	}
 
 	/**
@@ -329,6 +338,7 @@ class Loader {
 		Update::option( 'surerank_flush_required', 1 );
 		Cron::get_instance()->unschedule_sitemap_generation();
 		Checksum::get_instance()->clear_checksum();
+		Compat::teardown();
 
 		delete_option( 'surerank_cron_test_ok' );
 		delete_option( 'surerank_last_cron_run' );
@@ -530,6 +540,7 @@ class Loader {
 			Defaults::class,
 			Schemas::class,
 			Crawl_Optimization::class,
+			Hentry::class,
 			Api_Init::class,
 			Headless::class,
 			Headless_Sitemap::class,

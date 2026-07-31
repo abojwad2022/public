@@ -230,9 +230,7 @@ function* updateBrokenLinkIgnoreState( url, actionType ) {
 	const isTaxonomy = window?.surerank_seo_popup?.is_taxonomy === '1';
 	const postId = isTaxonomy
 		? 0
-		: state.pageSeoChecks?.postId ||
-		  state.variables?.post?.ID?.value ||
-		  0;
+		: state.pageSeoChecks?.postId || state.variables?.post?.ID?.value || 0;
 
 	// Stored broken links must be passed along so the backend keeps the
 	// other entries intact when reconciling the post meta. The check data can

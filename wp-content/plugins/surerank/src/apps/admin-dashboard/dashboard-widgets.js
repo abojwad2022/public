@@ -34,7 +34,7 @@ export const RatingWidget = () => {
 					</Container>
 					<p className="text-sm text-text-secondary font-normal m-0">
 						{ __(
-							'We would love to hear from you. We\'d appreciate every single review.',
+							"We would love to hear from you. We'd appreciate every single review.",
 							'surerank'
 						) }
 					</p>

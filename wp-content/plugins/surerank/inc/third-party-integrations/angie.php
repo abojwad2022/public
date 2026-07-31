@@ -13,6 +13,7 @@ use SureRank\Inc\API\Admin;
 use SureRank\Inc\API\Api_Base;
 use SureRank\Inc\API\Post;
 use SureRank\Inc\API\Term;
+use SureRank\Inc\Functions\Cache_Purge;
 use SureRank\Inc\Functions\Helper;
 use SureRank\Inc\Functions\Settings;
 use SureRank\Inc\Functions\Update;
@@ -366,10 +367,36 @@ class Angie extends Api_Base {
 			];
 		}
 
+		// Object-level authorization. This route is admin-only today (no role_capability), so this is defense-in-depth
+		// against a future capability lowering, mirroring the guards on the post/term SEO save endpoints.
 		if ( $type === 'post' ) {
+			if ( ! Post::can_manage_post_seo( $id ) ) {
+				return [
+					'success' => false,
+					'message' => __( 'You are not allowed to manage SEO settings for this post.', 'surerank' ),
+				];
+			}
 			Post::update_post_meta_common( $id, $data );
+
+			// Refresh this page's cached output across page-cache plugins.
+			Cache_Purge::purge_post( $id );
 		} else {
+			if ( ! Term::can_manage_term_seo( $id ) ) {
+				return [
+					'success' => false,
+					'message' => __( 'You are not allowed to manage SEO settings for this term.', 'surerank' ),
+				];
+			}
 			Term::update_term_meta_common( $id, $data );
+
+			// Refresh this term archive's cached output across page-cache plugins.
+			$term = get_term( $id );
+			if ( $term instanceof \WP_Term ) {
+				$term_link = get_term_link( $term );
+				if ( is_string( $term_link ) ) {
+					Cache_Purge::purge_url( $term_link );
+				}
+			}
 		}
 
 		return [

@@ -137,6 +137,73 @@ class Helper {
 	}
 
 	/**
+	 * Check if FluentCart is active.
+	 *
+	 * @since 1.9.2
+	 * @return bool
+	 */
+	public static function fluentcart_status() {
+		return defined( 'FLUENTCART_VERSION' );
+	}
+
+	/**
+	 * Check if the FluentCart integration is active.
+	 *
+	 * True only when FluentCart is active AND the user has not disabled the
+	 * SureRank FluentCart integration. Use this for FluentCart-specific SEO
+	 * behavior; use fluentcart_status() only when you need to know whether the
+	 * FluentCart plugin itself is present.
+	 *
+	 * @since 1.9.2
+	 * @return bool
+	 */
+	public static function fluentcart_enabled() {
+		return self::fluentcart_status() && wp_validate_boolean( Settings::get( 'enable_fluentcart_integration' ) );
+	}
+
+	/**
+	 * Check if the current page is a single FluentCart product.
+	 *
+	 * @since 1.9.2
+	 * @return bool
+	 */
+	public static function is_fluentcart_product() {
+		return is_singular( 'fluent-products' );
+	}
+
+	/**
+	 * Check if the current page is a single SureCart product.
+	 *
+	 * @since 1.9.2
+	 * @return bool
+	 */
+	public static function is_sc_product() {
+		return is_singular( 'sc_product' );
+	}
+
+	/**
+	 * Check if the current page is a single product of any supported e-commerce
+	 * integration (WooCommerce, FluentCart, or SureCart).
+	 *
+	 * Used to gate product-specific SEO output (Open Graph/Twitter product tags,
+	 * og:type=product) so it applies to every active commerce platform.
+	 *
+	 * @since 1.9.2
+	 * @return bool
+	 */
+	public static function is_ecommerce_product_page() {
+		if ( self::woocommerce_enabled() && self::is_product() ) {
+			return true;
+		}
+
+		if ( self::fluentcart_enabled() && self::is_fluentcart_product() ) {
+			return true;
+		}
+
+		return self::sc_status() && self::is_sc_product();
+	}
+
+	/**
 	 * Get the correct page ID, handling WooCommerce shop page as front page.
 	 *
 	 * When WooCommerce shop page is set as the front page in Settings > Reading,
@@ -717,7 +784,7 @@ class Helper {
 		$utm_args = array_merge(
 			[
 				'utm_source'   => 'surerank_plugin',
-				'utm_medium'   => 'wordpress_plugin',
+				'utm_medium'   => 'in_product',
 				'utm_campaign' => 'core_plugin',
 			],
 			'' !== $utm_content ? [ 'utm_content' => $utm_content ] : [],

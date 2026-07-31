@@ -11,6 +11,7 @@
 namespace SureRank\Inc\API;
 
 use Exception;
+use SureRank\Inc\Functions\Cache;
 use SureRank\Inc\Functions\Cron;
 use SureRank\Inc\Functions\Get;
 use SureRank\Inc\Functions\Helper;
@@ -24,6 +25,7 @@ use SureRank\Inc\Importers\Seopress\Seopress;
 use SureRank\Inc\Importers\Slimseo;
 use SureRank\Inc\Importers\Squirrly\Squirrly;
 use SureRank\Inc\Importers\Yoast\Yoast;
+use SureRank\Inc\Sitemap\Generation_Mode;
 use SureRank\Inc\Traits\Get_Instance;
 use SureRank\Inc\Traits\Logger;
 use WP_REST_Request;
@@ -1319,17 +1321,23 @@ class Migrations extends Api_Base {
 	 */
 	private function regenerate_sitemap_cache_after_migration(): void {
 		try {
-			// Check if crons are available.
+			// Auto mode: just drop the sitemap cache so the migrated content is
+			// re-derived on the next request via build-on-miss — no cron needed.
+			if ( Generation_Mode::allows_inline_build() ) {
+				Cache::clear_prefix( 'sitemap' );
+				return;
+			}
+
+			// Cron mode: schedule a rebuild 30s after migration completes (the
+			// delay lets migration DB writes settle). If cron is unavailable the
+			// admin can use the manual Regenerate flow.
 			if ( Helper::are_crons_available() ) {
-				// Schedule sitemap cache generation 30 seconds after migration completes.
-				// This delay ensures migration database operations are fully complete.
 				wp_schedule_single_event(
 					time() + 30,
 					Cron::SITEMAP_CRON_EVENT,
 					[ 'yes' ]
 				);
 			}
-			// If crons are disabled, the manual batch processing will be used from the frontend.
 		} catch ( Exception $e ) {
 			$this->log(
 				sprintf(

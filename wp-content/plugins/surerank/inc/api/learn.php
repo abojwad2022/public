@@ -111,6 +111,10 @@ class Learn extends Api_Base {
 	 * Mirror of LEARN_CHAPTERS in src/apps/admin-learn/learn-config.js. Both
 	 * lists must match. PHP is the validator; JS is the renderer.
 	 *
+	 * The `pro` chapter steps are only marked complete client-side once Pro is
+	 * active and licensed (free users see them locked and cannot toggle), but
+	 * the IDs are allowed here so the unlocked checkboxes can persist progress.
+	 *
 	 * @since 1.7.4
 	 * @return array<string, array<int, string>>
 	 */
@@ -139,6 +143,17 @@ class Learn extends Api_Base {
 				'facebook_og',
 				'x_cards',
 				'override_per_page',
+			],
+			'pro'             => [
+				'pro_redirection',
+				'pro_broken_links',
+				'pro_link_suggestions',
+				'pro_advanced_schema',
+				'pro_custom_schema',
+				'pro_meta_generation',
+				'pro_bulk_alt_text',
+				'pro_instant_indexing',
+				'pro_advanced_sitemaps',
 			],
 		];
 	}
@@ -219,7 +234,18 @@ class Learn extends Api_Base {
 			$auto_detected['social']['x_cards'] = true;
 		}
 
-		return $auto_detected;
+		/**
+		 * Filter auto-detected Learn step completions.
+		 *
+		 * Lets the Pro plugin contribute completions for its own steps (keyed
+		 * `$auto_detected['pro'][ $step_id ]`) from Pro-only settings, without
+		 * the free plugin referencing Pro setting keys. Mirrors the
+		 * `surerank-pro.learn-chapter` JS filter that extends the Pro chapter.
+		 *
+		 * @since 1.9.2
+		 * @param array<string, array<string, bool>> $auto_detected Auto-detected map keyed by chapter then step.
+		 */
+		return apply_filters( 'surerank_learn_auto_detected', $auto_detected );
 	}
 
 	/**

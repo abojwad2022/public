@@ -10,6 +10,7 @@
 
 namespace SureRank\Inc\API;
 
+use SureRank\Inc\Functions\Cache_Purge;
 use SureRank\Inc\Functions\Defaults;
 use SureRank\Inc\Functions\Get;
 use SureRank\Inc\Functions\Send_Json;
@@ -205,6 +206,9 @@ class User_Seo extends Api_Base {
 		$current_time = time();
 		Update::option( 'surerank_last_optimized_on', $current_time ); // Site-wide last optimisation.
 		Update::user_meta( $user_id, 'surerank_user_optimized_at', $current_time ); // Per-user optimisation timestamp.
+
+		// Refresh this author archive's cached output across page-cache plugins.
+		Cache_Purge::purge_url( get_author_posts_url( $user_id ) );
 
 		return [
 			'success' => true,

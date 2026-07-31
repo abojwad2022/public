@@ -1,13 +1,13 @@
 import { __ } from '@wordpress/i18n';
-import { SearchBox } from '@bsf/force-ui';
+import { Button, SearchBox } from '@bsf/force-ui';
 import {
 	useNavigate,
 	useLocation,
 	useRouterState,
 } from '@tanstack/react-router';
-import { useState, useMemo, useEffect } from '@wordpress/element';
+import { useState, useMemo, useEffect, useRef } from '@wordpress/element';
 import React from 'react';
-import { File } from 'lucide-react';
+import { File, Search } from 'lucide-react';
 import { scrollToElement as scrollToElementFn } from '@Functions/utils';
 
 const flattenNavLinks = ( navLinks ) => {
@@ -138,7 +138,7 @@ const flattenNavLinks = ( navLinks ) => {
 	return flattened;
 };
 
-const GlobalSearch = ( { navLinks = [] } ) => {
+const GlobalSearch = ( { navLinks = [], onNavigate } ) => {
 	const navigate = useNavigate();
 	const location = useLocation();
 	const {
@@ -315,6 +315,8 @@ const GlobalSearch = ( { navLinks = [] } ) => {
 		} else {
 			navigate( { to: path } );
 		}
+
+		onNavigate?.();
 	};
 
 	useEffect( () => {
@@ -393,6 +395,73 @@ const GlobalSearch = ( { navLinks = [] } ) => {
 					</SearchBox.List>
 				</SearchBox.Content>
 			</SearchBox>
+		</div>
+	);
+};
+
+// Icon-only variant for widths where the inline search input doesn't fit.
+// Renders a magnifier button that expands into the full GlobalSearch panel.
+export const GlobalSearchCompact = ( { navLinks = [] } ) => {
+	const [ isExpanded, setIsExpanded ] = useState( false );
+	const containerRef = useRef( null );
+
+	// Open the panel with the same Cmd/Ctrl + / shortcut as the inline SearchBox.
+	useEffect( () => {
+		const handleShortcut = ( event ) => {
+			const isMac = window.navigator.userAgent.includes( 'Mac' );
+			const modifierPressed = isMac ? event.metaKey : event.ctrlKey;
+			if ( event.key === '/' && modifierPressed ) {
+				event.preventDefault();
+				setIsExpanded( true );
+			}
+		};
+		window.addEventListener( 'keydown', handleShortcut );
+		return () => window.removeEventListener( 'keydown', handleShortcut );
+	}, [] );
+
+	useEffect( () => {
+		if ( ! isExpanded ) {
+			return;
+		}
+
+		containerRef.current?.querySelector( 'input' )?.focus();
+
+		const handlePointerDown = ( event ) => {
+			if ( ! containerRef.current?.contains( event.target ) ) {
+				setIsExpanded( false );
+			}
+		};
+		const handleEscape = ( event ) => {
+			if ( event.key === 'Escape' ) {
+				setIsExpanded( false );
+			}
+		};
+		document.addEventListener( 'mousedown', handlePointerDown );
+		document.addEventListener( 'keydown', handleEscape );
+		return () => {
+			document.removeEventListener( 'mousedown', handlePointerDown );
+			document.removeEventListener( 'keydown', handleEscape );
+		};
+	}, [ isExpanded ] );
+
+	return (
+		<div ref={ containerRef } className="relative">
+			<Button
+				variant="ghost"
+				size="sm"
+				icon={ <Search /> }
+				aria-label={ __( 'Search', 'surerank' ) }
+				aria-expanded={ isExpanded }
+				onClick={ () => setIsExpanded( ( prev ) => ! prev ) }
+			/>
+			{ isExpanded && (
+				<div className="absolute right-0 top-full mt-2 w-80 z-50">
+					<GlobalSearch
+						navLinks={ navLinks }
+						onNavigate={ () => setIsExpanded( false ) }
+					/>
+				</div>
+			) }
 		</div>
 	);
 };

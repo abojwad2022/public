@@ -145,13 +145,14 @@ export const refreshPageChecks = async (
 	brokenLinkState
 ) => {
 	const isUser = isUserContext();
-	const isTaxonomyListing = ! isUser && surerank_seo_popup?.is_taxonomy === '1';
+	const isTaxonomyListing =
+		! isUser && surerank_seo_popup?.is_taxonomy === '1';
 	const dynamicPostId =
 		staticSelect( STORE_NAME ).getVariables()?.post?.ID?.value ||
 		staticSelect( STORE_NAME ).getVariables()?.user?.ID?.value ||
 		staticSelect( STORE_NAME ).getActivePostId() ||
 		( isUser ? surerank_seo_popup?.user_id : 0 ) ||
-		( isTaxonomyListing ? ( surerank_seo_popup?.term_id || 0 ) : 0 ) ||
+		( isTaxonomyListing ? surerank_seo_popup?.term_id || 0 : 0 ) ||
 		0;
 	setIsRefreshing( true );
 	const timestamp = Date.now();
@@ -292,6 +293,18 @@ export const isAvadaBuilder = () => {
 
 export const isListingPage = () => {
 	return surerank_seo_popup?.editor_type === 'listing';
+};
+
+/**
+ * Whether we're in the block (Gutenberg) editor — the only context where the
+ * AI image-alt grid can reliably read images and write alt back. Classic, page
+ * builders, and server-sourced contexts fall back to "Help Me Fix".
+ *
+ * @since x.x.x
+ * @return {boolean} True in the block editor.
+ */
+export const isBlockEditor = () => {
+	return surerank_seo_popup?.editor_type === 'block';
 };
 
 /**

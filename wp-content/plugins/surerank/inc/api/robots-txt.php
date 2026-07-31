@@ -47,8 +47,9 @@ class RobotsTxt extends Api_Base {
 				'permission_callback' => [ $this, 'validate_permission' ],
 				'args'                => [
 					'robots_txt_content' => [
-						'required' => true,
-						'type'     => 'string',
+						'required'          => true,
+						'type'              => 'string',
+						'sanitize_callback' => 'sanitize_textarea_field',
 					],
 				],
 				'role_capability'     => 'global_setting',

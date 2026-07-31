@@ -27,6 +27,7 @@ import { Tabs } from '@bsf/force-ui';
 import { usePageCheckStatus } from '@SeoPopup/hooks';
 import { cn, getStatusIndicatorClasses } from '@/functions/utils';
 import { ENABLE_PAGE_LEVEL_SEO } from '@/global/constants';
+import CacheCompatibilityNotice from '@/global/components/cache-compatibility-notice';
 import { isSeoAnalysisDisabled } from '@SeoPopup/components/page-seo-checks/analyzer/utils/page-builder';
 
 const MetaSettings = ( props ) => {
@@ -129,6 +130,10 @@ const MetaSettings = ( props ) => {
 
 	return (
 		<Fragment>
+			<CacheCompatibilityNotice
+				compact
+				active={ !! window?.surerank_seo_popup?.active_cache_plugins }
+			/>
 			<div>
 				<Tabs.Group
 					className="w-full"

@@ -3,17 +3,19 @@
 // security plugin or WAF blocks /wp-json/. See #2362.
 import '@Functions/api-fetch-middleware';
 
-import { createRoot } from 'react-dom';
+import { Skeleton } from '@bsf/force-ui';
 import Modal from '@SeoPopup/modal';
 import RegisterMenu from './register-menu';
 import { registerPlugin } from '@wordpress/plugins';
 import { select, useDispatch } from '@wordpress/data';
 import { STORE_NAME } from '@Store/constants';
 import { SureRankMonoLogo } from '@GlobalComponents/icons';
-import { useEffect } from '@wordpress/element';
-import { __ } from '@wordpress/i18n';
+import { createRoot, useEffect } from '@wordpress/element';
+import { __, _n, sprintf } from '@wordpress/i18n';
 import PageCheckStatusIndicator from '@AdminComponents/page-check-status-indicator';
 import usePageCheckStatus from './hooks/usePageCheckStatus';
+import EditorTour from '@SeoPopup/components/editor-tour/editor-tour';
+import { cn } from '@Functions/utils';
 
 import '@Store/store';
 import './style.scss';
@@ -33,11 +35,7 @@ const RenderTriggerPopupButton = () => {
 			.querySelector( '#surerank-classic-seo-popup-trigger' )
 			?.getAttribute( 'data-surerank-variant' ) === 'sidebar';
 
-	// Mirror the Gutenberg label condition from SpectraPageSettingsPopup.
 	const getButtonText = () => {
-		if ( status === 'success' || counts.errorAndWarnings === 0 ) {
-			return __( 'Manage Your SEO', 'surerank' );
-		}
 		return __( 'Optimize Here', 'surerank' );
 	};
 
@@ -48,16 +46,63 @@ const RenderTriggerPopupButton = () => {
 		}
 	}, [] );
 
+	const totalIssues = counts.error + counts.warning;
+
+	// Severity hint: red when any errors, amber for warnings only, green when clean.
+	let statusDotClass = 'bg-support-success';
+	if ( counts.error > 0 ) {
+		statusDotClass = 'bg-support-error';
+	} else if ( counts.warning > 0 ) {
+		statusDotClass = 'bg-support-warning';
+	}
+
+	const statusLabel =
+		totalIssues > 0
+			? sprintf(
+					/* translators: %d: number of SEO improvements available. */
+					_n(
+						'%d SEO issue found.',
+						'%d SEO issues found.',
+						totalIssues,
+						'surerank'
+					),
+					totalIssues
+			  )
+			: __(
+					'Your SEO looks good. You are ready to publish.',
+					'surerank'
+			  );
+
 	if ( isSidebarVariant ) {
 		return (
-			<div className="surerank-classic-sidebar-trigger-wrap">
-				<button
-					className="button button-primary"
-					type="button"
-					onClick={ () => updateModalState( true ) }
-				>
-					{ getButtonText() }
-				</button>
+			<div className="flex flex-col items-start gap-2.5">
+				{ initializing && (
+					<Skeleton
+						variant="rectangular"
+						className="w-20 h-3 rounded-sm"
+					/>
+				) }
+				{ ! initializing && (
+					<p className="surerank-classic-sidebar-status m-0 flex items-start gap-2 text-xs leading-5 text-text-secondary">
+						<span
+							className={ cn(
+								'mt-[7px] size-1.5 shrink-0 rounded-full',
+								statusDotClass
+							) }
+						/>
+						<span>{ statusLabel }</span>
+					</p>
+				) }
+				<div className="surerank-classic-sidebar-trigger-wrap">
+					<button
+						className="button button-primary"
+						type="button"
+						onClick={ () => updateModalState( true ) }
+					>
+						{ getButtonText() }
+					</button>
+					<EditorTour />
+				</div>
 			</div>
 		);
 	}
@@ -77,6 +122,7 @@ const RenderTriggerPopupButton = () => {
 				errorAndWarnings={ counts.errorAndWarnings }
 				initializing={ initializing }
 			/>
+			<EditorTour />
 		</div>
 	);
 };
@@ -100,9 +146,7 @@ const getClassicTriggerMountTarget = () => {
 };
 
 const mountClassicTrigger = () => {
-	if (
-		! [ 'classic', 'user' ].includes( surerank_seo_popup.editor_type )
-	) {
+	if ( ! [ 'classic', 'user' ].includes( surerank_seo_popup.editor_type ) ) {
 		return;
 	}
 	const targetElement = getClassicTriggerMountTarget();

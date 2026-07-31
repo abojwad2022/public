@@ -317,7 +317,7 @@ class Headless extends Api_Base {
 	 *
 	 * @param mixed $meta_key Meta key from the meta hooks.
 	 * @return bool
-	 * @since 1.9.0
+	 * @since 1.9.2
 	 */
 	private function is_seo_meta_key( $meta_key ) {
 		return is_string( $meta_key ) && 0 === strpos( $meta_key, self::SEO_META_PREFIX );

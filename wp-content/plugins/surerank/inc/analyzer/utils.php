@@ -233,6 +233,11 @@ class Utils {
 	public static function existing_broken_links( $broken_links, $urls ) {
 		$description           = $broken_links['description'] ?? [];
 		$existing_broken_links = [];
+		// Malformed/legacy metadata may store description as a string; guard so
+		// the foreach below never iterates a non-iterable value.
+		if ( ! is_array( $description ) ) {
+			$description = [];
+		}
 		foreach ( $description as $item ) {
 			if ( is_array( $item ) && isset( $item['list'] ) ) {
 				$existing_broken_links = $item['list'];

@@ -44,7 +44,8 @@ const SaveButton = () => {
 		const isUser = !! surerank_seo_popup?.is_user;
 		const isTerm =
 			! isUser &&
-			( !! surerank_seo_popup.is_taxonomy || isCurrentPage( 'term.php' ) );
+			( !! surerank_seo_popup.is_taxonomy ||
+				isCurrentPage( 'term.php' ) );
 
 		let idParam = { post_id: surerank_seo_popup?.post_id };
 		let dataUrl = POST_SEO_DATA_URL;

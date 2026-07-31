@@ -14,11 +14,16 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit; // Exit if accessed directly.
 }
 
+use SureRank\Inc\Admin\Sync;
 use SureRank\Inc\BatchProcess\Sync_Archives;
+use SureRank\Inc\BatchProcess\Sync_Posts;
+use SureRank\Inc\BatchProcess\Sync_Taxonomies;
 use SureRank\Inc\Functions\Cache;
 use SureRank\Inc\Functions\Compat;
 use SureRank\Inc\Functions\Cron;
+use SureRank\Inc\Functions\Helper;
 use SureRank\Inc\Functions\Settings;
+use SureRank\Inc\Sitemap\Providers\Registry;
 use SureRank\Inc\Traits\Get_Instance;
 
 /**
@@ -41,6 +46,19 @@ class Xml_Sitemap extends Sitemap {
 	 * @since 1.7.2
 	 */
 	private const STALE_REBUILD_THRESHOLD = 2 * DAY_IN_SECONDS;
+
+	/**
+	 * Whether the current request may build missing cache inline.
+	 *
+	 * Mirrors the generation mode: true in auto (every sitemap is produced
+	 * on the fly, one bounded page per request), false in cron (requests
+	 * read the cache only; the scheduled batch is the sole builder).
+	 *
+	 * @since 1.9.3
+	 * @var bool
+	 */
+	private $chunk_on_the_fly = false;
+
 	/**
 	 * Sitemap slug to be used across the class.
 	 *
@@ -185,11 +203,20 @@ class Xml_Sitemap extends Sitemap {
 	 */
 	public function generate_sitemap( string $type, int $page, $threshold ): void {
 
-		// Self-healing: if the 6-hourly cron has silently stopped firing
-		// and the sitemap is stale past the threshold, schedule a one-shot
-		// recovery rebuild. Called once (not per dispatch branch) to avoid
-		// the duplicate option-read on cache-miss hits.
-		$this->maybe_schedule_stale_rebuild();
+		// The generation mode decides everything — no site-size heuristic.
+		// Auto: build on the fly (index from counts, chunks per visited page).
+		// Cron: read the cache only; the scheduled batch is the sole builder.
+		$this->chunk_on_the_fly = Generation_Mode::allows_inline_build();
+
+		if ( ! $this->chunk_on_the_fly ) {
+			// Cron mode: keep the cache fresh out of band, never inline.
+			$this->maybe_schedule_stale_rebuild();
+		} elseif ( $this->cache_is_absent() ) {
+			// Auto mode, cold cache: synthesize just the index from provider
+			// count queries. The chunk files its entries point to are built
+			// lazily as each sub-sitemap page is requested (below).
+			Registry::get_instance()->build_index();
+		}
 
 		// 1. Live cache — exits on success, falls through on miss.
 		if ( '1' === $type ) {
@@ -213,6 +240,37 @@ class Xml_Sitemap extends Sitemap {
 
 		// 3. Miss — cache absent or unreadable. Emit a valid 503.
 		$this->send_miss_response();
+	}
+
+	/**
+	 * Show the "cron not enabled" warning only in cron mode.
+	 *
+	 * Auto mode builds on the fly and never depends on a working cron, so
+	 * the warning is suppressed there.
+	 *
+	 * @since 1.9.3
+	 * @return bool
+	 */
+	public function show_cron_warning(): bool {
+		if ( ! Settings::get( 'enable_xml_sitemap' ) ) {
+			return false;
+		}
+
+		return ! Generation_Mode::allows_inline_build() && ! Helper::are_crons_available();
+	}
+
+	/**
+	 * Whether the dashboard should offer the manual Regenerate button.
+	 *
+	 * Meaningful only in cron mode, where the scheduled batch is the sole
+	 * builder. Auto mode is fully self-serving (each sitemap builds inline
+	 * when visited), so a manual button is pure noise there.
+	 *
+	 * @since 1.9.3
+	 * @return bool
+	 */
+	public function show_regenerate_button(): bool {
+		return ! Generation_Mode::allows_inline_build();
 	}
 
 	/**
@@ -256,6 +314,14 @@ class Xml_Sitemap extends Sitemap {
 		// has_archive post type, far below the split threshold, so they are
 		// never paginated (see Sync_Archives).
 		$chunk = Cache::get_file( 'sitemap/' . Sync_Archives::TYPE . '-chunk-1.json' );
+
+		// Chunk-on-demand: the archive chunk is a single tiny build (one
+		// URL per has_archive post type), so build it inline on a miss.
+		if ( ! $chunk && $this->chunk_on_the_fly ) {
+			Sync_Archives::get_instance()->import();
+			$chunk = Cache::get_file( 'sitemap/' . Sync_Archives::TYPE . '-chunk-1.json' );
+		}
+
 		if ( ! $chunk ) {
 			return;
 		}
@@ -352,6 +418,9 @@ class Xml_Sitemap extends Sitemap {
 	 * @since 1.9.0
 	 */
 	public function get_entries_for_base( string $base, int $page ): array {
+		// Honor the generation mode so headless REST builds chunks on miss in
+		// auto mode, matching the XML serving path (cache-only in cron mode).
+		$this->chunk_on_the_fly = Generation_Mode::allows_inline_build();
 		return $this->combine_chunks( $base, max( 1, $page ) );
 	}
 
@@ -458,6 +527,16 @@ class Xml_Sitemap extends Sitemap {
 	}
 
 	/**
+	 * Whether the live sitemap index is completely absent (cold cache).
+	 *
+	 * @since 1.9.3
+	 * @return bool
+	 */
+	private function cache_is_absent(): bool {
+		return ! Cache::file_exists( 'sitemap/sitemap_index.json' );
+	}
+
+	/**
 	 * Get sitemap from cache
 	 *
 	 * @param string $type Sitemap type.
@@ -496,6 +575,13 @@ class Xml_Sitemap extends Sitemap {
 				? Cache::read_rebuild_backup( $cache_path )
 				: Cache::get_file( $cache_path );
 
+			// Chunk-on-demand: build just this chunk inline and re-read.
+			// The write also self-heals the cache for future requests.
+			if ( ! $cache_file_data && ! $from_backup && $this->chunk_on_the_fly ) {
+				$this->build_chunk( $base, $chunk_number, $chunk_size );
+				$cache_file_data = Cache::get_file( $cache_path );
+			}
+
 			if ( ! $cache_file_data ) {
 				continue;
 			}
@@ -507,5 +593,45 @@ class Xml_Sitemap extends Sitemap {
 		}
 
 		return $combined_sitemap;
+	}
+
+	/**
+	 * Build one missing JSON chunk inline, using the same sync classes the
+	 * cron batch uses, so on-demand chunks are byte-identical to cron-built
+	 * ones. Bounded work: one query of $chunk_size items.
+	 *
+	 * The slug is validated against the included post types / taxonomies so
+	 * crafted sitemap URLs cannot trigger queries for arbitrary types.
+	 *
+	 * @param string $base         Chunk-file prefix, e.g. "post-type-page".
+	 * @param int    $chunk_number 1-based chunk number within the type.
+	 * @param int    $chunk_size   Items per chunk.
+	 * @since 1.9.3
+	 * @return void
+	 */
+	private function build_chunk( string $base, int $chunk_number, int $chunk_size ): void {
+		$offset     = ( $chunk_number - 1 ) * $chunk_size;
+		$sync       = Sync::get_instance();
+		$pt_prefix  = self::get_post_type_prefix() . '-';
+		$tax_prefix = self::get_taxonomy_prefix() . '-';
+
+		if ( 0 === strpos( $base, $pt_prefix ) ) {
+			$slug = substr( $base, strlen( $pt_prefix ) );
+			if ( array_key_exists( $slug, (array) $sync->get_included_post_types() ) ) {
+				( new Sync_Posts( $offset, $slug, $chunk_size ) )->import();
+			}
+			return;
+		}
+
+		if ( 0 === strpos( $base, $tax_prefix ) ) {
+			$slug = substr( $base, strlen( $tax_prefix ) );
+			foreach ( (array) $sync->get_included_taxonomies() as $taxonomy ) {
+				$taxonomy_slug = is_array( $taxonomy ) ? (string) ( $taxonomy['slug'] ?? '' ) : (string) $taxonomy;
+				if ( $taxonomy_slug === $slug ) {
+					( new Sync_Taxonomies( $offset, $slug, $chunk_size ) )->import();
+					return;
+				}
+			}
+		}
 	}
 }

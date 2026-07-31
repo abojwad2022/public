@@ -104,9 +104,7 @@ Steps:
 				setTimeout( () => setCopied( false ), 2000 );
 			} )
 			.catch( () => {
-				toast.error(
-					__( 'Failed to copy to clipboard', 'surerank' )
-				);
+				toast.error( __( 'Failed to copy to clipboard', 'surerank' ) );
 			} );
 	};
 
@@ -228,7 +226,10 @@ Steps:
 						slug="surerank-only"
 						text={ __( 'SureRank Only', 'surerank' ) }
 					/>
-					<Tabs.Tab slug="global" text={ __( 'Global', 'surerank' ) } />
+					<Tabs.Tab
+						slug="global"
+						text={ __( 'Global', 'surerank' ) }
+					/>
 				</Tabs.Group>
 			</Tabs>
 			<div
@@ -264,7 +265,10 @@ Steps:
 							) }
 						>
 							{ promptCopied ? (
-								<Check size={ 16 } style={ { color: '#a6e3a1' } } />
+								<Check
+									size={ 16 }
+									style={ { color: '#a6e3a1' } }
+								/>
 							) : (
 								<Sparkles size={ 16 } />
 							) }
@@ -292,7 +296,10 @@ Steps:
 							aria-label={ __( 'Copy JSON config', 'surerank' ) }
 						>
 							{ copied ? (
-								<Check size={ 16 } style={ { color: '#a6e3a1' } } />
+								<Check
+									size={ 16 }
+									style={ { color: '#a6e3a1' } }
+								/>
 							) : (
 								<Copy size={ 16 } />
 							) }

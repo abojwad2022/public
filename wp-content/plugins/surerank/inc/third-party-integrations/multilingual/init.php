@@ -83,9 +83,27 @@ class Init {
 			return;
 		}
 
+		/**
+		 * Filters the SureRank settings keys registered with Polylang.
+		 *
+		 * Lets add-ons (e.g. SureRank Pro) register their own translatable
+		 * top-level keys of the surerank_settings option without the free
+		 * plugin needing to know about them. Keys may be exact names or
+		 * Polylang name patterns (e.g. '*_page_title'); every value must be 1.
+		 *
+		 * Only add title/description text keys. Never add booleans, arrays,
+		 * URLs or enums: Polylang returns an empty string for an untranslated
+		 * non-text value, which would break functional settings such as
+		 * enable_xml_sitemap.
+		 *
+		 * @since 1.9.3
+		 * @param array<string, int> $keys Translatable settings keys.
+		 */
+		$keys = apply_filters( 'surerank_polylang_translatable_keys', self::translatable_settings_keys() );
+
 		new \PLL_Translate_Option(
 			SURERANK_SETTINGS,
-			[ '*' => 1 ],
+			$keys,
 			[ 'context' => 'SureRank' ]
 		);
 	}
@@ -119,6 +137,36 @@ class Init {
 		}
 
 		return $args;
+	}
+
+	/**
+	 * Settings keys that hold translatable text.
+	 *
+	 * Only the title/description templates and social text defaults are
+	 * registered with Polylang. A wildcard ( [ '*' => 1 ] ) must NOT be used:
+	 * it tells Polylang to translate every key, including booleans and arrays
+	 * (e.g. enable_xml_sitemap, no_index, sitemap_excluded_*). Polylang returns
+	 * an empty string for an untranslated boolean, so on the front end
+	 * enable_xml_sitemap evaluates to '0' and the whole sitemap module is
+	 * disabled, serving the blog/archive instead of the sitemap. URLs, enums
+	 * and handles are likewise excluded as they are not translatable text.
+	 *
+	 * @since 1.9.3
+	 * @return array<string, int>
+	 */
+	private static function translatable_settings_keys(): array {
+		return [
+			'separator'                      => 1,
+			'page_title'                     => 1,
+			'page_description'               => 1,
+			'focus_keyword'                  => 1,
+			'home_page_title'                => 1,
+			'home_page_description'          => 1,
+			'home_page_facebook_title'       => 1,
+			'home_page_facebook_description' => 1,
+			'home_page_twitter_title'        => 1,
+			'home_page_twitter_description'  => 1,
+		];
 	}
 
 	/**

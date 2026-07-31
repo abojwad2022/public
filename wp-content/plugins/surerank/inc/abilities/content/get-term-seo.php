@@ -119,6 +119,16 @@ class Get_Term_Seo extends Ability_Base {
 			);
 		}
 
+		// Object-level authorization: the ability framework already gates this at manage_options, but guard the per-term read here too so the shared
+		// helper is never reached without an edit_term check (parity with the REST/AJAX save paths, and defense-in-depth if the capability is lowered).
+		if ( ! Term::can_manage_term_seo( $term_id ) ) {
+			return new \WP_Error(
+				'surerank_forbidden',
+				__( 'You are not allowed to view SEO settings for this term.', 'surerank' ),
+				[ 'status' => 403 ]
+			);
+		}
+
 		return Term::get_term_data_by_id( $term_id, $taxonomy, true );
 	}
 }

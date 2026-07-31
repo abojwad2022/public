@@ -12,9 +12,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit; // Exit if accessed directly.
 }
 
+use SureRank\Inc\API\Migrations;
+use SureRank\Inc\API\Post;
 use SureRank\Inc\Frontend\Crawl_Optimization;
 use SureRank\Inc\Frontend\Image_Seo;
 use SureRank\Inc\Functions\Get;
+use SureRank\Inc\Functions\Settings;
 use SureRank\Inc\Functions\Update;
 use SureRank\Inc\GoogleSearchConsole\Auth as GoogleSearchConsoleAuth;
 use SureRank\Inc\GoogleSearchConsole\Controller as GoogleSearchConsoleController;
@@ -49,10 +52,19 @@ class Seo_Popup {
 		add_action( 'show_user_profile', [ $this, 'add_user_meta_box_trigger' ] );
 		add_action( 'edit_user_profile', [ $this, 'add_user_meta_box_trigger' ] );
 		add_action( 'add_meta_boxes', [ $this, 'register_classic_sidebar_meta_box' ], 20, 2 );
+		// Pin the box to the second position (just below Publish). Runs last so all boxes are registered.
+		add_action( 'add_meta_boxes', [ $this, 'pin_classic_sidebar_meta_box' ], 9999, 1 );
 		add_action( 'created_category', [ $this, 'update_category_seo_values' ] );
 		add_action( 'edited_category', [ $this, 'update_category_seo_values' ] );
+		/* SEO menu on the admin bar (wp-admin + front end); gated in the callback. */
+		add_action( 'admin_bar_menu', [ $this, 'add_admin_bar_menu' ], 100 );
 		// For enqueue scripts on the frontend.
 		add_action( 'wp_enqueue_scripts', [ $this, 'frontend_enqueue_scripts' ] );
+
+		/* Live admin-bar status update when checks are ignored/restored/fixed. */
+		add_action( 'rest_api_init', [ $this, 'register_status_route' ] );
+		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_admin_bar_live' ] );
+		add_action( 'wp_enqueue_scripts', [ $this, 'enqueue_admin_bar_live' ] );
 	}
 
 	/**
@@ -146,6 +158,46 @@ class Seo_Popup {
 	}
 
 	/**
+	 * Pin the SureRank Classic Editor meta box to the second position in the
+	 * sidebar, directly below the Publish ("submitdiv") box.
+	 *
+	 * Runs after every meta box is registered. Only reorders when the box is in
+	 * the default 'core' priority bucket, so a custom
+	 * surerank_seo_sidebar_box_priority value is left untouched. A user's own
+	 * drag-and-drop order still wins, since that is restored at render time.
+	 *
+	 * @param string $post_type Current post type / screen id.
+	 * @since 1.9.2
+	 * @return void
+	 */
+	public function pin_classic_sidebar_meta_box( string $post_type ): void {
+		global $wp_meta_boxes;
+
+		if ( empty( $wp_meta_boxes[ $post_type ]['side']['core'] ) ) {
+			return;
+		}
+
+		$core = $wp_meta_boxes[ $post_type ]['side']['core'];
+
+		if ( ! isset( $core['surerank_classic_seo_box'], $core['submitdiv'] ) ) {
+			return;
+		}
+
+		$surerank = $core['surerank_classic_seo_box'];
+		unset( $core['surerank_classic_seo_box'] );
+
+		$reordered = [];
+		foreach ( $core as $id => $box ) {
+			$reordered[ $id ] = $box;
+			if ( 'submitdiv' === $id ) {
+				$reordered['surerank_classic_seo_box'] = $surerank;
+			}
+		}
+
+		$wp_meta_boxes[ $post_type ]['side']['core'] = $reordered; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- Reordering registered meta boxes requires updating this global.
+	}
+
+	/**
 	 * Render the Classic Editor sidebar meta box content.
 	 *
 	 * @param \WP_Post $post Current post object.
@@ -226,8 +278,6 @@ class Seo_Popup {
 			return;
 		}
 
-		add_action( 'admin_bar_menu', [ $this, 'add_admin_bar_menu' ], 100 );
-
 		do_action( 'surerank_seo_popup_frontend_enqueue_scripts' );
 
 		wp_enqueue_media();
@@ -239,7 +289,15 @@ class Seo_Popup {
 			return;
 		}
 
-		$this->enqueue_assets( 'elementor', $context_data );
+		// The seo-popup script bundle must never load on the frontend: its asset
+		// dependencies include wp-editor, which registers the core/editor data
+		// store in the browser. WooCommerce's Cart/Checkout blocks treat that
+		// store's presence as "running inside the editor" and render their
+		// preview products instead of the real cart. The frontend popup is
+		// mounted by the front-end-meta-box entry, which only needs the
+		// seo-popup localized data and stylesheet (cloned into its shadow root).
+		$this->enqueue_vendor_and_common_assets();
+		$this->enqueue_seo_popup_style();
 
 		$this->build_assets_operations(
 			'front-end-meta-box',
@@ -248,6 +306,12 @@ class Seo_Popup {
 				'object_name' => 'front_end_meta_box',
 				'data'        => [],
 			]
+		);
+
+		$this->localize_script(
+			'front-end-meta-box',
+			'seo_popup',
+			$this->get_localization_data( 'elementor', $context_data )
 		);
 	}
 
@@ -281,21 +345,89 @@ class Seo_Popup {
 	 * @return void
 	 */
 	public function add_admin_bar_menu( $wp_admin_bar ) {
-		if ( ! wp_script_is( $this->enqueue_prefix . '-seo-popup', 'enqueued' ) ) {
+		// On the frontend the popup is mounted by the front-end-meta-box entry;
+		// the seo-popup bundle itself is editor/admin-only (see frontend_enqueue_scripts).
+		$popup_available = wp_script_is( $this->enqueue_prefix . '-seo-popup', 'enqueued' )
+			|| wp_script_is( $this->enqueue_prefix . '-front-end-meta-box', 'enqueued' );
+		Seo_Toolbar::get_instance()->add_nodes(
+			$wp_admin_bar,
+			$this->get_admin_bar_object_id(),
+			$popup_available
+		);
+	}
+
+	/**
+	 * Register the REST route that returns the admin bar's current issue counts.
+	 *
+	 * @since 1.9.2
+	 * @return void
+	 */
+	public function register_status_route() {
+		register_rest_route(
+			'surerank/v1',
+			'/seo-bar-status',
+			[
+				'methods'             => 'GET',
+				'callback'            => [ $this, 'get_seo_bar_status' ],
+				'permission_callback' => static function () {
+					return apply_filters( 'surerank_content_setting_access', current_user_can( 'manage_options' ) );
+				},
+				'args'                => [
+					'post_id' => [
+						'sanitize_callback' => 'absint',
+						'default'           => 0,
+					],
+				],
+			]
+		);
+	}
+
+	/**
+	 * REST callback: site + page issue counts for the admin bar.
+	 *
+	 * @param \WP_REST_Request<array<string, mixed>> $request Request.
+	 * @since 1.9.2
+	 * @return \WP_REST_Response|\WP_Error
+	 */
+	public function get_seo_bar_status( $request ) {
+		$post_id = (int) $request->get_param( 'post_id' );
+
+		// Object-level guard: this route is only gated by the content-setting role,
+		// so verify edit access to the requested post before disclosing its checks.
+		if ( ! Post::can_manage_post_seo( $post_id ) ) {
+			return new \WP_Error(
+				'surerank_forbidden',
+				__( 'You are not allowed to view SEO checks for this post.', 'surerank' ),
+				[ 'status' => rest_authorization_required_code() ]
+			);
+		}
+
+		return rest_ensure_response( Seo_Toolbar::get_instance()->get_status( $post_id ) );
+	}
+
+	/**
+	 * Enqueue the tiny script that live-updates the admin-bar dots when checks change.
+	 *
+	 * @since 1.9.2
+	 * @return void
+	 */
+	public function enqueue_admin_bar_live() {
+		if ( ! is_admin_bar_showing() ) {
 			return;
 		}
 
-		$wp_admin_bar->add_node(
-			[
-				'id'    => 'surerank-meta-box',
-				'title' => '<span class="ab-icon" style="margin-top: 2px;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M13.5537 1.5C17.8453 1.5 21.3251 4.97895 21.3252 9.27051C21.3252 12.347 19.5368 15.0056 16.9434 16.2646H21.3252V22.5H18.0889C14.9086 22.5 12.2861 20.1186 11.9033 17.042H11.9014L11.9033 13.7852C14.8283 13.7661 17.0342 11.3894 17.0342 8.45996V6.0293C14.137 6.02947 11.6948 7.97682 10.9443 10.6338C10.1605 9.53345 8.87383 8.8165 7.41992 8.81641H6.38086V9.85352H6.38379C6.44515 12.0356 8.23375 13.786 10.4307 13.7861H10.7061L10.6934 17.042H10.6865C10.2943 20.1082 7.67678 22.4785 4.50391 22.4785H2.6748V1.5H13.5537Z" fill="currentColor"/></svg></span><span class="ab-label">' . esc_html__( 'SureRank Meta Box', 'surerank' ) . '</span>',
-				'href'  => '#',
-				'meta'  => [
-					'class'   => 'surerank-meta-box-trigger',
-					'title'   => esc_html__( 'Open SureRank Meta Box', 'surerank' ),
-					'onclick' => 'return false;',
-				],
-			]
+		$handle = $this->enqueue_prefix . '-admin-bar-live';
+		wp_enqueue_script(
+			$handle,
+			SURERANK_URL . 'inc/admin/assets/admin-bar-live.js',
+			[ 'wp-api-fetch' ],
+			SURERANK_VERSION,
+			true
+		);
+		wp_localize_script(
+			$handle,
+			'surerank_admin_bar_live',
+			[ 'post_id' => $this->get_admin_bar_object_id() ]
 		);
 	}
 
@@ -451,6 +583,26 @@ class Seo_Popup {
 		}
 
 		return true;
+	}
+
+	/**
+	 * Resolve the current object id for the admin bar in both contexts.
+	 *
+	 * @since 1.9.2
+	 * @return int Post id on a singular front-end view or a post edit screen, else 0.
+	 */
+	private function get_admin_bar_object_id() {
+		if ( ! is_admin() ) {
+			return is_singular() ? (int) get_queried_object_id() : 0;
+		}
+
+		$screen = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
+		if ( ! $screen instanceof \WP_Screen || 'post' !== $screen->base ) {
+			return 0;
+		}
+
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only screen lookup, no state change.
+		return isset( $_GET['post'] ) ? absint( wp_unslash( $_GET['post'] ) ) : 0;
 	}
 
 	/**
@@ -633,6 +785,30 @@ class Seo_Popup {
 	}
 
 	/**
+	 * Enqueue only the seo-popup stylesheet.
+	 *
+	 * Used on the frontend, where the popup markup (rendered by the
+	 * front-end-meta-box entry inside a shadow root) still relies on the
+	 * seo-popup styles, but the seo-popup script must not load because its
+	 * wp-editor dependency breaks WooCommerce block hydration.
+	 *
+	 * @since 1.9.3
+	 * @return void
+	 */
+	private function enqueue_seo_popup_style(): void {
+		$asset_path = $this->build_path . 'seo-popup/index.asset.php';
+		$version    = SURERANK_VERSION;
+
+		if ( file_exists( $asset_path ) ) {
+			$asset   = include $asset_path;
+			$version = is_array( $asset ) && ! empty( $asset['version'] ) ? $asset['version'] : SURERANK_VERSION;
+		}
+
+		$this->style_operations( 'seo-popup', $this->build_url . 'seo-popup/style.css', [], $version );
+		wp_style_add_data( $this->enqueue_prefix . '-seo-popup', 'rtl', 'replace' );
+	}
+
+	/**
 	 * Enqueue assets for SEO popup.
 	 *
 	 * @param string                                                                                                                                                                              $editor_type Editor type.
@@ -647,28 +823,43 @@ class Seo_Popup {
 			[
 				'hook'        => 'seo-popup',
 				'object_name' => 'seo_popup',
-				'data'        => array_merge(
-					[
-						'admin_assets_url'         => SURERANK_URL . 'inc/admin/assets',
-						'site_icon_url'            => get_site_icon_url( 16 ),
-						'editor_type'              => $editor_type,
-						'post_type'                => $context_data['post_type'],
-						'is_taxonomy'              => $context_data['is_taxonomy'],
-						'is_user'                  => $context_data['is_user'] ?? false,
-						'description_length'       => Get::description_length(),
-						'title_length'             => Get::title_length(),
-						'keyword_checks'           => $this->keyword_checks(),
-						'page_checks'              => $this->page_checks(),
-						'image_seo'                => Image_Seo::get_instance()->status(),
-						'is_frontend'              => $context_data['is_frontend'] ?? false,
-						'broken_link_ignored_urls' => Get::option( 'surerank_broken_link_ignored_urls', [] ),
-					],
-					$context_data['post_data'],
-					$context_data['term_data'],
-					$context_data['user_data'] ?? [],
-					$this->get_indexing_status_localization( $context_data )
-				),
+				'data'        => $this->get_localization_data( $editor_type, $context_data ),
 			]
+		);
+	}
+
+	/**
+	 * Build the localization payload shared by the seo-popup and
+	 * front-end-meta-box entries (exposed to JS as surerank_seo_popup).
+	 *
+	 * @param string                                                                                                                                                                              $editor_type Editor type.
+	 * @param array{post_data: array<string, mixed>, term_data: array<string, mixed>, user_data?: array<string, mixed>, post_type: string, is_taxonomy: bool, is_user?: bool, is_frontend?: bool} $context_data Context data.
+	 * @since 1.9.3
+	 * @return array<string, mixed>
+	 */
+	private function get_localization_data( string $editor_type, array $context_data ): array {
+		return array_merge(
+			[
+				'admin_assets_url'         => SURERANK_URL . 'inc/admin/assets',
+				'site_icon_url'            => get_site_icon_url( 16 ),
+				'editor_type'              => $editor_type,
+				'post_type'                => $context_data['post_type'],
+				'is_taxonomy'              => $context_data['is_taxonomy'],
+				'is_user'                  => $context_data['is_user'] ?? false,
+				'description_length'       => Get::description_length(),
+				'title_length'             => Get::title_length(),
+				'keyword_checks'           => $this->keyword_checks(),
+				'page_checks'              => $this->page_checks(),
+				'image_seo'                => Image_Seo::get_instance()->status(),
+				'generate_alt_with_ai'     => (bool) Settings::get( 'generate_alt_with_ai' ),
+				'is_frontend'              => $context_data['is_frontend'] ?? false,
+				'broken_link_ignored_urls' => Get::option( 'surerank_broken_link_ignored_urls', [] ),
+				'active_cache_plugins'     => Migrations::is_cache_plugin_active(),
+			],
+			$context_data['post_data'],
+			$context_data['term_data'],
+			$context_data['user_data'] ?? [],
+			$this->get_indexing_status_localization( $context_data )
 		);
 	}
 

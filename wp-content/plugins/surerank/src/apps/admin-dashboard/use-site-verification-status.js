@@ -13,12 +13,17 @@ const useSiteVerificationStatus = (
 	searchConsole
 ) => {
 	return useMemo( () => {
-		const currentSiteInList = searchConsole?.sites?.some(
+		// The full property entry for the current site. Google APIs only accept
+		// the exact property string (URL-prefix properties end with a trailing
+		// slash), so consumers must send currentSiteEntry.siteUrl — never the
+		// raw origin — when selecting a property.
+		const currentSiteEntry = searchConsole?.sites?.find(
 			( site ) =>
 				site.siteUrl === currentSiteUrl ||
 				site.siteUrl === `${ currentSiteUrl }/` ||
 				normalizeUrl( site.siteUrl ) === normalizeUrl( currentSiteUrl )
 		);
+		const currentSiteInList = !! currentSiteEntry;
 
 		const isSelectedSiteVerified = () => {
 			if ( ! selectedSite ) {
@@ -55,6 +60,7 @@ const useSiteVerificationStatus = (
 				searchConsole.selectedSite === `${ currentSiteUrl }/` );
 
 		return {
+			currentSiteEntry,
 			currentSiteInList,
 			isSelectedSiteVerified: isSelectedSiteVerified(),
 			currentSiteInListButNotVerified,

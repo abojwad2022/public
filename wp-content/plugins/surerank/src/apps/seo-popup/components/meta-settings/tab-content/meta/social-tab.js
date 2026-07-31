@@ -27,6 +27,7 @@ import { SeoPopupTooltip } from '@AdminComponents/tooltip';
 import MediaPreview from '@/apps/admin-components/media-preview';
 import { createMediaFrame, getSiteDetails } from '@/global/utils/utils';
 import { applyFilters } from '@wordpress/hooks';
+import OgImageUpgradeButton from '@/global/components/og-image-upgrade-button';
 
 const socialMediaTabs = [
 	{
@@ -336,6 +337,12 @@ const SocialTab = ( { postMetaData, updatePostMetaData, globalDefaults } ) => {
 											setImageGenModalOpen( true ),
 									}
 								) }
+								<OgImageUpgradeButton
+									description={ __(
+										'Upgrade to SureRank Pro to generate branded, AI-powered Open Graph images for this content.',
+										'surerank'
+									) }
+								/>
 							</div>
 
 							{ /* Conditional Input */ }

@@ -13,6 +13,7 @@ import { useState } from '@wordpress/element';
 import apiFetch from '@wordpress/api-fetch';
 import { UpgradeNotice } from '@/global/components/nudges';
 import Alert from '@/global/components/alert';
+import CacheCompatibilityNotice from '@/global/components/cache-compatibility-notice';
 
 const xmlContent = ( metaSettings ) => [
 	{
@@ -270,21 +271,32 @@ const SiteMaps = () => {
 	return (
 		<PageContentWrapper
 			title={ __( 'Sitemaps', 'surerank' ) }
-			secondaryButton={ <SitemapButtons /> }
+			secondaryButton={
+				surerank_admin_common?.show_regenerate_button ? (
+					<SitemapButtons />
+				) : null
+			}
 			description={ __(
 				'Generates a sitemap to help search engines find and index your content more efficiently.',
 				'surerank'
 			) }
 			afterDescription={
-				surerank_admin_common?.crons_available ? null : (
-					<Alert
-						color="warning"
-						message={ __(
-							'It seems CRON is not enabled on your site. You can use the "Regenerate" button to generate the sitemap cache manually.',
-							'surerank'
-						) }
+				<>
+					<CacheCompatibilityNotice
+						active={
+							!! surerank_admin_common?.active_cache_plugins
+						}
 					/>
-				)
+					{ surerank_admin_common?.show_cron_warning ? (
+						<Alert
+							color="warning"
+							message={ __(
+								'It seems CRON is not enabled on your site. You can use the "Regenerate" button to generate the sitemap cache manually.',
+								'surerank'
+							) }
+						/>
+					) : null }
+				</>
 			}
 		>
 			<GeneratePageContent json={ getPageContent( metaSettings ) } />

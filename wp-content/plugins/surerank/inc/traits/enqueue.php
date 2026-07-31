@@ -160,40 +160,30 @@ trait Enqueue {
 	}
 
 	/**
-	 * Enqueue vendor and common assets.
+	 * Enqueue the shared webpack runtime and vendor chunk.
+	 *
+	 * Note: despite the historical method name, the build emits no "common"
+	 * chunk, so only the runtime and the single shared vendor chunk that every
+	 * React entry depends on are enqueued here.
 	 *
 	 * @since 1.0.0
 	 * @return void
 	 */
 	public function enqueue_vendor_and_common_assets() {
-		// 1. First, enqueue runtime - all other chunks depend on it
+		// 1. Enqueue the shared runtime first - the vendor chunk and every
+		// entry depend on it.
 		$this->enqueue_files_with_deps( 'runtime', 'runtime', [] );
 
-		// 2. Get all vendor chunk directories
-		$vendor_dirs    = glob( $this->build_path . 'vendor-*', GLOB_ONLYDIR );
-		$vendor_handles = [];
-
-		// 3. Enqueue all vendor chunks with runtime as dependency
-		if ( ! empty( $vendor_dirs ) ) {
-			foreach ( $vendor_dirs as $vendor_dir ) {
-				$dir_name         = basename( $vendor_dir );
-				$handle           = $this->enqueue_prefix . '-' . $dir_name;
-				$vendor_handles[] = $handle;
-
-				$this->enqueue_files_with_deps(
-					$dir_name,
-					$dir_name,
-					[ $this->enqueue_prefix . '-runtime' ]
-				);
-			}
+		// 2. Enqueue the single shared vendor chunk (all node_modules code).
+		// Every React entry depends on it, so it loads once and is cached
+		// across admin pages instead of shipping dozens of split chunks.
+		if ( file_exists( $this->build_path . 'vendor/index.asset.php' ) ) {
+			$this->enqueue_files_with_deps(
+				'vendor',
+				'vendor',
+				[ $this->enqueue_prefix . '-runtime' ]
+			);
 		}
-
-		// 4. Enqueue common with runtime and all vendor chunks as dependencies
-		$common_deps = array_merge(
-			[ $this->enqueue_prefix . '-runtime' ],
-			$vendor_handles
-		);
-		$this->enqueue_files_with_deps( 'common', 'common', $common_deps );
 	}
 
 	/**

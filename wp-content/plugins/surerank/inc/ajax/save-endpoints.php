@@ -92,6 +92,16 @@ class Save_Endpoints {
 			);
 		}
 
+		if ( ! Post::can_manage_post_seo( $post_id ) ) {
+			wp_send_json(
+				[
+					'success' => false,
+					'message' => __( 'You are not allowed to manage SEO settings for this post.', 'surerank' ),
+				],
+				403
+			);
+		}
+
 		$meta_data = $this->extract_meta_data();
 
 		$result = Post::save_post_seo_meta( $post_id, $meta_data );
@@ -119,6 +129,16 @@ class Save_Endpoints {
 					'message' => __( 'Invalid term id.', 'surerank' ),
 				],
 				400
+			);
+		}
+
+		if ( ! Term::can_manage_term_seo( $term_id ) ) {
+			wp_send_json(
+				[
+					'success' => false,
+					'message' => __( 'You are not allowed to manage SEO settings for this term.', 'surerank' ),
+				],
+				403
 			);
 		}
 

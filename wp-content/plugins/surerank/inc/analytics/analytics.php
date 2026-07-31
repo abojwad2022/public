@@ -8,6 +8,7 @@
 namespace SureRank\Inc\Analytics;
 
 use SureRank\Inc\Functions\Defaults;
+use SureRank\Inc\Functions\Helper;
 use SureRank\Inc\Functions\Settings;
 use SureRank\Inc\GoogleSearchConsole\Controller;
 use SureRank\Inc\Traits\Get_Instance;
@@ -40,6 +41,9 @@ class Analytics {
 	public function __construct() {
 		// Stats payload filter.
 		add_filter( 'bsf_core_stats', [ $this, 'add_surerank_analytics_data' ] );
+
+		// Record admin-bar navigation clicks (gated on usage-tracking opt-in).
+		add_action( 'admin_init', [ $this, 'record_admin_bar_usage' ] );
 
 		// Only run analytics in admin context.
 		if ( ! is_admin() ) {
@@ -75,7 +79,7 @@ class Analytics {
 				'popup_logo'        => SURERANK_URL . 'inc/admin/assets/images/surerank.png',
 				'plugin_slug'       => 'surerank',
 				'popup_title'       => 'Quick Feedback',
-				'support_url'       => 'https://surerank.com/contact/',
+				'support_url'       => Helper::get_marketing_link( 'contact/', 'deactivation_survey_support' ),
 				'popup_description' => 'If you have a moment, please share why you are deactivating SureRank:',
 				'show_on_screens'   => [ 'plugins', 'plugins-network' ],
 				'plugin_version'    => SURERANK_VERSION,
@@ -89,7 +93,7 @@ class Analytics {
 				'popup_logo'        => SURERANK_URL . 'inc/admin/assets/images/surerank.png',
 				'plugin_slug'       => 'surerank-pro',
 				'popup_title'       => 'Quick Feedback',
-				'support_url'       => 'https://surerank.com/contact/',
+				'support_url'       => Helper::get_marketing_link( 'contact/', 'deactivation_survey_support' ),
 				'popup_description' => 'If you have a moment, please share why you are deactivating SureRank Pro:',
 				'show_on_screens'   => [ 'plugins', 'plugins-network' ],
 				'plugin_version'    => defined( 'SURERANK_PRO_VERSION' ) ? SURERANK_PRO_VERSION : '',
@@ -205,6 +209,65 @@ class Analytics {
 		}
 
 		return $difference;
+	}
+
+	/**
+	 * Record an admin-bar navigation click as a daily counter.
+	 *
+	 * Fires on admin page loads carrying the `surerank_src` marker added to the
+	 * SureRank admin-bar links. Counts are kept per day in a single option and
+	 * surfaced via get_kpi_tracking_data(). Only records when usage tracking is
+	 * opted in, so nothing is stored for users who have not consented.
+	 *
+	 * @since 1.9.2
+	 * @return void
+	 */
+	public function record_admin_bar_usage(): void {
+		// phpcs:disable WordPress.Security.NonceVerification.Recommended -- Read-only telemetry marker on a GET link; no state-changing action is performed.
+		if ( empty( $_GET['page'] ) || 'surerank' !== sanitize_key( wp_unslash( $_GET['page'] ) ) ) {
+			return;
+		}
+		if ( empty( $_GET['surerank_src'] ) ) {
+			return;
+		}
+		$src = sanitize_key( wp_unslash( $_GET['surerank_src'] ) );
+		// phpcs:enable WordPress.Security.NonceVerification.Recommended
+
+		// Respect the usage-tracking opt-in and the global kill switch.
+		if ( ! apply_filters( 'bsf_usage_tracking_enabled', true )
+			|| 'yes' !== get_site_option( 'surerank_usage_optin', false ) ) {
+			return;
+		}
+
+		$map = [
+			'adminbar_seochecks' => 'seo_checks',
+			'adminbar_dashboard' => 'dashboard',
+			'adminbar_settings'  => 'settings',
+		];
+		if ( ! isset( $map[ $src ] ) ) {
+			return;
+		}
+		$key   = $map[ $src ];
+		$today = current_time( 'Y-m-d' );
+
+		$usage = get_option( 'surerank_adminbar_usage', [] );
+		if ( ! is_array( $usage ) ) {
+			$usage = [];
+		}
+		if ( empty( $usage[ $today ] ) || ! is_array( $usage[ $today ] ) ) {
+			$usage[ $today ] = [];
+		}
+		$usage[ $today ][ $key ] = ( isset( $usage[ $today ][ $key ] ) ? (int) $usage[ $today ][ $key ] : 0 ) + 1;
+
+		// Keep only the last few days so the option stays tiny.
+		$cutoff = strtotime( '-4 days', (int) strtotime( $today ) );
+		foreach ( array_keys( $usage ) as $date ) {
+			if ( strtotime( (string) $date ) < $cutoff ) {
+				unset( $usage[ $date ] );
+			}
+		}
+
+		update_option( 'surerank_adminbar_usage', $usage, false );
 	}
 
 	/**
@@ -638,6 +701,11 @@ class Analytics {
 		$kpi_data = [];
 		$today    = current_time( 'Y-m-d' );
 
+		$adminbar_usage = get_option( 'surerank_adminbar_usage', [] );
+		if ( ! is_array( $adminbar_usage ) ) {
+			$adminbar_usage = [];
+		}
+
 		for ( $i = 1; $i <= 2; $i++ ) {
 			$timestamp = strtotime( $today . ' -' . $i . ' days' );
 			if ( false === $timestamp ) {
@@ -647,9 +715,19 @@ class Analytics {
 
 			$optimized_count = $this->get_optimized_posts_count_within_date( $date );
 
+			$day_usage  = isset( $adminbar_usage[ $date ] ) && is_array( $adminbar_usage[ $date ] ) ? $adminbar_usage[ $date ] : [];
+			$seo_checks = isset( $day_usage['seo_checks'] ) ? (int) $day_usage['seo_checks'] : 0;
+			$dashboard  = isset( $day_usage['dashboard'] ) ? (int) $day_usage['dashboard'] : 0;
+			$settings   = isset( $day_usage['settings'] ) ? (int) $day_usage['settings'] : 0;
+
 			$kpi_data[ $date ] = [
 				'numeric_values' => [
-					'optimized_posts' => $optimized_count,
+					'optimized_posts'     => $optimized_count,
+					'adminbar_seo_checks' => $seo_checks,
+					'adminbar_dashboard'  => $dashboard,
+					'adminbar_settings'   => $settings,
+					// Derived "engaged with the toolbar" metric = sum of tracked clicks.
+					'adminbar_opened'     => $seo_checks + $dashboard + $settings,
 				],
 			];
 		}

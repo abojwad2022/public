@@ -237,7 +237,7 @@ class Constants {
 	 * @return array<string, mixed>
 	 */
 	public static function parse_seo_column( string $raw ): array {
-		$seo = maybe_unserialize( $raw );
+		$seo = self::safe_unserialize( $raw );
 
 		if ( ! $seo ) {
 			return [];
@@ -400,7 +400,7 @@ class Constants {
 			if ( empty( $row->post ) ) {
 				continue;
 			}
-			$post_data = maybe_unserialize( $row->post );
+			$post_data = self::safe_unserialize( $row->post );
 			if ( ! $post_data ) {
 				continue;
 			}
@@ -437,7 +437,7 @@ class Constants {
 			if ( empty( $row->post ) ) {
 				continue;
 			}
-			$post_data = maybe_unserialize( $row->post );
+			$post_data = self::safe_unserialize( $row->post );
 			if ( ! $post_data ) {
 				continue;
 			}
@@ -508,6 +508,24 @@ class Constants {
 	// -------------------------------------------------------------------------
 	// Private helpers
 	// -------------------------------------------------------------------------
+
+	/**
+	 * Safely unserialize a value read from the Squirrly qss tables.
+	 *
+	 * Restricts deserialization to plain data ( allowed_classes => false ) so a
+	 * crafted serialized object planted in the qss table cannot trigger PHP
+	 * object injection during import. Returns the raw value when it is not
+	 * serialized, matching maybe_unserialize()'s contract.
+	 *
+	 * @param string $raw Raw column value.
+	 * @since 1.9.2
+	 * @return mixed
+	 */
+	private static function safe_unserialize( string $raw ) {
+		return is_serialized( $raw )
+			? @unserialize( trim( $raw ), [ 'allowed_classes' => false ] ) // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.serialize_unserialize, WordPress.PHP.NoSilencedErrors.Discouraged -- Mirrors maybe_unserialize() (same is_serialized() gate, trim and silenced warning) but hardened with allowed_classes => false to block object injection.
+			: $raw;
+	}
 
 	/**
 	 * Execute a single query to retrieve every `post` column value from qss for
