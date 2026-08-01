@@ -18,6 +18,7 @@ import { PageHeader } from '../../components/Layout.jsx'
 import { Can } from '../../components/Protected.jsx'
 import {
   Alert,
+  Avatar,
   Badge,
   Button,
   Card,
@@ -242,13 +243,11 @@ export default function Users() {
                   <TR key={staff.id}>
                     <TD label="Name" primary>
                       <div className="flex items-center gap-2.5">
-                        <img
-                          src={staff.avatar}
-                          alt=""
-                          width={32}
-                          height={32}
-                          loading="lazy"
-                          className="size-8 shrink-0 rounded-full bg-surface2 object-cover"
+                        {/* avatar_id, not avatar: the latter is always a Gravatar URL. */}
+                        <Avatar
+                          src={staff.avatar_id ? staff.avatar : ''}
+                          name={staff.name}
+                          size={32}
                         />
                         <div className="min-w-0">
                           <Link
