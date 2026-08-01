@@ -89,6 +89,7 @@ class Service_Provider {
 			return;
 		}
 		$widgets_manager->register( new Form_Widget() );
+		$widgets_manager->register( new Payment_History_Widget() );
 	}
 
 }

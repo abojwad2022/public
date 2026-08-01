@@ -3,7 +3,6 @@ import { taxApi } from '../../api/endpoints.js'
 import { useToast } from '../../context/ToastContext.jsx'
 import {
   useConfirm,
-  Badge,
   Button,
   Card,
   Checkbox,

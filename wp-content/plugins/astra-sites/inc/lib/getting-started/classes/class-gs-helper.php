@@ -236,7 +236,7 @@ class GS_Helper {
 			];
 		}
 
-		if ( is_plugin_active( 'ultimate-addons-for-gutenberg/ultimate-addons-for-gutenberg.php' ) ) {
+		if ( is_plugin_active( 'ultimate-addons-for-gutenberg/ultimate-addons-for-gutenberg.php' ) || is_plugin_active( 'spectra-blocks/spectra-blocks.php' ) ) {
 			$action_items[] = [
 				'id'          => 'spectra',
 				'title'       => __( 'Website Pages', 'astra-sites' ),

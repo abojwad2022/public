@@ -2,10 +2,22 @@
 /**
  * Login / Register Form — Yazan override.
  *
- * Wraps WooCommerce's login + register forms in a brand-voiced header and card layout. All form
- * logic is untouched from core: field names, nonces (woocommerce-login / woocommerce-register),
- * the registration/username/password option checks, and every do_action hook are preserved so
- * authentication and third-party integrations keep working. Only presentational markup was added.
+ * ONE CARD, not two. WooCommerce ships login and register as side-by-side columns, which meant the
+ * page showed two forms asking for the same email and password — redundant on its own, and flatly
+ * at odds with a store whose headline promise is "one tap, no registration form". So: the social
+ * buttons and the sign-in fields lead, and registration is folded behind a quiet toggle for the
+ * minority who still want to type their details.
+ *
+ * The toggle is a native <details>, deliberately not a JS widget: it opens without JavaScript, is
+ * keyboard- and screen-reader-addressable for free, and it is re-opened server-side when a
+ * registration attempt comes back with errors so nobody loses their place.
+ *
+ * All form logic is untouched from core: field names, nonces (woocommerce-login /
+ * woocommerce-register), the registration/username/password option checks, and every do_action
+ * hook are preserved so authentication and third-party integrations keep working — including the
+ * social sign-in buttons, which attach to woocommerce_login_form_start. Only the arrangement and
+ * the wrapper markup are ours; the .u-columns / .u-column1 / .u-column2 class names are kept even
+ * though the layout no longer uses columns, because plugins and CSS in the wild target them.
  *
  * @see     https://woocommerce.com/document/template-structure/
  * @package Yazan
@@ -19,6 +31,15 @@ if ( ! defined( 'ABSPATH' ) ) {
 do_action( 'woocommerce_before_customer_login_form' );
 
 $yz_registration = ( 'yes' === get_option( 'woocommerce_enable_myaccount_registration' ) );
+
+/*
+ * Keep the registration panel open when the shopper just tried to register — otherwise a failed
+ * attempt ("that email is already registered") collapses the form and hides both their input and
+ * the reason it failed. Display hint only; it performs no action, so it needs no nonce of its own
+ * (the register form's own nonce is checked by WooCommerce as usual).
+ */
+// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Presentation-only: decides whether a panel renders expanded.
+$yz_register_open = isset( $_POST['register'] );
 ?>
 
 <div class="yz-account-auth">
@@ -29,7 +50,7 @@ $yz_registration = ( 'yes' === get_option( 'woocommerce_enable_myaccount_registr
 		<p class="yz-account-auth__lede">
 			<?php
 			echo $yz_registration
-				? esc_html__( 'Sign in to follow your orders, or create an account to begin your collection of genuine Yemeni agate and sterling silver.', 'yazan' )
+				? esc_html__( 'Sign in to follow your orders, or begin your collection of genuine Yemeni agate and sterling silver.', 'yazan' )
 				: esc_html__( 'Sign in to follow your orders and manage the details of your Yazan account.', 'yazan' );
 			?>
 		</p>
@@ -82,7 +103,12 @@ $yz_registration = ( 'yes' === get_option( 'woocommerce_enable_myaccount_registr
 
 		<div class="u-column2 col-2">
 
-			<h2><?php esc_html_e( 'Create an Account', 'yazan' ); ?></h2>
+			<details class="yz-auth-more"<?php echo $yz_register_open ? ' open' : ''; ?>>
+
+				<summary class="yz-auth-more__toggle">
+					<?php esc_html_e( 'New to Yazan? Create an account', 'yazan' ); ?>
+				</summary>
+
 			<p class="yz-auth-card__note"><?php esc_html_e( 'Join Yazan to keep your orders and details in one quiet place.', 'yazan' ); ?></p>
 
 			<form method="post" class="woocommerce-form woocommerce-form-register register" <?php do_action( 'woocommerce_register_form_tag' ); ?> >
@@ -126,6 +152,8 @@ $yz_registration = ( 'yes' === get_option( 'woocommerce_enable_myaccount_registr
 				<?php do_action( 'woocommerce_register_form_end' ); ?>
 
 			</form>
+
+			</details>
 
 		</div>
 

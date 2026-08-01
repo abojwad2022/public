@@ -251,6 +251,7 @@ if ( ! class_exists( 'ST_Batch_Processing_Gutenberg' ) ) :
 			$content = $this->replace_sureforms_ids( $content );
 			$content = $this->replace_surecart_forms_ids( $content );
 			$content = $this->replace_suredonation_ids( $content );
+			$content = $this->replace_suremembers_ids( $content );
 
 			ST_Importer_Log::add(
 				'Updating post content (first pass)',
@@ -415,6 +416,80 @@ if ( ! class_exists( 'ST_Batch_Processing_Gutenberg' ) ) :
 			}
 
 			return $content;
+		}
+
+		/**
+		 * Replace SureMembers access group IDs in content.
+		 *
+		 * Access groups are `wsm_access_group` posts, re-created with new IDs on
+		 * import. Content references them in two places:
+		 * - the `[suremembers_restrict access_group_ids="1,2"]` shortcode, and
+		 * - the `"sureMemberRestrictions":[1,2]` attribute SureMembers registers
+		 *   on every block type.
+		 * Both are remapped to the newly imported access group IDs.
+		 *
+		 * @since 1.1.37
+		 *
+		 * @param string $content Post content.
+		 * @return string
+		 */
+		public function replace_suremembers_ids( $content ) {
+
+			$access_group_id_map = get_option( 'astra_sites_suremembers_access_group_id_map', array() );
+
+			if ( empty( $access_group_id_map ) || ! is_array( $access_group_id_map ) ) {
+				return $content;
+			}
+
+			$map_id = function ( $id ) use ( $access_group_id_map ) {
+				$id = (int) trim( $id );
+				return isset( $access_group_id_map[ $id ] ) ? (int) $access_group_id_map[ $id ] : $id;
+			};
+
+			// The [suremembers_restrict] shortcode (quotes may be slash-escaped
+			// when the shortcode sits inside serialized block attributes).
+			$replaced = preg_replace_callback(
+				'/(\[suremembers_restrict\s[^\]]*access_group_ids=\\\\?")([\d,\s]+)(\\\\?")/',
+				function ( $matches ) use ( $map_id ) {
+					$new_ids = array_map( $map_id, explode( ',', $matches[2] ) );
+					return $matches[1] . implode( ',', $new_ids ) . $matches[3];
+				},
+				$content
+			);
+
+			$content = null !== $replaced ? $replaced : $content;
+
+			// The per-block restriction attribute inside block comments. Quotes
+			// may be slash-escaped (the WXR importer stores content that way)
+			// and IDs may be serialized as numbers or numeric strings; both
+			// formats are preserved.
+			$replaced = preg_replace_callback(
+				'/(\\\\?"sureMemberRestrictions\\\\?":\[)([^\]]*)(\])/',
+				function ( $matches ) use ( $map_id ) {
+					$ids_raw = str_replace( array( '\\', '"' ), '', $matches[2] );
+
+					if ( '' === trim( $ids_raw ) || ! preg_match( '/^[\d,\s]+$/', $ids_raw ) ) {
+						return $matches[0];
+					}
+
+					$new_ids = array_map( $map_id, explode( ',', $ids_raw ) );
+
+					if ( false !== strpos( $matches[2], '"' ) ) {
+						$quote   = false !== strpos( $matches[2], '\\"' ) ? '\\"' : '"';
+						$new_ids = array_map(
+							function ( $id ) use ( $quote ) {
+								return $quote . $id . $quote;
+							},
+							$new_ids
+						);
+					}
+
+					return $matches[1] . implode( ',', $new_ids ) . $matches[3];
+				},
+				$content
+			);
+
+			return null !== $replaced ? $replaced : $content;
 		}
 
 		/**

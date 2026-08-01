@@ -41,36 +41,30 @@ class Yazan_Dashboard_Auth {
 		register_rest_route(
 			self::NS,
 			'/auth/login',
-			array(
-				'methods'             => 'POST',
-				'callback'            => array( __CLASS__, 'login' ),
-				'permission_callback' => '__return_true', // Public — credentials are the secret; rate-limited below.
-				'args'                => array(
-					'username' => array( 'required' => true, 'type' => 'string' ),
-					'password' => array( 'required' => true, 'type' => 'string' ),
-					'remember' => array( 'required' => false, 'type' => 'boolean', 'default' => false ),
-				),
+			Yazan_REST_Guard::public_args(
+				'POST',
+				array( __CLASS__, 'login' ),
+				'Sign-in itself: the credentials are the secret, and failures are rate-limited below.',
+				array(
+					'args' => array(
+						'username' => array( 'required' => true, 'type' => 'string' ),
+						'password' => array( 'required' => true, 'type' => 'string' ),
+						'remember' => array( 'required' => false, 'type' => 'boolean', 'default' => false ),
+					),
+				)
 			)
 		);
 
 		register_rest_route(
 			self::NS,
 			'/auth/logout',
-			array(
-				'methods'             => 'POST',
-				'callback'            => array( __CLASS__, 'logout' ),
-				'permission_callback' => array( __CLASS__, 'require_login' ),
-			)
+			Yazan_REST_Guard::args( 'POST', array( __CLASS__, 'logout' ), 'dashboard.access' )
 		);
 
 		register_rest_route(
 			self::NS,
 			'/auth/me',
-			array(
-				'methods'             => 'GET',
-				'callback'            => array( __CLASS__, 'me' ),
-				'permission_callback' => array( __CLASS__, 'require_login' ),
-			)
+			Yazan_REST_Guard::args( 'GET', array( __CLASS__, 'me' ), 'dashboard.access' )
 		);
 	}
 
@@ -93,6 +87,8 @@ class Yazan_Dashboard_Auth {
 	/**
 	 * Build a permission_callback that requires a specific capability.
 	 *
+	 * @deprecated 1.8.0 Use require_perm() with a Yazan permission slug instead.
+	 *
 	 * @param string $cap Capability.
 	 * @return callable
 	 */
@@ -101,6 +97,44 @@ class Yazan_Dashboard_Auth {
 			if ( ! current_user_can( $cap ) ) {
 				return new WP_Error( 'yazan_forbidden', __( 'Insufficient permissions.', 'yazan' ), array( 'status' => rest_authorization_required_code() ) );
 			}
+			return true;
+		};
+	}
+
+	/**
+	 * Build a permission_callback that requires a Yazan permission.
+	 *
+	 * {@see Yazan_REST_Guard} already refuses the request before this runs, so this is defence in
+	 * depth rather than the primary boundary. It matters because a future refactor could call a
+	 * controller method directly (bypassing the filter but not the callback), and because a single
+	 * core filter's ordering should never be the only thing standing between a role and an action.
+	 *
+	 * @param string $perm Permission slug, e.g. 'orders.refund'.
+	 * @return callable
+	 */
+	public static function require_perm( $perm ) {
+		return static function () use ( $perm ) {
+			if ( ! is_user_logged_in() ) {
+				return new WP_Error( 'yazan_unauthenticated', __( 'You need to sign in.', 'yazan' ), array( 'status' => 401 ) );
+			}
+
+			$user_id = get_current_user_id();
+
+			if ( Yazan_Users::is_suspended( $user_id ) ) {
+				return new WP_Error( 'yazan_suspended', __( 'This account is suspended. Contact an administrator.', 'yazan' ), array( 'status' => 403 ) );
+			}
+
+			if ( ! Yazan_Permissions::can( $perm, $user_id ) ) {
+				return new WP_Error(
+					'yazan_forbidden',
+					__( 'You do not have permission to do that.', 'yazan' ),
+					array(
+						'status'     => rest_authorization_required_code(),
+						'permission' => $perm,
+					)
+				);
+			}
+
 			return true;
 		};
 	}
@@ -136,6 +170,20 @@ class Yazan_Dashboard_Auth {
 		$user = wp_signon( $creds, is_ssl() );
 
 		if ( is_wp_error( $user ) ) {
+			/*
+			 * A suspension refusal comes from Yazan_Users::block_suspended_login() on the
+			 * `authenticate` filter, which means the credentials were correct. Reporting it as a
+			 * bad password would send the operator chasing a password reset, and counting it as a
+			 * failed attempt would lock out the IP for a policy decision rather than an attack.
+			 */
+			if ( 'yazan_suspended' === $user->get_error_code() ) {
+				return new WP_Error(
+					'yazan_suspended',
+					__( 'This account is suspended. Contact an administrator.', 'yazan' ),
+					array( 'status' => 403 )
+				);
+			}
+
 			self::record_failure( $ip, $username );
 			// Generic message — never reveal whether the username exists.
 			return new WP_Error(
@@ -207,12 +255,37 @@ class Yazan_Dashboard_Auth {
 	 * @return array
 	 */
 	public static function user_payload( $user ) {
+		$set = Yazan_Permissions::for_user( $user->ID );
+
+		$yazan_roles = array();
+		foreach ( Yazan_Roles::for_user( $user->ID ) as $role_id ) {
+			$role = Yazan_Roles::get( $role_id );
+			if ( $role ) {
+				$yazan_roles[] = array(
+					'id'   => $role['id'],
+					'slug' => $role['slug'],
+					'name' => $role['name'],
+				);
+			}
+		}
+
 		return array(
 			'id'           => $user->ID,
 			'name'         => $user->display_name,
 			'email'        => $user->user_email,
+			'phone'        => Yazan_Users::phone( $user->ID ),
 			'avatar'       => get_avatar_url( $user->ID, array( 'size' => 48 ) ),
 			'roles'        => array_values( (array) $user->roles ),
+			'status'       => Yazan_Users::status( $user->ID ),
+			'lastLogin'    => Yazan_Users::last_login( $user->ID ),
+			// The RBAC payload the SPA branches on. A flat slug map so every can() is O(1).
+			'isSuper'      => (bool) $set['super'],
+			'permissions'  => $set['perms'],
+			'yazanRoles'   => $yazan_roles,
+			/*
+			 * Legacy capability flags. Kept for one release so nothing breaks mid-migration —
+			 * every consumer has moved to `permissions` above. Delete in 1.9.0.
+			 */
 			'capabilities' => array(
 				'edit_products'         => user_can( $user, 'edit_products' ),
 				'delete_products'       => user_can( $user, 'delete_products' ),

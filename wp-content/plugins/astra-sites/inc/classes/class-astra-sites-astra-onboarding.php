@@ -167,8 +167,8 @@ if ( ! class_exists( 'Astra_Sites_Astra_Onboarding' ) ) {
 
 			return array(
 				array(
-					'slug'        => 'ultimate-addons-for-gutenberg',
-					'title'       => 'Spectra',
+					'slug'        => 'spectra-blocks',
+					'title'       => 'Spectra Blocks',
 					'logoSvg'     => $icons['spectra'],
 					'description' => __( 'Powerful visual website builder made for WordPress. Just click, drag, and create anything, no code, no limits.', 'astra-sites' ),
 				),

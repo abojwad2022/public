@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router'
 import { api } from '../api/client.js'
 import { ShoppingCart } from '../components/ui/icons.js'
 import { chime } from '../lib/chime.js'

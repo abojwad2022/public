@@ -136,8 +136,15 @@ class Generate_Form_Markup {
 		$block_count       = count( $form_blocks );
 		$current_post_type = get_post_type();
 
-		// load all the frontend assets.
-		Frontend_Assets::enqueue_scripts_and_styles();
+		// When enabled, the form renders without the SureForms inline CSS variables so
+		// the site's own CSS fully controls its appearance. Per-form Custom CSS still applies.
+		// Read ONCE through the canonical checker so the `srfm_disable_default_styles`
+		// filter runs a single time per render and governs the enqueue path, the
+		// marker class and the inline CSS guard alike.
+		$disable_default_styles = Form_Styling::is_default_styling_disabled( $id );
+
+		// load all the frontend assets. Skips the SureForms stylesheets when the form has default styling disabled.
+		Frontend_Assets::enqueue_scripts_and_styles( $disable_default_styles );
 
 		ob_start();
 		if ( '' !== $id && 0 !== $block_count ) {
@@ -154,6 +161,7 @@ class Generate_Form_Markup {
 			if ( Form_Styling::has_custom_styling( $block_attrs ) ) {
 				$form_styling = Form_Styling::map_block_attrs_to_styling( $form_styling, $block_attrs );
 			}
+
 			// Background Settings.
 			$bg_type                   = $form_styling['bg_type'] ?? 'color';
 			$bg_color                  = $form_styling['bg_color'] ?? '';
@@ -241,6 +249,7 @@ class Generate_Form_Markup {
 				! empty( $block_id_suffix ) ? $container_id : '', // Unique class for CSS scoping when blockId exists.
 				$sf_classname,
 				'Neve' === $theme_name ? $neve_theme_margin_class_name : '', // compatibility with Neve theme for margin between main content and footer.
+				$disable_default_styles ? 'srfm-styling-none' : '', // Marker class when default styling is disabled, so custom CSS can target the state.
 				$background_classes,
 			];
 
@@ -355,11 +364,17 @@ class Generate_Form_Markup {
 				$form_classes[] = 'srfm-submit-button-hidden';
 			}
 
+			// The scoped Custom CSS below is for embedded views only: on the form's own
+			// single/instant view, templates/single-form.php already outputs the Custom
+			// CSS (unscoped) in <head> — emitting it here too would duplicate it.
+			$embed_custom_css = 'sureforms_form' !== $current_post_type ? $custom_css : '';
 			?>
 			<div class="<?php echo esc_attr( implode( ' ', array_filter( $form_classes ) ) ); ?>">
+			<?php if ( ! $disable_default_styles || '' !== $embed_custom_css ) { // Nothing to print otherwise — avoid an empty style block. ?>
 			<style>
 				/* Need to check and remove the input variables related to the Style Tab. */
 				<?php echo esc_html( ".{$container_id}" ); ?> {
+					<?php if ( ! $disable_default_styles ) { ?>
 					/* New test variables */
 					--srfm-color-scheme-primary: <?php echo esc_html( $primary_color_var ); ?>;
 					--srfm-color-scheme-text-on-primary: <?php echo esc_html( $label_text_color_var ); ?>;
@@ -398,7 +413,7 @@ class Generate_Form_Markup {
 					--srfm-dropdown-icon-disabled: hsl( from <?php echo esc_html( $help_color_var ); ?> h s l / 0.25 );
 
 					/* Background Control Variables */
-					<?php
+						<?php
 						// Form Styles.
 						$styling_vars = [
 							// Instant Form Padding.
@@ -474,28 +489,27 @@ class Generate_Form_Markup {
 							echo esc_html( Helper::get_string_value( $key ) ) . ': ' . esc_html( Helper::get_string_value( $value ) ) . ';';
 						}
 						?>
-					<?php
-					// Echo the CSS variables for the form according to the field spacing selected.
-					foreach ( $selected_size as $variable => $value ) {
-						echo esc_html( Helper::get_string_value( $variable ) ) . ': ' . esc_html( Helper::get_string_value( $value ) ) . ';';
-					}
-					do_action(
-						'srfm_form_css_variables',
-						[
-							'id'            => $id,
-							'primary_color' => $primary_color_var,
-							'help_color'    => $help_color_var,
-							'form_styling'  => $form_styling,
-							'block_attrs'   => $block_attrs,
-						]
-					);
-					// echo custom css on page/post.
-					if ( 'sureforms_form' !== $current_post_type ) {
-						echo wp_kses_post( $custom_css );
-					}
+						<?php
+						// Echo the CSS variables for the form according to the field spacing selected.
+						foreach ( $selected_size as $variable => $value ) {
+							echo esc_html( Helper::get_string_value( $variable ) ) . ': ' . esc_html( Helper::get_string_value( $value ) ) . ';';
+						}
+						do_action(
+							'srfm_form_css_variables',
+							[
+								'id'            => $id,
+								'primary_color' => $primary_color_var,
+								'help_color'    => $help_color_var,
+								'form_styling'  => $form_styling,
+								'block_attrs'   => $block_attrs,
+							]
+						);
+					} // End if default styling is not disabled.
+					echo wp_kses_post( $embed_custom_css );
 					?>
 				}
 			</style>
+			<?php } // End if the style block has content. ?>
 			<?php
 			if ( 'sureforms_form' !== $current_post_type && true === $show_title_current_page ) {
 				$title = ! empty( get_the_title( (int) $id ) ) ? get_the_title( (int) $id ) : '';

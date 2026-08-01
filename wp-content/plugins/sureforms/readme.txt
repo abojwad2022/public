@@ -1,463 +1,434 @@
-=== SureForms - Drag & Drop Contact Form & Form Builder, Payment Form, Survey, Quiz & Calculator ===
+=== SureForms - Contact Form Builder, AI Forms, Payment Form, Survey & Quiz ===
 Contributors: brainstormforce
-Tags: forms, contact form, form builder, survey, payment form
+Tags: forms, ai forms, contact form, form builder, payment form
 Requires at least: 6.4
-Tested up to: 7.0
+Tested up to: 7.0.2
 Requires PHP: 7.4
-Stable tag: 2.12.1
+Stable tag: 2.12.2
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
-SureForms is an AI-powered WordPress form builder for creating contact forms, payment forms, surveys, quizzes, and multi-step forms without code.
+AI form generator and WordPress form builder for contact and Stripe payment forms, with surveys and quizzes in SureForms Business.
 
 == Description ==
 
-#### SUREFORMS – THE BEST AI-ASSISTED WORDPRESS FORM BUILDER
+### THE AI FORM GENERATOR FOR WORDPRESS
 
-★★★★★
+SureForms is an AI form generator and WordPress form builder that turns a simple prompt into a ready-to-edit contact form, Stripe payment form, booking request form, quote form, lead form, application form, or other custom form. SureForms Business adds advanced form types such as surveys, quizzes, registration forms, calculators, multi-step forms, and conversational forms.
 
-SureForms is the most beginner-friendly **WordPress form builder**, designed to help anyone create contact forms, payment forms, surveys, quizzes, multi-step forms, and conversational forms without writing a single line of code. Powered by AI and built natively on the WordPress block editor, SureForms makes building any form on your WordPress site fast, intuitive, and beautiful.
+Unlike tools that generate code or move you into a separate interface, SureForms creates editable form blocks directly inside the WordPress block editor. No external API key is required, and you remain in control of every field, label, layout, notification, and setting.
 
-Trusted by **500,000+ websites**, SureForms is the modern alternative to traditional contact form plugins — purpose-built for speed, design, and conversions.
+Start with AI, choose a ready-made template, or build from scratch with drag and drop. Trusted by more than 500,000 websites, SureForms combines AI form generation with a familiar Gutenberg experience.
 
 👉 <a href="https://bsf.io/sureforms-demo" target="_blank" rel="">Try the live demo of SureForms</a>
 
 [youtube https://www.youtube.com/watch?v=qLpnm4GdXks]
 
-### CREATE BEAUTIFUL RESPONSIVE FORMS USING WORDPRESS BLOCK EDITOR (GUTENBERG EDITOR) WITHOUT CODING ⚡
+### CREATE THE FORM YOU NEED
 
-Our mission at SureForms is to empower you to build **beautiful contact forms and custom WordPress forms without any code**.
+Use SureForms Free to create:
 
-We're taking a fresh approach with Gutenberg, WordPress's native drag-and-drop builder, to make creating contact forms and custom forms seamless and intuitive — with no new interface to learn.
+-   Contact forms for enquiries, support, and customer communication
+-   Stripe payment forms for products, services, donations, subscriptions, and event fees
+-   Booking request forms, quote forms, lead forms, job application forms, and event RSVP forms
+-   Newsletter forms, feedback forms, request forms, order forms, and other custom WordPress forms
 
-SureForms is a beginner-friendly WordPress form plugin that makes building contact forms and other high-converting custom forms fast and simple, with advanced features like multi-step forms, conversational forms, payment forms, conditional logic, calculations, native integrations, and more.
+SureForms Business adds advanced form types and workflows:
 
-Good design and user experience are crucial for contact forms. Yet many website owners struggle to make their contact forms blend seamlessly with their site's look and feel, often leading to lower response rates.
+-   Registration forms, login forms, lost-password forms, and reset-password forms
+-   Survey forms, feedback surveys, polls, and Net Promoter Score forms
+-   Quiz forms for assessments, scored quizzes, and personality tests
+-   Calculator forms for quotes, pricing, BMI, cost estimates, and custom formulas
+-   Multi-step forms and conversational forms
 
-### POWERFUL FEATURES OF SUREFORMS 💪
+### GENERATE A COMPLETE FORM WITH AI
 
-Below are some of the top features SureForms offers:
+Describe the form you need in plain language, and SureForms AI creates a ready-to-edit form with suitable fields, labels, and structure. You can refine every part of the generated form inside the WordPress block editor.
 
-#### Native WordPress Form Builder (No New Editor to Learn)
+Use the AI form builder to draft contact forms, Stripe payment forms, booking requests, quote forms, lead forms, application forms, and other custom forms in minutes. SureForms Business enables the advanced survey, quiz, registration, calculator, multi-step, and conversational workflows described below.
 
-SureForms uses WordPress's native block editor for a seamless drag-and-drop form building experience. There's no separate interface, no proprietary builder, and no learning curve — just the WordPress editor you already know.
+Why SureForms works differently as an AI form generator:
 
-It's fast, simple, and the most beginner-friendly form builder for WordPress.
-
-#### AI Form Builder for WordPress
+-   No external API key is required
+-   AI form generation is available in the free plugin
+-   Generated fields remain fully editable
+-   Forms are created as native WordPress blocks inside Gutenberg
+-   You can start with AI, use a template, or build from scratch
+-   The generated form stays inside your WordPress website
 
 [youtube https://www.youtube.com/watch?v=uDLF4dk3YHI]
 
-SureForms is the first AI-powered form builder for WordPress, making form creation faster and smarter. From simple contact forms to advanced calculators, the SureForms AI handles the details, offers smart field suggestions, and helps you build functional, user-friendly forms in just a few clicks.
+### POWERFUL FREE FEATURES IN SUREFORMS
 
-**Here are a few examples of forms you can create with SureForms AI:**
+The free version of SureForms is more than a basic contact form plugin. It includes the essential tools needed to build, publish, manage, and improve WordPress forms without installing multiple add-ons.
 
--   Contact Form
--   Feedback / Survey Form
--   Event RSVP Form
--   Job Application Form
--   Newsletter Form
--   Support Form
--   Payment Forms
--   Calorie Counter
--   Calculators
--   Conversational Forms
+#### Native WordPress Drag and Drop Form Builder
 
-#### Conditional Logic Forms - No-Code Drag & Drop Form Builder
+SureForms uses the WordPress block editor as its form-building interface. Drag, drop, reorder, duplicate, and style fields using the same Gutenberg experience you already use to build pages and posts.
 
-SureForms makes advanced features like conditional logic, multi-step forms, query parameters, and more simple to use through a no-code interface. This empowers anyone to create powerful, interactive WordPress forms without writing a single line of code.
+There is no separate proprietary form canvas to learn. Your form remains made of editable WordPress blocks and can be embedded using a block or shortcode.
 
-#### WordPress Payment Forms with Stripe and PayPal
+#### AI Form Builder for WordPress
 
-SureForms supports a built-in **Payment Forms** feature. With SureForms, anyone can easily create full-fledged donation forms, event registrations, product checkouts, or any kind of form that needs to accept payments — all without relying on any extra add-on or third-party plugins. This makes collecting payments seamless, secure, and effortless directly through your WordPress forms using Stripe. PayPal payments are available with SureForms Business.
+Generate a complete form from a simple prompt, then edit every field, label, placeholder, and setting. SureForms AI helps you move faster without locking the result inside a separate cloud dashboard.
 
-Here are a few examples of how the Payment Forms feature in SureForms can power your forms:
+#### Contact Forms and Custom Forms
+
+Create simple contact forms or detailed custom forms for sales enquiries, customer support, feedback, applications, bookings, registrations, events, leads, and internal workflows.
+
+#### Stripe Payment Forms
+
+Accept secure Stripe payments from your WordPress forms without installing a separate payment add-on. Build donation forms, service payment forms, order forms, membership payment forms, and event registration forms.
+
+Examples:
+
 -   [Donation Form](https://sureforms.com/form/donation-form/?utm_source=wordpress.org&utm_medium=donation_form_example)
--   [Photography Packages Booking Form](https://sureforms.com/form/photography-packages-payment-form/?utm_source=wordpress.org&utm_medium=photography_payment_example)
--   [Monthly Membership Plan Form](https://sureforms.com/form/monthly-membership-plan/?utm_source=wordpress.org&utm_medium=membership_plan_example)
--   [Web Design Packages Booking Form](https://sureforms.com/form/freelance-web-design-packages-payment/?utm_source=wordpress.org&utm_medium=web_design_payment_example)
+-   [Photography Packages Payment Form](https://sureforms.com/form/photography-packages-payment-form/?utm_source=wordpress.org&utm_medium=photography_payment_example)
+-   [Monthly Membership Form](https://sureforms.com/form/monthly-membership-plan/?utm_source=wordpress.org&utm_medium=membership_plan_example)
+-   [Web Design Quote and Payment Form](https://sureforms.com/form/freelance-web-design-packages-payment/?utm_source=wordpress.org&utm_medium=web_design_payment_example)
 
-#### Instant Forms (Shareable Form Links — No Embed Needed)
+PayPal payments are available with SureForms Business.
+
+#### Form Entries Inside WordPress
+
+Store and manage form entries directly inside your WordPress dashboard. Review submissions, search entries, export data, and keep control of your form information without relying on a separate form-data service.
+
+#### Email Notifications
+
+Send customized email notifications after every form submission. Configure recipients, reply-to addresses, subject lines, message content, and smart form data for different workflows.
+
+#### Confirmation Messages and Redirects
+
+Show a custom success message after submission or redirect users to another page. This makes it easy to guide visitors toward downloads, thank-you pages, purchases, bookings, and next steps.
+
+#### Instant Forms with Shareable Links
 
 [youtube https://www.youtube.com/watch?v=pMH129ZUxJ0]
 
-With SureForms' own Instant Form feature, you can publish forms with a unique shareable URL. No page, no shortcode, no embedding needed. Share the link anywhere — email, social, SMS — and make your forms instantly accessible.
+Publish a form with its own shareable URL without creating a separate WordPress page. Share Instant Forms through email, social media, messaging apps, QR codes, or campaigns.
 
-#### Mobile-Friendly Responsive Forms
+#### Responsive Forms and Multi-Column Layouts
 
-SureForms recognizes the importance of mobile-friendly contact forms. Every form created with SureForms is designed with a mobile-first approach, ensuring it looks and functions flawlessly on phones, tablets, and desktops alike.
+Create mobile-friendly forms that work across phones, tablets, and desktops. Arrange fields into flexible columns to make longer forms cleaner and easier to complete.
 
-#### Multi-Column Form Layouts
+#### Real-Time Field Validation
 
-SureForms makes it easy to arrange input fields into multiple columns for a clean, efficient form layout. This makes your forms look organized, visually appealing, and encourages higher completion rates. You can customize the columns to fit your design.
+Help users correct incomplete or invalid information before submitting a form. Inline validation improves data quality and reduces failed submissions.
 
-#### 15+ Form Input Fields
+#### Spam Protection
 
-**SureForms comes with 15+ fields to build your form:**
+Protect forms with Google reCAPTCHA, hCaptcha, Cloudflare Turnstile, and honeypot protection. These options help block automated spam while keeping the form experience usable for real visitors.
 
--   Text Field
--   Email
--   URL
--   Textarea
--   Multiple Choice
--   Checkbox
--   GDPR Agreement
--   Number Field
--   Phone Number
--   Dropdown
--   Address Field
--   Custom Button
--   Separator
--   Heading
--   Image
--   Icon
+#### GDPR-Friendly Forms
 
-#### Inline Form Validation in Real-Time
+Add a GDPR agreement field and control how visitor information is collected. Form entries stay inside your WordPress website unless you intentionally connect an external integration.
 
-Real-time validation for form fields provides instant feedback to users if they enter incorrect or incomplete information. This ensures data accuracy and enhances the user experience on every form submission.
+#### Form Reports and Analytics
 
-#### GDPR-Compliant WordPress Forms
+Review form activity through reports and visual insights in the WordPress dashboard. Understand submission patterns and identify forms that may need attention.
 
-Ensure your forms are GDPR compliant and protect user data by simply enabling the built-in GDPR setting.
+#### Styling Controls
 
-#### Anti-Spam Forms (reCAPTCHA, hCaptcha, Cloudflare Turnstile & Honeypot)
+Customize colors, typography, spacing, borders, field appearance, buttons, and layouts. SureForms forms are designed to work with your active WordPress theme while still giving you control over their appearance.
 
-Protect your WordPress forms from spam with built-in measures including Google reCAPTCHA, hCaptcha, Cloudflare Turnstile, and Honeypot fields. These ensure submissions are genuine, block bots, and keep your WordPress contact forms secure without bothering your users.
+#### Form Import Tools
 
-#### Personalized Confirmation Messages and Redirects
+Move supported forms into SureForms instead of rebuilding everything manually. Imported forms remain editable inside the WordPress block editor.
 
-SureForms provides options for setting up customized confirmation messages or redirections that are displayed to users after successful form submissions.
+#### Built-In Translations
 
-Tailor these messages to provide personalized feedback or redirect respondents to specific pages.
+SureForms includes built-in translations for:
 
-#### Email Notifications for Every Form Submission
+-   German
+-   Spanish
+-   French
+-   Italian
+-   Dutch
+-   Polish
+-   Portuguese
 
-Configure customized email notifications triggered by form submissions. Specify recipients, email templates, and personalized messages to stay informed and automate communication.
-
-#### Form Entries Management Inside WordPress
-
-Stores form entries securely so you can access and manage form submission data right inside your WordPress dashboard. You can review, export, or perform actions on form entries as needed — no external service required.
-
-#### Visual Data Reporting and Form Analytics
-
-Analyze and gain insights from form submissions through interactive charts, graphs, and data visualizations. Take data-driven decisions from your WordPress dashboard.
+SureForms is also translation-ready and works with multilingual tools such as WPML, Polylang, and TranslatePress.
 
 #### Developer-Friendly Customization
 
-SureForms gives developers clean APIs, hooks, and well-structured code, making it easy to customize, extend, and integrate forms with other systems, plugins, or themes.
+Use clean APIs, hooks, and structured code to extend form behavior, connect custom workflows, or adapt SureForms for client projects.
 
-#### Multilingual WordPress Forms - Built-In Translations
+### SUREFORMS BUSINESS FEATURES
 
-SureForms ships with built-in translations for 7 languages. No extra plugins, no manual setup. Install SureForms and it works immediately in:
+SureForms Business adds advanced workflows, fields, automation, and form types while keeping the same Gutenberg-native form-building experience.
 
--   German (Deutsch)
--   Spanish (Español)
--   French (Français)
--   Italian (Italiano)
--   Dutch (Nederlands)
--   Polish (Polski)
--   Portuguese (Português)
-
-All form labels, admin UI, block editor controls, and error messages are fully translated. Need another language? SureForms is fully translation-ready and compatible with WPML, Polylang, and TranslatePress.
-
-### Premium Features of SureForms 🔥
-
-SureForms Business unlocks advanced capabilities for power users, agencies, and businesses. Here's everything you get:
+[Explore all SureForms features](https://sureforms.com/features/?utm_source=wordpress.org&utm_medium=features_overview)
 
 #### Advanced Form Types
 
 [**Conversational Forms**](https://sureforms.com/features/conversational-form/?utm_source=wordpress.org&utm_medium=conversational_form):
-Chat-like forms, one question at a time, for higher conversions and lower drop-off rates.
+Create chat-like forms that display one question at a time for a focused experience.
 
 [**Multi-step Forms**](https://sureforms.com/features/multi-step-forms/?utm_source=wordpress.org&utm_medium=multistep_forms):
-Bite-sized forms with progress indicators, reducing form fatigue and boosting completion rates.
+Break longer forms into manageable steps with progress indicators.
 
 [**Quiz Forms**](https://sureforms.com/features/quiz/?utm_source=wordpress.org&utm_medium=quiz):
-Create scored quizzes and personality tests with result output and grading.
+Build scored quizzes, graded assessments, and personality tests with result output.
 
 [**Conditional Logic Forms**](https://sureforms.com/features/conditional-logic/?utm_source=wordpress.org&utm_medium=conditional_logic):
-Show or hide fields, customize email notifications, and display different confirmation messages based on users' answers.
+Show or hide fields and control notifications or confirmation messages based on user responses.
 
 [**Calculator Forms**](https://sureforms.com/features/calculator-form/?utm_source=wordpress.org&utm_medium=calculator_form):
-Provide instant quotes or results with interactive calculators on your site — designed to bring more traffic and conversions.
+Create quote forms, pricing calculators, BMI calculators, cost estimators, and formula-based forms with real-time values.
 
-[**Survey & Poll Forms**](https://sureforms.com/features/surveys-and-polls/?utm_source=wordpress.org&utm_medium=surveys_polls):
-Collect structured feedback, run opinion polls, and measure customer loyalty with the built-in Net Promoter Score (NPS) field.
+[**Survey and Poll Forms**](https://sureforms.com/features/surveys-and-polls/?utm_source=wordpress.org&utm_medium=surveys_polls):
+Collect structured feedback, run polls, and measure customer sentiment with reports and NPS fields.
 
-#### Pro Field Types
+[**Registration and Login Forms**](https://sureforms.com/features/login-and-registration/?utm_source=wordpress.org&utm_medium=registration_login):
+Create branded registration forms, login forms, lost-password forms, and reset-password flows using WordPress blocks.
 
-SureForms Business adds these powerful field types on top of the 15+ free fields:
+#### Advanced Form Fields
 
--   Date Picker (with localization and disabled dates)
+SureForms Business adds fields for more complex forms:
+
+-   Date Picker
 -   Time Picker
--   File Upload (multi-file, type restrictions, role-based access)
--   Signature Field
--   Rating Field
+-   File Upload
+-   Signature
+-   Rating
 -   Range Slider
--   Repeater Field (dynamically add field groups)
+-   Repeater
 -   Hidden Field
 -   Custom HTML
 -   Password Field
 
-#### Advanced Features
+#### Advanced Workflows
 
 [**PDF Generation**](https://sureforms.com/features/pdf-generator/?utm_source=wordpress.org&utm_medium=pdf_generation):
-Instantly create downloadable PDFs of form submissions for records or sharing.
+Create downloadable PDFs from form submissions for records, applications, invoices, certificates, or sharing.
 
-[**Save & Resume**](https://sureforms.com/features/save-and-resume/?utm_source=wordpress.org&utm_medium=save_and_resume):
-Let users save their progress and come back to complete the form later.
+[**Save and Resume**](https://sureforms.com/features/save-and-resume/?utm_source=wordpress.org&utm_medium=save_and_resume):
+Let users save partially completed forms and return later.
 
-**Partial Entries**:
-Capture in-progress form submissions automatically — recover abandoned forms and follow up with users who dropped off before completing.
+**Partial Entries:**
+Capture in-progress submissions so you can understand where users stop and follow up when appropriate.
 
 **Form Restrictions:**
-Restrict form visibility and submissions by IP address, country, keywords, user login status, or password — with regex support for advanced validation. Set submission limits per day, week, month, year, or lifetime.
+Restrict visibility or submissions by IP address, country, keywords, login status, password, date, or submission limits.
 
-[**Custom Registration & Login Forms**](https://sureforms.com/features/login-and-registration/?utm_source=wordpress.org&utm_medium=registration_login):
-Fully functional, branded Registration and Login forms for your WordPress site using just a block.
-
-[**Custom Post Type Creation**](https://sureforms.com/features/post-creation/?utm_source=wordpress.org&utm_medium=post_creation):
+[**Custom Post Creation**](https://sureforms.com/features/post-creation/?utm_source=wordpress.org&utm_medium=post_creation):
 Create WordPress posts or custom post types directly from form submissions.
 
-**Conditional Emails & Confirmations:**
-Send different email notifications and show different confirmation messages based on form field values.
+**Conditional Emails and Confirmations:**
+Send different notifications or show different confirmation messages based on submitted values.
 
 **Dynamic Options:**
-Populate dropdowns and multiple choice fields dynamically from post types, taxonomies, or user roles.
-
-**Embed Styling:**
-Customize form appearance with advanced styling options when embedding forms via shortcode or page builders.
-
-#### Integrations & Automation
-
-[**Advanced Native Integrations**](https://sureforms.com/integrations/?utm_source=wordpress.org&utm_medium=integrations):
-Connect your forms natively with top apps and services to automate workflows and save time — no third-party add-ons or plugins required.
-
-SureForms connects natively with Google Sheets, Mailchimp, FluentCRM, HubSpot, Brevo, ActiveCampaign, Zoho CRM, Klaviyo, Airtable, Notion, Telegram, MailerLite, GetResponse, Campaign Monitor, Drip, MailPoet, Kit, Keap, and 25+ more.
-
-**Zapier Integration:**
-Connect your forms with 5,000+ apps through Zapier for limitless automation.
-
-**Webhooks:**
-Send form data to any external URL or API endpoint with conditional webhook triggers.
+Populate dropdown and multiple-choice options from post types, taxonomies, or user roles.
 
 **PayPal Payments:**
-Accept PayPal payments alongside Stripe for flexible payment collection.
+Accept PayPal alongside Stripe for payment forms, donation forms, membership forms, bookings, and registration payments.
+
+#### Native Integrations and Automation
+
+[**Explore SureForms integrations**](https://sureforms.com/integrations/?utm_source=wordpress.org&utm_medium=integrations)
+
+Connect SureForms with Google Sheets, Mailchimp, FluentCRM, HubSpot, Brevo, ActiveCampaign, Zoho CRM, Klaviyo, Airtable, Notion, Telegram, MailerLite, GetResponse, Campaign Monitor, Drip, MailPoet, Kit, Keap, and 25+ additional services.
+
+Use Zapier to connect forms with thousands of apps, or send form data to custom API endpoints with webhooks.
 
 #### Page Builder Styling
 
-Customize form appearance directly within your favorite page builder:
--   Gutenberg Block Editor — styling controls in the block sidebar
--   Bricks Builder — styling options in the Bricks panel
--   Elementor — styling controls in the Elementor widget
+Customize SureForms directly inside:
 
-### HOW IT WORKS ❓
+-   Gutenberg Block Editor
+-   Elementor
+-   Bricks Builder
 
-From installation to creating your first contact form, SureForms is designed to be simple and intuitive. Here is how it works:
+SureForms also works with Divi, Beaver Builder, and other popular WordPress page builders.
 
-#### Step 1: Install the SureForms WordPress Plugin 🔌
+### HOW SUREFORMS WORKS
 
-From your WordPress dashboard, navigate to the Plugins menu and click on the "Add New" button. Search for the SureForms plugin, then click "Install Now" and "Activate".
+#### Step 1: Install SureForms
 
-#### Step 2: Build Your Form with Drag and Drop ⚙️
+In your WordPress dashboard, go to Plugins > Add New, search for "SureForms," then install and activate the plugin.
 
-Once the plugin is installed, you'll be redirected to the SureForms dashboard page in your WordPress dashboard. There you will find a button to create a new form. Click it to build and customize your form using the SureForms drag-and-drop interface to suit your requirements.
+#### Step 2: Create Your Form
 
-#### Step 3: Embed or Publish Your Form 📄
+Generate a form with AI, choose a ready-made template, or start from scratch using the drag and drop WordPress form builder.
 
-Once your form is ready, easily embed it on any page or post using the provided shortcode or block. Or, you can use the 'Instant Form' option to make it live instantly with a shareable link.
+#### Step 3: Customize the Form
 
-### WHO CAN BENEFIT FROM SUREFORMS?
+Add fields, arrange columns, configure notifications, choose confirmation behavior, enable spam protection, and match the form to your website.
 
-SureForms is built for anyone who needs contact forms, custom forms, or advanced user-friendly forms on WordPress.
+#### Step 4: Publish or Share
 
--   **Website Owners:** For any GDPR-compliant contact form without coding.
--   **Designers:** For forms that match site aesthetics with custom styling options.
--   **Developers:** Ability to extend with clean APIs, hooks, and custom CSS.
--   **No-Code Professionals:** Use advanced features like Conditional Logic, Multi-step, and Conversational Forms with ease.
--   **Agencies:** To save time with easy integration for scalable workflows.
--   **E-commerce Stores:** To power up Checkouts, Registrations, and Customer Forms.
--   **Educators & Communities:** To build student Registration or Login Forms, Feedback Forms, or Membership Forms quickly.
-### WORDPRESS THEMES & PLUGINS THAT SUREFORMS SUPPORTS 🔗
+Embed the form on a page or post using a block or shortcode, or publish it as an Instant Form with a shareable link.
 
-SureForms works with any theme, including Astra, Spectra One, Blocksy, Bricks, Flatsome, GeneratePress, Hestia, Kadence, and Neve.
+### WHO CAN USE SUREFORMS?
 
-It is compatible with popular plugins including WooCommerce, Easy Digital Downloads, GiveWP, LearnDash, LifterLMS, MemberPress, Restrict Content Pro, SureCart, SureMembers, OttoKit, The Events Calendar, TutorLMS, Wishlist Member, CartFlows, Elementor Pro, Beaver Builder, Divi, and many more.
+-   **Website Owners:** Create contact forms, payment forms, booking forms, feedback forms, and other everyday forms without coding.
+-   **Businesses:** Collect leads, payments, registrations, applications, and customer feedback.
+-   **Designers:** Build forms that match a website using block-based styling controls.
+-   **Developers:** Extend forms through APIs, hooks, custom CSS, and integrations.
+-   **No-Code Professionals:** Create advanced workflows without building a custom application.
+-   **Agencies:** Build and manage forms across client websites with a familiar WordPress workflow.
+-   **Educators and Course Creators:** Create quizzes, assessments, registrations, and surveys.
+-   **Nonprofits:** Build donation forms, volunteer forms, event forms, and application forms.
 
-### CONNECT WITH OUR TEAM AND COMMUNITY
+### WORDPRESS THEMES, BUILDERS, AND PLUGINS
 
-[Follow us on Facebook](https://www.facebook.com/sureforms) for the latest SureForms news, feature releases, and updates. 
+SureForms works with popular themes including Astra, Spectra One, Blocksy, Bricks, Flatsome, GeneratePress, Hestia, Kadence, and Neve.
 
-[Join our Facebook group community](https://www.facebook.com/groups/surecart):
-Learn the tricks and techniques that other SureForms users are using to grow their business. Also, get exciting insider information on upcoming feature releases.
+It works with page builders including Gutenberg, Elementor, Bricks, Divi, and Beaver Builder.
 
-### WANT TO CONTRIBUTE TO THE PLUGIN?
+SureForms is compatible with popular plugins and platforms including WooCommerce, Easy Digital Downloads, GiveWP, LearnDash, LifterLMS, MemberPress, Restrict Content Pro, SureCart, SureMembers, OttoKit, The Events Calendar, TutorLMS, Wishlist Member, and CartFlows.
 
-You may now contribute to the plugin on [GitHub](https://github.com/brainstormforce/sureforms-public).
+### CONNECT WITH SUREFORMS
 
-### USE OF 3RD PARTY SERVICES
+[Follow SureForms on Facebook](https://www.facebook.com/sureforms) for product news and feature updates.
 
-To improve the user experience, SureForms may use the following 3rd party services if the required features are enabled:
+[Join the SureForms community](https://www.facebook.com/groups/surecart) to learn from other users and discuss workflows.
 
--   **ipinfo** -- is used to show User IP Info to Admin when IP Logging is turned on. [TOS](https://ipinfo.io/terms-of-service) and [Privacy Policy](https://ipinfo.io/privacy-policy)
+### CONTRIBUTE TO SUREFORMS
 
--   **Google Fonts** -- are loaded to add additional fonts to your website. Google's [TOS](https://policies.google.com/terms) and [Privacy Policy](https://policies.google.com/privacy)
+Contribute to the public plugin repository on [GitHub](https://github.com/brainstormforce/sureforms-public).
 
--   **ipapi** -- is used to auto detect the current user region Phone Field [TOS](https://ipapi.co/terms/) and [Privacy Policy](https://ipapi.co/privacy/)
+### THIRD-PARTY SERVICES
 
--   **reCAPTCHA** -- is used for spam prevention and to ensure that the submissions made through the form are done by real human users.
+SureForms may connect to third-party services only when the related feature is enabled:
 
--   **Stripe** -- is used for processing payment forms. [TOS](https://stripe.com/legal/ssa) and [Privacy Policy](https://stripe.com/privacy)
+-   **ipinfo** may show visitor IP information when IP logging is enabled. [Terms](https://ipinfo.io/terms-of-service) and [Privacy Policy](https://ipinfo.io/privacy-policy)
+-   **Google Fonts** may load when a Google font is selected. [Terms](https://policies.google.com/terms) and [Privacy Policy](https://policies.google.com/privacy)
+-   **ipapi** may detect a visitor's region for the phone field. [Terms](https://ipapi.co/terms/) and [Privacy Policy](https://ipapi.co/privacy/)
+-   **Google reCAPTCHA** may be used for spam prevention.
+-   **Stripe** is used to process Stripe payment forms. [Terms](https://stripe.com/legal/ssa) and [Privacy Policy](https://stripe.com/privacy)
 
 ### BRANDING GUIDELINE
 
-#### SureForms® is a registered trademark. Please use the following format when mentioning SureForms anywhere:
+SureForms is a registered trademark. Please use the official product name "SureForms."
 
--   SureForms \[correct\]
--   Sure Forms \[incorrect\]
--   Sureform \[incorrect\]
--   Sureforms \[incorrect\]
--   Sure forms \[incorrect\]
--   SureForm \[incorrect\]
--   Sure Form \[incorrect\]
+== Installation ==
+
+1. In your WordPress dashboard, go to Plugins > Add New.
+2. Search for "SureForms."
+3. Click Install Now, then Activate.
+4. Choose a template, generate a form with AI, or start from scratch.
+5. Add and style fields using the WordPress block editor.
+6. Configure notifications, confirmation behavior, and spam protection.
+7. Publish using a block, shortcode, or Instant Form link.
 
 == Blocks ==
 
-This plugin provides 16 blocks for all users, with additional advanced blocks available in SureForms Business:
+SureForms provides 16 blocks for all users, with additional advanced fields available in SureForms Business:
 
--   **Address Field:** Add a full-address input to your WordPress contact form, with line 1, line 2, city, state, postal code, and country.
-
--   **Phone Number Field:** Collect international phone numbers in your forms with built-in country code detection and validation.
-
--   **Email Field:** Add an email input to your contact form, with real-time validation and built-in spam protection.
-
--   **Textarea Field:** Capture long-form responses, comments, or messages in your WordPress forms with a resizable text area.
-
--   **Number Field:** Collect numeric input such as age, quantity, or price in your form with min, max, and step controls.
-
--   **URL Field:** Let users submit website addresses with automatic URL validation in your forms.
-
--   **Dropdown Field:** Add a single-select dropdown to your WordPress form, with customizable options and dynamic values.
-
--   **Custom Button Block:** Add a styled submit or action button to your SureForms layout.
-
--   **Text Field:** Add a single-line text input for short answers like names, titles, or short responses.
-
--   **Multiple Choice Field:** Let users pick one option from a list of radio choices in your WordPress form.
-
--   **Checkbox Field:** Add single or multiple checkbox options to capture preferences, agreements, or selections.
-
--   **Separator:** Add a visual divider to organize fields and sections inside your SureForms form.
-
--   **Heading:** Add section headings to give your form structure and improve readability.
-
--   **Image:** Display an image inside your form to add visual context, branding, or instructions.
-
--   **Icon:** Add an icon to your form for visual polish and brand consistency.
-
--   **GDPR Agreement Field:** Add a GDPR consent checkbox to your WordPress contact form to stay compliant with data privacy laws.
+-   **Address Field:** Collect a full address with address lines, city, state, postal code, and country.
+-   **Phone Number Field:** Collect international phone numbers with country code support and validation.
+-   **Email Field:** Collect validated email addresses for contact forms, lead forms, and registrations.
+-   **Textarea Field:** Capture long-form messages, comments, descriptions, or feedback.
+-   **Number Field:** Collect numeric information with minimum, maximum, and step controls.
+-   **URL Field:** Accept validated website or page URLs.
+-   **Dropdown Field:** Add a single-select list with customizable options.
+-   **Custom Button Block:** Add a styled submit or action button.
+-   **Text Field:** Collect names, titles, short answers, and other single-line information.
+-   **Multiple Choice Field:** Let users select one option from a list.
+-   **Checkbox Field:** Add single or multiple checkbox options for preferences and agreements.
+-   **Separator:** Divide a form into clear visual sections.
+-   **Heading:** Add headings to organize longer forms.
+-   **Image:** Add visual context, branding, or instructions.
+-   **Icon:** Add icons for visual clarity and design.
+-   **GDPR Agreement Field:** Add a consent checkbox for privacy-related agreements.
 
 == Frequently Asked Questions ==
 
 = Is SureForms free? =
 
-Yes! SureForms is 100% free to download and use on the WordPress.org plugin directory. The free version includes the AI form builder, contact forms, payment forms via Stripe, GDPR compliance, anti-spam protection, native integrations, and 15+ form fields. Advanced features like multi-step forms, conversational forms, quizzes, surveys, file uploads, and PayPal payments are available with SureForms Business.
+Yes. SureForms is free to download from WordPress.org. The free plugin includes AI form generation, contact forms, Stripe payment forms, form entries, email notifications, confirmation messages, Instant Forms, spam protection, styling controls, analytics, import tools, translations, and 16 blocks.
 
-= How is SureForms different from other WordPress form plugins? =
+= What can I build with SureForms? =
 
-SureForms is the first AI-powered form builder built natively on the WordPress block editor. Most form plugins ship with their own proprietary builder you have to learn from scratch. SureForms uses the Gutenberg interface you already know, adds AI form generation so you can build a form from a single prompt, and includes payment forms, conditional logic, and native integrations in a clean, modern design. It's the modern alternative to legacy contact form plugins on WordPress.
+You can build contact forms, payment forms, feedback forms, surveys, polls, quizzes, registration forms, login forms, booking forms, quote forms, lead forms, application forms, calculators, order forms, event forms, and other custom WordPress forms. Some advanced form types require SureForms Business.
 
-= How is SureForms different from Contact Form 7? =
+= How does the SureForms AI form builder work? =
 
-Contact Form 7 is a long-trusted plugin, but it relies on shortcodes and requires manual HTML for advanced layouts. SureForms is fully visual, drag-and-drop, mobile-first, and includes payment forms, AI form generation, conditional logic, and design controls out of the box — without needing add-ons. If you're upgrading from Contact Form 7, SureForms gives you a modern WordPress form-building experience without the technical setup.
+Describe the form you need in plain language. SureForms AI generates a complete form with appropriate fields and labels. The generated form is made of editable WordPress blocks, so you can change every part of it before publishing.
 
-= Does SureForms work with Elementor, Bricks, and Divi? =
+= Do I need an external AI API key? =
 
-Yes. SureForms works seamlessly with Elementor, Bricks Builder, Divi Builder, Beaver Builder, and any other major WordPress page builder. SureForms Business also adds dedicated styling controls inside the Elementor widget and the Bricks element so you can match your form's appearance to your site's design without writing CSS.
+No. You do not need to connect your own external AI API key to generate forms with SureForms.
 
-= Do I need coding skills to create forms using SureForms? =
+= Does SureForms work with Gutenberg? =
 
-**No coding needed!**
+Yes. SureForms is built on the WordPress block editor. Its fields are WordPress blocks, so forms are created and edited using the familiar Gutenberg interface.
 
-With SureForms' visual block builder, you can drag and drop Gutenberg blocks to create beautiful, responsive WordPress forms. Perfect for small business owners, freelancers, designers, or anyone who wants forms without technical skills.
+= Can I create payment forms? =
 
-= What are the requirements to use SureForms? =
+Yes. Stripe payment forms are included in the free plugin. You can create donation forms, service payment forms, order forms, memberships, bookings, and event registration forms. SureForms Business adds PayPal payments.
 
-You just need the latest version of WordPress and any theme. SureForms installs like any other plugin and is ready to use within seconds.
+= Can I create registration forms and login forms? =
 
-= Can I use SureForms along with a Page Builder? =
+Yes. SureForms Business includes registration forms, login forms, password fields, lost-password forms, and reset-password forms.
 
-Yes. SureForms only requires the latest WordPress version and works seamlessly with all major page builders — Elementor, Bricks, Divi, Beaver Builder, and more — without interference.
+= Can I create surveys, polls, and feedback forms? =
 
-Should you need help, you can [get in touch with us.](https://support.brainstormforce.com/?utm_source=wp-repo&utm_medium=link&utm_campaign=readme)
+Yes. SureForms Business includes survey forms, feedback forms, polls, NPS fields, reports, and conditional workflows.
 
-= Will SureForms slow down my website? =
+= Can I create quiz and calculator forms? =
 
-Absolutely not. SureForms is lightweight and fast, built with clean code and modular architecture to ensure it never slows down your WordPress site.
+Yes. SureForms Business supports scored quizzes, graded assessments, personality quizzes, quote calculators, pricing calculators, BMI calculators, cost estimators, and other formula-based forms.
 
-= Can I use SureForms on client websites? =
+= Does SureForms support multi-step and conversational forms? =
 
-Yes. You can use SureForms on your own sites as well as on your clients' websites — no licensing restrictions on the free version.
+Yes. SureForms Business includes multi-step forms with progress indicators and conversational forms that display one question at a time.
 
-= What more do I get with SureForms? =
+= Does SureForms support file uploads and signatures? =
 
-When you use SureForms, you get a huge library of ready-to-use form templates that can be used to build your forms fast — contact forms, payment forms, lead generation forms, registration forms, and many more.
-
-= Does SureForms support Multi-step Forms or Conversational Forms? =
-
-Yes. You can easily create Multi-step Forms as well as Conversational Forms to improve user experience and conversion rates with SureForms Business plans.
-
-= Can I create quiz forms with SureForms? =
-
-Yes. SureForms Business includes a Quiz module. You can create scored quizzes with grading and personality tests with result output — all with the same drag-and-drop builder.
-
-= Does SureForms support file uploads? =
-
-Yes. With SureForms Business, you can add file upload fields to your forms. It supports multi-file uploads, file type restrictions, and role-based access control for uploaded files.
+Yes. SureForms Business includes file uploads, signatures, ratings, dates, times, sliders, repeaters, hidden fields, and other advanced fields.
 
 = What integrations does SureForms support? =
 
-SureForms connects natively with services including Google Sheets, Mailchimp, HubSpot, ActiveCampaign, Klaviyo, FluentCRM, Zoho CRM, Notion, and many more. You can also use Zapier to connect with 5,000+ additional apps, or use webhooks to send data to any API endpoint.
+SureForms connects with services including Google Sheets, Mailchimp, FluentCRM, HubSpot, Brevo, ActiveCampaign, Zoho CRM, Klaviyo, Airtable, Notion, Telegram, MailerLite, GetResponse, Campaign Monitor, Drip, MailPoet, Kit, and Keap. SureForms Business also supports Zapier and webhooks.
 
-= Does SureForms support Payment Forms? =
+= Does SureForms work with Elementor, Bricks, Divi, and Beaver Builder? =
 
-Yes. SureForms has built-in Payment Form support. You can collect payments securely through Stripe in the free version. PayPal payments are available with SureForms Business. No add-ons or extra plugins needed.
+Yes. SureForms works with major WordPress themes and page builders. SureForms Business includes dedicated styling controls for Elementor and Bricks.
 
-= How is SureForms different from WPForms? =
+= Where is form data stored? =
 
-SureForms and WPForms are both powerful WordPress form builders, but they differ on pricing and architecture. WPForms requires the $199/yr Pro tier for multi-step forms and higher tiers for conversational forms and advanced features. SureForms includes every feature AI form generation, conditional logic, multi-step forms, conversational forms, payment forms, quizzes, and surveys, on every paid plan from $59/yr with no feature-gating. SureForms is also built natively on the Gutenberg block editor, while WPForms uses a separate proprietary interface. Read the full comparison: [SureForms vs WPForms](https://sureforms.com/sureforms-vs-wpforms/?utm_source=wordpress.org&utm_medium=wpforms_comparison).
+Form entries are stored in your WordPress database. You can view, manage, search, and export entries from your WordPress dashboard.
 
-= How is SureForms different from Fluent Forms? =
+= Does SureForms protect forms from spam? =
 
-Both are capable WordPress form plugins. SureForms differentiates with built-in AI form generation (no API key needed), native Gutenberg block editor integration, and flat pricing where every feature is available on every paid plan. SureForms also ships with built-in translations for 7 languages out of the box and stores all form data exclusively on your own site. No cloud storage. Read the full comparison: [SureForms vs Fluent Forms](https://sureforms.com/sureforms-vs-fluent-forms/?utm_source=wordpress.org&utm_medium=fluentform_comparison).
+Yes. SureForms supports Google reCAPTCHA, hCaptcha, Cloudflare Turnstile, and honeypot protection.
 
-= Is SureForms a good Contact Form 7 alternative? =
+= Will SureForms slow down my website? =
 
-Yes. SureForms is one of the best Contact Form 7 alternatives for WordPress. Unlike Contact Form 7, SureForms requires no shortcodes or manual HTML. You build forms visually using the Gutenberg block editor. SureForms also adds payment forms, AI form generation, conditional logic, multi-step forms, conversational forms, file uploads, and 25+ native integrations.All features Contact Form 7 requires add-ons or custom code to replicate. Read the full comparison: [SureForms vs Contact Form 7](https://sureforms.com/news/contact-form-7-alternative-sureforms/?utm_source=wordpress.org&utm_medium=cf7_comparison).
+SureForms is built with a block-based, modular approach and is designed to load only what is needed for your forms.
 
-= Can I build a calculator form in WordPress with SureForms? =
+= Can I use SureForms on client websites? =
 
-Yes. SureForms Business includes a dedicated Calculator Forms feature. You can build pricing calculators, quote generators, cost estimators, BMI calculators, and any other calculation-based form using the built-in formula builder. No coding required. Dynamic values can be shown to users in real time as they fill the form.
+Yes. You can use the free version on your own websites and client websites. Paid plan usage depends on the site allowance of the selected SureForms Business license.
 
-= Does SureForms work with Gutenberg / the WordPress block editor? =
+= Is SureForms a Contact Form 7 alternative? =
 
-Yes. SureForms is built entirely on the WordPress block editor (Gutenberg). Every form field is a native Gutenberg block. This means your forms inherit your theme's typography, colors, and spacing automatically, and you build forms using the same editor you already use to build pages. There is no separate interface to learn, no proprietary canvas, and no page builder required.
+Yes. SureForms provides a visual drag and drop form-building experience inside Gutenberg, without requiring shortcode editing or manual HTML for everyday form layouts. It also adds AI form generation, payment forms, entries, design controls, and advanced workflows. [Compare SureForms and Contact Form 7](https://sureforms.com/news/contact-form-7-alternative-sureforms/?utm_source=wordpress.org&utm_medium=cf7_comparison).
 
-= Can I create a registration form or login form with SureForms? =
+= How is SureForms different from other WordPress form builders? =
 
-Yes. SureForms Business includes fully functional user registration forms and login forms for WordPress. You can create branded registration and login experiences using the block editor. No coding required. Registration forms support custom user fields and role assignment.
+SureForms combines AI form generation, native Gutenberg blocks, form entries inside WordPress, Stripe payment forms, and a modern block-based editing experience. It avoids moving users into an unrelated proprietary builder and keeps generated forms fully editable.
 
-== Screenshot ==
+= Where can I learn more about SureForms Business features? =
 
-1. SureForms dashboard — manage all your WordPress forms in one place with form analytics, entries, and quick actions.
-2. Start building your forms within minutes using SureForms. Build a form from scratch with drag and drop, or let AI generate one for you from a simple prompt.
-3. AI form builder for WordPress — describe the form you need and SureForms creates it instantly with smart field suggestions. Add, remove, or rearrange fields as you need.
-4. Beautify your forms with Instant Form Styling and a wide range of Block and Form Settings — customize colors, typography, spacing, and every visual detail.
-5. Publish your forms instantly with a shareable Instant Form link, or easily embed forms in any page or post using SureForms' native Gutenberg block.
+Visit the [SureForms features page](https://sureforms.com/features/?utm_source=wordpress.org&utm_medium=features_faq) to explore advanced form types, fields, automation, payments, integrations, and workflows.
 
-You can report security issues through our [Bug Bounty Program](https://brainstormforce.com/bug-bounty-program/). We collaborate with Patchstack to provide opportunities for researchers to report vulnerabilities. The Patchstack team will help validate, triage, and handle any reported security issues.
+== Screenshots ==
+
+1. SureForms dashboard: manage forms, entries, reports, and quick actions.
+2. Create a form from scratch, select a template, or generate one with AI.
+3. AI form builder: describe the form you need and generate editable fields and labels.
+4. Customize colors, typography, spacing, buttons, and layouts.
+5. Publish through a Gutenberg block, shortcode, or shareable Instant Form link.
+
+You can report security issues through our [Bug Bounty Program](https://brainstormforce.com/bug-bounty-program/). We collaborate with Patchstack to validate, triage, and handle security reports.
 
 == Changelog ==
+= 2.12.2 - 20th July 2026 =
+* New: Added a Payment History widget for Elementor and Bricks.
+* Fix: Custom CSS now applies correctly on the single form view.
 = 2.12.1 - 8th July 2026 =
 * New: Added an AI-powered quick draft flow on the dashboard to generate forms faster, with built-in usage tracking.
 * Improvement: Email fields now enforce standard RFC 5321 length limits (a 64-character local part and 255-character domain) to prevent oversized submissions, with a filter to customize the limits.
@@ -470,13 +441,9 @@ You can report security issues through our [Bug Bounty Program](https://brainsto
 * Fix: Forms with multiple Cloudflare Turnstile widgets now submit correctly instead of silently failing with a generic error.
 * Fix: Resolved an issue where the Stripe Payment Element failed to render on live accounts that have Bacs Direct Debit, Link, Cash App, or BNPL enabled.
 * Fix: Restored the form editor on WordPress 6.x sites running plugins that register older-style blocks such as ThirstyAffiliates, Ninja Forms, and Gravity Forms.
-= 2.11.1 - 16th June 2026 =
-* Fix: Phone field auto country detection always resolved to the United States.
-* Fix: Corrected the Cloudflare Turnstile "Get Keys" link.
-* Fix: This update addressed a security bug. Props to Yaswanth Reddy Sunkara for reporting it responsibly to our team.
 The full changelog is available [here](https://sureforms.com/whats-new/?utm_source=wordpress.org&utm_medium=whats_new).
 
 == Upgrade Notice ==
 
-= 0.0.13 =
-From version 0.0.13 we're migrating to a custom database to enhance SureForms' performance and features. This step is necessary and irreversible and your current existing entries will be lost. Thank you for your understanding!
+= 2.12.2 =
+Recommended update with Payment History support for Elementor and Bricks, along with form styling fixes.

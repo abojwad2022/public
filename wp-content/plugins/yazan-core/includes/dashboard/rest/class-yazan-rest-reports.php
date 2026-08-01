@@ -33,21 +33,15 @@ class Yazan_REST_Reports {
 		register_rest_route(
 			Yazan_Dashboard_Auth::NS,
 			'/reports/sales',
-			array(
-				'methods'             => WP_REST_Server::READABLE,
-				'callback'            => array( __CLASS__, 'sales' ),
-				'permission_callback' => Yazan_Dashboard_Auth::require_cap( 'view_woocommerce_reports' ),
-			)
+			Yazan_REST_Guard::args( WP_REST_Server::READABLE, array( __CLASS__, 'sales' ), 'reports.view' )
 		);
 
 		register_rest_route(
 			Yazan_Dashboard_Auth::NS,
 			'/reports/stock',
-			array(
-				'methods'             => WP_REST_Server::READABLE,
-				'callback'            => array( __CLASS__, 'stock' ),
-				'permission_callback' => Yazan_Dashboard_Auth::require_cap( 'edit_products' ),
-			)
+			// Stock reporting is an inventory read, not a revenue read — a warehouse role should
+			// reach it without also being handed sales figures.
+			Yazan_REST_Guard::args( WP_REST_Server::READABLE, array( __CLASS__, 'stock' ), 'inventory.view' )
 		);
 	}
 

@@ -137,22 +137,26 @@ class Create_Form extends Abstract_Ability {
 							'type'        => 'object',
 							'description' => __( 'Form styling settings including colors and spacing.', 'sureforms' ),
 							'properties'  => [
-								'primaryColor'       => [
+								'primaryColor'         => [
 									'type'        => 'string',
 									'description' => __( 'Primary/accent color as hex (e.g. #111C44).', 'sureforms' ),
 								],
-								'textColor'          => [
+								'textColor'            => [
 									'type'        => 'string',
 									'description' => __( 'Text color as hex (e.g. #1E1E1E).', 'sureforms' ),
 								],
-								'textColorOnPrimary' => [
+								'textColorOnPrimary'   => [
 									'type'        => 'string',
 									'description' => __( 'Text color on primary backgrounds as hex (e.g. #FFFFFF).', 'sureforms' ),
 								],
-								'fieldSpacing'       => [
+								'fieldSpacing'         => [
 									'type'        => 'string',
 									'description' => __( 'Spacing between fields.', 'sureforms' ),
 									'enum'        => [ 'small', 'medium', 'large' ],
+								],
+								'disableDefaultStyles' => [
+									'type'        => 'boolean',
+									'description' => __( 'When true, SureForms does not enqueue its default frontend styles for this form, so the active theme styling applies instead.', 'sureforms' ),
 								],
 							],
 						],

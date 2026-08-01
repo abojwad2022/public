@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
 import { backupApi } from '../../api/endpoints.js'
-import { boot } from '../../api/client.js'
 import { useToast } from '../../context/ToastContext.jsx'
 import {
   useConfirm,

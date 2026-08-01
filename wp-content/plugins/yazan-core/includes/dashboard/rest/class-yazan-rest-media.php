@@ -33,27 +33,15 @@ class Yazan_REST_Media {
 			$ns,
 			'/media',
 			array(
-				array(
-					'methods'             => WP_REST_Server::READABLE,
-					'callback'            => array( __CLASS__, 'index' ),
-					'permission_callback' => Yazan_Dashboard_Auth::require_cap( 'upload_files' ),
-				),
-				array(
-					'methods'             => WP_REST_Server::CREATABLE,
-					'callback'            => array( __CLASS__, 'upload' ),
-					'permission_callback' => Yazan_Dashboard_Auth::require_cap( 'upload_files' ),
-				),
+				Yazan_REST_Guard::args( WP_REST_Server::READABLE, array( __CLASS__, 'index' ), 'media.view' ),
+				Yazan_REST_Guard::args( WP_REST_Server::CREATABLE, array( __CLASS__, 'upload' ), 'media.upload' ),
 			)
 		);
 
 		register_rest_route(
 			$ns,
 			'/media/(?P<id>\d+)',
-			array(
-				'methods'             => WP_REST_Server::DELETABLE,
-				'callback'            => array( __CLASS__, 'destroy' ),
-				'permission_callback' => Yazan_Dashboard_Auth::require_cap( 'upload_files' ),
-			)
+			Yazan_REST_Guard::args( WP_REST_Server::DELETABLE, array( __CLASS__, 'destroy' ), 'media.delete' )
 		);
 	}
 

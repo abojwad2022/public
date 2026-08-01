@@ -113,6 +113,12 @@ export const gatewaysApi = {
   reorder: (order) => api.put('/gateways', { order }),
 }
 
+// Write-only by design: get() never returns secret values, only whether each field is set.
+export const socialAuthApi = {
+  get: () => api.get('/social-auth'),
+  save: (providers) => api.put('/social-auth', { providers }),
+}
+
 export const emailsApi = {
   list: () => api.get('/emails'),
   saveGlobals: (settings) => api.put('/emails', { settings }),
@@ -185,4 +191,50 @@ export const aiApi = {
 
   analytics: (params) => api.get('/ai/analytics', params),
   logs: (params) => api.get('/ai/logs', params),
+}
+
+// Access control. Staff accounts — people who hold a Yazan role and can sign into /dashboard.
+// Shoppers stay on customersApi; the server refuses to return them here at all.
+export const usersApi = {
+  list: (params) => api.get('/users', params),
+  get: (id) => api.get(`/users/${id}`),
+  create: (payload) => api.post('/users', payload),
+  update: (id, payload) => api.put(`/users/${id}`, payload),
+  remove: (id, reassign) => api.del(`/users/${id}`, reassign ? { reassign } : undefined),
+
+  suspend: (id) => api.post(`/users/${id}/suspend`, {}),
+  activate: (id) => api.post(`/users/${id}/activate`, {}),
+  forceLogout: (id) => api.post(`/users/${id}/force-logout`, {}),
+  activity: (id, params) => api.get(`/users/${id}/activity`, params),
+
+  // mode 'link' emails a WordPress reset link and is the default; 'set' writes a password directly
+  // and is refused on your own account, because it destroys every session you hold.
+  resetPassword: (id, mode = 'link', password) =>
+    api.post(`/users/${id}/reset-password`, { mode, password }),
+
+  uploadPhoto: (id, file) => {
+    const form = new FormData()
+    form.append('file', file)
+    return api.upload(`/users/${id}/photo`, form)
+  },
+}
+
+// Roles. `update` sends the COMPLETE permission list — the server replaces the set wholesale and
+// audits the diff — plus the `updated_at` the editor loaded, so a concurrent save 409s instead of
+// silently overwriting someone else's work.
+export const rolesApi = {
+  list: (params) => api.get('/roles', params),
+  get: (id) => api.get(`/roles/${id}`),
+  create: (payload) => api.post('/roles', payload),
+  update: (id, payload) => api.put(`/roles/${id}`, payload),
+  remove: (id, reassignTo) =>
+    api.del(`/roles/${id}`, reassignTo ? { reassign_to: reassignTo } : undefined),
+  duplicate: (id, name) => api.post(`/roles/${id}/duplicate`, { name }),
+  members: (id, params) => api.get(`/roles/${id}/users`, params),
+}
+
+// The permission catalog, grouped by module. `grantable` is the subset the CALLER may hand out,
+// so the role editor can disable the rest without a second request.
+export const permissionsApi = {
+  list: () => api.get('/permissions'),
 }

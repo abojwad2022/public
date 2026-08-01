@@ -1,3 +1,6 @@
+v.2.4.32 - 16-July-2026
+- Fix: Version toggle no longer appears when UAGB is inactive, even if stale database options from a previous install are present.
+
 v.2.4.31 - 8-July-2026
 - New: Added a consent popup that installs and activates the required Spectra and form plugins before a pattern is inserted, with a tooltip on the Insert button listing the required plugin.
 - Improvement: Show Spectra Blocks (v3) patterns by default in all cases, and only show the version toggle when Spectra Legacy is active, with Spectra Blocks selected by default.

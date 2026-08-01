@@ -90,4 +90,12 @@ export {
   ChartPie, // Analytics
   Bell, // Notifications
   DatabaseZap, // Data Integrity
+  // Access control — users, roles, permissions
+  UserCog, // Users (staff)
+  ShieldCheck, // Roles
+  KeyRound, // Permissions
+  Lock, // Locked / system role / no access
+  Ban, // Suspended
+  UserCheck, // Activate
+  Crown, // Super admin
 } from 'lucide-react'

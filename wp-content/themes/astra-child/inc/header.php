@@ -238,17 +238,60 @@ function yazan_announcement_bar() {
 
 /*
  * ---------------------------------------------------------------------------
- * NOTE — this site's header is built with Header Footer Elementor
- * (.elementor-location-header), not Astra's native header. header.js tags whichever header is
- * present with `.yz-header`, and all CSS targets that, so this works under HFE today and under a
- * native Astra header later.
+ * NOTE — the header is built with ASTRA'S NATIVE Header Builder.
  *
- * The 3-row Comma structure itself (announcement / centered logo / uppercase nav) is arranged in
- * the header BUILDER (HFE Templates → Header, or Astra Header Builder). This file provides the
- * announcement bar + all the solid/sticky/compress/hover BEHAVIOUR on top of whatever layout the
- * builder produces.
+ * An earlier version of this note claimed it was Header Footer Elementor; that was wrong and cost
+ * a debugging session. Ground truth from the rendered page: <body> carries `ast-hfb-header` and
+ * there is NO `ehf-header` and no `.elementor-location-header` anywhere in the output. HFE owns
+ * the FOOTER only (`ehf-footer`, swapping #colophon) — which is what caused the confusion.
  *
- * If you switch to ASTRA'S NATIVE header you can also drive it with Astra hooks, e.g. inject CSS
- * through `astra_dynamic_theme_css`, or add markup with `astra_header_before` / `astra_header_after`.
+ * So the header layout lives in Astra Customizer options (in the DB), not in `_elementor_data`.
+ * header.js tags the header with `.yz-header` and all CSS targets that, so the styling would
+ * survive a move to another builder.
+ *
+ * Because it IS Astra, Astra's own hooks are available and are the right tool here:
+ * `astra_get_option_{$option}` filters any Customizer value (see the account link below),
+ * `astra_dynamic_theme_css` injects CSS, `astra_header_before` / `astra_header_after` add markup.
  * ---------------------------------------------------------------------------
  */
+
+/**
+ * Point the header account icon at the branded My Account page.
+ *
+ * Astra's account widget has no filter of its own on the link — Astra_Builder_UI_Controller::
+ * render_account() reads the URL straight from Customizer options, and for a logged-out visitor
+ * rewrites it to wp_login_url( $current_url ). That dropped shoppers on the raw wp-login.php
+ * screen: no brand, and none of the one-tap Google / Apple buttons that live on /my-account/.
+ *
+ * Astra's ready-made "WooCommerce" account type would fix it, but it is gated behind
+ * `defined( 'ASTRA_EXT_VER' )` (Astra Pro), which this site does not have.
+ *
+ * What IS available is the generic value filter every Customizer option passes through —
+ * astra_get_option() ends in apply_filters( "astra_get_option_{$option}", … ). Filtering the two
+ * link options is therefore a supported hook, not a patch, and needs no change to the parent theme.
+ *
+ * @param mixed $value Stored option value: array{url:string,new_tab:bool,link_rel:string}.
+ * @return mixed
+ */
+function yazan_account_link_url( $value ) {
+	if ( ! function_exists( 'wc_get_page_permalink' ) ) {
+		return $value; // No WooCommerce — leave Astra's default behaviour alone.
+	}
+
+	$my_account = wc_get_page_permalink( 'myaccount' );
+
+	if ( ! $my_account ) {
+		return $value; // My Account page missing/unpublished — same.
+	}
+
+	// Preserve the option's shape so Astra's own new_tab / rel handling keeps working.
+	$link = is_array( $value ) ? $value : array();
+
+	$link['url']      = $my_account;
+	$link['new_tab']  = false; // Signing in should never leave the shop in a stray tab.
+	$link['link_rel'] = isset( $link['link_rel'] ) ? $link['link_rel'] : '';
+
+	return $link;
+}
+add_filter( 'astra_get_option_header-account-logout-link', 'yazan_account_link_url' );
+add_filter( 'astra_get_option_header-account-login-link', 'yazan_account_link_url' );

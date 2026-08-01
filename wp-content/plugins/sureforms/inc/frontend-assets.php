@@ -161,7 +161,8 @@ class Frontend_Assets {
 
 			if ( $load_assets ) {
 				// Load needed styles in head tag if current requested page has SureForms form.
-				self::enqueue_scripts_and_styles();
+				// Skip the SureForms stylesheets when every form on the page has default styling disabled.
+				self::enqueue_scripts_and_styles( Form_Styling::should_skip_frontend_styles( $current_post ) );
 			}
 		}
 	}
@@ -169,19 +170,25 @@ class Frontend_Assets {
 	/**
 	 * Enqueue scripts and styles.
 	 *
+	 * @param bool $skip_form_styles When true, the SureForms stylesheets are not enqueued
+	 *                               (default styling disabled for the form). External library
+	 *                               styles and scripts are always loaded so advanced fields
+	 *                               like Dropdown and Phone keep working.
 	 * @return void
 	 * @since 0.0.11
 	 */
-	public static function enqueue_scripts_and_styles() {
+	public static function enqueue_scripts_and_styles( $skip_form_styles = false ) {
 		// Load the styles.
-		foreach ( self::$css_assets as $handle => $path ) {
+		if ( ! $skip_form_styles ) {
+			foreach ( self::$css_assets as $handle => $path ) {
 
-			// Skip single form styles if not on single form page.
-			if ( 'single' === $handle && ! is_singular( SRFM_FORMS_POST_TYPE ) ) {
-				continue;
+				// Skip single form styles if not on single form page.
+				if ( 'single' === $handle && ! is_singular( SRFM_FORMS_POST_TYPE ) ) {
+					continue;
+				}
+
+				wp_enqueue_style( SRFM_SLUG . '-' . $handle );
 			}
-
-			wp_enqueue_style( SRFM_SLUG . '-' . $handle );
 		}
 
 		// Load the external styles. Like Phone and Tom Select.

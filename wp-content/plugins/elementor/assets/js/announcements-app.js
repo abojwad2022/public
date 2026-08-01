@@ -467,6 +467,7 @@ var eventsConfig = {
       add: 'add_new_variable',
       connect: 'connect_variable',
       save: 'save_new_variable',
+      update: 'update_variable',
       openManager: 'open_variables_manager',
       saveChanges: 'save_variables_changes',
       delete: 'delete_variable',
@@ -479,7 +480,9 @@ var eventsConfig = {
       conflictChoice: 'design_system_conflict_choice',
       confirmed: 'design_system_import_confirmed',
       imported: 'design_system_imported',
-      importFailed: 'design_system_import_failed'
+      importFailed: 'design_system_import_failed',
+      export: 'design_system_export',
+      opened: 'design_system_opened'
     },
     components: {
       createClicked: 'component_create_clicked',

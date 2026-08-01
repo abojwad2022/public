@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams } from 'react-router'
 import { boot } from '../api/client.js'
 import { PageHeader } from '../components/Layout.jsx'
 
@@ -41,6 +41,7 @@ export default function RewardsEmbed() {
   // Theme is baked into the iframe URL for a correct first paint. Captured per
   // screen (useMemo on key) so a live theme toggle does NOT change src / reload —
   // the observer below re-tints the already-loaded embed in place instead.
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- `key` is the re-derivation trigger, not a value the factory reads: this component is not remounted when the screen changes, so dropping it would freeze the theme at first mount.
   const initialTheme = useMemo(() => readTheme(), [key])
   const src = `${base}/?yzrw_embed=${encodeURIComponent(key)}&theme=${initialTheme}`
 

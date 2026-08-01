@@ -3,7 +3,7 @@
  * Plugin Name:       Yazan Core
  * Plugin URI:        https://yazan.local
  * Description:       Portable store architecture for Yazan — product categories, the Collections taxonomy, and the professional ring attribute set. Kept in a plugin (not the theme) so the catalog structure survives theme changes.
- * Version:           1.6.0
+ * Version:           1.8.0
  * Requires at least: 6.5
  * Requires PHP:      8.1
  * Author:            Yazan
@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit; // No direct access.
 }
 
-define( 'YAZAN_CORE_VERSION', '1.6.0' );
+define( 'YAZAN_CORE_VERSION', '1.8.0' );
 define( 'YAZAN_CORE_FILE', __FILE__ );
 define( 'YAZAN_CORE_DIR', plugin_dir_path( __FILE__ ) );
 define( 'YAZAN_CORE_URL', plugin_dir_url( __FILE__ ) );
@@ -48,6 +48,30 @@ require YAZAN_CORE_DIR . 'includes/class-yazan-core-headers.php';
 
 // Full-site backup & restore engine (shared by the dashboard REST controller and the wp-admin page).
 require YAZAN_CORE_DIR . 'includes/backup/class-yazan-backup-engine.php';
+
+// One-tap sign-in with Google / Apple. Inert until the provider constants are defined in
+// wp-config.php — see includes/social-auth/README.md.
+require YAZAN_CORE_DIR . 'includes/social-auth/class-yazan-social-auth-store.php';
+require YAZAN_CORE_DIR . 'includes/social-auth/class-yazan-social-auth-jwt.php';
+require YAZAN_CORE_DIR . 'includes/social-auth/class-yazan-social-auth-provider.php';
+require YAZAN_CORE_DIR . 'includes/social-auth/class-yazan-social-auth-google.php';
+require YAZAN_CORE_DIR . 'includes/social-auth/class-yazan-social-auth-apple.php';
+require YAZAN_CORE_DIR . 'includes/social-auth/class-yazan-social-auth-users.php';
+require YAZAN_CORE_DIR . 'includes/social-auth/class-yazan-social-auth-cart.php';
+require YAZAN_CORE_DIR . 'includes/social-auth/class-yazan-social-auth-ui.php';
+require YAZAN_CORE_DIR . 'includes/social-auth/class-yazan-social-auth.php';
+Yazan_Social_Auth::register();
+
+/*
+ * Role-based access control: roles, the permission catalog, and the projection of Yazan
+ * permissions onto native WordPress capabilities.
+ *
+ * Initialised BEFORE the dashboard on purpose — the dashboard's first act on a request is a
+ * capability check, and it must already see the projected capabilities. Inert until its tables
+ * exist, so deploying it changes nothing until the installer has run.
+ */
+require YAZAN_CORE_DIR . 'includes/rbac/class-yazan-rbac-boot.php';
+Yazan_RBAC_Boot::init();
 
 // Standalone product-management dashboard (/dashboard): route, REST API, field registry, audit log.
 require YAZAN_CORE_DIR . 'includes/dashboard/class-yazan-dashboard-boot.php';

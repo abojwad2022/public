@@ -52,21 +52,13 @@ class Yazan_REST_Status {
 		register_rest_route(
 			$ns,
 			'/status',
-			array(
-				'methods'             => WP_REST_Server::READABLE,
-				'callback'            => array( __CLASS__, 'index' ),
-				'permission_callback' => Yazan_Dashboard_Auth::require_cap( self::CAP ),
-			)
+			Yazan_REST_Guard::args( WP_REST_Server::READABLE, array( __CLASS__, 'index' ), 'status.view' )
 		);
 
 		register_rest_route(
 			$ns,
 			'/status/tools/(?P<tool>[a-z0-9_\-]+)',
-			array(
-				'methods'             => WP_REST_Server::CREATABLE,
-				'callback'            => array( __CLASS__, 'run_tool' ),
-				'permission_callback' => Yazan_Dashboard_Auth::require_cap( self::CAP_TOOLS ),
-			)
+			Yazan_REST_Guard::args( WP_REST_Server::CREATABLE, array( __CLASS__, 'run_tool' ), 'status.tools' )
 		);
 	}
 
@@ -121,7 +113,12 @@ class Yazan_REST_Status {
 				'plugins'     => $plugins,
 				'counts'      => $counts,
 				'tools'       => self::tool_list(),
-				'can_run_tools' => current_user_can( self::CAP_TOOLS ),
+				'can_run_tools' => Yazan_Permissions::can( 'status.tools' ),
+				// Security self-check: any yazan/v1 handler shipped without a permission
+				// declaration, plus the state of the RBAC tables. Surfaced here so an unprotected
+				// endpoint is visible from the dashboard instead of needing a grep over SSH.
+				'rbac'          => Yazan_RBAC_Boot::status(),
+				'route_guard'   => Yazan_REST_Guard::status(),
 			),
 			200
 		);

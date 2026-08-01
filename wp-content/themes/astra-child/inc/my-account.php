@@ -27,11 +27,14 @@ function yazan_myaccount_enqueue() {
 	if ( ! function_exists( 'is_account_page' ) || ! is_account_page() ) {
 		return;
 	}
+	// yazan_asset_ver() appends the file's filemtime, so an edit to the stylesheet ships behind a
+	// fresh cache key. The bare YAZAN_VERSION this used before meant CSS fixes stayed invisible
+	// (browser + CDN kept serving the old file) until someone remembered to bump the constant.
 	wp_enqueue_style(
 		'yazan-my-account',
 		YAZAN_URI . '/assets/css/my-account.css',
 		array( 'yazan-main' ),
-		YAZAN_VERSION
+		yazan_asset_ver( 'assets/css/my-account.css' )
 	);
 }
 

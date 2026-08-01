@@ -49,23 +49,19 @@ class Yazan_REST_Terms {
 	 * @return void
 	 */
 	public static function register_routes() {
-		$ns   = Yazan_Dashboard_Auth::NS;
-		$perm = Yazan_Dashboard_Auth::require_cap( self::CAP );
+		$ns = Yazan_Dashboard_Auth::NS;
 
+		/*
+		 * One controller serves product categories, collections and attribute terms, so the whole
+		 * surface maps onto the `categories` module rather than splitting by taxonomy. A role that
+		 * may curate one taxonomy may curate them all — the screens are the same.
+		 */
 		register_rest_route(
 			$ns,
 			'/terms/(?P<taxonomy>[a-z0-9_\-]+)',
 			array(
-				array(
-					'methods'             => WP_REST_Server::READABLE,
-					'callback'            => array( __CLASS__, 'index' ),
-					'permission_callback' => $perm,
-				),
-				array(
-					'methods'             => WP_REST_Server::CREATABLE,
-					'callback'            => array( __CLASS__, 'create' ),
-					'permission_callback' => $perm,
-				),
+				Yazan_REST_Guard::args( WP_REST_Server::READABLE, array( __CLASS__, 'index' ), 'categories.view' ),
+				Yazan_REST_Guard::args( WP_REST_Server::CREATABLE, array( __CLASS__, 'create' ), 'categories.create' ),
 			)
 		);
 
@@ -73,16 +69,8 @@ class Yazan_REST_Terms {
 			$ns,
 			'/terms/(?P<taxonomy>[a-z0-9_\-]+)/(?P<id>\d+)',
 			array(
-				array(
-					'methods'             => WP_REST_Server::EDITABLE,
-					'callback'            => array( __CLASS__, 'update' ),
-					'permission_callback' => $perm,
-				),
-				array(
-					'methods'             => WP_REST_Server::DELETABLE,
-					'callback'            => array( __CLASS__, 'destroy' ),
-					'permission_callback' => $perm,
-				),
+				Yazan_REST_Guard::args( WP_REST_Server::EDITABLE, array( __CLASS__, 'update' ), 'categories.edit' ),
+				Yazan_REST_Guard::args( WP_REST_Server::DELETABLE, array( __CLASS__, 'destroy' ), 'categories.delete' ),
 			)
 		);
 	}

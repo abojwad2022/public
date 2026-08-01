@@ -127,7 +127,21 @@ if ( ! class_exists( 'ST_Importer_File_System' ) ) {
 		 * @return mixed
 		 */
 		public function get_demo_content() {
-			return $this->get_json_file_content( 'astra_sites_import_data.json' );
+			$data = $this->get_json_file_content( 'astra_sites_import_data.json' );
+
+			if ( ! empty( $data ) && is_array( $data ) ) {
+				return $data;
+			}
+
+			// file_put_contents can silently fail on shared hosting (disk quota, permissions).
+			$fallback = get_transient( 'astra_sites_import_data_fallback' );
+
+			if ( ! empty( $fallback ) && is_array( $fallback ) ) {
+				astra_sites_error_log( 'Demo content JSON file empty or unreadable, using database fallback.' );
+				return $fallback;
+			}
+
+			return $data;
 		}
 
 		/**
@@ -139,6 +153,7 @@ if ( ! class_exists( 'ST_Importer_File_System' ) ) {
 		 */
 		public function delete_demo_content() {
 			$this->delete_json_file( 'astra_sites_import_data.json' );
+			delete_transient( 'astra_sites_import_data_fallback' );
 		}
 
 		/**
@@ -171,6 +186,7 @@ if ( ! class_exists( 'ST_Importer_File_System' ) ) {
 		 */
 		public function update_demo_data( $file_content ) {
 			$this->update_json_file( 'astra_sites_import_data.json', $file_content );
+			set_transient( 'astra_sites_import_data_fallback', $file_content, HOUR_IN_SECONDS );
 		}
 	}
 

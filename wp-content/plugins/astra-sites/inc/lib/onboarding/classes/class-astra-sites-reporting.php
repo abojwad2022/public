@@ -81,13 +81,15 @@ class Astra_Sites_Reporting {
             return;
         }
 
-        $data = json_decode( $cached_errors['err'] );
+        $data       = json_decode( $cached_errors['err'] );
+        $error_type = isset( $cached_errors['type'] ) ? sanitize_text_field( $cached_errors['type'] ) : 'astra-sites';
+
         $report_data = array(
             'id' => $id,
             'import_attempts' => isset( $data->tryAgainCount ) ? absint( $data->tryAgainCount ) : 0,
             'import_status'   => 'false',
             'exit_intend'     => 'true',
-            'type'            => isset( $cached_errors['type'] ) ? sanitize_text_field( $cached_errors['type'] ) : 'astra-sites',
+            'type'            => isset( $cached_errors['builder_type'] ) ? sanitize_text_field( $cached_errors['builder_type'] ) : $error_type,
             'page_builder'    => isset( $cached_errors['page_builder'] ) ? sanitize_text_field( $cached_errors['page_builder'] ) : '',
             'template_type'   => isset( $cached_errors['template_type'] ) ? sanitize_text_field( $cached_errors['template_type'] ) : '',
             'failure_reason'  => is_object( $data ) && isset( $data->primaryText ) ? sanitize_text_field( $data->primaryText ) : 'unknown',

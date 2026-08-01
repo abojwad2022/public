@@ -141,6 +141,18 @@ export const initialState = {
 			plugins: [ 'surecontact' ],
 		},
 		{
+			title: __( 'Cookie Consent', 'astra-sites' ),
+			id: 'surecookie',
+			description: __(
+				'Add cookie consent and privacy compliance tools',
+				'astra-sites'
+			),
+			enabled: true,
+			compulsory: false,
+			icon: 'surecookie',
+			plugins: [ 'surecookie' ],
+		},
+		{
 			title: __( 'Free Live Chat', 'astra-sites' ),
 			id: 'live-chat',
 			description: __(

@@ -42,6 +42,16 @@ class Yazan_Core_Installer {
 			Yazan_Dashboard_Audit::install_table();
 		}
 
+		/*
+		 * RBAC: tables, permission catalog, default roles, and the one-time backfill that maps the
+		 * WordPress roles already in use onto Yazan roles. Also self-installs on `init` (see
+		 * Yazan_RBAC_Boot::maybe_install) because this store can be run entirely from /dashboard
+		 * without ever loading wp-admin, and this method only fires on admin_init.
+		 */
+		if ( class_exists( 'Yazan_RBAC_Boot' ) ) {
+			Yazan_RBAC_Boot::install();
+		}
+
 		// AI generation-log table (idempotent via dbDelta).
 		if ( class_exists( 'Yazan_AI_Boot' ) ) {
 			Yazan_AI_Boot::install();

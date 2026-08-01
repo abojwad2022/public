@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link } from 'react-router'
 import { inventoryApi, productsApi } from '../api/endpoints.js'
 import { useToast } from '../context/ToastContext.jsx'
 import { PageHeader } from '../components/Layout.jsx'

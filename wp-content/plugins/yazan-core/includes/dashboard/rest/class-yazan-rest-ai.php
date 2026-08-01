@@ -34,16 +34,14 @@ class Yazan_REST_AI {
 	 * @return void
 	 */
 	public static function register_routes() {
-		$ns    = Yazan_Dashboard_Auth::NS;
-		$admin = Yazan_Dashboard_Auth::require_cap( self::ADMIN_CAP );
-		$gen   = Yazan_Dashboard_Auth::require_cap( self::GEN_CAP );
+		$ns = Yazan_Dashboard_Auth::NS;
 
 		register_rest_route(
 			$ns,
 			'/ai/settings',
 			array(
-				array( 'methods' => WP_REST_Server::READABLE, 'callback' => array( __CLASS__, 'get_settings' ), 'permission_callback' => $admin ),
-				array( 'methods' => WP_REST_Server::EDITABLE, 'callback' => array( __CLASS__, 'update_settings' ), 'permission_callback' => $admin ),
+				Yazan_REST_Guard::args( WP_REST_Server::READABLE, array( __CLASS__, 'get_settings' ), 'ai.configure' ),
+				Yazan_REST_Guard::args( WP_REST_Server::EDITABLE, array( __CLASS__, 'update_settings' ), 'ai.configure' ),
 			)
 		);
 
@@ -51,94 +49,102 @@ class Yazan_REST_AI {
 			$ns,
 			'/ai/credentials',
 			array(
-				array( 'methods' => WP_REST_Server::READABLE, 'callback' => array( __CLASS__, 'get_credentials' ), 'permission_callback' => $admin ),
-				array( 'methods' => WP_REST_Server::CREATABLE, 'callback' => array( __CLASS__, 'set_credential' ), 'permission_callback' => $admin ),
+				Yazan_REST_Guard::args( WP_REST_Server::READABLE, array( __CLASS__, 'get_credentials' ), 'ai.configure' ),
+				Yazan_REST_Guard::args( WP_REST_Server::CREATABLE, array( __CLASS__, 'set_credential' ), 'ai.configure' ),
 			)
 		);
 
 		register_rest_route(
 			$ns,
 			'/ai/test',
-			array( 'methods' => WP_REST_Server::CREATABLE, 'callback' => array( __CLASS__, 'test' ), 'permission_callback' => $admin )
+			Yazan_REST_Guard::args( WP_REST_Server::CREATABLE, array( __CLASS__, 'test' ), 'ai.configure' )
 		);
 
 		register_rest_route(
 			$ns,
 			'/ai/test-all',
-			array( 'methods' => WP_REST_Server::CREATABLE, 'callback' => array( __CLASS__, 'test_all' ), 'permission_callback' => $admin )
+			Yazan_REST_Guard::args( WP_REST_Server::CREATABLE, array( __CLASS__, 'test_all' ), 'ai.configure' )
 		);
 
 		register_rest_route(
 			$ns,
 			'/ai/core/test',
-			array( 'methods' => WP_REST_Server::CREATABLE, 'callback' => array( __CLASS__, 'core_test' ), 'permission_callback' => $admin )
+			Yazan_REST_Guard::args( WP_REST_Server::CREATABLE, array( __CLASS__, 'core_test' ), 'ai.configure' )
 		);
 
 		register_rest_route(
 			$ns,
 			'/ai/product',
-			array( 'methods' => WP_REST_Server::CREATABLE, 'callback' => array( __CLASS__, 'product' ), 'permission_callback' => $gen )
+			Yazan_REST_Guard::args( WP_REST_Server::CREATABLE, array( __CLASS__, 'product' ), 'ai.use' )
 		);
 
 		register_rest_route(
 			$ns,
 			'/ai/seo',
-			array( 'methods' => WP_REST_Server::CREATABLE, 'callback' => array( __CLASS__, 'seo' ), 'permission_callback' => $gen )
+			Yazan_REST_Guard::args( WP_REST_Server::CREATABLE, array( __CLASS__, 'seo' ), 'ai.use' )
 		);
 
 		register_rest_route(
 			$ns,
 			'/ai/marketing',
-			array( 'methods' => WP_REST_Server::CREATABLE, 'callback' => array( __CLASS__, 'marketing' ), 'permission_callback' => $gen )
+			Yazan_REST_Guard::args( WP_REST_Server::CREATABLE, array( __CLASS__, 'marketing' ), 'ai.use' )
 		);
 
 		register_rest_route(
 			$ns,
 			'/ai/gallery/plan',
-			array( 'methods' => WP_REST_Server::CREATABLE, 'callback' => array( __CLASS__, 'gallery_plan' ), 'permission_callback' => $gen )
+			Yazan_REST_Guard::args( WP_REST_Server::CREATABLE, array( __CLASS__, 'gallery_plan' ), 'ai.use' )
 		);
 
 		register_rest_route(
 			$ns,
 			'/ai/gallery/generate',
-			array( 'methods' => WP_REST_Server::CREATABLE, 'callback' => array( __CLASS__, 'gallery_generate' ), 'permission_callback' => $gen )
+			Yazan_REST_Guard::args( WP_REST_Server::CREATABLE, array( __CLASS__, 'gallery_generate' ), 'ai.use' )
 		);
 
 		register_rest_route(
 			$ns,
 			'/ai/analytics',
-			array( 'methods' => WP_REST_Server::READABLE, 'callback' => array( __CLASS__, 'analytics' ), 'permission_callback' => $admin )
+			Yazan_REST_Guard::args( WP_REST_Server::READABLE, array( __CLASS__, 'analytics' ), 'ai.insights_view' )
 		);
 
+		// Token counts and USD spend — a separate permission from reading the insights themselves.
 		register_rest_route(
 			$ns,
 			'/ai/logs',
-			array( 'methods' => WP_REST_Server::READABLE, 'callback' => array( __CLASS__, 'logs' ), 'permission_callback' => $admin )
+			Yazan_REST_Guard::args( WP_REST_Server::READABLE, array( __CLASS__, 'logs' ), 'ai.view_logs' )
 		);
 
-		// PUBLIC — the storefront concierge. No login; protected by a page nonce + per-IP throttle +
-		// the global budget cap. Retrieval-grounded, so it can only surface real catalogue products.
 		register_rest_route(
 			$ns,
 			'/ai/chat',
-			array( 'methods' => WP_REST_Server::CREATABLE, 'callback' => array( __CLASS__, 'chat' ), 'permission_callback' => '__return_true' )
+			Yazan_REST_Guard::public_args(
+				WP_REST_Server::CREATABLE,
+				array( __CLASS__, 'chat' ),
+				'Storefront concierge for anonymous visitors; page nonce + per-IP throttle + global budget cap.'
+			)
 		);
 
-		// PUBLIC — hands the widget a fresh chat nonce so a stale page-embedded one (caching / expiry /
-		// changed login session) self-heals instead of dead-ending on "session expired". A nonce is not a
-		// secret and this is same-origin, so exposing a refresh route is safe.
+		// A nonce is not a secret and this is same-origin, so letting the widget refresh a stale
+		// one is safe — and stops a cached page dead-ending on "session expired".
 		register_rest_route(
 			$ns,
 			'/ai/chat-nonce',
-			array( 'methods' => WP_REST_Server::READABLE, 'callback' => array( __CLASS__, 'chat_nonce' ), 'permission_callback' => '__return_true' )
+			Yazan_REST_Guard::public_args(
+				WP_REST_Server::READABLE,
+				array( __CLASS__, 'chat_nonce' ),
+				'Refreshes the public chat nonce for anonymous storefront visitors.'
+			)
 		);
 
-		// PUBLIC — human-support handoff: emails the transcript to the owner, optionally POSTs it to a CRM
-		// webhook, and returns a WhatsApp deep link. Same CSRF nonce as chat + a stricter per-IP throttle.
 		register_rest_route(
 			$ns,
 			'/ai/chat/handoff',
-			array( 'methods' => WP_REST_Server::CREATABLE, 'callback' => array( __CLASS__, 'chat_handoff' ), 'permission_callback' => '__return_true' )
+			Yazan_REST_Guard::public_args(
+				WP_REST_Server::CREATABLE,
+				array( __CLASS__, 'chat_handoff' ),
+				'Human-support handoff from the public chat widget; same CSRF nonce plus a stricter throttle.'
+			)
 		);
 	}
 

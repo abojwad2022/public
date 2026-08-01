@@ -5,7 +5,7 @@ Tags: Elementor,Templates,Gutenberg,Block Editor,Astra Starter Sites
 Requires at least: 6.6
 Requires PHP: 7.4
 Tested up to: 7.0
-Stable tag: 4.7.1
+Stable tag: 4.7.3
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -245,6 +245,29 @@ You can report the issue through our [Bug Bounty Program](https://brainstormforc
 6. Use the power of AI with a single click to write copy, proofread, translate content into different languages. Adjust content length and tone seamlessly for maximum appeal.
 
 == Changelog ==
+v4.7.3  - 29th-July-2026
+- Improvement:
+    - Refined the Elementor Template Library premium tooltips for better usability, clarity, and dark mode accessibility.
+    - AI Builder: PHP fatal errors during import are now captured in the import log and reported on the import screen instead of failing silently.
+    - ST Importer: Added import compatibility for SureCart products with variants.
+    - ST Importer: Import log entries are now appended atomically so concurrent requests no longer overwrite each other, and PHP fatal errors during reset are captured in the import log.
+- Fix:
+    - Added database fallback for demo content when JSON file write fails silently on shared hosting, preventing "Customizer data is empty" errors.
+    - Accented and special characters (e.g. é, ñ) getting corrupted into literal escape sequences when inserting a single Elementor template or block.
+
+v4.7.2 - 22nd July 2026
+- Improvement:
+    - Added SureCookie (Cookie Consent) to the features selection step in the onboarding flow.
+    - Importer: Spectra Blocks plugin is now installed from the WordPress.org repository during import, removing the temporary hardcoded download URL.
+    - Importer: Added SureMembers import support — access group, post, and term ID remapping across restriction rule metas, restricted-content post meta, shortcodes, and block attributes.
+    - Finish setup: Show the Website Pages action item in the Finish Setup checklist when the standalone Spectra Blocks plugin is active.
+    - Design Kit: Version toggle no longer appears when UAGB is inactive, even if stale database options from a previous install are present.
+    - AI Builder: Import progress screen improvements.
+- Fix:
+    - AI Builder: Template search now correctly handles multiple keywords and keywords containing spaces or special characters.
+    - AI Builder: Prevent Spectra Blocks onboarding redirect after activation during import by updating to the renamed redirect and onboarding options.
+    - AI Builder: Corrected typos in user-facing error messages.
+
 v4.7.1 - 13th July 2026
 - Fix:
     - AI Builder: Progress loader jump and content alignment on the building-website screen.

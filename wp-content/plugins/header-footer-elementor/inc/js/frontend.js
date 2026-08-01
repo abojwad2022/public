@@ -1,6 +1,69 @@
 ( function( $ ) {
 
 	/**
+	 * Sanitize icon markup before injecting it into the DOM.
+	 *
+	 * The nav-menu toggle/close icons are read from data-* attributes and
+	 * rendered as HTML. Only Font Awesome <i> and inline SVG icons are
+	 * legitimate here, so every other element — and every event handler or
+	 * URL-bearing attribute — is stripped to prevent DOM-based XSS.
+	 *
+	 * Parsing happens inside a <template>, whose content is inert: images do
+	 * not load and scripts do not run, so no payload fires during sanitization.
+	 *
+	 * @since 2.9.2
+	 * @param {string} markup Raw icon markup from a data attribute.
+	 * @return {string} Sanitized markup safe to pass to jQuery .html().
+	 */
+	function hfe_sanitize_icon_html( markup ) {
+		if ( 'string' !== typeof markup || '' === markup ) {
+			return '';
+		}
+
+		// Icon-only elements: basic shapes plus the paint/structural elements
+		// (gradients, clip paths, masks, patterns, markers) that multi-colour
+		// SVG icons rely on. All of these are non-scriptable and hold no text
+		// content. Deliberately excludes elements with special parsing
+		// (RCDATA/RAWTEXT such as <title>, <desc>, <text>, <style>, <textarea>)
+		// to avoid mutation-XSS on the re-parse done by jQuery .html().
+		var allowed_tags = [
+			'I', 'SPAN', 'SVG', 'PATH', 'G', 'DEFS', 'SYMBOL',
+			'CIRCLE', 'ELLIPSE', 'LINE', 'POLYLINE', 'POLYGON', 'RECT',
+			'LINEARGRADIENT', 'RADIALGRADIENT', 'STOP', 'CLIPPATH', 'MASK', 'PATTERN', 'MARKER'
+		];
+
+		var template = document.createElement( 'template' );
+		template.innerHTML = markup;
+
+		Array.prototype.slice.call( template.content.querySelectorAll( '*' ) ).forEach( function( node ) {
+			// Drop anything that is not an allowed icon element.
+			if ( -1 === allowed_tags.indexOf( node.tagName.toUpperCase() ) ) {
+				if ( node.parentNode ) {
+					node.parentNode.removeChild( node );
+				}
+				return;
+			}
+
+			// Strip event handlers and URL/style attributes on the kept elements.
+			Array.prototype.slice.call( node.attributes ).forEach( function( attr ) {
+				var name = attr.name.toLowerCase();
+				if (
+					0 === name.indexOf( 'on' ) ||
+					'src' === name ||
+					'href' === name ||
+					'xlink:href' === name ||
+					'style' === name ||
+					'formaction' === name
+				) {
+					node.removeAttribute( attr.name );
+				}
+			} );
+		} );
+
+		return template.innerHTML;
+	}
+
+	/**
 	* Search widget JS
 	*/
 
@@ -681,7 +744,7 @@
 				var full_width = $selector.data( 'full-width' );
 				var toggle_icon = $( '.elementor-element-' + id + ' nav' ).data( 'toggle-icon' );
 
-				$( '.elementor-element-' + id).find( '.hfe-nav-menu-icon' ).html( toggle_icon );
+				$( '.elementor-element-' + id).find( '.hfe-nav-menu-icon' ).html( hfe_sanitize_icon_html( toggle_icon ) );
 
 				$this.removeClass( 'hfe-active-menu' );
 				$this.attr( 'aria-expanded', 'false' );
@@ -700,7 +763,7 @@
 				var full_width = $selector.data( 'full-width' );
 				var close_icon = $( '.elementor-element-' + id + ' nav' ).data( 'close-icon' );
 
-				$( '.elementor-element-' + id).find( '.hfe-nav-menu-icon' ).html( close_icon );
+				$( '.elementor-element-' + id).find( '.hfe-nav-menu-icon' ).html( hfe_sanitize_icon_html( close_icon ) );
 				
 				$this.addClass( 'hfe-active-menu' );
 				$this.attr( 'aria-expanded', 'true' );

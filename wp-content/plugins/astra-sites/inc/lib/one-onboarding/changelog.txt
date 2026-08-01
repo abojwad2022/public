@@ -1,5 +1,8 @@
 == Changelog ==
 
+v1.0.4 - 16th July 2026
+- Improvement: Suppressed the standalone Spectra Blocks plugin activation redirect during onboarding.
+
 v1.0.3 - 21st April 2026
 - Fix: Use fully-qualified class names in class_exists() guards to prevent fatal errors when another plugin defines a global Api, Admin, Ajax, Plugin, or Register class.
 

@@ -23,27 +23,18 @@ class Yazan_REST_Customers {
 	 * @return void
 	 */
 	public static function register_routes() {
-		$ns   = Yazan_Dashboard_Auth::NS;
-		$perm = Yazan_Dashboard_Auth::require_cap( 'edit_shop_orders' );
+		$ns = Yazan_Dashboard_Auth::NS;
 
 		register_rest_route(
 			$ns,
 			'/customers',
-			array(
-				'methods'             => WP_REST_Server::READABLE,
-				'callback'            => array( __CLASS__, 'index' ),
-				'permission_callback' => $perm,
-			)
+			Yazan_REST_Guard::args( WP_REST_Server::READABLE, array( __CLASS__, 'index' ), 'customers.view' )
 		);
 
 		register_rest_route(
 			$ns,
 			'/customers/(?P<id>\d+)',
-			array(
-				'methods'             => WP_REST_Server::READABLE,
-				'callback'            => array( __CLASS__, 'show' ),
-				'permission_callback' => $perm,
-			)
+			Yazan_REST_Guard::args( WP_REST_Server::READABLE, array( __CLASS__, 'show' ), 'customers.view' )
 		);
 	}
 

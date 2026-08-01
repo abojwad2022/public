@@ -30,15 +30,14 @@ class Yazan_REST_Shipping {
 	 * @return void
 	 */
 	public static function register_routes() {
-		$ns   = Yazan_Dashboard_Auth::NS;
-		$perm = Yazan_Dashboard_Auth::require_cap( self::CAP );
+		$ns = Yazan_Dashboard_Auth::NS;
 
 		register_rest_route(
 			$ns,
 			'/shipping/zones',
 			array(
-				array( 'methods' => WP_REST_Server::READABLE, 'callback' => array( __CLASS__, 'index' ), 'permission_callback' => $perm ),
-				array( 'methods' => WP_REST_Server::CREATABLE, 'callback' => array( __CLASS__, 'create_zone' ), 'permission_callback' => $perm ),
+				Yazan_REST_Guard::args( WP_REST_Server::READABLE, array( __CLASS__, 'index' ), 'shipping.view' ),
+				Yazan_REST_Guard::args( WP_REST_Server::CREATABLE, array( __CLASS__, 'create_zone' ), 'shipping.edit' ),
 			)
 		);
 
@@ -46,27 +45,23 @@ class Yazan_REST_Shipping {
 			$ns,
 			'/shipping/zones/(?P<id>\d+)',
 			array(
-				array( 'methods' => WP_REST_Server::EDITABLE, 'callback' => array( __CLASS__, 'update_zone' ), 'permission_callback' => $perm ),
-				array( 'methods' => WP_REST_Server::DELETABLE, 'callback' => array( __CLASS__, 'delete_zone' ), 'permission_callback' => $perm ),
+				Yazan_REST_Guard::args( WP_REST_Server::EDITABLE, array( __CLASS__, 'update_zone' ), 'shipping.edit' ),
+				Yazan_REST_Guard::args( WP_REST_Server::DELETABLE, array( __CLASS__, 'delete_zone' ), 'shipping.edit' ),
 			)
 		);
 
 		register_rest_route(
 			$ns,
 			'/shipping/zones/(?P<id>\d+)/methods',
-			array(
-				'methods'             => WP_REST_Server::CREATABLE,
-				'callback'            => array( __CLASS__, 'add_method' ),
-				'permission_callback' => $perm,
-			)
+			Yazan_REST_Guard::args( WP_REST_Server::CREATABLE, array( __CLASS__, 'add_method' ), 'shipping.edit' )
 		);
 
 		register_rest_route(
 			$ns,
 			'/shipping/zones/(?P<id>\d+)/methods/(?P<instance>\d+)',
 			array(
-				array( 'methods' => WP_REST_Server::EDITABLE, 'callback' => array( __CLASS__, 'update_method' ), 'permission_callback' => $perm ),
-				array( 'methods' => WP_REST_Server::DELETABLE, 'callback' => array( __CLASS__, 'delete_method' ), 'permission_callback' => $perm ),
+				Yazan_REST_Guard::args( WP_REST_Server::EDITABLE, array( __CLASS__, 'update_method' ), 'shipping.edit' ),
+				Yazan_REST_Guard::args( WP_REST_Server::DELETABLE, array( __CLASS__, 'delete_method' ), 'shipping.edit' ),
 			)
 		);
 	}

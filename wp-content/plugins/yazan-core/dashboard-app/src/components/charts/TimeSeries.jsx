@@ -118,7 +118,8 @@ export function BarSeries({
   const [hover, setHover] = useState(null)
   const wrapRef = useRef(null)
 
-  const rows = data || []
+  // Memoized so the `|| []` fallback does not hand `max` a fresh array on every render.
+  const rows = useMemo(() => data || [], [data])
   const max = useMemo(() => niceCeil(Math.max(0, ...rows.map((r) => Number(r.value) || 0))), [rows])
 
   if (!rows.length || max <= 0) {

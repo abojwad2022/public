@@ -30,27 +30,19 @@ class Yazan_REST_Orders {
 	 * @return void
 	 */
 	public static function register_routes() {
-		$ns   = Yazan_Dashboard_Auth::NS;
-		$perm = Yazan_Dashboard_Auth::require_cap( self::CAP );
+		$ns = Yazan_Dashboard_Auth::NS;
 
 		register_rest_route(
 			$ns,
 			'/orders',
-			array(
-				'methods'             => WP_REST_Server::READABLE,
-				'callback'            => array( __CLASS__, 'index' ),
-				'permission_callback' => $perm,
-			)
+			Yazan_REST_Guard::args( WP_REST_Server::READABLE, array( __CLASS__, 'index' ), 'orders.view' )
 		);
 
+		// Bulk only ever changes status, so it maps to orders.status rather than a broad edit.
 		register_rest_route(
 			$ns,
 			'/orders/bulk',
-			array(
-				'methods'             => WP_REST_Server::CREATABLE,
-				'callback'            => array( __CLASS__, 'bulk' ),
-				'permission_callback' => $perm,
-			)
+			Yazan_REST_Guard::args( WP_REST_Server::CREATABLE, array( __CLASS__, 'bulk' ), 'orders.status' )
 		);
 
 		/*
@@ -60,17 +52,19 @@ class Yazan_REST_Orders {
 		register_rest_route(
 			$ns,
 			'/orders/alerts',
-			array(
-				'methods'             => WP_REST_Server::READABLE,
-				'callback'            => array( __CLASS__, 'alerts' ),
-				'permission_callback' => $perm,
-				'args'                => array(
-					'since' => array(
-						'type'              => 'integer',
-						'required'          => false,
-						'sanitize_callback' => 'absint',
+			Yazan_REST_Guard::args(
+				WP_REST_Server::READABLE,
+				array( __CLASS__, 'alerts' ),
+				'orders.view',
+				array(
+					'args' => array(
+						'since' => array(
+							'type'              => 'integer',
+							'required'          => false,
+							'sanitize_callback' => 'absint',
+						),
 					),
-				),
+				)
 			)
 		);
 
@@ -78,16 +72,8 @@ class Yazan_REST_Orders {
 			$ns,
 			'/orders/(?P<id>\d+)',
 			array(
-				array(
-					'methods'             => WP_REST_Server::READABLE,
-					'callback'            => array( __CLASS__, 'show' ),
-					'permission_callback' => $perm,
-				),
-				array(
-					'methods'             => WP_REST_Server::EDITABLE,
-					'callback'            => array( __CLASS__, 'update' ),
-					'permission_callback' => $perm,
-				),
+				Yazan_REST_Guard::args( WP_REST_Server::READABLE, array( __CLASS__, 'show' ), 'orders.view' ),
+				Yazan_REST_Guard::args( WP_REST_Server::EDITABLE, array( __CLASS__, 'update' ), 'orders.edit' ),
 			)
 		);
 
@@ -95,16 +81,8 @@ class Yazan_REST_Orders {
 			$ns,
 			'/orders/(?P<id>\d+)/notes',
 			array(
-				array(
-					'methods'             => WP_REST_Server::READABLE,
-					'callback'            => array( __CLASS__, 'notes' ),
-					'permission_callback' => $perm,
-				),
-				array(
-					'methods'             => WP_REST_Server::CREATABLE,
-					'callback'            => array( __CLASS__, 'add_note' ),
-					'permission_callback' => $perm,
-				),
+				Yazan_REST_Guard::args( WP_REST_Server::READABLE, array( __CLASS__, 'notes' ), 'orders.view' ),
+				Yazan_REST_Guard::args( WP_REST_Server::CREATABLE, array( __CLASS__, 'add_note' ), 'orders.notes' ),
 			)
 		);
 	}
@@ -590,7 +568,7 @@ class Yazan_REST_Orders {
 			'gateway_refund_supported' => class_exists( 'Yazan_REST_Order_Write' )
 				? Yazan_REST_Order_Write::gateway_supports_refund( $order )
 				: false,
-			'can_gateway_refund' => current_user_can( 'manage_woocommerce' ),
+			'can_gateway_refund' => Yazan_Permissions::can( 'orders.refund_gateway' ),
 		);
 	}
 

@@ -283,10 +283,17 @@ class ST_Importer {
 			foreach ( $products as $index => $product ) {
 				$gallery_ids = [];
 
+				// Source attachment ID => imported attachment ID, used to remap variant images.
+				$attachment_id_map = array();
+
 				foreach ( $product['gallery'] ?? [] as $attachment ) {
 					$hash_url = ST_Importer_Helper::get_hash_image( $attachment['url'] ?? '' );
 					if ( ! empty( $hash_url ) && isset( $hash_map[ $hash_url ] ) ) {
 						$gallery_ids[] = $hash_map[ $hash_url ];
+
+						if ( ! empty( $attachment['id'] ) ) {
+							$attachment_id_map[ (int) $attachment['id'] ] = $hash_map[ $hash_url ];
+						}
 					}
 				}
 
@@ -294,8 +301,8 @@ class ST_Importer {
 
 				// Map nested data arrays if they exist, else set to empty arrays or default values.
 				$products[ $index ]['prices']              = ! empty( $product['prices']['data'] ) ? $product['prices']['data'] : array( array( 'amount' => 9900 ) );
-				$products[ $index ]['variants']            = ! empty( $product['variants']['data'] ) ? $product['variants']['data'] : array();
-				$products[ $index ]['variant_options']     = ! empty( $product['variant_options']['data'] ) ? $product['variant_options']['data'] : array();
+				$products[ $index ]['variants']            = ! empty( $product['variants']['data'] ) ? self::sanitize_surecart_variants( $product['variants']['data'], $attachment_id_map ) : array();
+				$products[ $index ]['variant_options']     = ! empty( $product['variant_options']['data'] ) ? self::sanitize_surecart_variant_options( $product['variant_options']['data'] ) : array();
 				$products[ $index ]['product_collections'] = ! empty( $product['product_collections']['data'] ) ? $product['product_collections']['data'] : array();
 
 				$product_slug = $product['slug'] ?? '';
@@ -346,6 +353,120 @@ class ST_Importer {
 				'error'  => $e->getMessage(),
 			);
 		}
+	}
+
+	/**
+	 * Sanitize SureCart variants for the platform import payload.
+	 *
+	 * The SureCart imports/products endpoint rejects products whose nested
+	 * variants carry read-only/computed fields or IDs belonging to the source
+	 * account, so only creatable fields are forwarded — mirroring the payload
+	 * shape SureCart's own WooCommerce migration sends to the same endpoint.
+	 *
+	 * @since 1.1.38
+	 *
+	 * @param array<int, array<string, mixed>> $variants          Exported variant objects.
+	 * @param array<int, int>                  $attachment_id_map Source attachment ID => imported attachment ID.
+	 * @return array<int, array<string, mixed>>
+	 */
+	private static function sanitize_surecart_variants( $variants, $attachment_id_map = array() ) {
+		$allowed = array(
+			'option_1',
+			'option_2',
+			'option_3',
+			'amount',
+			'sku',
+			'position',
+			'allow_out_of_stock_purchases',
+			'auto_fulfill_enabled',
+			'shipping_enabled',
+			'tax_enabled',
+			'tax_category',
+			'weight',
+			'weight_unit',
+			'dimensions',
+			'metadata',
+		);
+
+		$sanitized = array();
+
+		foreach ( $variants as $variant ) {
+			if ( ! is_array( $variant ) ) {
+				continue;
+			}
+
+			$clean = array_intersect_key( $variant, array_flip( $allowed ) );
+
+			// Drop null values — the platform applies its own defaults.
+			$clean = array_filter(
+				$clean,
+				static function ( $value ) {
+					return null !== $value;
+				}
+			);
+
+			// Stock is seeded via stock_adjustment; the stock field itself is read-only.
+			if ( ! empty( $variant['stock_enabled'] ) ) {
+				$clean['stock_enabled']    = true;
+				$clean['stock_adjustment'] = (int) ( $variant['stock'] ?? 0 );
+			}
+
+			// Point the variant image at the imported attachment, not the source site's.
+			if ( isset( $clean['metadata'] ) && is_array( $clean['metadata'] ) ) {
+				if ( isset( $clean['metadata']['wp_media'] ) ) {
+					$old_media = (int) $clean['metadata']['wp_media'];
+
+					if ( isset( $attachment_id_map[ $old_media ] ) ) {
+						$clean['metadata']['wp_media'] = $attachment_id_map[ $old_media ];
+					} else {
+						unset( $clean['metadata']['wp_media'] );
+					}
+				}
+
+				if ( empty( $clean['metadata'] ) ) {
+					unset( $clean['metadata'] );
+				}
+			} else {
+				unset( $clean['metadata'] );
+			}
+
+			$sanitized[] = $clean;
+		}
+
+		return $sanitized;
+	}
+
+	/**
+	 * Sanitize SureCart variant options for the platform import payload.
+	 *
+	 * Only the creatable fields are forwarded; read-only fields and IDs from
+	 * the source account are stripped so the import is not rejected.
+	 *
+	 * @since 1.1.38
+	 *
+	 * @param array<int, array<string, mixed>> $variant_options Exported variant option objects.
+	 * @return array<int, array<string, mixed>>
+	 */
+	private static function sanitize_surecart_variant_options( $variant_options ) {
+		$allowed   = array( 'name', 'values', 'display_type', 'position' );
+		$sanitized = array();
+
+		foreach ( $variant_options as $option ) {
+			if ( ! is_array( $option ) ) {
+				continue;
+			}
+
+			$clean = array_intersect_key( $option, array_flip( $allowed ) );
+
+			// An option without a name or values cannot create valid variants.
+			if ( empty( $clean['name'] ) || empty( $clean['values'] ) ) {
+				continue;
+			}
+
+			$sanitized[] = $clean;
+		}
+
+		return $sanitized;
 	}
 
 	/**

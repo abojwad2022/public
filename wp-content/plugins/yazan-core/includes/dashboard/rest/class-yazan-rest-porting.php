@@ -50,27 +50,18 @@ class Yazan_REST_Porting {
 	 * @return void
 	 */
 	public static function register_routes() {
-		$ns   = Yazan_Dashboard_Auth::NS;
-		$perm = Yazan_Dashboard_Auth::require_cap( self::CAP );
+		$ns = Yazan_Dashboard_Auth::NS;
 
 		register_rest_route(
 			$ns,
 			'/porting/export',
-			array(
-				'methods'             => WP_REST_Server::READABLE,
-				'callback'            => array( __CLASS__, 'export' ),
-				'permission_callback' => $perm,
-			)
+			Yazan_REST_Guard::args( WP_REST_Server::READABLE, array( __CLASS__, 'export' ), 'porting.export' )
 		);
 
 		register_rest_route(
 			$ns,
 			'/porting/import',
-			array(
-				'methods'             => WP_REST_Server::CREATABLE,
-				'callback'            => array( __CLASS__, 'import' ),
-				'permission_callback' => $perm,
-			)
+			Yazan_REST_Guard::args( WP_REST_Server::CREATABLE, array( __CLASS__, 'import' ), 'porting.import' )
 		);
 	}
 

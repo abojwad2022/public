@@ -26,8 +26,6 @@ class Ai_Builder_Compatibility_UAG {
 	 */
 	public function __construct() {
 		add_action( 'astra_sites_after_plugin_activation', array( $this, 'uag_activation' ), 10 );
-		// Remove the filter and function once Spectra Blocks is available on wordpress.org.
-		add_filter( 'plugins_api', array( $this, 'override_spectra_blocks_download' ), 10, 3 );
 	}
 
 	/**
@@ -44,39 +42,6 @@ class Ai_Builder_Compatibility_UAG {
 	}
 
 	/**
-	 * Override the download link for spectra-blocks plugin during import.
-	 *
-	 * Spectra Blocks is not yet available on wordpress.org, so we redirect
-	 * the download to a temporary hosted URL during the import process.
-	 *
-	 * @since 1.2.81
-	 * @param false|object|array<string, mixed> $result The result object or array. Default false.
-	 * @param string                            $action The type of information being requested from the Plugin Installation API.
-	 * @param object                            $args   Plugin API arguments.
-	 * @return false|object|array<string, mixed> Modified result.
-	 */
-	public function override_spectra_blocks_download( $result, $action, $args ) {
-		if ( true !== astra_sites_has_import_started() || 'plugin_information' !== $action ) {
-			return $result;
-		}
-
-		if ( ! isset( $args->slug ) || 'spectra-blocks' !== $args->slug ) {
-			return $result;
-		}
-
-		if ( ! is_object( $result ) ) {
-			$result = new \stdClass();
-		}
-
-		$result->name          = 'Spectra Blocks'; // @phpstan-ignore-line -- Dynamic properties on stdClass for WP plugins_api response.
-		$result->slug          = 'spectra-blocks'; // @phpstan-ignore-line
-		$result->version       = '0.0.8'; // @phpstan-ignore-line
-		$result->download_link = 'https://wpspectra.com/wp-content/uploads/2026/06/spectra-blocks.0.0.8.zip'; // @phpstan-ignore-line
-
-		return $result;
-	}
-
-	/**
 	 * Disable redirect after installing and activating UAG or Spectra Blocks.
 	 *
 	 * @since 3.0.15
@@ -84,10 +49,15 @@ class Ai_Builder_Compatibility_UAG {
 	 * @return void
 	 */
 	public function uag_activation( $plugin_init ) {
-		if ( 'ultimate-addons-for-gutenberg/ultimate-addons-for-gutenberg.php' === $plugin_init
-			|| 'spectra-blocks/spectra-blocks.php' === $plugin_init ) {
+		if ( 'ultimate-addons-for-gutenberg/ultimate-addons-for-gutenberg.php' === $plugin_init ) {
 			update_option( '__uagb_do_redirect', false );
 			update_option( 'spectra_onboarding', array( 'status' => 'completed' ) );
+		}
+
+		// Spectra Blocks 1.0.0 renamed the redirect flag and the onboarding-completed option.
+		if ( 'spectra-blocks/spectra-blocks.php' === $plugin_init ) {
+			update_option( '__spectra_blocks_do_redirect', false );
+			update_option( 'spectra_blocks_onboarding', array( 'status' => 'completed' ) );
 		}
 	}
 }

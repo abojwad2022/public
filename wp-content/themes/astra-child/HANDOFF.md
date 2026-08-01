@@ -37,11 +37,13 @@ is not on `localhost:3306`. Here is the working recipe.
 ### Paths & ports (⚠️ Local reassigns these on restart — re-derive if they stop working)
 - **PHP binary:** `C:/Users/Nebras/AppData/Roaming/Local/lightning-services/php-8.3.17+1/bin/win64/php.exe`
 - **Site php.ini (loads all extensions + sets the right DB port):**
-  `C:/Users/Nebras/AppData/Roaming/Local/run/O2BtUtET-/conf/php/php.ini`
-- **Run dir for THIS site:** `.../Local/run/O2BtUtET-/` (find it by grepping the run dirs' nginx
-  `site.conf` for the `Local Sites/yazan/app/public` root).
-- **MySQL:** host `127.0.0.1`, port **10029**, user `root`, pass `root`, db `local`
-  (`local-site.json` lists a STALE 10017 — ignore it; read `run/<id>/conf/mysql/my.cnf`).
+  `C:/Users/Nebras/AppData/Roaming/Local/run/ZxDGXcWIP/conf/php/php.ini`
+- **Run dir for THIS site:** `.../Local/run/ZxDGXcWIP/` — was `O2BtUtET-`, reassigned 2026-07-31.
+  Re-derive by grepping each run dir's conf for `Local Sites/yazan`; **`yazan2` is a different
+  site** with its own run dir (currently `veQcwIpwv`, still on PHP 8.2.30), so match the exact name.
+- **MySQL:** host `127.0.0.1`, port **10028**, user `root`, pass `root`, db `local`
+  (was 10029; `local-site.json` lists a STALE 10017 — ignore it. Authoritative source is
+  `mysqli.default_port` in `run/<id>/conf/php/php.ini`).
 - **Webroot:** `C:/Users/Nebras/Local Sites/yazan/app/public`
 - **Site URL:** `http://yazan.local` · **Shop page:** `/store/`
 
@@ -89,9 +91,31 @@ It prints the PNG path — Read it to see the page. Raw form if needed:
   --window-size=1440,2200 --host-resolver-rules="MAP yazan.local 127.0.0.1" \
   --ignore-certificate-errors --screenshot="C:/path/out.png" "http://yazan.local/store/"
 ```
-Caveats: hits nginx on :80 (not port-sensitive to Local restarts); scroll-reveal/hover animations
-may not fire in a static shot (not necessarily a bug); for markup use curl-to-nginx above, for
-pixels use this.
+
+#### ⚠️ NEVER judge mobile from a raw `--window-size=390,844` shot
+`chrome --headless --window-size=390,844` does **not** emulate a phone. It renders in **desktop**
+mode at a narrow window, and desktop Chrome **ignores `<meta name="viewport">`** — so the page lays
+out as a squeezed desktop page and looks clipped at the right edge even when a real phone renders
+it perfectly. **This exact artefact was mistaken for a real "mobile overflow bug" on 2026-07-31**
+and was partly chased before CDP proved `scrollWidth === clientWidth === 390` — no overflow had
+ever existed. If you take one thing from this section, take this.
+
+`shot.sh … mobile` now routes through **`tools/shot-cdp.mjs`**, which drives the DevTools protocol
+(`Emulation.setDeviceMetricsOverride{ mobile: true }` + an iPhone UA + touch emulation) — the only
+way to set the mobile flag. It also **prints the measurement**, so overflow is read, not guessed:
+
+```
+$ bash tools/shot.sh /store/ mobile
+C:/…/store_mobile.png
+viewport 390px · scrollWidth 390px · no horizontal overflow
+```
+
+Verified 2026-08-01: `/`, `/store/`, `/cart/`, `/checkout/`, `/my-account/` all report **no
+horizontal overflow** at 390px. Needs Node 18+ for global `fetch`/`WebSocket` (machine has 24).
+
+Other caveats: hits nginx on :80 (not port-sensitive to Local restarts); scroll-reveal/hover
+animations may not fire in a static shot (not necessarily a bug); for markup use curl-to-nginx
+above, for pixels use this.
 
 ---
 
@@ -107,8 +131,12 @@ pixels use this.
   `pa_color`, `pa_rarity`, `pa_shape`, `pa_style`, `pa_silver-purity`, `pa_condition`.
 - **Active plugins:** woocommerce, woocommerce-payments, **cartflows** (owns checkout),
   **modern-cart** (owns the cart drawer — style it, don't rebuild), **variation-swatches-woo**,
-  power-coupons, sureforms, surerank, **elementor + header-footer-elementor** (header/footer are
-  built in HFE/Elementor), woo-cart-abandonment-recovery, astra-sites (importer — can remove),
+  power-coupons, sureforms, surerank, **elementor + header-footer-elementor** (⚠️ HFE owns the
+  **FOOTER ONLY** — `ehf-footer`. The **HEADER is Astra's own Header Builder** (`ast-hfb-header`);
+  there is no `ehf-header` and no `.elementor-location-header` in the output. This line used to say
+  both were HFE and that cost a debugging session — so header layout lives in Astra Customizer
+  options, NOT in `_elementor_data`, and Astra's `astra_get_option_{$option}` filters work on it),
+  woo-cart-abandonment-recovery, astra-sites (importer — can remove),
   and a custom **`yazan-core`** plugin that already exists.
 - **Permalinks:** `/%postname%/`.
 
@@ -148,6 +176,123 @@ Nothing outside `astra-child/` was touched. No products, no plugins, no parent t
 ---
 
 ## 5. Known issues / next steps
+
+- **✅ BUILT (yazan-core v1.8.0, 2026-08-01) — Users · Roles · Permissions (RBAC) in `/dashboard`.**
+  Full documentation in **`plugins/yazan-core/DASHBOARD.md` → "Roles & permissions (RBAC)"**. Nothing
+  in `astra-child/` changed; this is entirely a yazan-core feature.
+  - **⚠️ A WordPress `administrator` bypasses every Yazan permission** — deliberate, it is the
+    lockout backstop. So ticking Yazan roles on such an account does nothing until you demote it.
+    The user editor has a **WordPress role** control for exactly that (permission `users.wp_role`,
+    super admins only, refuses demoting the last administrator or changing your own).
+  - **149 permissions / 34 modules**, defined in code (`includes/rbac/class-yazan-permission-registry.php`)
+    and mirrored into `wp_yazan_permissions`. Four tables; the two pivots are real many-to-many.
+    Eight roles seeded: Super Admin, Admin, Manager, Sales, Inventory, Customer Service, Accountant,
+    Marketing.
+  - **Every `yazan/v1` route is gated** by a central default-deny filter
+    (`Yazan_REST_Guard` on `rest_request_before_callbacks`). Verified: 238 handlers tagged,
+    14 deliberately public, **0 untagged**, checkable any time from `GET /status`.
+  - **`Yazan_REST_Guard::MODE` currently ships as `'report'`** — an untagged route is allowed but
+    logged. ⚠️ **Next step: flip it to `'enforce'`** once `/status` has reported `untagged: 0` for a
+    day. That is the one deliberate piece of unfinished hardening.
+  - **Nothing was taken away from anyone.** The WP-capability bridge is an *additive* `user_has_cap`
+    filter — it only ever ORs capabilities in, never removes them, and never rewrites a WP role. All
+    8 existing administrators were backfilled to `super-admin` and are unaffected.
+  - **⚠️ `yazan/v1` is a SHARED namespace.** `yazan-social-rewards` publishes its customer-facing
+    routes (`/customer/*`, `/campaign/*`, `/reward/*`, `/statistics`) into it. They are listed in
+    `Yazan_REST_Guard::FOREIGN_PREFIXES` and left to their own permission callbacks — if that plugin
+    adds a route, it will surface in `/status` as untagged and needs adding to that list.
+  - **🐛 Fixed a long-standing bug while testing this:** `Yazan_Dashboard_Audit::query()` ran the
+    action filter through `sanitize_key()`, which **strips the dot** — so filtering the Activity Log
+    for `product.create` searched for `productcreate` and matched nothing. Every action name is
+    dotted, so that filter had never worked for any action. Now uses `clean_action()`, the same
+    normaliser the write path uses.
+  - Audit log gained a **`user_agent`** column (schema v2, added by `dbDelta`) plus `user_id` and
+    `action` indexes. `Yazan_Core_Privacy` blanks the UA on user deletion and now **deletes**
+    (not anonymises) `wp_yazan_user_roles` rows.
+  - Verified end-to-end with 34 assertions through `rest_do_request()` — a Sales role gets 200 on
+    orders/customers/products and **403 `yazan_forbidden`** on settings/users/roles/backup/audit/
+    reports and `DELETE /products/{id}`; suspension returns `yazan_suspended`; logged-out returns
+    401. Screenshots confirmed the sidebar, ⌘K palette and action buttons all shrink to match.
+
+- **✅ BUILT (yazan-core v1.7.0) — one-tap sign-in with Google & Apple.** New module at
+  `plugins/yazan-core/includes/social-auth/` (8 classes + `assets/css/social-auth.css`). Tap →
+  provider account picker → signed in, back where they were. No registration form, no password, no
+  confirmation screen. Full setup + troubleshooting in that folder's **`README.md`**.
+  - **Server-side OAuth redirect, deliberately NOT Google's JS SDK.** Google Identity Services
+    would give an in-page popup but needs `accounts.google.com/gsi/client` on the login page, which
+    would end the site's zero-external-requests position. Both provider marks are inline SVG, so
+    the buttons add **zero** requests. Decision taken with the user on 2026-07-31.
+  - **Ships inert.** With no wp-config constants defined, no buttons render and `/my-account/` is
+    byte-for-byte unchanged — verified by curl before/after.
+  - Attaches via `woocommerce_login_form_start` / `woocommerce_register_form_start`, two of the
+    hooks `woocommerce/myaccount/form-login.php` already preserved, so it also appears on
+    CartFlows' checkout login automatically. **No existing template was edited.**
+  - Linking by verified email only (`email_verified` must be true) — that single rule is what stops
+    an unverified address reaching an existing customer's orders. Subject id, not email, is the
+    durable identity, so a changed Google address does not fork the account.
+  - Fires `wp_login`, so the rewards plugin's `LoginObserver` streak logic keeps working. Uses
+    `wc_create_new_customer()` and `wc_set_customer_auth_cookie()` rather than hand-rolled
+    equivalents.
+  - Basket survives sign-in via `Yazan_Social_Auth_Cart` (stash before redirect, merge after,
+    adding only lines the cart does not already hold).
+  - **Tests:** `tests/run.php social` — 75 assertions, all passing. Full suite is **660/660**.
+  - **⚠️ NOT yet verified end-to-end** — needs real credentials and a public HTTPS tunnel, since
+    neither provider accepts `yazan.local`. Untested: the live provider round trip, Apple's
+    cross-site `form_post` + `SameSite=None` cookie, Apple's first-auth name blob, and the basket
+    merge across a real sign-in. Apple additionally needs a paid Developer Program membership.
+- **✅ FIXED (v2.8.0) — `/my-account/` two-column layout + header account icon.** Six fixes, all
+  verified by self-screenshot at desktop / 900px / mobile.
+  - **The empty-quadrant bug was Astra's float clearfix meeting CSS grid.** Astra ships
+    `.woocommerce .col2-set::before,::after{content:" ";display:table}`
+    (`woocommerce-layout-grid.min.css`). A grid container's own pseudo-elements are **grid items**,
+    so `#customer_login` had FOUR items in a 2-column grid: `::before` took cell 1, Sign In took
+    cell 2, Register wrapped to row 2, `::after` filled the rest. `clear:both` is a no-op on a grid
+    item. Fix = `content: none` on those two pseudo-elements (`my-account.css`). **Remember this
+    whenever you turn a WooCommerce `.col2-set` / `.u-columns` wrapper into a grid or flex parent.**
+  - **Mobile overflow** was `1fr` (= `minmax(auto,1fr)`, cannot shrink below min-content) plus up to
+    88px of card padding → `minmax(0, 1fr)`, the idiom the signed-in grid already used.
+  - **Breakpoint 860/861 → 991/992.** The old pair was the only one of its kind in the child theme
+    (convention is 767 / 991-993) and left the 861–921px band rendering two padded columns inside
+    an already-narrowed Elementor container — the worst overflow case.
+  - **The "floating" account icon**: `header.css` gave `.ast-header-account` a 56px
+    `line-height/min-height !important` but — unlike its three cluster siblings — never gave it
+    `display:flex; align-items:center`, so an 18px inline-flex SVG sat baseline-aligned in a 56px
+    line box and rode high. Added the flex centring + `line-height: 1`.
+  - **Crowding guard**: Astra's `grid-template-columns: auto auto` + `flex-wrap: nowrap` with no
+    `1fr`/`min-width:0` let the row overflow right, pushing the last child (the account icon) off
+    screen ≈≤1280px. Header stays full-bleed by design; the nav now absorbs the squeeze.
+  - **Account icon now points at `/my-account/`**, not `wp-login.php`. Astra exposes no filter on
+    that link and its WooCommerce account type is gated behind Astra **Pro**, so this uses the
+    generic `astra_get_option_{$option}` value filter (`inc/header.php`) — a supported hook, no
+    parent-theme edit.
+- **✅ FIXED (v2.8.0) — theme switcher was invisible below 921px.** `theme-switcher.js` moved it
+  into `.site-header-primary-section-right`, but `querySelector` returns the **desktop** header's
+  cluster, which is `display:none` on mobile — so the control vanished instead of falling back to
+  its floating button. Now guarded on actual visibility, with a rAF-throttled `resize` listener
+  that moves it back and forth across the breakpoint. **This exposed a latent collision:** the
+  floating switcher and the concierge launcher are both pinned bottom-inline-start, and the chat
+  widget's `z-index: 99990` buried the switcher's `1000`. They are now stacked vertically.
+- **✅ CHANGED (v2.8.0) — `/my-account/` is now ONE card, not two columns.** The user asked why the
+  page still showed a full manual registration form when the whole promise is "one tap, no
+  registration form" — a fair objection. Now: social buttons → "or use your email" → sign-in
+  fields, all in a single 520px card, with registration folded behind a native `<details>`
+  ("New to Yazan? Create an account") underneath. `<details>` deliberately, not JS: it opens with
+  JavaScript off and is keyboard/AT-addressable for free. It is re-opened **server-side** when
+  `$_POST['register']` is set, so a failed registration does not collapse the form and hide the
+  error. Every WooCommerce hook, nonce and field name is preserved, and the
+  `.u-columns/.u-column1/.u-column2` class names are kept even though nothing is a column now,
+  because plugins target them.
+  - `Yazan_Social_Auth_UI` now renders the provider buttons **once per page**, not once per form —
+    with both forms on one screen the old per-form guard produced two identical button pairs.
+- **✅ FIXED (v2.8.0) — stale cache keys.** `my-account.css`, `theme-switcher.css` and
+  `theme-switcher.js` were enqueued with the bare `YAZAN_VERSION`, so edits to them shipped behind
+  an old cache key and appeared to do nothing. All three now use `yazan_asset_ver()` (filemtime),
+  like everything in `inc/enqueue.php`. **If a CSS change ever seems not to apply, check this first.**
+- **⚠️ Note on the test suite count.** The authz suite enumerates live routes, so its total moves
+  with them: it read **156 routes / 660 assertions** earlier on 2026-07-31 and **169 / 706** later
+  the same day. Verified NOT caused by the theme work — stashing every file from that round left
+  the count identical — and stable across repeated runs. Treat "0 failed" as the signal, not the
+  total.
 
 - **✅ RESOLVED (v1.8.2) — `yz-subject` placement.** Re-hooked `yazan_loop_subject_line` from
   `woocommerce_shop_loop_item_title` @5 onto Astra's `astra_woo_shop_title_before`, which fires
@@ -319,10 +464,20 @@ Nothing outside `astra-child/` was touched. No products, no plugins, no parent t
     `wp_create_nonce`, or the nonce is computed against an empty token and 403s), launch Chrome with
     `--remote-debugging-port`, then drive `Network.setCookie` + `Page.captureScreenshot` over CDP from
     a small node script (node 24 has a global `WebSocket`). Scripts kept in the scratchpad.
-- **⚠️ REGRESSION spotted (not fixed — out of scope of the payment work): Google Fonts are back.**
-  `/product/…` serves 2 `fonts.googleapis.com` links (`elementor-gf-roboto`, `elementor-gf-robotoslab`).
-  The `elementor_google_font` option is now **unset** (it was set to `0`), so the zero-external-request
-  invariant recorded below no longer holds. Re-set the option and re-check `yazan_dequeue_foreign_fonts()`.
+- **✅ FIXED (v2.8.0) — the Google Fonts regression, and made un-regressable.** It was worse than
+  first recorded: not just `/product/…` but **every page**, and there was a third source nobody had
+  spotted — **CartFlows** loading `Lato:700` on the checkout.
+  - `elementor_google_font` was not merely reset to a wrong value, it was **deleted**, and Elementor
+    treats absent as enabled. A DB value can be wiped again by the next update, so it is now
+    enforced in code: `add_filter( 'pre_option_elementor_google_font', … )` returning `'0'`
+    (`inc/enqueue.php`) short-circuits `get_option()` before it reads the row. **Consequence to
+    know: the Elementor settings screen will now look like it saves and change nothing — remove
+    that filter if a Google font is ever genuinely wanted.**
+  - `cartflows-google-fonts` added to `yazan_dequeue_foreign_fonts()`, which is the only thing that
+    catches it (the option filter does not).
+  - Verified 0 `fonts.googleapis.com` / `fonts.gstatic.com` references on `/`, `/store/`,
+    `/my-account/`, `/cart/` and `/checkout/`. The only remaining off-site string sitewide is the
+    `gmpg.org` XFN profile link, which is metadata — no request is made.
 - Cart drawer = style modern-cart, don't rebuild. Checkout = CartFlows.
 - **✅ DONE — GSAP hosted locally.** GSAP 3.12.5 + ScrollTrigger moved from cdnjs to
   `assets/js/vendor/` (inc/enqueue.php now enqueues `$js.'vendor/gsap.min.js'` / `ScrollTrigger.min.js`).

@@ -54,11 +54,24 @@ yazan-core/
 │   ├── class-yazan-dashboard.php          /dashboard rewrite + standalone HTML shell
 │   ├── class-yazan-dashboard-auth.php     Login/logout/me + shared permission callbacks
 │   ├── class-yazan-dashboard-fields.php   Jewelry & authenticity field registry  ← the sync contract
-│   ├── class-yazan-dashboard-audit.php    Audit log (the one custom table)
+│   ├── class-yazan-dashboard-audit.php    Audit log (who / what / when / IP / browser)
 │   └── rest/
+│       ├── class-yazan-rest-guard.php     Central default-deny authorization for the namespace
 │       ├── class-yazan-rest-products.php  list / read / create / update / delete / bulk
 │       ├── class-yazan-rest-media.php     upload / list / delete (real Media Library)
-│       └── class-yazan-rest-meta.php      reference data + dashboard stats
+│       ├── class-yazan-rest-meta.php      reference data + dashboard stats
+│       ├── class-yazan-rest-users.php     staff accounts: CRUD, suspend, reset, force-logout
+│       ├── class-yazan-rest-roles.php     role CRUD + the grant editor's save path
+│       └── class-yazan-rest-permissions.php   the catalog, grouped by module (read-only)
+├── includes/rbac/                         Access control — see "Roles & permissions" below
+│   ├── class-yazan-rbac-boot.php          Requires the classes, hooks, install/upgrade path
+│   ├── class-yazan-rbac-schema.php        The four tables (dbDelta)
+│   ├── class-yazan-permission-registry.php  THE CATALOG — source of truth, in code
+│   ├── class-yazan-permissions.php        Resolution + three-tier cache
+│   ├── class-yazan-roles.php              Role CRUD, grants, assignment, default seed
+│   ├── class-yazan-users.php              Status, last login, phone, photo, sessions
+│   ├── class-yazan-cap-projection.php     Yazan permissions → WP capabilities (additive only)
+│   └── class-yazan-rbac-guard.php         Last-super-admin, self-protection, anti-escalation
 ├── assets/dashboard/                      Build output — COMMIT THIS (app.js, app.css, favicon.svg)
 └── dashboard-app/                         React source (node_modules/ is gitignored)
     ├── vite.config.js                     Emits stable app.js / app.css into assets/dashboard/
@@ -73,57 +86,147 @@ yazan-core/
 
 ## REST API (`/wp-json/yazan/v1`)
 
-| Method | Route | Capability |
+Generated from the live route registry. The third column is the **Yazan permission slug** the route
+requires — not a WordPress capability. Enforcement is central and default-deny
+(`Yazan_REST_Guard` on `rest_request_before_callbacks`), with the same slug repeated on each route's
+own `permission_callback`; both come from one argument to `Yazan_REST_Guard::args()`, so they cannot
+drift apart. See [Roles & permissions](#roles--permissions-rbac).
+
+Rows marked **public** are deliberately outside RBAC and keep their own `permission_callback`:
+sign-in, the storefront chat widget, the token-authenticated backup download, and the customer
+wishlist. `/customer/*`, `/campaign/*`, `/reward/*` and `/statistics` also live in this namespace but
+belong to **yazan-social-rewards** — they are listed in `Yazan_REST_Guard::FOREIGN_PREFIXES`.
+
+| Method | Route | Permission |
 |---|---|---|
-| POST | `/auth/login` | public (rate-limited: 6 failures / 15 min per IP) |
-| POST | `/auth/logout` · GET `/auth/me` | `edit_products` |
-| GET | `/products` — `search, category, stock_status, type, status, orderby, order, page, per_page` | `edit_products` |
-| GET · POST | `/products` · `/products/{id}` | `edit_products` |
-| PUT/PATCH | `/products/{id}` | `edit_products` |
-| DELETE | `/products/{id}?force=1` | `delete_products` |
-| POST | `/products/bulk` — `trash, delete, publish, draft, set_instock, set_outofstock` | `edit_products` (+`delete_products` for the destructive two) |
-| GET · POST | `/media` · DELETE `/media/{id}` | `upload_files` |
-| GET | `/meta/taxonomies` · `/stats` | `edit_products` |
-| GET | `/orders` — `search, status, customer_id, date_from, date_to, orderby, order, page, per_page` | `edit_shop_orders` |
-| GET | `/orders/{id}` | `edit_shop_orders` |
-| PUT/PATCH | `/orders/{id}` — `status`, `customer_note` | `edit_shop_orders` |
-| POST | `/orders/bulk` — `status`, `ids` | `edit_shop_orders` |
-| GET · POST | `/orders/{id}/notes` — `note`, `customer_note` | `edit_shop_orders` |
-| POST | `/orders` — create; `line_items`, `billing`, `shipping`, `shipping_lines`, `status` | `edit_shop_orders` |
-| PUT/PATCH | `/orders/{id}/items` — `items[]`, `add[]`, `remove[]` | `edit_shop_orders` (+ order must be editable) |
-| GET · POST | `/orders/{id}/refunds` — `amount`, `reason`, `restock`, `refund_payment` | `edit_shop_orders` (+ `manage_woocommerce` for gateway) |
-| DELETE | `/orders/{id}/refunds/{refund_id}` | `manage_woocommerce` |
-| GET · POST | `/coupons` · `/coupons/{id}` (GET/PUT/DELETE) | `edit_shop_coupons` / `delete_shop_coupons` |
-| GET | `/reports/sales` — `days` or `date_from`+`date_to` | `view_woocommerce_reports` |
-| GET | `/reports/stock` | `edit_products` |
-| PUT/PATCH | `/orders/{id}/addresses` — `billing`, `shipping` | `edit_shop_orders` |
-| POST · DELETE | `/orders/{id}/coupons` — `code` | `edit_shop_orders` (+ order editable) |
-| POST | `/products/{id}/duplicate` | `edit_products` |
-| POST | `/products/quick-edit` — `items[]` | `edit_products` |
-| GET · PUT/PATCH | `/tax` · `/tax/classes` · `/tax/rates` (+ `/{id}`) | `manage_woocommerce` |
-| GET · POST · PUT · DELETE | `/shipping/zones` (+ `/{id}`, `/{id}/methods`, `/{id}/methods/{instance}`) | `manage_woocommerce` |
-| GET · PUT | `/gateways` · `/gateways/{id}` — enable/order/copy only, never credentials | `manage_woocommerce` |
-| GET · PUT | `/emails` · `/emails/{id}` | `manage_woocommerce` |
-| GET | `/porting/export` — `type=products\|orders\|customers` | `manage_woocommerce` |
-| POST | `/porting/import` — `type`, `csv`, `dry_run`, `create_missing` | `manage_woocommerce` |
-| GET · POST · PUT · DELETE | `/webhooks` · `/webhooks/{id}` | `manage_woocommerce` |
-| GET · POST | `/backup` — list+env / create (`scope=full\|db`, `keep`) | `manage_options` |
-| DELETE | `/backup/{id}` | `manage_options` |
-| POST | `/backup/{id}/restore` — `confirm=RESTORE`, `safety` | `manage_options` |
-| POST | `/backup/{id}/download-token` → single-use token | `manage_options` |
-| GET | `/backup/download?token=` — streams the archive | token (single-use, 120s) |
-| GET | `/status` | `manage_woocommerce` |
-| POST | `/status/tools/{tool}` | `manage_options` |
-| GET · PUT/PATCH | `/settings` — read schema+values / write whitelisted options | `manage_woocommerce` |
-| GET | `/audit` — `search, action_filter, object_type, user_id, object_id, date_from, date_to, page, per_page` | `manage_woocommerce` |
-| POST | `/audit/purge` — `days` | `manage_options` |
-| GET · POST | `/terms/{taxonomy}` — list / create | `manage_product_terms` |
-| PUT/PATCH · DELETE | `/terms/{taxonomy}/{id}` | `manage_product_terms` |
-| GET | `/attributes` — definitions + their terms | `edit_products` |
-| POST · PUT/PATCH · DELETE | `/attributes` · `/attributes/{id}` | `manage_woocommerce` |
-| POST | `/inventory/bulk` — `items[]` of `{id, manage_stock, stock_quantity, stock_status}` | `edit_products` |
-| GET | `/customers` — `search, role, orderby (name·email·registered), order, stats, page, per_page` | `edit_shop_orders` |
-| GET | `/customers/{id}` — adds billing/shipping, order count, lifetime spend, last order | `edit_shop_orders` |
+| GET | `/ai/analytics` | `ai.insights_view` |
+| POST | `/ai/chat` | **public** — not RBAC-governed |
+| GET | `/ai/chat-nonce` | **public** — not RBAC-governed |
+| POST | `/ai/chat/handoff` | **public** — not RBAC-governed |
+| POST | `/ai/core/test` | `ai.configure` |
+| GET | `/ai/credentials` | `ai.configure` |
+| POST | `/ai/credentials` | `ai.configure` |
+| POST | `/ai/gallery/generate` | `ai.use` |
+| POST | `/ai/gallery/plan` | `ai.use` |
+| GET | `/ai/logs` | `ai.view_logs` |
+| POST | `/ai/marketing` | `ai.use` |
+| POST | `/ai/product` | `ai.use` |
+| POST | `/ai/seo` | `ai.use` |
+| GET | `/ai/settings` | `ai.configure` |
+| POST · PUT/PATCH | `/ai/settings` | `ai.configure` |
+| POST | `/ai/test` | `ai.configure` |
+| POST | `/ai/test-all` | `ai.configure` |
+| GET | `/attributes` | `attributes.view` |
+| POST | `/attributes` | `attributes.create` |
+| POST · PUT/PATCH | `/attributes/{id}` | `attributes.edit` |
+| DELETE | `/attributes/{id}` | `attributes.delete` |
+| GET | `/audit` | `audit.view` |
+| POST | `/audit/purge` | `audit.purge` |
+| POST | `/auth/login` | **public** — not RBAC-governed |
+| POST | `/auth/logout` | `dashboard.access` |
+| GET | `/auth/me` | `dashboard.access` |
+| GET | `/backup` | `backup.view` |
+| POST | `/backup` | `backup.create` |
+| DELETE | `/backup/{id}` | `backup.delete` |
+| POST | `/backup/{id}/download-token` | `backup.download` |
+| POST | `/backup/{id}/restore` | `backup.restore` |
+| GET | `/backup/download` | **public** — not RBAC-governed |
+| GET | `/coupons` | `coupons.view` |
+| POST | `/coupons` | `coupons.create` |
+| GET | `/coupons/{id}` | `coupons.view` |
+| POST · PUT/PATCH | `/coupons/{id}` | `coupons.edit` |
+| DELETE | `/coupons/{id}` | `coupons.delete` |
+| GET | `/customers` | `customers.view` |
+| GET | `/customers/{id}` | `customers.view` |
+| GET | `/emails` | `emails.view` |
+| POST · PUT/PATCH | `/emails` | `emails.edit` |
+| POST · PUT/PATCH | `/emails/{id}` | `emails.edit` |
+| GET | `/gateways` | `gateways.view` |
+| POST · PUT/PATCH | `/gateways` | `gateways.edit` |
+| POST · PUT/PATCH | `/gateways/{id}` | `gateways.edit` |
+| POST | `/inventory/bulk` | `inventory.edit` |
+| GET | `/media` | `media.view` |
+| POST | `/media` | `media.upload` |
+| DELETE | `/media/{id}` | `media.delete` |
+| GET | `/meta/taxonomies` | `dashboard.access` |
+| GET | `/orders` | `orders.view` |
+| POST | `/orders` | `orders.create` |
+| GET | `/orders/{id}` | `orders.view` |
+| POST · PUT/PATCH | `/orders/{id}` | `orders.edit` |
+| POST · PUT/PATCH | `/orders/{id}/addresses` | `orders.addresses` |
+| POST | `/orders/{id}/coupons` | `orders.coupons` |
+| DELETE | `/orders/{id}/coupons` | `orders.coupons` |
+| POST · PUT/PATCH | `/orders/{id}/items` | `orders.items` |
+| GET | `/orders/{id}/notes` | `orders.view` |
+| POST | `/orders/{id}/notes` | `orders.notes` |
+| GET | `/orders/{id}/refunds` | `orders.view` |
+| POST | `/orders/{id}/refunds` | `orders.refund` |
+| DELETE | `/orders/{id}/refunds/{refund_id}` | `orders.refund_gateway` |
+| GET | `/orders/alerts` | `orders.view` |
+| POST | `/orders/bulk` | `orders.status` |
+| GET | `/permissions` | `permissions.view` |
+| GET | `/porting/export` | `porting.export` |
+| POST | `/porting/import` | `porting.import` |
+| GET | `/products` | `products.view` |
+| POST | `/products` | `products.create` |
+| GET | `/products/{id}` | `products.view` |
+| POST · PUT/PATCH | `/products/{id}` | `products.edit` |
+| DELETE | `/products/{id}` | `products.delete` |
+| POST | `/products/{id}/duplicate` | `products.duplicate` |
+| POST | `/products/bulk` | `products.bulk` |
+| POST | `/products/quick-edit` | `products.edit` |
+| GET | `/reports/sales` | `reports.view` |
+| GET | `/reports/stock` | `inventory.view` |
+| GET | `/roles` | `roles.view` |
+| POST | `/roles` | `roles.create` |
+| GET | `/roles/{id}` | `roles.view` |
+| POST · PUT/PATCH | `/roles/{id}` | `roles.edit` |
+| DELETE | `/roles/{id}` | `roles.delete` |
+| POST | `/roles/{id}/duplicate` | `roles.create` |
+| GET | `/roles/{id}/users` | `users.view` |
+| GET | `/settings` | `settings.view` |
+| POST · PUT/PATCH | `/settings` | `settings.edit` |
+| GET | `/shipping/zones` | `shipping.view` |
+| POST | `/shipping/zones` | `shipping.edit` |
+| POST · PUT/PATCH | `/shipping/zones/{id}` | `shipping.edit` |
+| DELETE | `/shipping/zones/{id}` | `shipping.edit` |
+| POST | `/shipping/zones/{id}/methods` | `shipping.edit` |
+| POST · PUT/PATCH | `/shipping/zones/{id}/methods/{instance}` | `shipping.edit` |
+| DELETE | `/shipping/zones/{id}/methods/{instance}` | `shipping.edit` |
+| GET | `/social-auth` | `settings.view` |
+| POST · PUT/PATCH | `/social-auth` | `settings.edit` |
+| GET | `/stats` | `dashboard.view` |
+| GET | `/status` | `status.view` |
+| POST | `/status/tools/{tool}` | `status.tools` |
+| GET | `/tax` | `tax.view` |
+| POST · PUT/PATCH | `/tax` | `tax.edit` |
+| POST | `/tax/classes` | `tax.edit` |
+| DELETE | `/tax/classes` | `tax.edit` |
+| GET | `/tax/rates` | `tax.view` |
+| POST | `/tax/rates` | `tax.edit` |
+| POST · PUT/PATCH | `/tax/rates/{id}` | `tax.edit` |
+| DELETE | `/tax/rates/{id}` | `tax.edit` |
+| GET | `/terms/{taxonomy}` | `categories.view` |
+| POST | `/terms/{taxonomy}` | `categories.create` |
+| POST · PUT/PATCH | `/terms/{taxonomy}/{id}` | `categories.edit` |
+| DELETE | `/terms/{taxonomy}/{id}` | `categories.delete` |
+| GET | `/users` | `users.view` |
+| POST | `/users` | `users.create` |
+| GET | `/users/{id}` | `users.view` |
+| POST · PUT/PATCH | `/users/{id}` | `users.edit` |
+| DELETE | `/users/{id}` | `users.delete` |
+| POST | `/users/{id}/activate` | `users.suspend` |
+| GET | `/users/{id}/activity` | `users.view_activity` |
+| POST | `/users/{id}/force-logout` | `users.force_logout` |
+| POST | `/users/{id}/photo` | `users.edit` |
+| POST | `/users/{id}/reset-password` | `users.reset_password` |
+| POST | `/users/{id}/suspend` | `users.suspend` |
+| GET | `/webhooks` | `webhooks.view` |
+| POST | `/webhooks` | `webhooks.create` |
+| POST · PUT/PATCH | `/webhooks/{id}` | `webhooks.edit` |
+| DELETE | `/webhooks/{id}` | `webhooks.delete` |
+| GET | `/wishlist` | **public** — not RBAC-governed |
+| POST | `/wishlist/toggle` | **public** — not RBAC-governed |
 
 ---
 
@@ -185,14 +288,21 @@ stored it follows the OS `prefers-color-scheme`, falling back to dark.
 ## Security
 
 - **AuthN** `wp_signon()` over the site's own cookie; generic error messages; per-IP rate limiting.
-- **AuthZ** `current_user_can()` on every route — native WooCommerce roles, no custom roles.
-- **CSRF** `wp_rest` nonce required on all cookie-authenticated requests (enforced by core).
+- **AuthZ** RBAC — see [Roles & permissions](#roles--permissions-rbac). Every route declares a
+  permission slug and one filter enforces it, default-deny. A suspended account is refused on the
+  `authenticate` filter, so no cookie is ever issued.
+- **CSRF** `wp_rest` nonce required on all cookie-authenticated requests (enforced by core). The
+  nonce expires after 12–24h and is bound to the login session, so `client.js` renews it once from
+  `admin-ajax.php?action=rest-nonce` and replays the call when core answers
+  `rest_cookie_invalid_nonce`; if no nonce can be minted, the session is gone and the app returns to
+  the sign-in screen.
 - **Input** per-field sanitisation (`sanitize_text_field`, `wc_format_decimal`, `absint`,
   `wp_kses_post`); unknown fields ignored; SKU uniqueness validated.
 - **Uploads** `media_handle_upload()` with a MIME allow-list (images + PDF).
 - **SQL** no raw queries for product data (WC CRUD only); audit table uses `$wpdb->insert()` /
   `prepare()`.
-- **Audit** every create/update/delete/bulk/media/login lands in `wp_yazan_audit_log`.
+- **Audit** every create/update/delete/bulk/media/login lands in `wp_yazan_audit_log`, with the
+  actor, IP and browser. Role and user changes record the exact permission diff.
 
 ---
 
@@ -206,6 +316,120 @@ stored it follows the OS `prefers-color-scheme`, falling back to dark.
 | 3 | **Orders** — list, detail, status changes, bulk, notes | **Done** |
 | 3b | **Customers** — list (search, role filter, sorting, pagination) + detail quick-view | **Done** |
 | 4 | **Settings · activity log** | **Done** |
+| 5 | **Users · Roles · Permissions (RBAC)** | **Done** |
+
+---
+
+## Roles & permissions (RBAC)
+
+Added in 1.8.0. Four tables in `includes/rbac/`, ~150 permissions, and one filter that makes an
+unprotected endpoint structurally impossible.
+
+### The model
+
+```
+wp_yazan_roles              id, slug, name, is_super, is_system, sort, updated_at
+wp_yazan_permissions        the catalog, MIRRORED from code (never authoritative)
+wp_yazan_role_permissions   role_id  ⇄ permission_slug   (many-to-many)
+wp_yazan_user_roles         user_id  ⇄ role_id           (many-to-many)
+```
+
+`Yazan_Permission_Registry::all()` in code is the **source of truth**; the table is a projection
+re-synced on every `REGISTRY_VERSION` bump, so the catalog can be queried in SQL and travels inside
+a database backup. The grants pivot stores the **slug**, not a foreign key: config is then portable
+between environments, resolution needs no JOIN, and a catalog rewrite can never silently reassign a
+grant to whatever row inherited an id.
+
+A user's effective permissions are the **union** of their roles. There are deliberately no deny
+rules — a deny primitive makes the union order-dependent, which is how "adding a role removed my
+access" happens.
+
+Permissions for modules this store has not built yet (`membership`, `banners`, `api_keys`,
+`notifications`, `reviews`, `collections`, `pages`, `analytics`) are marked `planned`. They can be
+granted now, render greyed in the Role Editor, and start working the day the module ships.
+
+### Where each layer enforces
+
+| Layer | Mechanism |
+|---|---|
+| REST (primary) | `Yazan_REST_Guard` on `rest_request_before_callbacks` — runs after route matching, so it holds the exact matched handler, and **before** the route's own `permission_callback`. An untagged handler is denied. |
+| REST (defence in depth) | each handler also carries `Yazan_Dashboard_Auth::require_perm( $slug )`. |
+| WooCommerce internals | `Yazan_Cap_Projection` — a **purely additive** `user_has_cap` filter mapping Yazan permissions onto the WP capabilities Woo actually checks. It never writes `false` and never modifies a role, so it cannot take access away. |
+| SPA routes | `<Protected perm="…">` in `App.jsx`. |
+| Buttons & menus | `<Can perm="…">`, plus `perm:` on every `NAV` entry in `Layout.jsx` (the ⌘K palette inherits the same filter). |
+
+**Adding a route:** use `Yazan_REST_Guard::args( $methods, $callback, 'module.action' )`. That one
+call emits the callback, the `permission_callback` and the guard tag together.
+`GET /status` reports any handler carrying neither a permission nor an explicit public marker.
+
+**Why `rest_request_before_callbacks` and not `rest_pre_dispatch`:** the latter fires *before*
+`match_request_to_handler()`, so `get_route()` is still the raw path and there is no handler —
+enforcing there would mean maintaining a second, drifting copy of the routing table as regexes.
+
+### `Yazan_REST_Guard::MODE`
+
+Ships as `'report'`: an **untagged** route is allowed but logged to the audit table and counted in
+`GET /status`. Flip to `'enforce'` once `status.route_guard.untagged` has read `0` for a day.
+A route that IS tagged and denied is refused in both modes — the mode only decides what happens to
+a handler nobody labelled. `/users`, `/roles` and `/permissions` are always hard-enforced.
+
+### Safety rails (`Yazan_RBAC_Guard`)
+
+- **Last super admin** — delete, demote, suspend and role-change each assert one remains, inside
+  `GET_LOCK('yazan_rbac_write')` so two operators cannot both pass the check.
+- **Self-protection** — you cannot delete, suspend, or change the roles of your own account.
+- **No escalation** — you can only grant permissions you hold, and only edit a role whose *current*
+  set is also within yours. Without that second clause a Manager could edit (or strip) the Super
+  Admin role and lock their own boss out.
+- **Suspension** bites in three places: the `authenticate` filter, session destruction, and a
+  per-request check in the guard.
+- **Password reset** defaults to WordPress's own emailed link. Setting one directly is refused on
+  your own account, because `wp_set_password()` destroys every session you hold.
+
+### WordPress role vs Yazan role
+
+A **WordPress `administrator` is always treated as a Yazan super admin** — that is the lockout
+backstop, and it means ticking Yazan role boxes on such an account changes nothing. The user editor
+therefore exposes a **WordPress role** control (permission `users.wp_role`) directly above the Yazan
+roles, so an operator can move a staff account down to Subscriber and have its Yazan roles actually
+take effect. Four rules apply:
+
+- Only a Yazan **super admin** may change a WordPress role at all — this is site-level, not
+  store-level, authorization.
+- Only an account that **is** a WordPress administrator may grant `administrator`. Without this a
+  Yazan-only super admin could mint a full WordPress administrator from the dashboard — exactly the
+  escalation path `Yazan_Cap_Projection` avoids by mapping `users.*` to no capabilities at all.
+- You cannot change **your own** WordPress role.
+- Demoting the **last administrator who can still sign in** is refused (`yazan_last_wp_admin`).
+  Suspended administrators do not count, because the `authenticate` filter blocks them at
+  wp-login.php too, not only at `/dashboard`.
+
+Recorded separately as `user.wp_role_change`, never buried inside a generic `user.update`.
+
+### Install / upgrade
+
+`Yazan_RBAC_Boot::maybe_install()` runs on `init` priority 1 against one autoloaded option, because
+`Yazan_Core_Installer` only fires on `admin_init` and this store can be operated entirely from
+`/dashboard`. It creates the tables, syncs the catalog, seeds eight roles **only into an empty
+table** (never re-seeds), and backfills once: every `administrator` → `super-admin`, every
+`shop_manager` → `manager`. Before install the whole subsystem is inert, so deploying it changes
+nothing until the installer has run.
+
+A real WordPress administrator is **always** treated as a super admin, read straight from
+`WP_User::$roles` — never through a capability API, which would recurse inside `user_has_cap`. That
+is the lockout backstop.
+
+### Performance
+
+`Yazan_Permissions::for_user()` costs two indexed queries on a cold cache and nothing thereafter:
+a static memo, `wp_cache`, and a **usermeta snapshot** that survives across requests. The snapshot
+is the tier actually carrying the load, because this site has no persistent object-cache drop-in.
+
+The cache **version is part of the key**, not the value, so a stale entry is unreachable rather than
+merely wrong — there is no delete to forget. Any RBAC write bumps the version, and
+`YAZAN_CORE_VERSION` is folded in so a deploy that changes the catalog cannot serve an old snapshot.
+
+---
 
 ### Beyond the phases — coupons, reports, order corrections, catalogue speed-ups
 

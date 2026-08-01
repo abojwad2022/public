@@ -71,6 +71,9 @@ if ( ! class_exists( 'Ai_Builder_Compatibility' ) ) {
 
 			// Plugin - SureDonation.
 			require_once AI_BUILDER_DIR . 'inc/compatibility/suredonation/ai-builder-compatibility-suredonation.php';
+
+			// Plugin - SureCookie.
+			require_once AI_BUILDER_DIR . 'inc/compatibility/surecookie/ai-builder-compatibility-surecookie.php';
 		}
 
 		/**

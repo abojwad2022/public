@@ -71,18 +71,50 @@ function yazan_head_inline() {
 
 /**
  * Drop the Google-Fonts requests that other tools add but the brand never uses: Astra's default
- * Lato and Elementor's Roboto / Roboto Slab. The brand fonts are the self-hosted Cormorant Garamond
- * (display) + Jost (body), and `body.yazan{font-family:var(--yz-font-body)}` already wins over Astra's
- * Lato — so removing these is purely a network win (part of the zero-external-requests goal). Elementor
- * is additionally disabled at the option level (see the shipping/config script); this dequeue is the
- * belt-and-suspenders for the current render.
+ * Lato, Elementor's Roboto / Roboto Slab, and CartFlows' own Lato on the checkout. The brand fonts
+ * are the self-hosted Cormorant Garamond (display) + Jost (body), and
+ * `body.yazan{font-family:var(--yz-font-body)}` already wins over Astra's Lato — so removing these
+ * is purely a network win (part of the zero-external-requests goal). Elementor is additionally
+ * disabled by the pre_option filter below; this dequeue is the belt-and-suspenders for the current
+ * render, and the ONLY thing that catches CartFlows.
+ *
+ * Runs at priority 100 so it lands after the plugins that register these handles.
  */
 add_action( 'wp_enqueue_scripts', 'yazan_dequeue_foreign_fonts', 100 );
 function yazan_dequeue_foreign_fonts() {
-	foreach ( array( 'astra-google-fonts', 'elementor-gf-roboto', 'elementor-gf-robotoslab' ) as $handle ) {
+	$handles = array(
+		'astra-google-fonts',
+		'elementor-gf-roboto',
+		'elementor-gf-robotoslab',
+		// CartFlows loads Lato:700 on the checkout it owns — the last external font on the site.
+		'cartflows-google-fonts',
+	);
+
+	foreach ( $handles as $handle ) {
 		wp_dequeue_style( $handle );
 		wp_deregister_style( $handle );
 	}
+}
+
+/**
+ * Keep Elementor's Google Fonts off — permanently.
+ *
+ * The site's zero-external-requests position was originally achieved by setting the
+ * `elementor_google_font` option to 0 in the database. That option later came back UNSET (an
+ * Elementor update or a settings save will do it), and because Elementor treats "unset" as
+ * "enabled", every page quietly started serving two fonts.googleapis.com stylesheets again —
+ * Roboto and Roboto Slab, neither of which this theme ever uses (`body.yazan` sets Jost/Cormorant).
+ *
+ * A DB value can be unset again by the next update, so this is enforced in code instead:
+ * `pre_option_*` short-circuits get_option() before it ever reads the row, which no plugin update
+ * can undo. Returning the string '0' (not false) is what makes the short-circuit take effect.
+ *
+ * To genuinely use a Google font later, remove this filter — do not fight it from the Elementor UI,
+ * because the setting screen will look like it saved and change nothing.
+ */
+add_filter( 'pre_option_elementor_google_font', 'yazan_disable_elementor_google_fonts' );
+function yazan_disable_elementor_google_fonts() {
+	return '0';
 }
 
 /**

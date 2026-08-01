@@ -120,18 +120,20 @@ function yazan_theme_head_boot() {
  */
 add_action( 'wp_enqueue_scripts', 'yazan_theme_switcher_assets', 20 );
 function yazan_theme_switcher_assets() {
+	// Per-file cache busting (filemtime), same as every enqueue in inc/enqueue.php. These two used
+	// the bare constant, so edits here shipped behind a stale cache key.
 	wp_enqueue_style(
 		'yazan-theme-switcher',
 		YAZAN_URI . '/assets/css/theme-switcher.css',
 		array( 'yazan-theme-tokens' ),
-		YAZAN_VERSION
+		yazan_asset_ver( 'assets/css/theme-switcher.css' )
 	);
 
 	wp_enqueue_script(
 		'yazan-theme-switcher',
 		YAZAN_URI . '/assets/js/theme-switcher.js',
 		array(),
-		YAZAN_VERSION,
+		yazan_asset_ver( 'assets/js/theme-switcher.js' ),
 		array(
 			'strategy'  => 'defer',
 			'in_footer' => true,

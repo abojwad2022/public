@@ -1191,6 +1191,7 @@
 	border-right: 1px solid #e6e9ec;
 	border-left: 1px solid #e6e9ec;
 	opacity: 0;
+	pointer-events: none;
 }
 
 #ast-sites-modal .astra-sites-tooltip-icon {

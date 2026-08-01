@@ -8,15 +8,23 @@
 
 /* Page rhythm — centre the whole account inside the brand container. */
 body.woocommerce-account .woocommerce {
-	max-width: var(--yz-container, 1200px);
+	max-width: var(--yz-container, 1240px);
 	margin-inline: auto;
 	padding-block: clamp(28px, 4vw, 60px);
 	padding-inline: clamp(16px, 4vw, 40px);
 }
 
-/* Hairline token fallback (mirrors the value used across the theme sheets). */
+/* A hairline for the surfaces THIS sheet paints hard white (inputs, login cards).
+   --yz-hairline is themed: dark-on-light under Obsidian, but a light white-on-dark
+   line under Burgundy (theme-tokens.css:134) — which would vanish on a white card.
+   This sheet used to fix that by re-declaring --yz-hairline itself for the whole
+   account area, which cured the white surfaces and broke every other one: the
+   dashboard cards and order tables sit on the PAGE background, so under Burgundy
+   they were drawing a dark line on a dark ground and disappeared. Separate token,
+   applied only where the background really is white; everything else keeps the
+   themed one and recolours correctly. */
 body.woocommerce-account {
-	--yz-hairline: rgba(20, 18, 16, 0.12);
+	--yz-hairline-on-white: rgba(20, 18, 16, 0.12);
 }
 
 /* The account is rendered by a [woocommerce_my_account] shortcode inside an Elementor
@@ -37,7 +45,12 @@ body.woocommerce-account .elementor-widget-shortcode .woocommerce {
    which would override any grid — so we NEUTRALISE those floats/widths on the
    children and let CSS grid on `.woocommerce` own the layout in both LTR & RTL.
    -------------------------------------------------------------------------- */
-@media (min-width: 861px) {
+/* 992px, not the 861px this sheet used to use. That old pair (860/861) was the
+   only one of its kind in the child theme — the convention is 767 / 991-993 —
+   and it was the direct cause of the worst overflow: between 861px and Astra's
+   own 921px smallscreen break, two padded columns were still being forced into
+   an already-narrowed Elementor container. */
+@media (min-width: 992px) {
 	body.woocommerce-account.logged-in .woocommerce {
 		display: grid;
 		grid-template-columns: 270px minmax(0, 1fr);
@@ -293,7 +306,7 @@ body.woocommerce-account .woocommerce input[type="tel"],
 body.woocommerce-account .woocommerce select,
 body.woocommerce-account .woocommerce .select2-container .select2-selection {
 	border-radius: 0 !important;
-	border: 1px solid var(--yz-hairline);
+	border: 1px solid var(--yz-hairline-on-white);
 	background: #fff;
 	padding: 13px 15px;
 	font-size: 15px;
@@ -347,25 +360,109 @@ body.woocommerce-account .woocommerce select:focus {
 	color: var(--yz-muted, #6e6a63);
 }
 
-/* Two-column card grid (register enabled). */
+/* Astra ships a float clearfix for .col2-set (woocommerce-layout-grid.min.css):
+       .woocommerce .col2-set::before,::after { content:" "; display:table }
+   Harmless under floats — but a GRID container's own ::before/::after are grid
+   ITEMS. With two columns they auto-placed as:
+
+       row 1 | ::before (empty) | Sign In
+       row 2 | Create an Account | ::after (empty)
+
+   …which is exactly the reported bug: an empty top-left quadrant, Sign In pushed
+   right, Register dropped below-left. `clear:both` is a no-op on a grid item, so
+   nothing rescued it. Killing the generated content removes both phantom items.
+   Must come BEFORE the grid declaration is relied upon; keep the two together. */
+body.woocommerce-account:not(.logged-in) #customer_login.u-columns::before,
+body.woocommerce-account:not(.logged-in) #customer_login.u-columns::after {
+	content: none;
+}
+
+/* ONE centred card, not two columns.
+   Sign-in (and the social buttons above it) is the card; registration is the
+   quiet <details> below it and carries no card treatment of its own, so the page
+   reads as a single decision instead of two competing forms. `#customer_login`
+   keeps its .u-columns/.col2-set class names for compatibility but is no longer
+   laid out as columns — hence display:block and the explicit float/width reset
+   on the children, which Astra and WooCommerce both still try to set. */
 body.woocommerce-account:not(.logged-in) #customer_login.u-columns {
-	display: grid;
-	grid-template-columns: 1fr 1fr;
-	gap: clamp(20px, 2.6vw, 36px);
-	align-items: stretch;
+	display: block;
+	max-inline-size: 520px;
+	margin-inline: auto;
 }
 body.woocommerce-account:not(.logged-in) #customer_login .u-column1,
 body.woocommerce-account:not(.logged-in) #customer_login .u-column2 {
 	width: auto;
 	float: none;
 	margin: 0;
-	padding: clamp(28px, 3.4vw, 44px);
-	border: 1px solid var(--yz-hairline);
+	min-inline-size: 0;
+}
+/* The card itself — sign-in only. */
+body.woocommerce-account:not(.logged-in) #customer_login .u-column1 {
+	padding: clamp(28px, 3.4vw, 40px);
+	border: 1px solid var(--yz-hairline-on-white);
 	background: #fff;
 }
-/* Second card carries a faint gold ground so "Register" reads as the invitation. */
+/* Registration sits under the card, unstyled, so it never competes with it. */
 body.woocommerce-account:not(.logged-in) #customer_login .u-column2 {
-	background: linear-gradient(180deg, rgba(154, 123, 63, 0.05), transparent 70%);
+	padding: 0;
+	border: 0;
+	background: none;
+	margin-block-start: 18px;
+}
+
+/* --------------------------------------------------------------------------
+   "New to Yazan? Create an account" — native <details>, so it opens with no
+   JavaScript and is keyboard/AT addressable for free.
+   -------------------------------------------------------------------------- */
+.yz-auth-more {
+	text-align: center;
+}
+.yz-auth-more__toggle {
+	display: inline-block;
+	padding: 10px 4px;
+	font-size: 13.5px;
+	color: var(--yz-muted, #6e6a63);
+	cursor: pointer;
+	list-style: none; /* Firefox */
+	transition: color 0.2s ease;
+}
+/* Kill the default disclosure triangle in WebKit/Blink; the underline is the affordance. */
+.yz-auth-more__toggle::-webkit-details-marker {
+	display: none;
+}
+.yz-auth-more__toggle::after {
+	content: "";
+	display: block;
+	inline-size: 100%;
+	block-size: 1px;
+	margin-block-start: 3px;
+	background: currentColor;
+	opacity: 0.35;
+	transition: opacity 0.2s ease;
+}
+.yz-auth-more__toggle:hover,
+.yz-auth-more[open] > .yz-auth-more__toggle {
+	color: var(--yz-ink);
+}
+.yz-auth-more__toggle:hover::after {
+	opacity: 0.7;
+}
+.yz-auth-more__toggle:focus-visible {
+	outline: 2px solid var(--yz-focus, var(--yz-gold, #b08d57));
+	outline-offset: 3px;
+}
+/* Once open, the registration form gets the same card surface as sign-in. */
+.yz-auth-more[open] > :not(.yz-auth-more__toggle) {
+	text-align: start;
+}
+.yz-auth-more[open] > .yz-auth-card__note {
+	margin-block-start: 14px;
+}
+.yz-auth-more[open] > form.register {
+	margin-block-start: 10px;
+	padding: clamp(24px, 3vw, 34px);
+	border: 1px solid var(--yz-hairline-on-white);
+	background: #fff;
 }
 
 /* When registration is OFF, WooCommerce prints only the bare login form — centre it as one card. */
@@ -373,7 +470,7 @@ body.woocommerce-account:not(.logged-in) form.woocommerce-form-login {
 	max-width: 460px;
 	margin-inline: auto;
 	padding: clamp(28px, 3.4vw, 44px);
-	border: 1px solid var(--yz-hairline);
+	border: 1px solid var(--yz-hairline-on-white);
 	background: #fff;
 }
 body.woocommerce-account:not(.logged-in) #customer_login form.woocommerce-form-login {
@@ -420,8 +517,7 @@ body.woocommerce-account .woocommerce-LostPassword {
 /* --------------------------------------------------------------------------
    Responsive.
    -------------------------------------------------------------------------- */
-@media (max-width: 860px) {
+@media (max-width: 991px) {
 	body.woocommerce-account .woocommerce-MyAccount-navigation { position: static; top: auto; }
-	body.woocommerce-account:not(.logged-in) #customer_login.u-columns { grid-template-columns: 1fr; }
 	body.woocommerce-account.logged-in .woocommerce-MyAccount-content { margin-block-start: 28px; }
 }

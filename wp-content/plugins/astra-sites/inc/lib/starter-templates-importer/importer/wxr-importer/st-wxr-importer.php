@@ -90,6 +90,11 @@ class ST_WXR_Importer {
 		add_action( 'import_start', array( $this, 'suppress_suredonation_auto_form' ) );
 		add_action( 'import_end', array( $this, 'restore_suredonation_auto_form' ) );
 		add_action( 'import_end', array( $this, 'remap_suredonation_relations' ) );
+
+		// SureMembers access-group rules reference source-site post and term IDs.
+		// Track term imports and remap the rule metas once all content is in.
+		add_action( 'wxr_importer.processed.term', array( $this, 'track_suremembers_term' ), 10, 2 );
+		add_action( 'import_end', array( $this, 'remap_suremembers_relations' ) );
 	}
 
 	/**
@@ -223,6 +228,221 @@ class ST_WXR_Importer {
 			$suredonation_form_id_map                 = get_option( 'astra_sites_suredonation_form_id_map', array() );
 			$suredonation_form_id_map[ $original_id ] = $post_id;
 			update_option( 'astra_sites_suredonation_form_id_map', $suredonation_form_id_map );
+		}
+
+		if ( defined( 'SUREMEMBERS_POST_TYPE' ) && ! empty( $original_id ) ) {
+			$post_type = get_post_type( $post_id );
+
+			if ( SUREMEMBERS_POST_TYPE === $post_type ) {
+				$access_group_id_map                 = get_option( 'astra_sites_suremembers_access_group_id_map', array() );
+				$access_group_id_map[ $original_id ] = $post_id;
+				update_option( 'astra_sites_suremembers_access_group_id_map', $access_group_id_map, 'no' );
+			} elseif ( 'attachment' !== $post_type ) {
+				// Access-group rules can target any post type ("post-{id}-|" /
+				// "postchild-{id}-|" rule strings), so track every content post.
+				$post_id_map                 = get_option( 'astra_sites_suremembers_post_id_map', array() );
+				$post_id_map[ $original_id ] = $post_id;
+				update_option( 'astra_sites_suremembers_post_id_map', $post_id_map, 'no' );
+			}
+		}
+	}
+
+	/**
+	 * Track imported terms for the SureMembers rule remap.
+	 *
+	 * Access-group rules can target taxonomy terms via "tax-{term_id}-single-{taxonomy}"
+	 * rule strings, so keep an old → new term ID map alongside the post map.
+	 *
+	 * @since 1.1.37
+	 *
+	 * @param int   $term_id New term ID.
+	 * @param array $data    Raw data imported for the term.
+	 * @return void
+	 */
+	public function track_suremembers_term( $term_id, $data = array() ) {
+		if ( ! defined( 'SUREMEMBERS_POST_TYPE' ) ) {
+			return;
+		}
+
+		$original_id = isset( $data['id'] ) ? absint( $data['id'] ) : 0;
+
+		if ( empty( $original_id ) || empty( $term_id ) ) {
+			return;
+		}
+
+		$term_id_map                 = get_option( 'astra_sites_suremembers_term_id_map', array() );
+		$term_id_map[ $original_id ] = (int) $term_id;
+		update_option( 'astra_sites_suremembers_term_id_map', $term_id_map, 'no' );
+	}
+
+	/**
+	 * Remap SureMembers access-group relations to the imported IDs.
+	 *
+	 * Two directions need fixing once the import completes:
+	 * 1. Rule metas on each imported access group (include/exclude/drips/rules)
+	 *    hold rule strings such as "post-{id}-|", "postchild-{id}-|" and
+	 *    "tax-{term_id}-single-{taxonomy}" that still carry source-site IDs.
+	 * 2. Restricted posts carry the source access-group IDs in their
+	 *    "suremembers_post_access_group" meta.
+	 *
+	 * Runs on `import_end`, when the post/term/group ID maps captured during
+	 * the WXR import are complete. Each object is remapped only once (guarded
+	 * by a marker meta) so a resumed import cannot remap an already-new ID.
+	 *
+	 * @since 1.1.37
+	 * @return void
+	 */
+	public function remap_suremembers_relations() {
+		$access_group_id_map = get_option( 'astra_sites_suremembers_access_group_id_map', array() );
+
+		if ( empty( $access_group_id_map ) || ! is_array( $access_group_id_map ) ) {
+			return;
+		}
+
+		$post_id_map = get_option( 'astra_sites_suremembers_post_id_map', array() );
+		$term_id_map = get_option( 'astra_sites_suremembers_term_id_map', array() );
+
+		$post_id_map = is_array( $post_id_map ) ? $post_id_map : array();
+		$term_id_map = is_array( $term_id_map ) ? $term_id_map : array();
+
+		$rule_meta_keys = array(
+			'suremembers_plan_include',
+			'suremembers_plan_exclude',
+			'suremembers_plan_drips',
+		);
+
+		foreach ( $access_group_id_map as $new_group_id ) {
+			$new_group_id = (int) $new_group_id;
+
+			if ( get_post_meta( $new_group_id, '_astra_sites_suremembers_remapped', true ) ) {
+				continue;
+			}
+
+			foreach ( $rule_meta_keys as $meta_key ) {
+				$meta_value = get_post_meta( $new_group_id, $meta_key, true );
+
+				if ( empty( $meta_value ) ) {
+					continue;
+				}
+
+				$remapped = $this->remap_suremembers_rule_value( $meta_value, $post_id_map, $term_id_map );
+
+				if ( $remapped !== $meta_value ) {
+					update_post_meta( $new_group_id, $meta_key, $remapped );
+				}
+			}
+
+			update_post_meta( $new_group_id, '_astra_sites_suremembers_remapped', true );
+		}
+
+		$this->remap_suremembers_post_access_groups( $access_group_id_map );
+	}
+
+	/**
+	 * Recursively remap source-site IDs inside SureMembers rule meta values.
+	 *
+	 * Rule strings live as individual array entries, so the patterns are
+	 * anchored — any other string (URLs, preview content, labels) is left
+	 * untouched. Handled formats: "post-{id}-|", "postchild-{id}-|" and
+	 * "tax-{term_id}-single-{taxonomy}".
+	 *
+	 * @since 1.1.37
+	 *
+	 * @param mixed                  $value       Meta value (array or scalar).
+	 * @param array<int|string, int> $post_id_map Old → new post IDs.
+	 * @param array<int|string, int> $term_id_map Old → new term IDs.
+	 * @return mixed
+	 */
+	public function remap_suremembers_rule_value( $value, $post_id_map, $term_id_map ) {
+		if ( is_array( $value ) ) {
+			foreach ( $value as $key => $item ) {
+				$value[ $key ] = $this->remap_suremembers_rule_value( $item, $post_id_map, $term_id_map );
+			}
+			return $value;
+		}
+
+		if ( ! is_string( $value ) ) {
+			return $value;
+		}
+
+		$value = preg_replace_callback(
+			'/^(post|postchild)-(\d+)-\|$/',
+			function ( $matches ) use ( $post_id_map ) {
+				$old_id = (int) $matches[2];
+				$new_id = isset( $post_id_map[ $old_id ] ) ? (int) $post_id_map[ $old_id ] : $old_id;
+				return $matches[1] . '-' . $new_id . '-|';
+			},
+			$value
+		);
+
+		$remapped = preg_replace_callback(
+			'/^tax-(\d+)-single-([a-zA-Z0-9_\-]+)$/',
+			function ( $matches ) use ( $term_id_map ) {
+				$old_id = (int) $matches[1];
+				$new_id = isset( $term_id_map[ $old_id ] ) ? (int) $term_id_map[ $old_id ] : $old_id;
+				return 'tax-' . $new_id . '-single-' . $matches[2];
+			},
+			$value
+		);
+
+		return null !== $remapped ? $remapped : $value;
+	}
+
+	/**
+	 * Remap the "suremembers_post_access_group" meta on imported posts.
+	 *
+	 * Restricted posts arrive from the WXR with the source-site access-group
+	 * IDs; point them at the newly imported access groups.
+	 *
+	 * @since 1.1.37
+	 *
+	 * @param array<int|string, int> $access_group_id_map Old → new access group IDs.
+	 * @return void
+	 */
+	public function remap_suremembers_post_access_groups( $access_group_id_map ) {
+		$post_ids = get_posts(
+			array(
+				'post_type'      => 'any',
+				'post_status'    => 'any',
+				'posts_per_page' => -1,
+				'fields'         => 'ids',
+				'meta_query'     => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- One-time remap at the end of the import.
+					array(
+						'key'     => 'suremembers_post_access_group',
+						'compare' => 'EXISTS',
+					),
+					array(
+						'key'     => '_astra_sites_suremembers_groups_remapped',
+						'compare' => 'NOT EXISTS',
+					),
+					array(
+						'key'     => '_astra_sites_imported_post',
+						'compare' => 'EXISTS',
+					),
+				),
+			)
+		);
+
+		foreach ( $post_ids as $post_id ) {
+			$groups = get_post_meta( (int) $post_id, 'suremembers_post_access_group', true );
+
+			if ( is_array( $groups ) && ! empty( $groups ) ) {
+				$remapped = array();
+				$changed  = false;
+
+				foreach ( $groups as $group_id ) {
+					$group_id   = (int) $group_id;
+					$new_id     = isset( $access_group_id_map[ $group_id ] ) ? (int) $access_group_id_map[ $group_id ] : $group_id;
+					$changed    = $changed || $new_id !== $group_id;
+					$remapped[] = $new_id;
+				}
+
+				if ( $changed ) {
+					update_post_meta( (int) $post_id, 'suremembers_post_access_group', $remapped );
+				}
+			}
+
+			update_post_meta( (int) $post_id, '_astra_sites_suremembers_groups_remapped', true );
 		}
 	}
 

@@ -323,12 +323,6 @@ class ST_Importer_Log {
 			error_log( $formatted_content ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- This is for the debug logs while importing. This is conditional and will not be logged in the debug.log file for normal users.
 		}
 
-		$filesystem    = self::get_filesystem();
-		$existing_data = '';
-		if ( $filesystem && method_exists( $filesystem, 'get_contents' ) && file_exists( (string) $log_file ) ) {
-			$existing_data = $filesystem->get_contents( $log_file );
-		}
-
 		// Bail early to avoid potential Fatal errors during CLI imports.
 		if ( ! $log_file ) {
 			return;
@@ -337,9 +331,9 @@ class ST_Importer_Log {
 		// Style separator.
 		$separator = PHP_EOL;
 
-		if ( $filesystem && method_exists( $filesystem, 'put_contents' ) ) {
-			$filesystem->put_contents( $log_file, $existing_data . $separator . $formatted_content, FS_CHMOD_FILE );
-		}
+		// WP_Filesystem lacks an append mode — a read-modify-write drops entries when concurrent requests write the log.
+		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_read_file_put_contents
+		file_put_contents( $log_file, $separator . $formatted_content, FILE_APPEND | LOCK_EX );
 
 		/**
 		 * Fires after adding content to the import log file.

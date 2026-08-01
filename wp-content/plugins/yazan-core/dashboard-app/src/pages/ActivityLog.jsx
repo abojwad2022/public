@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link } from 'react-router'
 import { auditApi } from '../api/endpoints.js'
 import { useAuth } from '../context/AuthContext.jsx'
 import { useToast } from '../context/ToastContext.jsx'
@@ -177,7 +177,7 @@ export default function ActivityLog() {
             </Button>
           )}
 
-          {can('manage_woo') && (
+          {can('audit.purge') && (
             <Button size="sm" variant="danger" icon={Trash2} onClick={() => setPurgeOpen(true)}>
               Purge old
             </Button>
@@ -207,6 +207,7 @@ export default function ActivityLog() {
                   <TH>Details</TH>
                   <TH className="w-28">By</TH>
                   <TH className="w-28">IP</TH>
+                  <TH className="w-32">Browser</TH>
                 </TR>
               </THead>
               <TBody>
@@ -249,6 +250,13 @@ export default function ActivityLog() {
                       </TD>
                       <TD className="text-muted">{row.user} label="By"</TD>
                       <TD className="font-mono text-xs text-faint" label="IP">{row.ip || '—'}</TD>
+                      {/* Truncated with the full string on hover — a user-agent is far too long
+                          for a column, but useless if it cannot be read at all. */}
+                      <TD className="max-w-32 text-xs text-faint" label="Browser">
+                        <span className="block truncate" title={row.user_agent || undefined}>
+                          {row.user_agent || '—'}
+                        </span>
+                      </TD>
                     </TR>
                   )
                 })}

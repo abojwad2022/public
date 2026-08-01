@@ -16,7 +16,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit; // No direct access.
 }
 
-define( 'YAZAN_VERSION', '2.7.0' );
+define( 'YAZAN_VERSION', '2.8.0' );
 define( 'YAZAN_DIR', get_stylesheet_directory() );
 define( 'YAZAN_URI', get_stylesheet_directory_uri() );
 

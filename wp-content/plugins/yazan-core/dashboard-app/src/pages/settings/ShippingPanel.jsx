@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { shippingApi } from '../../api/endpoints.js'
 import { useToast } from '../../context/ToastContext.jsx'
-import { Badge, Button, Card, Field, Input, Modal, Select, Spinner } from '../../components/ui/index.js'
+import { Badge, Button, Card, Field, Input, Modal, Select, Spinner, useConfirm } from '../../components/ui/index.js'
 
 export default function ShippingPanel() {
   const [confirm, confirmDialog] = useConfirm()

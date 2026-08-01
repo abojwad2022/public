@@ -80,6 +80,12 @@ if ( ! class_exists( 'Astra_Sites_Nps_Notice' ) ) :
 				}
 			}
 
+			// Add the Starter Templates plugin version and premium status.
+			if ( defined( 'ASTRA_SITES_VER' ) ) {
+				$post_data['plugin_version'] = ASTRA_SITES_VER;
+			}
+			$post_data['is_premium'] = defined( 'ASTRA_PRO_SITES_NAME' );
+
 			return $post_data;
 		}
 

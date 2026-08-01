@@ -80,6 +80,10 @@ class Yazan_Dashboard {
 		$boot       = array(
 			'restRoot'  => esc_url_raw( rest_url( Yazan_Dashboard_Auth::NS ) ),
 			'nonce'     => wp_create_nonce( 'wp_rest' ),
+			// The nonce below is only valid for 12–24h and is tied to the login session, so a tab
+			// left open outlives it. Core's rest-nonce action mints a replacement from the cookie
+			// alone — it is the only renewal route that is not itself gated on a nonce.
+			'nonceUrl'  => esc_url_raw( admin_url( 'admin-ajax.php?action=rest-nonce' ) ),
 			'basePath'  => '/' . self::SLUG,
 			'homeUrl'   => esc_url_raw( home_url( '/' ) ),
 			'storeUrl'  => esc_url_raw( home_url( '/store/' ) ),

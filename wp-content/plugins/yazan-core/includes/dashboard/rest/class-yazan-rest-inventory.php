@@ -36,11 +36,7 @@ class Yazan_REST_Inventory {
 		register_rest_route(
 			Yazan_Dashboard_Auth::NS,
 			'/inventory/bulk',
-			array(
-				'methods'             => WP_REST_Server::CREATABLE,
-				'callback'            => array( __CLASS__, 'bulk_save' ),
-				'permission_callback' => Yazan_Dashboard_Auth::require_cap( 'edit_products' ),
-			)
+			Yazan_REST_Guard::args( WP_REST_Server::CREATABLE, array( __CLASS__, 'bulk_save' ), 'inventory.edit' )
 		);
 	}
 

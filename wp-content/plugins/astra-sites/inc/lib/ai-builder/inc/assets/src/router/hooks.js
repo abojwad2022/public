@@ -55,7 +55,7 @@ export const useNavigateSteps = () => {
 
 		stepNextButtonClick( {
 			stepNumber: steps[ currentStepIndex ]?.layoutConfig?.stepNumber,
-			slug: steps[ currentStepIndex ]?.layoutConfig?.name,
+			slug: steps[ currentStepIndex ]?.layoutConfig?.stepSlug,
 		} );
 	};
 

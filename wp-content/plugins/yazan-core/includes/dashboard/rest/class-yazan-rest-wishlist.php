@@ -36,25 +36,37 @@ class Yazan_REST_Wishlist {
 				: new WP_Error( 'yazan_auth', __( 'Please sign in to use favourites.', 'yazan' ), array( 'status' => rest_authorization_required_code() ) );
 		};
 
+		/*
+		 * Outside RBAC on purpose. Favourites are a STOREFRONT feature: the callers are shoppers
+		 * with no staff role at all, and measuring them against the staff permission catalog would
+		 * mean every customer needed a Yazan role just to save a ring. The closure above stays the
+		 * authority — login required, and every read/write is scoped to the caller's own list.
+		 */
+		$why = 'Storefront feature for logged-in customers; scoped to the caller by its own permission_callback.';
+
 		register_rest_route(
 			$ns,
 			'/wishlist',
-			array(
-				'methods'             => WP_REST_Server::READABLE,
-				'callback'            => array( __CLASS__, 'get_list' ),
-				'permission_callback' => $auth,
+			Yazan_REST_Guard::public_args(
+				WP_REST_Server::READABLE,
+				array( __CLASS__, 'get_list' ),
+				$why,
+				array( 'permission_callback' => $auth )
 			)
 		);
 		register_rest_route(
 			$ns,
 			'/wishlist/toggle',
-			array(
-				'methods'             => WP_REST_Server::CREATABLE,
-				'callback'            => array( __CLASS__, 'toggle' ),
-				'permission_callback' => $auth,
-				'args'                => array(
-					'product_id' => array( 'required' => true, 'sanitize_callback' => 'absint' ),
-				),
+			Yazan_REST_Guard::public_args(
+				WP_REST_Server::CREATABLE,
+				array( __CLASS__, 'toggle' ),
+				$why,
+				array(
+					'permission_callback' => $auth,
+					'args'                => array(
+						'product_id' => array( 'required' => true, 'sanitize_callback' => 'absint' ),
+					),
+				)
 			)
 		);
 	}

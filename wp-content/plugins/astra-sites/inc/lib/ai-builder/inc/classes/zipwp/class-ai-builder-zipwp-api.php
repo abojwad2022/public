@@ -390,10 +390,12 @@ class Ai_Builder_ZipWP_Api {
 							'required'          => false,
 							'sanitize_callback' => 'sanitize_text_field',
 						),
-						'keyword'       => array(
-							'type'              => 'string',
-							'sanitize_callback' => 'sanitize_text_field',
-							'required'          => false,
+						'keywords'      => array(
+							'type'     => 'array',
+							'required' => false,
+							'items'    => array(
+								'type' => 'string',
+							),
 						),
 						'page_builder'  => array(
 							'type'              => 'string',
@@ -892,7 +894,7 @@ class Ai_Builder_ZipWP_Api {
 			'images'                 => isset( $request['images'] ) ? $request['images'] : '',
 			'language'               => isset( $request['language'] ) ? $request['language'] : 'en',
 			'site_type'              => 'ai',
-			'site_source'            => apply_filters( 'ai_builder_site_source', 'starter-templates' ),
+			'site_source'            => self::get_site_source(),
 			'site_features'          => isset( $request['site_features'] ) ? $request['site_features'] : [],
 			'site_features_data'     => isset( $request['site_features_data'] ) ? $request['site_features_data'] : [],
 		);
@@ -1568,9 +1570,27 @@ class Ai_Builder_ZipWP_Api {
 			);
 		}
 
-		$keyword = isset( $request['keyword'] ) ? sanitize_text_field( $request['keyword'] ) : 'multipurpose';
+		$keywords = isset( $request['keywords'] ) && is_array( $request['keywords'] )
+			? array_map( 'sanitize_text_field', $request['keywords'] )
+			: array( 'multipurpose' );
+		$keyword  = implode(
+			',',
+			array_map(
+				'rawurlencode',
+				array_filter(
+					$keywords,
+					static function ( $item ) {
+						return '' !== $item;
+					}
+				)
+			)
+		);
 
-		$api_endpoint = $this->get_api_domain() . '/sites/templates/search?query=' . $keyword;
+		if ( '' === $keyword ) {
+			$keyword = 'multipurpose';
+		}
+
+		$api_endpoint = add_query_arg( 'query', $keyword, $this->get_api_domain() . '/sites/templates/search' );
 
 		$post_data = array(
 			'business_name' => isset( $request['business_name'] ) ? sanitize_text_field( $request['business_name'] ) : '',
@@ -2243,6 +2263,23 @@ class Ai_Builder_ZipWP_Api {
 		);
 		return is_array( $token_details ) && isset( $token_details['email'] ) ? $token_details['email'] : '';
 	}
+
+	/**
+	 * Get the site source sent with ZipWP requests.
+	 *
+	 * @since 1.2.85
+	 * @return string
+	 */
+	public static function get_site_source() {
+		/**
+		 * Filter the site source sent with ZipWP requests.
+		 *
+		 * @param string $source The site source. Default 'starter-templates'.
+		 * @since 1.2.85
+		 */
+		return apply_filters( 'ai_builder_site_source', 'starter-templates' );
+	}
+
 	/**
 	 * Record step.
 	 *
@@ -2268,6 +2305,7 @@ class Ai_Builder_ZipWP_Api {
 			'current_step'      => isset( $request['current_step'] ) ? absint( $request['current_step'] ) : 0,
 			'current_step_name' => isset( $request['current_step_name'] ) ? sanitize_text_field( $request['current_step_name'] ) : '',
 			'email'             => $this->get_zip_user_email(),
+			'source'            => self::get_site_source(),
 		];
 
 		$body = wp_json_encode( $post_data );

@@ -13,6 +13,7 @@ import ToolsPanel from './settings/ToolsPanel.jsx'
 import WebhooksPanel from './settings/WebhooksPanel.jsx'
 import StatusPanel from './settings/StatusPanel.jsx'
 import BackupPanel from './settings/BackupPanel.jsx'
+import SocialLoginPanel from './settings/SocialLoginPanel.jsx'
 
 export default function Settings() {
   const toast = useToast()
@@ -23,7 +24,7 @@ export default function Settings() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
 
-  const canManage = can('manage_woo')
+  const canManage = can('settings.edit')
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -86,6 +87,7 @@ export default function Settings() {
     { key: 'shipping', label: 'Shipping' },
     { key: 'payments', label: 'Payments' },
     { key: 'emails', label: 'Emails' },
+    { key: 'social', label: 'Social login' },
     { key: 'tools', label: 'Import / Export' },
     { key: 'webhooks', label: 'Webhooks' },
     { key: 'status', label: 'System status' },
@@ -151,6 +153,8 @@ export default function Settings() {
         <PaymentsPanel />
       ) : tab === 'emails' ? (
         <EmailsPanel />
+      ) : tab === 'social' ? (
+        <SocialLoginPanel />
       ) : tab === 'tools' ? (
         <ToolsPanel />
       ) : tab === 'webhooks' ? (

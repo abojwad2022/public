@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link } from 'react-router'
 import { reportsApi } from '../api/endpoints.js'
 import { useMeta, formatPrice } from '../context/MetaContext.jsx'
 import { useToast } from '../context/ToastContext.jsx'
@@ -163,7 +163,7 @@ export default function Reports() {
   )
 }
 
-function StockCard({ title, rows, tone, empty, icon }) {
+function StockCard({ title, rows, tone, empty }) {
   return (
     <Card
       title={title}

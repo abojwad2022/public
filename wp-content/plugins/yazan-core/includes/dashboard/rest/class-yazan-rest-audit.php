@@ -35,21 +35,13 @@ class Yazan_REST_Audit {
 		register_rest_route(
 			$ns,
 			'/audit',
-			array(
-				'methods'             => WP_REST_Server::READABLE,
-				'callback'            => array( __CLASS__, 'index' ),
-				'permission_callback' => Yazan_Dashboard_Auth::require_cap( self::CAP ),
-			)
+			Yazan_REST_Guard::args( WP_REST_Server::READABLE, array( __CLASS__, 'index' ), 'audit.view' )
 		);
 
 		register_rest_route(
 			$ns,
 			'/audit/purge',
-			array(
-				'methods'             => WP_REST_Server::CREATABLE,
-				'callback'            => array( __CLASS__, 'purge' ),
-				'permission_callback' => Yazan_Dashboard_Auth::require_cap( self::CAP_PURGE ),
-			)
+			Yazan_REST_Guard::args( WP_REST_Server::CREATABLE, array( __CLASS__, 'purge' ), 'audit.purge' )
 		);
 	}
 
@@ -93,6 +85,8 @@ class Yazan_REST_Audit {
 				'object_id'   => (int) $row->object_id,
 				'changes'     => self::decode( $row->changes ),
 				'ip'          => $row->ip,
+				// Present only on rows written since schema v2; older entries return ''.
+				'user_agent'  => isset( $row->user_agent ) ? (string) $row->user_agent : '',
 				'date'        => $row->created_at,
 			);
 		}

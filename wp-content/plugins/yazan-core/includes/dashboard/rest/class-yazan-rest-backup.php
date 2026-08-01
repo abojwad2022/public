@@ -39,64 +39,45 @@ class Yazan_REST_Backup {
 	 * @return void
 	 */
 	public static function register_routes() {
-		$ns   = Yazan_Dashboard_Auth::NS;
-		$perm = Yazan_Dashboard_Auth::require_cap( self::CAP );
+		$ns = Yazan_Dashboard_Auth::NS;
 
 		register_rest_route(
 			$ns,
 			'/backup',
 			array(
-				array(
-					'methods'             => WP_REST_Server::READABLE,
-					'callback'            => array( __CLASS__, 'index' ),
-					'permission_callback' => $perm,
-				),
-				array(
-					'methods'             => WP_REST_Server::CREATABLE,
-					'callback'            => array( __CLASS__, 'create' ),
-					'permission_callback' => $perm,
-				),
+				Yazan_REST_Guard::args( WP_REST_Server::READABLE, array( __CLASS__, 'index' ), 'backup.view' ),
+				Yazan_REST_Guard::args( WP_REST_Server::CREATABLE, array( __CLASS__, 'create' ), 'backup.create' ),
 			)
 		);
 
 		register_rest_route(
 			$ns,
 			'/backup/(?P<id>[A-Za-z0-9\-]+)',
-			array(
-				'methods'             => WP_REST_Server::DELETABLE,
-				'callback'            => array( __CLASS__, 'delete' ),
-				'permission_callback' => $perm,
-			)
+			Yazan_REST_Guard::args( WP_REST_Server::DELETABLE, array( __CLASS__, 'delete' ), 'backup.delete' )
 		);
 
 		register_rest_route(
 			$ns,
 			'/backup/(?P<id>[A-Za-z0-9\-]+)/restore',
-			array(
-				'methods'             => WP_REST_Server::CREATABLE,
-				'callback'            => array( __CLASS__, 'restore' ),
-				'permission_callback' => $perm,
-			)
+			Yazan_REST_Guard::args( WP_REST_Server::CREATABLE, array( __CLASS__, 'restore' ), 'backup.restore' )
 		);
 
 		register_rest_route(
 			$ns,
 			'/backup/(?P<id>[A-Za-z0-9\-]+)/download-token',
-			array(
-				'methods'             => WP_REST_Server::CREATABLE,
-				'callback'            => array( __CLASS__, 'download_token' ),
-				'permission_callback' => $perm,
-			)
+			Yazan_REST_Guard::args( WP_REST_Server::CREATABLE, array( __CLASS__, 'download_token' ), 'backup.download' )
 		);
 
-		// Token-authenticated binary stream — no nonce (it's a top-level browser navigation).
+		// Token-authenticated binary stream — no nonce (it's a top-level browser navigation), so
+		// RBAC cannot apply here either. The permission check happened when download_token() minted
+		// the single-use 120-second token, and download() re-verifies the user from its payload.
 		register_rest_route(
 			$ns,
 			'/backup/download',
-			array(
-				'methods'             => WP_REST_Server::READABLE,
-				'callback'            => array( __CLASS__, 'download' ),
-				'permission_callback' => '__return_true',
+			Yazan_REST_Guard::public_args(
+				WP_REST_Server::READABLE,
+				array( __CLASS__, 'download' ),
+				'Top-level navigation with no nonce; authorised by a single-use signed token instead.'
 			)
 		);
 	}

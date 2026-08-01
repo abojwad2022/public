@@ -132,7 +132,7 @@ const ImportSite = () => {
 
 		if ( tryAgainCount >= 2 ) {
 			generateAnalyticsLead( tryAgainCount, false, {
-				id: templateId,
+				id: templateResponse?.id || templateId,
 				page_builder: builder,
 				template_type: selectedTemplateType,
 				error,

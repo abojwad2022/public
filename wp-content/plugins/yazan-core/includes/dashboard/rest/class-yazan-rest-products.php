@@ -31,71 +31,46 @@ class Yazan_REST_Products {
 			$ns,
 			'/products',
 			array(
-				array(
-					'methods'             => WP_REST_Server::READABLE,
-					'callback'            => array( __CLASS__, 'index' ),
-					'permission_callback' => Yazan_Dashboard_Auth::require_cap( 'edit_products' ),
-				),
-				array(
-					'methods'             => WP_REST_Server::CREATABLE,
-					'callback'            => array( __CLASS__, 'create' ),
-					'permission_callback' => Yazan_Dashboard_Auth::require_cap( 'edit_products' ),
-				),
+				Yazan_REST_Guard::args( WP_REST_Server::READABLE, array( __CLASS__, 'index' ), 'products.view' ),
+				Yazan_REST_Guard::args( WP_REST_Server::CREATABLE, array( __CLASS__, 'create' ), 'products.create' ),
 			)
 		);
 
+		/*
+		 * Bulk carries trash/delete among its actions, so the handler re-checks products.delete
+		 * per action — this gate only decides who may reach the bulk mechanism at all.
+		 */
 		register_rest_route(
 			$ns,
 			'/products/bulk',
-			array(
-				'methods'             => WP_REST_Server::CREATABLE,
-				'callback'            => array( __CLASS__, 'bulk' ),
-				'permission_callback' => Yazan_Dashboard_Auth::require_cap( 'edit_products' ),
-			)
+			Yazan_REST_Guard::args( WP_REST_Server::CREATABLE, array( __CLASS__, 'bulk' ), 'products.bulk' )
 		);
 
 		register_rest_route(
 			$ns,
 			'/products/(?P<id>\d+)/duplicate',
-			array(
-				'methods'             => WP_REST_Server::CREATABLE,
-				'callback'            => array( __CLASS__, 'duplicate' ),
-				'permission_callback' => Yazan_Dashboard_Auth::require_cap( 'edit_products' ),
-			)
+			Yazan_REST_Guard::args( WP_REST_Server::CREATABLE, array( __CLASS__, 'duplicate' ), 'products.duplicate' )
 		);
 
+		/*
+		 * Quick edit writes price and stock inline, so it additionally re-checks
+		 * products.change_price / products.change_stock per field inside the handler.
+		 */
 		register_rest_route(
 			$ns,
 			'/products/quick-edit',
-			array(
-				'methods'             => WP_REST_Server::CREATABLE,
-				'callback'            => array( __CLASS__, 'quick_edit' ),
-				'permission_callback' => Yazan_Dashboard_Auth::require_cap( 'edit_products' ),
-			)
+			Yazan_REST_Guard::args( WP_REST_Server::CREATABLE, array( __CLASS__, 'quick_edit' ), 'products.edit' )
 		);
 
 		register_rest_route(
 			$ns,
 			'/products/(?P<id>\d+)',
 			array(
-				array(
-					'methods'             => WP_REST_Server::READABLE,
-					'callback'            => array( __CLASS__, 'show' ),
-					'permission_callback' => Yazan_Dashboard_Auth::require_cap( 'edit_products' ),
-				),
-				array(
-					'methods'             => WP_REST_Server::EDITABLE,
-					'callback'            => array( __CLASS__, 'update' ),
-					'permission_callback' => Yazan_Dashboard_Auth::require_cap( 'edit_products' ),
-				),
-				array(
-					'methods'             => WP_REST_Server::DELETABLE,
-					'callback'            => array( __CLASS__, 'destroy' ),
-					'permission_callback' => Yazan_Dashboard_Auth::require_cap( 'delete_products' ),
-				),
+				Yazan_REST_Guard::args( WP_REST_Server::READABLE, array( __CLASS__, 'show' ), 'products.view' ),
+				Yazan_REST_Guard::args( WP_REST_Server::EDITABLE, array( __CLASS__, 'update' ), 'products.edit' ),
+				Yazan_REST_Guard::args( WP_REST_Server::DELETABLE, array( __CLASS__, 'destroy' ), 'products.delete' ),
 			)
 		);
-
 	}
 
 	/* --------------------------------------------------------------------- */
@@ -562,10 +537,38 @@ class Yazan_REST_Products {
 			return new WP_Error( 'yazan_too_many', __( 'Please save at most 100 products at a time.', 'yazan' ), array( 'status' => 400 ) );
 		}
 
+		/*
+		 * Quick edit is a single endpoint that writes several differently-trusted fields at once,
+		 * so `products.edit` gets you in and the finer permissions decide what actually lands. The
+		 * blocked fields are silently dropped rather than failing the whole batch — a warehouse
+		 * role saving twenty stock levels should not lose the lot because one row also carried a
+		 * price the UI left in the payload.
+		 */
+		$may_price = Yazan_Permissions::can( 'products.change_price' );
+		$may_stock = Yazan_Permissions::can( 'products.change_stock' );
+		$blocked   = array();
+
 		$updated = array();
 		$skipped = array();
 
 		foreach ( $rows as $row ) {
+			if ( ! $may_price ) {
+				foreach ( array( 'regular_price', 'sale_price' ) as $field ) {
+					if ( array_key_exists( $field, $row ) ) {
+						unset( $row[ $field ] );
+						$blocked['products.change_price'] = true;
+					}
+				}
+			}
+			if ( ! $may_stock ) {
+				foreach ( array( 'manage_stock', 'stock_quantity', 'stock_status' ) as $field ) {
+					if ( array_key_exists( $field, $row ) ) {
+						unset( $row[ $field ] );
+						$blocked['products.change_stock'] = true;
+					}
+				}
+			}
+
 			$id      = absint( $row['id'] ?? 0 );
 			$product = $id ? wc_get_product( $id ) : null;
 			if ( ! $product instanceof WC_Product ) {
@@ -639,7 +642,14 @@ class Yazan_REST_Products {
 		);
 
 		return new WP_REST_Response(
-			array( 'updated' => $updated, 'skipped' => $skipped, 'count' => count( $updated ) ),
+			array(
+				'updated' => $updated,
+				'skipped' => $skipped,
+				'count'   => count( $updated ),
+				// Tell the client which fields its own permissions stopped, so the UI can say so
+				// instead of the operator watching an edit quietly revert.
+				'blocked' => array_keys( $blocked ),
+			),
 			200
 		);
 	}
@@ -682,8 +692,28 @@ class Yazan_REST_Products {
 		if ( ! in_array( $action, $allowed, true ) || empty( $ids ) ) {
 			return new WP_Error( 'yazan_invalid', __( 'Invalid bulk request.', 'yazan' ), array( 'status' => 400 ) );
 		}
-		if ( in_array( $action, array( 'trash', 'delete' ), true ) && ! current_user_can( 'delete_products' ) ) {
-			return new WP_Error( 'yazan_forbidden', __( 'Insufficient permissions.', 'yazan' ), array( 'status' => rest_authorization_required_code() ) );
+		/*
+		 * Reaching /products/bulk only proves the caller may use the bulk mechanism. The
+		 * destructive actions carry their own permission, so a role that may bulk-publish is not
+		 * thereby allowed to bulk-delete.
+		 */
+		$action_perm = array(
+			'trash'          => 'products.delete',
+			'delete'         => 'products.delete',
+			'publish'        => 'products.publish',
+			'draft'          => 'products.publish',
+			'set_instock'    => 'products.change_stock',
+			'set_outofstock' => 'products.change_stock',
+		);
+		if ( ! Yazan_Permissions::can( $action_perm[ $action ] ) ) {
+			return new WP_Error(
+				'yazan_forbidden',
+				__( 'You do not have permission to run that bulk action.', 'yazan' ),
+				array(
+					'status'     => rest_authorization_required_code(),
+					'permission' => $action_perm[ $action ],
+				)
+			);
 		}
 
 		$done = array();

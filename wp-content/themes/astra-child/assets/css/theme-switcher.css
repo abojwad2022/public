@@ -10,7 +10,14 @@
 
 .yz-theme-switcher {
 	position: fixed;
-	inset-block-end: clamp(16px, 3vw, 28px);
+	/* Stacked ABOVE the concierge launcher, which is pinned to the same corner
+	   (chat.css:13-16, inset-block-end: 1.25rem) at z-index 99990 — far above this
+	   element's 1000, so overlapping would bury the switcher completely rather than
+	   merely crowd it. The collision was invisible for as long as the switcher was
+	   always relocated into the desktop header; it only surfaced once the mobile
+	   fallback started working, which is exactly where this control matters most.
+	   1.25rem (launcher offset) + ~46px (launcher height) + 10px breathing room. */
+	inset-block-end: calc(1.25rem + 56px);
 	/* Pinned bottom-LEFT so it never overlaps the modern-cart floating cart bubble
 	   (which sits bottom-right). Uses logical props → flips correctly under RTL. */
 	inset-inline-start: clamp(16px, 3vw, 28px);

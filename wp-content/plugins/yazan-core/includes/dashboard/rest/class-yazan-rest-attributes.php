@@ -30,23 +30,14 @@ class Yazan_REST_Attributes {
 	 * @return void
 	 */
 	public static function register_routes() {
-		$ns   = Yazan_Dashboard_Auth::NS;
-		$perm = Yazan_Dashboard_Auth::require_cap( self::CAP );
+		$ns = Yazan_Dashboard_Auth::NS;
 
 		register_rest_route(
 			$ns,
 			'/attributes',
 			array(
-				array(
-					'methods'             => WP_REST_Server::READABLE,
-					'callback'            => array( __CLASS__, 'index' ),
-					'permission_callback' => Yazan_Dashboard_Auth::require_cap( 'edit_products' ),
-				),
-				array(
-					'methods'             => WP_REST_Server::CREATABLE,
-					'callback'            => array( __CLASS__, 'create' ),
-					'permission_callback' => $perm,
-				),
+				Yazan_REST_Guard::args( WP_REST_Server::READABLE, array( __CLASS__, 'index' ), 'attributes.view' ),
+				Yazan_REST_Guard::args( WP_REST_Server::CREATABLE, array( __CLASS__, 'create' ), 'attributes.create' ),
 			)
 		);
 
@@ -54,16 +45,8 @@ class Yazan_REST_Attributes {
 			$ns,
 			'/attributes/(?P<id>\d+)',
 			array(
-				array(
-					'methods'             => WP_REST_Server::EDITABLE,
-					'callback'            => array( __CLASS__, 'update' ),
-					'permission_callback' => $perm,
-				),
-				array(
-					'methods'             => WP_REST_Server::DELETABLE,
-					'callback'            => array( __CLASS__, 'destroy' ),
-					'permission_callback' => $perm,
-				),
+				Yazan_REST_Guard::args( WP_REST_Server::EDITABLE, array( __CLASS__, 'update' ), 'attributes.edit' ),
+				Yazan_REST_Guard::args( WP_REST_Server::DELETABLE, array( __CLASS__, 'destroy' ), 'attributes.delete' ),
 			)
 		);
 	}

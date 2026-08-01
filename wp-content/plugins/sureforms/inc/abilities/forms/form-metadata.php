@@ -162,6 +162,9 @@ trait Form_Metadata {
 					$styling_data['field_spacing'] = $form_styling['fieldSpacing'];
 				}
 			}
+			if ( isset( $form_styling['disableDefaultStyles'] ) ) {
+				$styling_data['disable_default_styles'] = (bool) $form_styling['disableDefaultStyles'];
+			}
 
 			$post_metas['_srfm_forms_styling'] = $styling_data;
 		}

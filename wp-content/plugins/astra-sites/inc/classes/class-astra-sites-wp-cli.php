@@ -979,7 +979,7 @@ if ( class_exists( 'WP_CLI_Command' ) && ! class_exists( 'Astra_Sites_WP_CLI' ) 
 			$plugins_to_activate = array();
 
 			// 👉 Sort priority before installation.
-			$priority_order = array( 'woocommerce', 'elementor', 'ultimate-addons-for-gutenberg' );
+			$priority_order = array( 'woocommerce', 'elementor', 'spectra-blocks', 'ultimate-addons-for-gutenberg' );
 
 			uksort(
 				$all_plugins, function ( $a, $b ) use ( $priority_order ) {

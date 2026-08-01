@@ -124,6 +124,17 @@
 	 * @param {HTMLElement} sw The switcher root.
 	 * @return {boolean} True when placed inside the header.
 	 */
+	/**
+	 * Is the element actually rendered? An element inside `display:none` has no
+	 * offsetParent and no client rects.
+	 *
+	 * @param {Element} el Element to test.
+	 * @return {boolean}
+	 */
+	function isVisible(el) {
+		return !!el && !!(el.offsetWidth || el.offsetHeight || el.getClientRects().length);
+	}
+
 	function placeInHeader(sw) {
 		if (sw.closest('.site-header-primary-section-right')) { return true; }
 
@@ -132,8 +143,13 @@
 			|| document.querySelector('.elementor-location-header');
 		if (!header) { return false; }
 
+		// querySelector returns the FIRST match, which is the DESKTOP header's cluster.
+		// Below Astra's 921px breakpoint that whole header is display:none, so the
+		// switcher used to be moved into an invisible container and vanished entirely
+		// on phones instead of falling back to its floating button. Refuse to place it
+		// anywhere that is not actually on screen.
 		var right = header.querySelector('.site-header-primary-section-right');
-		if (!right) { return false; }
+		if (!isVisible(right)) { return false; }
 
 		// Wrap in an Astra header-item slot so it aligns with its siblings.
 		var slot = document.createElement('div');
@@ -147,6 +163,46 @@
 		return true;
 	}
 
+	/**
+	 * Return the switcher to where PHP rendered it, so it shows as the floating
+	 * button again. Dropping the in-header class restores the fixed positioning
+	 * that theme-switcher.css un-sets while it lives in the bar.
+	 *
+	 * @param {HTMLElement} sw   The switcher root.
+	 * @param {Element}     home Original parent node.
+	 * @return {void}
+	 */
+	function restoreFloating(sw, home) {
+		var slot = sw.closest('.yz-theme-slot');
+
+		home.appendChild(sw);
+		sw.classList.remove('yz-theme-switcher--in-header');
+
+		if (slot && slot.parentNode) { slot.parentNode.removeChild(slot); }
+	}
+
+	/**
+	 * Put the switcher wherever the current viewport can actually show it, and keep
+	 * that true across resizes and orientation changes.
+	 *
+	 * @param {HTMLElement} sw   The switcher root.
+	 * @param {Element}     home Original parent node.
+	 * @return {void}
+	 */
+	function syncPlacement(sw, home) {
+		var inHeader = !!sw.closest('.site-header-primary-section-right');
+
+		if (inHeader) {
+			// The bar it lives in may have just been hidden by a resize.
+			if (!isVisible(sw.closest('.site-header-primary-section-right'))) {
+				restoreFloating(sw, home);
+			}
+			return;
+		}
+
+		placeInHeader(sw);
+	}
+
 	function init() {
 		// Attribute is already set pre-paint; make sure controls agree.
 		syncControls(current());
@@ -154,11 +210,27 @@
 		var sw = document.querySelector('.yz-theme-switcher');
 		if (!sw) { return; }
 
+		// Where PHP rendered it — the fallback home for viewports with no desktop bar.
+		var home = sw.parentNode;
+
 		// Move into the header if possible; reveal once positioned (no flash of
 		// the old floating spot). The switcher is JS-only anyway, so gating its
 		// visibility on this init is safe.
 		placeInHeader(sw);
 		sw.classList.add('is-ready');
+
+		// Re-decide on resize / orientation change: crossing Astra's breakpoint in
+		// either direction swaps which header is on screen, and the switcher has to
+		// follow or it disappears. rAF-throttled — resize fires continuously.
+		var pending = false;
+		window.addEventListener('resize', function () {
+			if (pending) { return; }
+			pending = true;
+			window.requestAnimationFrame(function () {
+				pending = false;
+				syncPlacement(sw, home);
+			});
+		});
 
 		var toggle = sw.querySelector('.yz-theme-switcher__toggle');
 		var panel = sw.querySelector('.yz-theme-switcher__panel');

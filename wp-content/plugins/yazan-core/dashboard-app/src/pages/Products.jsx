@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router'
 import { productsApi } from '../api/endpoints.js'
 import { useMeta, formatPrice } from '../context/MetaContext.jsx'
 import { useToast } from '../context/ToastContext.jsx'
 import { useAuth } from '../context/AuthContext.jsx'
 import { PageHeader } from '../components/Layout.jsx'
+import { Can } from '../components/Protected.jsx'
 import {
   Badge,
   Button,
@@ -226,9 +227,11 @@ export default function Products() {
         subtitle={data ? `${data.total} product${data.total === 1 ? '' : 's'}` : ' '}
         breadcrumbs={[{ label: 'Catalog' }, { label: 'Products' }]}
         actions={
-          <Button variant="primary" icon={Plus} onClick={() => navigate('/products/new')}>
-            Add product
-          </Button>
+          <Can perm="products.create">
+            <Button variant="primary" icon={Plus} onClick={() => navigate('/products/new')}>
+              Add product
+            </Button>
+          </Can>
         }
       />
 
@@ -297,8 +300,8 @@ export default function Products() {
               <option value="draft">Set to draft</option>
               <option value="set_instock">Mark in stock</option>
               <option value="set_outofstock">Mark out of stock</option>
-              {can('delete_products') && <option value="trash">Move to trash</option>}
-              {can('delete_products') && <option value="delete">Delete permanently</option>}
+              {can('products.delete') && <option value="trash">Move to trash</option>}
+              {can('products.delete') && <option value="delete">Delete permanently</option>}
             </Select>
             <Button size="sm" variant="primary" onClick={runBulk} disabled={!bulkAction}>
               Apply
@@ -465,7 +468,7 @@ export default function Products() {
                               icon: ExternalLink,
                               onSelect: () => window.open(product.permalink, '_blank', 'noreferrer'),
                             },
-                            ...(can('delete_products')
+                            ...(can('products.delete')
                               ? [
                                   {
                                     key: 'trash',

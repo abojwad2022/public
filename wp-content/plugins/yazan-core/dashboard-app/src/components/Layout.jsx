@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { NavLink, useLocation, useNavigate } from 'react-router-dom'
+import { NavLink, useLocation, useNavigate } from 'react-router'
 import { useAuth } from '../context/AuthContext.jsx'
 import { useOrderAlerts } from '../context/OrderAlertsContext.jsx'
 import { boot } from '../api/client.js'
@@ -20,6 +20,7 @@ import {
   FolderTree,
   Gavel,
   Gift,
+  KeyRound,
   LayoutDashboard,
   Lightbulb,
   LogOut,
@@ -34,6 +35,7 @@ import {
   Settings as SettingsIcon,
   Share2,
   ShieldAlert,
+  ShieldCheck,
   ShoppingCart,
   SlidersHorizontal,
   Sparkles,
@@ -41,6 +43,7 @@ import {
   Sun,
   Tags,
   Ticket,
+  UserCog,
   UserPlus,
   Users,
   Wrench,
@@ -156,40 +159,40 @@ const TINT = {
 const NAV = [
   {
     tint: 1, // agate red — the brand hue on the home anchor
-    items: [{ to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true }],
+    items: [{ to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true, perm: 'dashboard.view' }],
   },
   {
     section: 'Catalog',
     tint: 3, // amber — goods, closest to the gold/agate brand warmth
     items: [
-      { to: '/products', label: 'Products', icon: Package },
-      { to: '/categories', label: 'Categories', icon: FolderTree },
-      { to: '/attributes', label: 'Attributes', icon: Tags },
-      { to: '/inventory', label: 'Inventory', icon: Boxes },
+      { to: '/products', label: 'Products', icon: Package, perm: 'products.view' },
+      { to: '/categories', label: 'Categories', icon: FolderTree, perm: 'categories.view' },
+      { to: '/attributes', label: 'Attributes', icon: Tags, perm: 'attributes.view' },
+      { to: '/inventory', label: 'Inventory', icon: Boxes, perm: 'inventory.view' },
     ],
   },
   {
     section: 'Sales',
     tint: 5, // green — money moving
     items: [
-      { to: '/orders', label: 'Orders', icon: ShoppingCart, cap: 'edit_shop_orders' },
-      { to: '/customers', label: 'Customers', icon: Users, cap: 'edit_shop_orders' },
-      { to: '/coupons', label: 'Coupons', icon: Ticket, cap: 'manage_woo' },
+      { to: '/orders', label: 'Orders', icon: ShoppingCart, perm: 'orders.view' },
+      { to: '/customers', label: 'Customers', icon: Users, perm: 'customers.view' },
+      { to: '/coupons', label: 'Coupons', icon: Ticket, perm: 'coupons.view' },
     ],
   },
   {
     section: 'Intelligence',
     tint: 2, // cyan — the analytical group
     items: [
-      { to: '/reports', label: 'Reports', icon: ChartNoAxesColumn, cap: 'manage_woo' },
-      { to: '/ai', label: 'AI Studio', icon: Sparkles, end: true },
-      { to: '/ai/insights', label: 'AI Insights', icon: Lightbulb, cap: 'manage_woo' },
+      { to: '/reports', label: 'Reports', icon: ChartNoAxesColumn, perm: 'reports.view' },
+      { to: '/ai', label: 'AI Studio', icon: Sparkles, end: true, perm: 'ai.use' },
+      { to: '/ai/insights', label: 'AI Insights', icon: Lightbulb, perm: 'ai.insights_view' },
     ],
   },
   {
     section: 'Rewards',
     tint: 6, // magenta — loyalty, distinct from anything commercial
-    cap: 'manage_yazan_rewards',
+    perm: 'rewards.view',
     collapsible: true,
     icon: Gift,
     // Where the collapsed rail's single Rewards icon points. /rewards redirects
@@ -211,12 +214,25 @@ const NAV = [
     ],
   },
   {
+    section: 'Access',
+    // Reuses the System blue: TINT only defines hues 1-6 (see the map above) and all six are
+    // taken. A seventh would need a new --yz-viz-7 token, and Access is utility work like System.
+    tint: 4,
+    // No group-level `perm` — NavSection already returns null once every item filters out, so a
+    // role with none of these permissions never sees the heading.
+    items: [
+      { to: '/users', label: 'Users', icon: UserCog, perm: 'users.view' },
+      { to: '/roles', label: 'Roles', icon: ShieldCheck, perm: 'roles.view' },
+      { to: '/permissions', label: 'Permissions', icon: KeyRound, perm: 'permissions.view' },
+    ],
+  },
+  {
     section: 'System',
     tint: 4, // blue — utility, cool and recessive
     items: [
-      { to: '/settings', label: 'Settings', icon: SettingsIcon, cap: 'manage_woo' },
-      { to: '/ai/settings', label: 'AI Settings', icon: SlidersHorizontal, cap: 'manage_woo' },
-      { to: '/activity', label: 'Activity log', icon: ScrollText, cap: 'manage_woo' },
+      { to: '/settings', label: 'Settings', icon: SettingsIcon, perm: 'settings.view' },
+      { to: '/ai/settings', label: 'AI Settings', icon: SlidersHorizontal, perm: 'ai.configure' },
+      { to: '/activity', label: 'Activity log', icon: ScrollText, perm: 'audit.view' },
     ],
   },
 ]
@@ -274,7 +290,7 @@ function NavItem({ item, collapsed, onNavigate, indented, tint }) {
 
 function NavSection({ group, can, collapsed, onNavigate }) {
   const { pathname } = useLocation()
-  const items = group.items.filter((i) => !i.cap || can(i.cap))
+  const items = group.items.filter((i) => !i.perm || can(i.perm))
   const hasActive = items.some((i) => pathname === i.to || pathname.startsWith(`${i.to}/`))
   const [open, setOpen] = useState(hasActive)
 
@@ -501,9 +517,9 @@ export default function Layout({ children }) {
 
   const destinations = useMemo(
     () =>
-      NAV.filter((g) => !g.cap || can(g.cap)).flatMap((g) =>
+      NAV.filter((g) => !g.perm || can(g.perm)).flatMap((g) =>
         g.items
-          .filter((i) => !i.cap || can(i.cap))
+          .filter((i) => !i.perm || can(i.perm))
           .map((i) => ({ ...i, section: g.section, icon: i.icon || g.icon }))
       ),
     [can]
@@ -538,7 +554,7 @@ export default function Layout({ children }) {
         </div>
 
         <nav aria-label="Main" className="yz-scroll-y flex-1 overflow-y-auto p-2">
-          {NAV.filter((g) => !g.cap || can(g.cap)).map((group, i) => (
+          {NAV.filter((g) => !g.perm || can(g.perm)).map((group, i) => (
             <NavSection
               key={group.section || `group-${i}`}
               group={group}

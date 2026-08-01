@@ -1,0 +1,154 @@
+/**
+ * "Continue with Google / Apple" buttons.
+ *
+ * Written against the child theme's design tokens with hard fallbacks after every var(), so the
+ * block re-tints automatically with the Black/Burgundy switcher and still looks deliberate if the
+ * module is ever run under a different theme (it lives in the plugin, not the theme, so it has to
+ * stand on its own).
+ *
+ * Direction-agnostic throughout — logical properties only, no left/right — so it mirrors correctly
+ * under RTL without a separate stylesheet.
+ */
+
+.yz-social-auth {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+	margin-block-end: 1.75rem;
+}
+
+.yz-social-auth__intro {
+	margin: 0;
+	font-size: 0.875rem;
+	line-height: 1.5;
+	color: var(--yz-text-2, #6b6b6b);
+}
+
+/* ------------------------------------------------------------------ */
+/* Buttons                                                            */
+/* ------------------------------------------------------------------ */
+
+.yz-social-auth__btn {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.625rem;
+
+	/* Comfortably past the 44px touch target these are mostly tapped at. */
+	min-height: 48px;
+	padding: 0.75rem 1.25rem;
+
+	border: 1px solid var(--yz-border, #d8d3cc);
+	border-radius: var(--yz-radius-sm, 4px);
+
+	font-size: 0.9375rem;
+	font-weight: 500;
+	line-height: 1.2;
+	text-decoration: none;
+
+	transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.yz-social-auth__btn:hover,
+.yz-social-auth__btn:focus-visible {
+	text-decoration: none;
+	transform: translateY(-1px);
+}
+
+.yz-social-auth__btn:active {
+	transform: translateY(0);
+}
+
+.yz-social-auth__btn:focus-visible {
+	outline: 2px solid var(--yz-focus, var(--yz-gold, #b08d57));
+	outline-offset: 2px;
+}
+
+.yz-social-auth__icon {
+	display: inline-flex;
+	flex: 0 0 auto;
+	align-items: center;
+	justify-content: center;
+}
+
+.yz-social-auth__icon svg {
+	display: block;
+}
+
+.yz-social-auth__label {
+	/* The mark + label read as one unit; keeping them centred as a pair looks tidier in a
+	   two-button stack than pinning the mark to the inline start. */
+	white-space: nowrap;
+}
+
+/*
+ * Google's brand guidelines require the four-colour mark on a light, neutral surface — so this one
+ * button deliberately does not take the brand palette.
+ */
+.yz-social-auth__btn--google {
+	background-color: #fff;
+	border-color: #dadce0;
+	color: #1f1f1f;
+}
+
+.yz-social-auth__btn--google:hover,
+.yz-social-auth__btn--google:focus-visible {
+	background-color: #f7f8f8;
+	border-color: #c9ccd0;
+	color: #1f1f1f;
+}
+
+/* Apple's mark is monochrome on a solid button — the brand ink is the right surface for it. */
+.yz-social-auth__btn--apple {
+	background-color: var(--yz-ink, #111);
+	border-color: var(--yz-ink, #111);
+	color: var(--yz-on-dark, #fff);
+}
+
+.yz-social-auth__btn--apple:hover,
+.yz-social-auth__btn--apple:focus-visible {
+	background-color: var(--yz-900, #1c1c1c);
+	border-color: var(--yz-900, #1c1c1c);
+	color: var(--yz-on-dark, #fff);
+}
+
+/* ------------------------------------------------------------------ */
+/* Divider                                                            */
+/* ------------------------------------------------------------------ */
+
+.yz-social-auth__divider {
+	display: flex;
+	align-items: center;
+	gap: 0.875rem;
+
+	margin-block-start: 0.5rem;
+
+	font-size: 0.75rem;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: var(--yz-text-2, #8a8279);
+}
+
+.yz-social-auth__divider::before,
+.yz-social-auth__divider::after {
+	content: "";
+	flex: 1 1 auto;
+	height: 1px;
+	background-color: var(--yz-hairline, var(--yz-border, #e2ddd6));
+}
+
+/* ------------------------------------------------------------------ */
+/* Motion                                                             */
+/* ------------------------------------------------------------------ */
+
+@media (prefers-reduced-motion: reduce) {
+	.yz-social-auth__btn {
+		transition: none;
+	}
+
+	.yz-social-auth__btn:hover,
+	.yz-social-auth__btn:focus-visible,
+	.yz-social-auth__btn:active {
+		transform: none;
+	}
+}

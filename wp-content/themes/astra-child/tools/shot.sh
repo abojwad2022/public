@@ -48,6 +48,25 @@ fi
 # Convert the Git-Bash path to a Windows path Chrome understands.
 WINOUT=$(echo "$OUT" | sed -E 's#^/c/#C:/#; s#^/([a-z])/#\U\1:/#')
 
+# MOBILE MUST GO THROUGH CDP. `--window-size=390,844` alone renders in DESKTOP mode at a narrow
+# window, and desktop Chrome ignores <meta name="viewport"> — so the page lays out as a squeezed
+# desktop page and appears clipped at the right edge even when a real phone renders it perfectly.
+# That artefact was mistaken for a genuine "mobile overflow bug" and cost real debugging time.
+# Only Emulation.setDeviceMetricsOverride{mobile:true} (DevTools protocol) sets the mobile flag,
+# so shot-cdp.mjs drives it via Node. Desktop shots stay on the fast CLI path below, where the two
+# approaches agree. The CDP path also PRINTS the real scrollWidth vs clientWidth, so overflow is
+# something you read rather than something you guess at from a picture.
+if [ "$MODE" = "mobile" ]; then
+  CDP="$(dirname "$0")/shot-cdp.mjs"
+  if command -v node >/dev/null 2>&1 && [ -f "$CDP" ]; then
+    WINCDP=$(echo "$CDP" | sed -E 's#^/c/#C:/#; s#^/([a-z])/#\U\1:/#')
+    node "$WINCDP" "$URL" "$WINOUT" 390 844 1 && exit 0
+    echo "shot-cdp.mjs failed — falling back to the CLI path (NOT true mobile emulation)" >&2
+  else
+    echo "WARNING: node or shot-cdp.mjs missing; this is NOT true mobile emulation." >&2
+  fi
+fi
+
 "$CHROME" \
   --headless=new --disable-gpu --hide-scrollbars \
   --window-size="$SIZE" \

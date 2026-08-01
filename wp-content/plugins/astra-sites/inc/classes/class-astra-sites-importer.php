@@ -73,7 +73,6 @@ if ( ! class_exists( 'Astra_Sites_Importer' ) ) {
 
 			add_action( 'init', array( $this, 'disable_default_woo_pages_creation' ), 2 );
 			add_filter( 'upgrader_package_options', array( $this, 'plugin_install_clear_directory' ) );
-			add_filter( 'plugins_api', array( $this, 'maybe_download_spectra_v3_beta_version' ), 10, 3 );
 		}
 
 		/**
@@ -237,46 +236,6 @@ if ( ! class_exists( 'Astra_Sites_Importer' ) ) {
 
 			Astra_Sites_Importer_Log::add( 'Plugin install clear directory options returned' );
 			return $options;
-		}
-
-		/**
-		 * Maybe download Spectra Blocks plugin during Astra Sites import.
-		 *
-		 * The required-plugins list is normalised at the API response level (api_request()),
-		 * so the frontend already sends `spectra-blocks` as the slug to install. This filter
-		 * provides the custom download URL since the plugin is not on WordPress.org.
-		 *
-		 * @param false|object|array $result The result object or array. Default false.
-		 * @param string             $action The type of information being requested from the Plugin Installation API.
-		 * @param object             $args   Plugin API arguments.
-		 * @return false|object|array Modified result.
-		 */
-		public function maybe_download_spectra_v3_beta_version( $result, $action, $args ) {
-			// Only apply during Astra Sites import and for plugin_information action.
-			if ( true !== astra_sites_has_import_started() || 'plugin_information' !== $action ) {
-				return $result;
-			}
-
-			// Only intercept the spectra-blocks slug.
-			if ( ! isset( $args->slug ) || 'spectra-blocks' !== $args->slug ) {
-				return $result;
-			}
-
-			// Check for our custom request parameter to ensure it's an Astra Sites import request.
-			// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Nonce verification is not required here as we are just reading a request parameter.
-			if ( ! isset( $_REQUEST['is_ast_request'] ) || 'true' !== sanitize_text_field( $_REQUEST['is_ast_request'] ) ) {
-				return $result;
-			}
-
-			// Provide the download URL for the standalone Spectra Blocks plugin.
-			if ( ! is_object( $result ) ) {
-				$result = new stdClass();
-			}
-
-			$result->version       = '0.0.8';
-			$result->download_link = 'https://wpspectra.com/wp-content/uploads/2026/06/spectra-blocks.0.0.8.zip';
-
-			return $result;
 		}
 
 		/**

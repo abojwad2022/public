@@ -217,11 +217,6 @@ function trendLabel(pct) {
   return `${Math.abs(n)}% vs previous period`
 }
 
-function trendTone(pct) {
-  if (pct === null || pct === undefined) return 'muted'
-  return Number(pct)>= 0 ? 'ok' : 'danger'
-}
-
 function pick(value) {
   if (value == null) return ''
   if (typeof value === 'string') return value

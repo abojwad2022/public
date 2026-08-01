@@ -20,7 +20,7 @@ msgstr ""
 #: inc/abilities/abilities-registrar.php:139
 #: inc/gutenberg-hooks.php:109
 #: inc/page-builders/bricks/elements/form-widget.php:67
-#: inc/page-builders/bricks/service-provider.php:55
+#: inc/page-builders/bricks/service-provider.php:56
 #: inc/page-builders/elementor/form-widget.php:144
 #: inc/page-builders/elementor/form-widget.php:301
 #: inc/page-builders/elementor/service-provider.php:74
@@ -562,7 +562,7 @@ msgid "I consent to have this website store my submitted information so they can
 msgstr "Acconsento a che questo sito web memorizzi le informazioni che ho inviato in modo che possano rispondere alla mia richiesta."
 
 #: inc/fields/inlinebutton-markup.php:184
-#: inc/generate-form-markup.php:640
+#: inc/generate-form-markup.php:654
 msgid "Please verify that you are not a robot."
 msgstr "Per favore verifica che tu non sia un robot."
 
@@ -614,7 +614,7 @@ msgstr "I dati del modulo non sono stati trovati."
 msgid "Sorry, you are not allowed to view the form."
 msgstr "Spiacente, non sei autorizzato a visualizzare il modulo."
 
-#: inc/generate-form-markup.php:820
+#: inc/generate-form-markup.php:834
 msgid "There was an error trying to submit your form. Please try again."
 msgstr "C'è stato un errore nel tentativo di inviare il modulo. Per favore riprova."
 
@@ -699,11 +699,13 @@ msgid "Form Title"
 msgstr "Titolo del modulo"
 
 #: inc/page-builders/elementor/form-widget.php:320
+#: inc/page-builders/elementor/payment-history-widget.php:110
 #: assets/build/blocks.js:172
 msgid "Show"
 msgstr "Mostra"
 
 #: inc/page-builders/elementor/form-widget.php:321
+#: inc/page-builders/elementor/payment-history-widget.php:111
 #: assets/build/blocks.js:172
 msgid "Hide"
 msgstr "Nascondi"
@@ -797,7 +799,7 @@ msgstr "Modulo aggiornato."
 #: inc/global-settings/global-settings-defaults.php:166
 #: inc/migrator/importers/cf7-importer.php:168
 #: inc/migrator/importers/ninja-importer.php:1152
-#: inc/post-types.php:998
+#: inc/post-types.php:1004
 msgid "Admin Notification Email"
 msgstr "Email di notifica amministrativa"
 
@@ -805,7 +807,7 @@ msgstr "Email di notifica amministrativa"
 #. translators: %s: {form_title} smart tag placeholder.
 #: inc/global-settings/global-settings-defaults.php:173
 #: inc/global-settings/global-settings.php:588
-#: inc/post-types.php:1005
+#: inc/post-types.php:1011
 #: assets/build/settings.js:172
 #, php-format,js-format
 msgid "New Form Submission - %s"
@@ -8331,7 +8333,7 @@ msgstr "Modifica modulo"
 #: inc/blocks/sform/block.php:42
 #: inc/page-builders/bricks/elements/form-widget.php:508
 #: inc/page-builders/elementor/form-widget.php:827
-#: inc/post-types.php:1318
+#: inc/post-types.php:1324
 #: assets/build/blocks.js:172
 msgid "This form has been deleted or is unavailable."
 msgstr "Questo modulo è stato eliminato o non è disponibile."
@@ -9327,7 +9329,7 @@ msgstr "Precedente"
 
 #: inc/global-settings/global-settings.php:530
 #: inc/migrator/base-migrator.php:548
-#: inc/post-types.php:1081
+#: inc/post-types.php:1087
 #: assets/build/formEditor.js:172
 msgid "Thank you"
 msgstr "Grazie"
@@ -13462,7 +13464,7 @@ msgstr "Modifica questo modulo"
 
 #: inc/global-settings/global-settings.php:531
 #: inc/migrator/base-migrator.php:549
-#: inc/post-types.php:1081
+#: inc/post-types.php:1087
 msgid "Your form has been submitted successfully. We'll review your details and get back to you soon."
 msgstr "Il tuo modulo è stato inviato con successo. Esamineremo i tuoi dettagli e ti ricontatteremo presto."
 
@@ -15605,23 +15607,23 @@ msgstr "Metadati opzionali del modulo, inclusi impostazioni di conferma, conform
 msgid "Message displayed after successful submission."
 msgstr "Messaggio visualizzato dopo l'invio riuscito."
 
-#: inc/abilities/forms/create-form.php:245
+#: inc/abilities/forms/create-form.php:249
 msgid "Form publish status."
 msgstr "Stato di pubblicazione del modulo."
 
-#: inc/abilities/forms/create-form.php:290
+#: inc/abilities/forms/create-form.php:294
 msgid "Form title is required."
 msgstr "Il titolo del modulo è obbligatorio."
 
-#: inc/abilities/forms/create-form.php:298
+#: inc/abilities/forms/create-form.php:302
 msgid "At least one form field is required."
 msgstr "È richiesto almeno un campo del modulo."
 
-#: inc/abilities/forms/create-form.php:326
+#: inc/abilities/forms/create-form.php:330
 msgid "Failed to generate form fields from the provided data."
 msgstr "Impossibile generare i campi del modulo dai dati forniti."
 
-#: inc/abilities/forms/create-form.php:383
+#: inc/abilities/forms/create-form.php:387
 msgid "Failed to create the form."
 msgstr "Creazione del modulo non riuscita."
 
@@ -15641,7 +15643,7 @@ msgstr "Se vero, elimina definitivamente il modulo. Altrimenti lo sposta nel ces
 #: inc/abilities/forms/get-form-stats.php:113
 #: inc/abilities/forms/get-form.php:110
 #: inc/abilities/forms/get-shortcode.php:95
-#: inc/abilities/forms/update-form.php:287
+#: inc/abilities/forms/update-form.php:291
 msgid "Form not found."
 msgstr "Modulo non trovato."
 
@@ -15841,8 +15843,8 @@ msgstr "Campo di testo"
 
 #: inc/form-restriction.php:183
 #: inc/form-restriction.php:184
-#: inc/post-types.php:1224
-#: inc/post-types.php:1264
+#: inc/post-types.php:1230
+#: inc/post-types.php:1270
 msgid "This form is not yet available. Check back after the scheduled start time."
 msgstr "Questo modulo non è ancora disponibile. Ricontrolla dopo l'orario di inizio programmato."
 
@@ -16126,8 +16128,8 @@ msgstr "Impossibile eliminare il webhook."
 msgid "Unable to connect to Stripe."
 msgstr "Impossibile connettersi a Stripe."
 
-#: inc/post-types.php:1225
-#: inc/post-types.php:1265
+#: inc/post-types.php:1231
+#: inc/post-types.php:1271
 msgid "This form is closed. The submission period has ended."
 msgstr "Questo modulo è chiuso. Il periodo di invio è terminato."
 
@@ -16662,78 +16664,78 @@ msgstr "Colore del testo su sfondi primari come esadecimale (ad esempio #FFFFFF)
 msgid "Spacing between fields."
 msgstr "Spaziatura tra i campi."
 
-#: inc/abilities/forms/create-form.php:161
-#: inc/abilities/forms/update-form.php:164
+#: inc/abilities/forms/create-form.php:165
+#: inc/abilities/forms/update-form.php:168
 msgid "Email notification settings for the first notification. Merges with existing."
 msgstr "Impostazioni di notifica email per la prima notifica. Si unisce a quelle esistenti."
 
-#: inc/abilities/forms/create-form.php:165
-#: inc/abilities/forms/update-form.php:168
+#: inc/abilities/forms/create-form.php:169
+#: inc/abilities/forms/update-form.php:172
 msgid "Enable or disable the notification."
 msgstr "Abilita o disabilita la notifica."
 
-#: inc/abilities/forms/create-form.php:169
-#: inc/abilities/forms/update-form.php:172
+#: inc/abilities/forms/create-form.php:173
+#: inc/abilities/forms/update-form.php:176
 msgid "Notification name."
 msgstr "Nome della notifica."
 
-#: inc/abilities/forms/create-form.php:173
-#: inc/abilities/forms/update-form.php:176
+#: inc/abilities/forms/create-form.php:177
+#: inc/abilities/forms/update-form.php:180
 msgid "Recipient email. Supports smart tags like {admin_email}."
 msgstr "Email del destinatario. Supporta tag intelligenti come {admin_email}."
 
-#: inc/abilities/forms/create-form.php:178
-#: inc/abilities/forms/update-form.php:181
+#: inc/abilities/forms/create-form.php:182
+#: inc/abilities/forms/update-form.php:185
 msgid "Sender name. Supports smart tags like {site_title}."
 msgstr "Nome del mittente. Supporta tag intelligenti come {site_title}."
 
-#: inc/abilities/forms/create-form.php:185
-#: inc/abilities/forms/update-form.php:188
+#: inc/abilities/forms/create-form.php:189
+#: inc/abilities/forms/update-form.php:192
 msgid "Email subject. Supports smart tags like {form_title}."
 msgstr "Oggetto dell'email. Supporta tag intelligenti come {form_title}."
 
-#: inc/abilities/forms/create-form.php:189
-#: inc/abilities/forms/update-form.php:192
+#: inc/abilities/forms/create-form.php:193
+#: inc/abilities/forms/update-form.php:196
 msgid "Email body. Supports smart tags like {all_data}."
 msgstr "Corpo dell'email. Supporta tag intelligenti come {all_data}."
 
-#: inc/abilities/forms/create-form.php:195
-#: inc/abilities/forms/update-form.php:198
+#: inc/abilities/forms/create-form.php:199
+#: inc/abilities/forms/update-form.php:202
 msgid "Form submission restrictions and scheduling."
 msgstr "Restrizioni e pianificazione dell'invio del modulo."
 
-#: inc/abilities/forms/create-form.php:199
-#: inc/abilities/forms/update-form.php:202
+#: inc/abilities/forms/create-form.php:203
+#: inc/abilities/forms/update-form.php:206
 msgid "Enable entry limit restriction."
 msgstr "Abilita la restrizione del limite di ingresso."
 
-#: inc/abilities/forms/create-form.php:203
-#: inc/abilities/forms/update-form.php:206
+#: inc/abilities/forms/create-form.php:207
+#: inc/abilities/forms/update-form.php:210
 msgid "Maximum number of entries allowed (0 = unlimited)."
 msgstr "Numero massimo di voci consentite (0 = illimitato)."
 
-#: inc/abilities/forms/create-form.php:207
-#: inc/abilities/forms/update-form.php:210
+#: inc/abilities/forms/create-form.php:211
+#: inc/abilities/forms/update-form.php:214
 msgid "Expiry date (YYYY-MM-DD)."
 msgstr "Data di scadenza (AAAA-MM-GG)."
 
-#: inc/abilities/forms/create-form.php:217
-#: inc/abilities/forms/update-form.php:220
+#: inc/abilities/forms/create-form.php:221
+#: inc/abilities/forms/update-form.php:224
 msgid "Message shown when form is closed."
 msgstr "Messaggio mostrato quando il modulo è chiuso."
 
-#: inc/abilities/forms/create-form.php:221
-#: inc/abilities/forms/update-form.php:224
+#: inc/abilities/forms/create-form.php:225
+#: inc/abilities/forms/update-form.php:228
 msgid "Enable form scheduling."
 msgstr "Abilita la pianificazione del modulo."
 
-#: inc/abilities/forms/create-form.php:225
-#: inc/abilities/forms/update-form.php:228
+#: inc/abilities/forms/create-form.php:229
+#: inc/abilities/forms/update-form.php:232
 msgid "Schedule start date (YYYY-MM-DD)."
 msgstr "Data di inizio pianificata (AAAA-MM-GG)."
 
-#: inc/abilities/forms/create-form.php:239
-#: inc/abilities/forms/update-form.php:242
+#: inc/abilities/forms/create-form.php:243
+#: inc/abilities/forms/update-form.php:246
 msgid "Custom CSS for the form."
 msgstr "CSS personalizzato per il modulo."
 
@@ -17333,37 +17335,37 @@ msgstr "Seleziona questo per creare un quiz con domande a punteggio e risultati 
 msgid "Survey Reports"
 msgstr "Rapporti di indagine"
 
-#: inc/frontend-assets.php:304
+#: inc/frontend-assets.php:311
 #: assets/build/formEditor.js:172
 #: assets/build/settings.js:172
 msgid "Heading 1"
 msgstr "Intestazione 1"
 
-#: inc/frontend-assets.php:305
+#: inc/frontend-assets.php:312
 #: assets/build/formEditor.js:172
 #: assets/build/settings.js:172
 msgid "Heading 2"
 msgstr "Intestazione 2"
 
-#: inc/frontend-assets.php:306
+#: inc/frontend-assets.php:313
 #: assets/build/formEditor.js:172
 #: assets/build/settings.js:172
 msgid "Heading 3"
 msgstr "Intestazione 3"
 
-#: inc/frontend-assets.php:307
+#: inc/frontend-assets.php:314
 #: assets/build/formEditor.js:172
 #: assets/build/settings.js:172
 msgid "Heading 4"
 msgstr "Intestazione 4"
 
-#: inc/frontend-assets.php:308
+#: inc/frontend-assets.php:315
 #: assets/build/formEditor.js:172
 #: assets/build/settings.js:172
 msgid "Heading 5"
 msgstr "Intestazione 5"
 
-#: inc/frontend-assets.php:309
+#: inc/frontend-assets.php:316
 #: assets/build/formEditor.js:172
 #: assets/build/settings.js:172
 msgid "Heading 6"
@@ -17510,6 +17512,9 @@ msgstr "Prossimo: %s"
 msgid "Cancelled %s"
 msgstr "Annullato %s"
 
+#: inc/page-builders/bricks/elements/payment-history-widget.php:51
+#: inc/page-builders/elementor/payment-history-widget.php:42
+#: inc/page-builders/elementor/payment-history-widget.php:91
 #: inc/payments/payment-history-shortcode.php:499
 msgid "Payment History"
 msgstr "Storico dei pagamenti"
@@ -18829,6 +18834,21 @@ msgstr "Scegli esattamente quali campi appaiono come colonne."
 msgid "Restrict who can view entries by user role."
 msgstr "Limita chi può visualizzare le voci in base al ruolo utente."
 
+#: inc/abilities/forms/create-form.php:159
+#: inc/abilities/forms/update-form.php:162
+msgid "When true, SureForms does not enqueue its default frontend styles for this form, so the active theme styling applies instead."
+msgstr "Quando è vero, SureForms non mette in coda i suoi stili frontend predefiniti per questo modulo, quindi si applica lo stile del tema attivo."
+
+#: inc/page-builders/bricks/elements/payment-history-widget.php:78
+#: inc/page-builders/elementor/payment-history-widget.php:98
+msgid "Items per page"
+msgstr "Elementi per pagina"
+
+#: inc/page-builders/bricks/elements/payment-history-widget.php:86
+#: inc/page-builders/elementor/payment-history-widget.php:108
+msgid "Show Subscriptions"
+msgstr "Mostra abbonamenti"
+
 #: inc/post-types.php:226
 msgctxt "post type general name"
 msgid "Forms"
@@ -19256,34 +19276,34 @@ msgctxt "block keyword"
 msgid "color"
 msgstr "colore"
 
-#: inc/frontend-assets.php:303
+#: inc/frontend-assets.php:310
 #: assets/build/formEditor.js:172
 #: assets/build/settings.js:172
 msgctxt "Quill heading picker: default paragraph style"
 msgid "Normal"
 msgstr "Normale"
 
-#: inc/frontend-assets.php:310
+#: inc/frontend-assets.php:317
 msgctxt "Quill link tooltip label"
 msgid "Visit URL:"
 msgstr "Visita l'URL:"
 
-#: inc/frontend-assets.php:311
+#: inc/frontend-assets.php:318
 msgctxt "Quill link tooltip label"
 msgid "Enter link:"
 msgstr "Inserisci il link:"
 
-#: inc/frontend-assets.php:312
+#: inc/frontend-assets.php:319
 msgctxt "Quill link tooltip action"
 msgid "Edit"
 msgstr "Modifica"
 
-#: inc/frontend-assets.php:313
+#: inc/frontend-assets.php:320
 msgctxt "Quill link tooltip action"
 msgid "Save"
 msgstr "Salva"
 
-#: inc/frontend-assets.php:314
+#: inc/frontend-assets.php:321
 msgctxt "Quill link tooltip action"
 msgid "Remove"
 msgstr "Rimuovi"

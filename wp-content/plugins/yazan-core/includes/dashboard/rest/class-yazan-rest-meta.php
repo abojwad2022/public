@@ -29,21 +29,15 @@ class Yazan_REST_Meta {
 		register_rest_route(
 			$ns,
 			'/meta/taxonomies',
-			array(
-				'methods'             => WP_REST_Server::READABLE,
-				'callback'            => array( __CLASS__, 'taxonomies' ),
-				'permission_callback' => Yazan_Dashboard_Auth::require_cap( 'edit_products' ),
-			)
+			// Shared reference data (categories, attributes, statuses) that MetaProvider blocks the
+			// whole SPA on, so it is gated on plain dashboard access rather than a module.
+			Yazan_REST_Guard::args( WP_REST_Server::READABLE, array( __CLASS__, 'taxonomies' ), 'dashboard.access' )
 		);
 
 		register_rest_route(
 			$ns,
 			'/stats',
-			array(
-				'methods'             => WP_REST_Server::READABLE,
-				'callback'            => array( __CLASS__, 'stats' ),
-				'permission_callback' => Yazan_Dashboard_Auth::require_cap( 'edit_products' ),
-			)
+			Yazan_REST_Guard::args( WP_REST_Server::READABLE, array( __CLASS__, 'stats' ), 'dashboard.view' )
 		);
 	}
 

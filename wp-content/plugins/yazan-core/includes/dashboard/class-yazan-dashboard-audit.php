@@ -19,7 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 class Yazan_Dashboard_Audit {
 
 	/** Bump when the table schema changes (drives re-install via dbDelta). */
-	const SCHEMA_VERSION = '1';
+	const SCHEMA_VERSION = '2';
 
 	/** Option storing the installed schema version. */
 	const SCHEMA_OPTION = 'yazan_audit_schema_version';
@@ -51,7 +51,13 @@ class Yazan_Dashboard_Audit {
 
 		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 
-		// dbDelta is picky: two spaces after PRIMARY KEY, lowercase types, KEY not INDEX.
+		/*
+		 * dbDelta is picky: two spaces after PRIMARY KEY, lowercase types, KEY not INDEX.
+		 *
+		 * v2 added `user_agent` plus the user_id and action indexes. dbDelta ADDs a missing column
+		 * to an existing table and never drops one — but it also emits CHANGE COLUMN whenever it
+		 * thinks a type differs, so the pre-existing lines below must not be reformatted.
+		 */
 		$sql = "CREATE TABLE {$table} (
 			id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
 			user_id bigint(20) unsigned NOT NULL DEFAULT 0,
@@ -60,10 +66,13 @@ class Yazan_Dashboard_Audit {
 			object_id bigint(20) unsigned NOT NULL DEFAULT 0,
 			changes longtext NULL,
 			ip varchar(45) NOT NULL DEFAULT '',
+			user_agent varchar(255) NOT NULL DEFAULT '',
 			created_at datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
 			PRIMARY KEY  (id),
 			KEY created_at (created_at),
-			KEY object (object_type,object_id)
+			KEY object (object_type,object_id),
+			KEY user_id (user_id),
+			KEY action (action)
 		) {$collate};";
 
 		dbDelta( $sql );
@@ -88,7 +97,11 @@ class Yazan_Dashboard_Audit {
 			$payload = is_string( $encoded ) ? $encoded : '';
 		}
 
-		// $wpdb->insert parameterises every value — no manual escaping needed.
+		/*
+		 * $wpdb->insert parameterises every value — no manual escaping needed. The $format array
+		 * below is POSITIONAL: it must stay in lock-step with the data array above it, or values
+		 * are bound with the wrong types and no error is raised. Keep them adjacent.
+		 */
 		$wpdb->insert( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 			self::table(),
 			array(
@@ -100,9 +113,10 @@ class Yazan_Dashboard_Audit {
 				'object_id'   => absint( $object_id ),
 				'changes'     => $payload,
 				'ip'          => self::client_ip(),
+				'user_agent'  => self::client_user_agent(),
 				'created_at'  => current_time( 'mysql' ),
 			),
-			array( '%d', '%s', '%s', '%d', '%s', '%s', '%s' )
+			array( '%d', '%s', '%s', '%d', '%s', '%s', '%s', '%s' )
 		);
 	}
 
@@ -139,8 +153,13 @@ class Yazan_Dashboard_Audit {
 		$params = array();
 
 		if ( ! empty( $args['action'] ) ) {
-			$where[]  = 'action = %s';
-			$params[] = sanitize_key( $args['action'] );
+			$where[] = 'action = %s';
+			/*
+			 * clean_action(), NOT sanitize_key() — sanitize_key strips the dot, so filtering for
+			 * "product.create" searched for "productcreate" and matched nothing. Every action name
+			 * in this table is dotted, so the filter silently returned an empty set for all of them.
+			 */
+			$params[] = self::clean_action( $args['action'] );
 		}
 		if ( ! empty( $args['object_type'] ) ) {
 			$where[]  = 'object_type = %s';
@@ -276,5 +295,18 @@ class Yazan_Dashboard_Audit {
 	private static function client_ip() {
 		$ip = isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : '';
 		return filter_var( $ip, FILTER_VALIDATE_IP ) ? $ip : '';
+	}
+
+	/**
+	 * Browser/user-agent string, truncated to the column width.
+	 *
+	 * Recorded so "who did this" can distinguish a session on the shop laptop from one on someone's
+	 * phone. It is a fingerprint, so Yazan_Core_Privacy blanks it when a user is deleted.
+	 *
+	 * @return string
+	 */
+	private static function client_user_agent() {
+		$agent = isset( $_SERVER['HTTP_USER_AGENT'] ) ? sanitize_text_field( wp_unslash( $_SERVER['HTTP_USER_AGENT'] ) ) : '';
+		return substr( $agent, 0, 255 );
 	}
 }

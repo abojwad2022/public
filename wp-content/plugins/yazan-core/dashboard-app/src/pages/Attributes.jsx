@@ -30,7 +30,7 @@ export default function Attributes() {
   const [confirm, setConfirm] = useState(null)
   const [busy, setBusy] = useState(false)
 
-  const canManage = can('manage_woo')
+  const canManage = can('attributes.edit')
 
   const load = useCallback(async () => {
     setLoading(true)

@@ -17,6 +17,7 @@ const PLUGIN_ICON_MAP = {
 	suremails: 'suremails.svg',
 	surerank: 'surerank.svg',
 	suretriggers: 'ottokit.svg',
+	surecookie: 'surecookie.svg',
 	'ultimate-addons-for-gutenberg': 'spectra.svg',
 	'ultimate-elementor': 'uae.svg',
 	'variation-swatches-woo': 'variation-swatches-woo.svg',

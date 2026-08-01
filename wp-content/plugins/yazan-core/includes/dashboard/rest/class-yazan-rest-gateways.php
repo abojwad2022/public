@@ -43,26 +43,21 @@ class Yazan_REST_Gateways {
 	 * @return void
 	 */
 	public static function register_routes() {
-		$ns   = Yazan_Dashboard_Auth::NS;
-		$perm = Yazan_Dashboard_Auth::require_cap( self::CAP );
+		$ns = Yazan_Dashboard_Auth::NS;
 
 		register_rest_route(
 			$ns,
 			'/gateways',
 			array(
-				array( 'methods' => WP_REST_Server::READABLE, 'callback' => array( __CLASS__, 'index' ), 'permission_callback' => $perm ),
-				array( 'methods' => WP_REST_Server::EDITABLE, 'callback' => array( __CLASS__, 'reorder' ), 'permission_callback' => $perm ),
+				Yazan_REST_Guard::args( WP_REST_Server::READABLE, array( __CLASS__, 'index' ), 'gateways.view' ),
+				Yazan_REST_Guard::args( WP_REST_Server::EDITABLE, array( __CLASS__, 'reorder' ), 'gateways.edit' ),
 			)
 		);
 
 		register_rest_route(
 			$ns,
 			'/gateways/(?P<id>[a-z0-9_\-]+)',
-			array(
-				'methods'             => WP_REST_Server::EDITABLE,
-				'callback'            => array( __CLASS__, 'update' ),
-				'permission_callback' => $perm,
-			)
+			Yazan_REST_Guard::args( WP_REST_Server::EDITABLE, array( __CLASS__, 'update' ), 'gateways.edit' )
 		);
 	}
 

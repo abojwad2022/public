@@ -1,3 +1,6 @@
+v1.0.8 - 16th July 2026
+- Improvement: Show the Website Pages action item in the Finish Setup checklist when the standalone Spectra Blocks plugin is active.
+
 v1.0.7 - 29th May 2026
 - New: Added SureContact action item to the Finish Setup checklist.
 

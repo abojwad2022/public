@@ -514,8 +514,8 @@ class Importer extends AjaxBase {
 		Ai_Builder_Importer_Log::add( 'Starting page builder batch processing for ' . $page_builder, 'info' );
 
 		$status = array(
-			'status' => false,
-			'msg'    => __( 'Required function not found', 'astra-sites' ),
+			'success' => false,
+			'msg'     => __( 'Required function not found', 'astra-sites' ),
 		);
 
 		if ( in_array( 'elementor', $plugins_slug, true ) ) {

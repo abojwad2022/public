@@ -1,3 +1,19 @@
+v1.2.87 - 28th July 2026
+- Improvement: PHP fatal errors during import are now captured in the import log and reported on the import screen instead of failing silently.
+- Fix: Step tracking now sends the backend-whitelisted step slugs instead of display labels, so build-with-AI onboarding steps are recorded correctly.
+
+v1.2.86 - 21st July 2026
+- Fix: Template search now correctly handles multiple keywords and keywords containing spaces or special characters.
+
+v1.2.85 - 21st July 2026
+- New: Added SureCookie plugin option in the feature list with compatibility to prevent onboarding redirect during template import.
+- Improvement: Spectra Blocks plugin is now installed from the WordPress.org repository during import, removing the temporary hardcoded download URL.
+- Improvement: Include the site source when tracking AI onboarding steps.
+- Improvement: Optimized build-with-ai carousel images for smaller file sizes.
+- Fix: Prevent Spectra Blocks 1.0.0 onboarding redirect after activation during import by updating to the renamed redirect and onboarding options.
+- Fix: Corrected typos in user-facing error messages.
+- Fix: Constrained the template preview toolbar height so it no longer stretches taller than intended.
+
 v1.2.84 - 13th July 2026
 - Fix: Progress loader jump and content alignment on the building-website screen.
 

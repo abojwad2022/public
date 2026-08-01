@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router'
 import { metaApi, ordersApi, productsApi, reportsApi } from '../api/endpoints.js'
 import { useAuth } from '../context/AuthContext.jsx'
 import { useMeta, formatPrice } from '../context/MetaContext.jsx'
 import { useToast } from '../context/ToastContext.jsx'
 import { PageHeader } from '../components/Layout.jsx'
+import { Can } from '../components/Protected.jsx'
 import {
   Badge,
   Button,
@@ -66,8 +67,8 @@ export function DashboardHome() {
   const toast = useToast()
   const navigate = useNavigate()
 
-  const canOrders = can('edit_shop_orders')
-  const canReports = can('manage_woo')
+  const canOrders = can('orders.view')
+  const canReports = can('reports.view')
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -188,9 +189,11 @@ export function DashboardHome() {
                 label="Reporting period"
               />
             )}
-            <Button variant="primary" icon={Plus} onClick={() => navigate('/products/new')}>
-              Add product
-            </Button>
+            <Can perm="products.create">
+              <Button variant="primary" icon={Plus} onClick={() => navigate('/products/new')}>
+                Add product
+              </Button>
+            </Can>
           </>
         }
       />

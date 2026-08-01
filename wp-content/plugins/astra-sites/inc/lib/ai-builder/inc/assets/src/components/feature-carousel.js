@@ -90,7 +90,7 @@ const FeatureCard = ( { card } ) => {
 
 				{ /* Card meta */ }
 				<div className="pt-3.5">
-					<h3 className="m-0 mb-1 text-xl font-bold tracking-tight text-[#0f172a]">
+					<h3 className="m-0 mb-1 text-lg font-bold tracking-tight text-[#0f172a]">
 						{ card.title }
 					</h3>
 					<p className="m-0 text-sm leading-snug text-[#64748b]">
@@ -152,7 +152,7 @@ const FeatureCarousel = () => {
 			className="flex flex-col items-center gap-5"
 		>
 			{ /* Viewport */ }
-			<div className="w-[480px] overflow-hidden rounded-[20px]">
+			<div className="w-[400px] overflow-hidden rounded-[20px]">
 				<div
 					className="flex transition-transform duration-[250ms] ease-in-out"
 					style={ {

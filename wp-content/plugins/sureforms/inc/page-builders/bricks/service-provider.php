@@ -42,6 +42,7 @@ class Service_Provider {
 			[ $this, 'bricks_translatable_strings' ]
 		);
 		\Bricks\Elements::register_element( __DIR__ . '/elements/form-widget.php' );
+		\Bricks\Elements::register_element( __DIR__ . '/elements/payment-history-widget.php' );
 	}
 
 	/**

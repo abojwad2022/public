@@ -303,7 +303,7 @@ const SitePreview = ( { handleClickStartBuilding, isInProgress } ) => {
 		return (
 			<div
 				className={ classNames(
-					'flex items-center gap-2.5 py-0 px-3 bg-white shadow-sm rounded-t-lg mx-auto h-[44px] z-[1] relative',
+					'flex items-center gap-2.5 py-0 px-3 bg-white shadow-sm rounded-t-lg mx-auto h-11 max-h-11 z-[1] relative',
 					responsiveMode?.name === 'desktop' && 'w-full mx-0',
 					responsiveMode?.name === 'tablet' && 'w-[800px]',
 					responsiveMode?.name === 'mobile' && 'w-[400px]'

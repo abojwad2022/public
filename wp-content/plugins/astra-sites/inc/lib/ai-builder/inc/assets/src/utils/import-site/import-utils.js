@@ -313,6 +313,16 @@ export const getFeaturePluginList = (
 					init: 'surerank/surerank.php',
 				} );
 				break;
+			case 'sure-cookie':
+				requiredPlugins.push( {
+					name: 'SureCookie',
+					slug: 'surecookie',
+					compulsory: siteFeatures?.find(
+						( f ) => f.id === 'sure-cookie'
+					)?.compulsory,
+					init: 'surecookie/surecookie.php',
+				} );
+				break;
 			case 'sales-funnels':
 				requiredPlugins.push( {
 					name: 'CartFlows',
@@ -514,7 +524,7 @@ export const setColorPalettes = async ( palette ) => {
 		method: 'post',
 		body: data,
 	} ).catch( ( e ) =>
-		showErrorToast( __( 'Failed to save Color Palletes', 'ai-builder' ), e )
+		showErrorToast( __( 'Failed to save Color Palettes', 'ai-builder' ), e )
 	);
 };
 
@@ -534,7 +544,7 @@ export const setSiteTitle = async ( businessName, showSiteTitle ) => {
 		method: 'post',
 		body: data,
 	} ).catch( ( e ) =>
-		showErrorToast( __( 'Failed to save Color Palletes', 'ai-builder' ), e )
+		showErrorToast( __( 'Failed to save Color Palettes', 'ai-builder' ), e )
 	);
 };
 

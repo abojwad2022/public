@@ -65,15 +65,14 @@ class Yazan_REST_Tax {
 	 * @return void
 	 */
 	public static function register_routes() {
-		$ns   = Yazan_Dashboard_Auth::NS;
-		$perm = Yazan_Dashboard_Auth::require_cap( self::CAP );
+		$ns = Yazan_Dashboard_Auth::NS;
 
 		register_rest_route(
 			$ns,
 			'/tax',
 			array(
-				array( 'methods' => WP_REST_Server::READABLE, 'callback' => array( __CLASS__, 'index' ), 'permission_callback' => $perm ),
-				array( 'methods' => WP_REST_Server::EDITABLE, 'callback' => array( __CLASS__, 'update_settings' ), 'permission_callback' => $perm ),
+				Yazan_REST_Guard::args( WP_REST_Server::READABLE, array( __CLASS__, 'index' ), 'tax.view' ),
+				Yazan_REST_Guard::args( WP_REST_Server::EDITABLE, array( __CLASS__, 'update_settings' ), 'tax.edit' ),
 			)
 		);
 
@@ -81,8 +80,8 @@ class Yazan_REST_Tax {
 			$ns,
 			'/tax/classes',
 			array(
-				array( 'methods' => WP_REST_Server::CREATABLE, 'callback' => array( __CLASS__, 'create_class' ), 'permission_callback' => $perm ),
-				array( 'methods' => WP_REST_Server::DELETABLE, 'callback' => array( __CLASS__, 'delete_class' ), 'permission_callback' => $perm ),
+				Yazan_REST_Guard::args( WP_REST_Server::CREATABLE, array( __CLASS__, 'create_class' ), 'tax.edit' ),
+				Yazan_REST_Guard::args( WP_REST_Server::DELETABLE, array( __CLASS__, 'delete_class' ), 'tax.edit' ),
 			)
 		);
 
@@ -90,8 +89,8 @@ class Yazan_REST_Tax {
 			$ns,
 			'/tax/rates',
 			array(
-				array( 'methods' => WP_REST_Server::READABLE, 'callback' => array( __CLASS__, 'rates' ), 'permission_callback' => $perm ),
-				array( 'methods' => WP_REST_Server::CREATABLE, 'callback' => array( __CLASS__, 'create_rate' ), 'permission_callback' => $perm ),
+				Yazan_REST_Guard::args( WP_REST_Server::READABLE, array( __CLASS__, 'rates' ), 'tax.view' ),
+				Yazan_REST_Guard::args( WP_REST_Server::CREATABLE, array( __CLASS__, 'create_rate' ), 'tax.edit' ),
 			)
 		);
 
@@ -99,8 +98,8 @@ class Yazan_REST_Tax {
 			$ns,
 			'/tax/rates/(?P<id>\d+)',
 			array(
-				array( 'methods' => WP_REST_Server::EDITABLE, 'callback' => array( __CLASS__, 'update_rate' ), 'permission_callback' => $perm ),
-				array( 'methods' => WP_REST_Server::DELETABLE, 'callback' => array( __CLASS__, 'delete_rate' ), 'permission_callback' => $perm ),
+				Yazan_REST_Guard::args( WP_REST_Server::EDITABLE, array( __CLASS__, 'update_rate' ), 'tax.edit' ),
+				Yazan_REST_Guard::args( WP_REST_Server::DELETABLE, array( __CLASS__, 'delete_rate' ), 'tax.edit' ),
 			)
 		);
 	}

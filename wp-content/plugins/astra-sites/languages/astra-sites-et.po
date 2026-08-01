@@ -14,9 +14,9 @@ msgstr ""
 #. Plugin Name of the plugin
 #: astra-sites.php
 #: astra-sites.php:133
-#: inc/classes/class-astra-sites-nps-notice.php:115
+#: inc/classes/class-astra-sites-nps-notice.php:121
 #: inc/classes/class-astra-sites-utils.php:87
-#: inc/classes/class-astra-sites.php:3056
+#: inc/classes/class-astra-sites.php:3064
 #: inc/lib/onboarding/class-onboarding-loader.php:111
 #: inc/lib/ai-builder/inc/assets/build/main.js:191
 #: inc/lib/onboarding/assets/dist/onboarding/main.js:123
@@ -57,13 +57,10 @@ msgstr "Hangi Oluline Tööriistakomplekt"
 #: inc/classes/class-astra-sites-error-handler.php:109
 #: inc/classes/class-astra-sites-error-handler.php:153
 #: inc/lib/ai-builder/inc/classes/importer/class-ai-builder-error-handler.php:110
-#: inc/lib/starter-templates-importer/resetter/st-resetter.php:531
-msgid "There was an error on your website."
-msgstr "Teie veebisaidil oli viga."
-
 #: inc/lib/ai-builder/inc/classes/importer/class-ai-builder-error-handler.php:164
-#: inc/lib/starter-templates-importer/resetter/st-resetter.php:500
-msgid "There was an error your website."
+#: inc/lib/starter-templates-importer/resetter/st-resetter.php:506
+#: inc/lib/starter-templates-importer/resetter/st-resetter.php:537
+msgid "There was an error on your website."
 msgstr "Teie veebisaidil oli viga."
 
 #. translators: %1$s refers to the plugin name
@@ -80,25 +77,25 @@ msgstr "See on tavaliselt tingitud ebajärjekindlatest faililubadest."
 msgid "You can easily update permissions by adding the following code into the wp-config.php file."
 msgstr "Saate õigusi hõlpsasti uuendada, lisades järgmise koodi wp-config.php faili."
 
-#: inc/lib/starter-templates-importer/importer/st-importer-log.php:449
+#: inc/lib/starter-templates-importer/importer/st-importer-log.php:443
 msgid "Enabled"
 msgstr "Lubatud"
 
-#: inc/lib/starter-templates-importer/importer/st-importer-log.php:452
+#: inc/lib/starter-templates-importer/importer/st-importer-log.php:446
 msgid "Disabled"
 msgstr "Keelatud"
 
-#: inc/lib/starter-templates-importer/importer/st-importer-log.php:536
-#: inc/lib/starter-templates-importer/importer/st-importer-log.php:593
+#: inc/lib/starter-templates-importer/importer/st-importer-log.php:530
+#: inc/lib/starter-templates-importer/importer/st-importer-log.php:587
 msgid "Yes"
 msgstr "Jah"
 
-#: inc/lib/starter-templates-importer/importer/st-importer-log.php:539
-#: inc/lib/starter-templates-importer/importer/st-importer-log.php:596
+#: inc/lib/starter-templates-importer/importer/st-importer-log.php:533
+#: inc/lib/starter-templates-importer/importer/st-importer-log.php:590
 msgid "No"
 msgstr "Ei"
 
-#: inc/lib/starter-templates-importer/importer/st-importer-log.php:611
+#: inc/lib/starter-templates-importer/importer/st-importer-log.php:605
 msgid "You currently have no scheduled cron events."
 msgstr "Teil ei ole praegu ühtegi ajastatud cron sündmust."
 
@@ -110,7 +107,7 @@ msgstr "Teil ei ole praegu ühtegi ajastatud cron sündmust."
 #: inc/classes/class-astra-sites.php:1339
 #: inc/classes/class-astra-sites.php:1434
 #: inc/classes/class-astra-sites.php:1469
-#: inc/classes/class-astra-sites.php:1669
+#: inc/classes/class-astra-sites.php:1677
 #: inc/importers/batch-processing/class-astra-sites-batch-processing.php:1033
 #: inc/importers/batch-processing/class-astra-sites-batch-processing.php:1053
 #: inc/importers/batch-processing/class-astra-sites-batch-processing.php:1071
@@ -119,13 +116,13 @@ msgstr "Teil ei ole praegu ühtegi ajastatud cron sündmust."
 #: inc/lib/ai-builder/inc/ajax/plugin.php:372
 #: inc/lib/ai-builder/inc/ajax/plugin.php:377
 #: inc/lib/ai-builder/inc/traits/helper.php:965
-#: inc/lib/gutenberg-templates/inc/importer/plugin.php:248
-#: inc/lib/gutenberg-templates/inc/importer/plugin.php:315
-#: inc/lib/gutenberg-templates/inc/importer/plugin.php:359
-#: inc/lib/gutenberg-templates/inc/importer/plugin.php:383
-#: inc/lib/gutenberg-templates/inc/importer/plugin.php:483
-#: inc/lib/gutenberg-templates/inc/importer/plugin.php:577
-#: inc/lib/gutenberg-templates/inc/importer/plugin.php:1164
+#: inc/lib/gutenberg-templates/inc/importer/plugin.php:247
+#: inc/lib/gutenberg-templates/inc/importer/plugin.php:314
+#: inc/lib/gutenberg-templates/inc/importer/plugin.php:358
+#: inc/lib/gutenberg-templates/inc/importer/plugin.php:382
+#: inc/lib/gutenberg-templates/inc/importer/plugin.php:482
+#: inc/lib/gutenberg-templates/inc/importer/plugin.php:576
+#: inc/lib/gutenberg-templates/inc/importer/plugin.php:1111
 #: inc/lib/gutenberg-templates/inc/importer/sync-library.php:361
 #: inc/lib/gutenberg-templates/inc/importer/sync-library.php:488
 #: inc/lib/gutenberg-templates/inc/importer/sync-library.php:513
@@ -141,15 +138,15 @@ msgstr "Teil ei ole praegu ühtegi ajastatud cron sündmust."
 msgid "You are not allowed to perform this action"
 msgstr "Teil ei ole lubatud seda toimingut teha"
 
-#: inc/classes/class-astra-sites-nps-notice.php:126
+#: inc/classes/class-astra-sites-nps-notice.php:132
 msgid "Thanks a lot for your feedback! 😍"
 msgstr "Suur tänu tagasiside eest! 😍"
 
-#: inc/classes/class-astra-sites-nps-notice.php:130
+#: inc/classes/class-astra-sites-nps-notice.php:136
 msgid "Thank you for your feedback"
 msgstr "Aitäh tagasiside eest"
 
-#: inc/classes/class-astra-sites-nps-notice.php:131
+#: inc/classes/class-astra-sites-nps-notice.php:137
 msgid "We value your input. How can we improve your experience?"
 msgstr "Hindame teie panust. Kuidas saaksime teie kogemust parandada?"
 
@@ -449,12 +446,6 @@ msgstr "Seda saidi kategooriat ei eksisteeri. Palun proovige teist saidi kategoo
 msgid "%s: XMLReader extension is missing! To import templates, please get in touch with your hosting provider to enable this extension."
 msgstr "%s: XMLReader laiend on puudu! Mallide importimiseks võtke ühendust oma majutusteenuse pakkujaga, et see laiend lubada."
 
-#. translators: %d is the Template ID.
-#: inc/classes/class-astra-sites.php:791
-#, php-format
-msgid "Invalid Template ID - %d"
-msgstr "Kehtetu malli ID - %d"
-
 #: inc/classes/class-astra-sites.php:900
 #: inc/classes/class-astra-sites.php:1360
 msgid "Invalid API URL."
@@ -525,288 +516,276 @@ msgstr "Vaja on saata allalaaditava pildi URL"
 msgid "Could not download the image."
 msgstr "Pilti ei saanud alla laadida."
 
-#: inc/classes/class-astra-sites.php:1759
+#: inc/classes/class-astra-sites.php:1767
 msgid "Get Started"
 msgstr "Alusta"
 
-#: inc/classes/class-astra-sites.php:1972
-#: inc/classes/class-astra-sites.php:2591
+#: inc/classes/class-astra-sites.php:1980
+#: inc/classes/class-astra-sites.php:2599
 #: inc/includes/templates.php:321
 msgid "Get Access!"
 msgstr "Hangi juurdepääs!"
 
-#: inc/classes/class-astra-sites.php:1974
+#: inc/classes/class-astra-sites.php:1982
 #: inc/lib/one-onboarding/build/main.js:25
 msgid "Upgrade"
 msgstr "Uuenda"
 
-#: inc/classes/class-astra-sites.php:1978
+#: inc/classes/class-astra-sites.php:1986
 msgid "Syncing template library in the background. The process can take anywhere between 2 to 3 minutes. We will notify you once done."
 msgstr "Mallide raamatukogu sünkroonimine taustal. Protsess võib võtta aega 2 kuni 3 minutit. Anname teile teada, kui see on tehtud."
 
-#: inc/classes/class-astra-sites.php:1979
+#: inc/classes/class-astra-sites.php:1987
 msgid "Some of the files required during the import process are missing.<br/><br/>Please try again after some time."
 msgstr "Mõned impordiprotsessi ajal vajalikud failid puuduvad.<br/><br/>Palun proovige mõne aja pärast uuesti."
 
-#: inc/classes/class-astra-sites.php:1989
+#: inc/classes/class-astra-sites.php:1997
 msgid "Done! View Site"
 msgstr "Valmis! Vaata saiti"
 
 #. translators: %s is a template name
-#: inc/classes/class-astra-sites.php:1992
+#: inc/classes/class-astra-sites.php:2000
 #, php-format
 msgid "Import \"%s\" Template"
 msgstr "Impordi \"%s\" mall"
 
-#: inc/classes/class-astra-sites.php:1995
+#: inc/classes/class-astra-sites.php:2003
 msgid "Installing Required Plugins.."
 msgstr "Nõutavate pistikprogrammide installimine.."
 
 #. translators: %s are white label strings.
-#: inc/classes/class-astra-sites.php:1997
+#: inc/classes/class-astra-sites.php:2005
 #, php-format
 msgid "Installing %1$s Theme.."
 msgstr "Paigaldan %1$s teema.."
 
-#: inc/classes/class-astra-sites.php:2020
+#: inc/classes/class-astra-sites.php:2028
 msgid "Dismiss this notice."
 msgstr "Hüljake see teade."
 
-#: inc/classes/class-astra-sites.php:2022
+#: inc/classes/class-astra-sites.php:2030
 msgid "One Last Step.."
 msgstr "Viimane samm.."
 
-#: inc/classes/class-astra-sites.php:2023
+#: inc/classes/class-astra-sites.php:2031
 msgid "Your Selected Website is Being Imported."
 msgstr "Teie valitud veebisaiti imporditakse."
 
-#: inc/classes/class-astra-sites.php:2024
+#: inc/classes/class-astra-sites.php:2032
 msgid "Your Selected Template is Being Imported."
 msgstr "Teie valitud mall imporditakse."
 
-#: inc/classes/class-astra-sites.php:2026
+#: inc/classes/class-astra-sites.php:2034
 msgid "We have sent you a surprise gift on your email address! Please check your inbox!"
 msgstr "Oleme saatnud teile üllatuskingituse teie e-posti aadressile! Palun kontrollige oma postkasti!"
 
-#: inc/classes/class-astra-sites.php:2028
+#: inc/classes/class-astra-sites.php:2036
 msgid "Looks like the template you are importing is temporarily not available."
 msgstr "Tundub, et mall, mida impordite, pole ajutiselt saadaval."
 
-#: inc/classes/class-astra-sites.php:2030
+#: inc/classes/class-astra-sites.php:2038
 msgid "There was an error connecting to the Starter Templates API."
 msgstr "Starter Templates API-ga ühendamisel ilmnes viga."
 
-#: inc/classes/class-astra-sites.php:2031
+#: inc/classes/class-astra-sites.php:2039
 msgid "There was an error while importing the content."
 msgstr "Sisu importimisel tekkis viga."
 
-#: inc/classes/class-astra-sites.php:2032
+#: inc/classes/class-astra-sites.php:2040
 msgid "To import content, WordPress needs to store XML file in /wp-content/ folder. Please get in touch with your hosting provider."
 msgstr "Sisu importimiseks peab WordPress salvestama XML-faili /wp-content/ kausta. Palun võtke ühendust oma majutusteenuse pakkujaga."
 
-#: inc/classes/class-astra-sites.php:2033
+#: inc/classes/class-astra-sites.php:2041
 msgid "Looks like your host probably could not store XML file in /wp-content/ folder."
 msgstr "Tundub, et teie host ei saanud tõenäoliselt XML-faili salvestada /wp-content/ kausta."
 
 #. translators: %s URL to document.
-#: inc/classes/class-astra-sites.php:2037
+#: inc/classes/class-astra-sites.php:2045
 #, php-format
 msgid "%1$sRead&nbsp;<a href=\"%2$s\" target=\"_blank\">article</a>&nbsp;to resolve the issue and continue importing template.%3$s"
 msgstr "%1$sLoe&nbsp;<a href=\"%2$s\" target=\"_blank\">artiklit</a>&nbsp;probleemi lahendamiseks ja malli importimise jätkamiseks.%3$s"
 
 #. translators: %s URL to document.
-#: inc/classes/class-astra-sites.php:2048
+#: inc/classes/class-astra-sites.php:2056
 #, php-format
 msgid "%1$sPlease report this <a href=\"%2$s\" target=\"_blank\">here</a>.%3$s"
 msgstr "%1$sPalun teatage sellest <a href=\"%2$s\" target=\"_blank\">siin</a>.%3$s"
 
 #. translators: %s Anchor link to support URL.
-#: inc/classes/class-astra-sites.php:2053
+#: inc/classes/class-astra-sites.php:2061
 #, php-format
 msgid "Please report this error%1$s here %2$s, so we can fix it."
 msgstr "Palun teatage sellest veast%1$s siin %2$s, et saaksime selle parandada."
 
-#: inc/classes/class-astra-sites.php:2338
+#: inc/classes/class-astra-sites.php:2346
 msgid "XMLReader Support Missing"
 msgstr "XMLReaderi tugi puudub"
 
 #. translators: %s doc link.
-#: inc/classes/class-astra-sites.php:2340
+#: inc/classes/class-astra-sites.php:2348
 msgid "You're close to importing the template. To complete the process, enable XMLReader support on your website.."
 msgstr "Olete lähedal malli importimisele. Protsessi lõpuleviimiseks lubage oma veebisaidil XMLReaderi tugi."
 
 #. translators: %s doc link.
-#: inc/classes/class-astra-sites.php:2340
-#: inc/classes/class-astra-sites.php:2345
-#: inc/classes/class-astra-sites.php:2350
-#: inc/classes/class-astra-sites.php:2368
+#: inc/classes/class-astra-sites.php:2348
+#: inc/classes/class-astra-sites.php:2353
+#: inc/classes/class-astra-sites.php:2358
+#: inc/classes/class-astra-sites.php:2376
 #, php-format
 msgid "Read an article <a href=\"%s\" target=\"_blank\">here</a> to resolve the issue."
 msgstr "Loe artiklit <a href=\"%s\" target=\"_blank\">siin</a>, et probleemi lahendada."
 
-#: inc/classes/class-astra-sites.php:2343
+#: inc/classes/class-astra-sites.php:2351
 msgid "cURL Support Missing"
 msgstr "cURL tugi puudub"
 
 #. translators: %s doc link.
-#: inc/classes/class-astra-sites.php:2345
+#: inc/classes/class-astra-sites.php:2353
 msgid "To run a smooth import, kindly enable cURL support on your website."
 msgstr "Selleks, et import sujuks sujuvalt, lubage oma veebisaidil cURL tugi."
 
-#: inc/classes/class-astra-sites.php:2348
+#: inc/classes/class-astra-sites.php:2356
 msgid "Disable Debug Mode"
 msgstr "Lülita silumisrežiim välja"
 
 #. translators: %s doc link.
-#: inc/classes/class-astra-sites.php:2350
+#: inc/classes/class-astra-sites.php:2358
 msgid "WordPress debug mode is currently enabled on your website. With this, any errors from third-party plugins might affect the import process."
 msgstr "Teie veebisaidil on praegu lubatud WordPressi tõrkeotsingu režiim. Sellega võivad kolmandate osapoolte pistikprogrammide vead mõjutada importimisprotsessi."
 
 #. translators: %s doc link.
-#: inc/classes/class-astra-sites.php:2350
+#: inc/classes/class-astra-sites.php:2358
 msgid "Kindly disable it to continue importing the Starter Template. To do so, you can add the following code into the wp-config.php file."
 msgstr "Palun keelake see, et jätkata Starter Template'i importimist. Selleks saate lisada järgmise koodi wp-config.php faili."
 
-#: inc/classes/class-astra-sites.php:2353
+#: inc/classes/class-astra-sites.php:2361
 msgid "Update Plugin"
 msgstr "Uuenda pistikprogramm"
 
 #. translators: %s update page link.
-#: inc/classes/class-astra-sites.php:2355
+#: inc/classes/class-astra-sites.php:2363
 #, php-format
 msgid "Kindly <a href=\"%s\" target=\"_blank\">update</a> them for a successful import. Skipping this step might break the template design/feature."
 msgstr "Palun <a href=\"%s\" target=\"_blank\">uuendage</a> neid eduka impordi jaoks. Selle sammu vahelejätmine võib rikkuda mallide kujunduse/funktsiooni."
 
-#: inc/classes/class-astra-sites.php:2358
+#: inc/classes/class-astra-sites.php:2366
 #: inc/includes/templates.php:468
 msgid "Required Plugins Missing"
 msgstr "Nõutud pistikprogrammid puuduvad"
 
-#: inc/classes/class-astra-sites.php:2359
+#: inc/classes/class-astra-sites.php:2367
 #: inc/lib/onboarding/assets/dist/onboarding/main.js:152
 msgid "This starter template requires premium plugins. As these are third party premium plugins, you'll need to purchase, install and activate them first."
 msgstr "See stardikomplekt nõuab premium pistikprogramme. Kuna need on kolmanda osapoole premium pistikprogrammid, peate need esmalt ostma, installima ja aktiveerima."
 
-#: inc/classes/class-astra-sites.php:2362
+#: inc/classes/class-astra-sites.php:2370
 msgid "Dynamic Page"
 msgstr "Dünaamiline leht"
 
-#: inc/classes/class-astra-sites.php:2363
+#: inc/classes/class-astra-sites.php:2371
 #: inc/lib/gutenberg-templates/dist/main.js:2
 msgid "The page template you are about to import contains a dynamic widget/module. Please note this dynamic data will not be available with the imported page."
 msgstr "Lehe mall, mida kavatsete importida, sisaldab dünaamilist vidinat/moodulit. Pange tähele, et see dünaamiline teave ei ole imporditud lehel saadaval."
 
-#: inc/classes/class-astra-sites.php:2363
+#: inc/classes/class-astra-sites.php:2371
 #: inc/lib/gutenberg-templates/dist/main.js:2
 msgid "You will need to add it manually on the page."
 msgstr "Peate selle lehele käsitsi lisama."
 
-#: inc/classes/class-astra-sites.php:2363
+#: inc/classes/class-astra-sites.php:2371
 msgid "This dynamic content will be available when you import the entire site."
 msgstr "See dünaamiline sisu on saadaval, kui impordite kogu saidi."
 
-#: inc/classes/class-astra-sites.php:2366
+#: inc/classes/class-astra-sites.php:2374
 msgid "Enable Flexbox Container from Elementor"
 msgstr "Luba Flexboxi konteiner Elementoris"
 
 #. translators: %s doc link.
-#: inc/classes/class-astra-sites.php:2368
+#: inc/classes/class-astra-sites.php:2376
 msgid "The Flexbox Container widget is disabled on your website. With this disabled, the import process will be affected. Kindly enable it to continue importing the Starter Template."
 msgstr "Teie veebisaidil on Flexboxi konteineri vidin keelatud. Selle keelamise korral mõjutatakse importimisprotsessi. Palun lubage see, et jätkata Starter Template'i importimist."
 
-#: inc/classes/class-astra-sites.php:2371
+#: inc/classes/class-astra-sites.php:2379
 msgid "Missing plugin installation permission"
 msgstr "Puudub pistikprogrammi installimise luba"
 
 #. translators: %s doc link.
-#: inc/classes/class-astra-sites.php:2373
+#: inc/classes/class-astra-sites.php:2381
 msgid "You do not have permission to install the required plugin. You must have install permissions to proceed with the required plugin."
 msgstr "Teil ei ole luba vajaliku pistikprogrammi installimiseks. Vajaliku pistikprogrammi installimiseks peate omama installilube."
 
-#: inc/classes/class-astra-sites.php:2376
+#: inc/classes/class-astra-sites.php:2384
 msgid "Missing plugin activation permission"
 msgstr "Puudub pistikprogrammi aktiveerimise luba"
 
 #. translators: %s doc link.
-#: inc/classes/class-astra-sites.php:2378
+#: inc/classes/class-astra-sites.php:2386
 msgid "You do not have permission to activate the required plugin. You must have activate permissions to proceed with the required plugin."
 msgstr "Teil ei ole luba vajaliku pistikprogrammi aktiveerimiseks. Vajaliku pistikprogrammi kasutamiseks peate omama aktiveerimisõigusi."
 
-#: inc/classes/class-astra-sites.php:2381
+#: inc/classes/class-astra-sites.php:2389
 msgid "Insufficient Memory Limit"
 msgstr "Ebapiisav mälupiirang"
 
 #. translators: %s doc link.
-#: inc/classes/class-astra-sites.php:2383
+#: inc/classes/class-astra-sites.php:2391
 msgid "The memory limit of your site is below the recommended 256MB. While you can proceed, increasing the memory limit is advised for a seamless import experience."
 msgstr "Teie saidi mälupiirang on alla soovitatud 256 MB. Kuigi saate jätkata, on sujuva importimise kogemuse tagamiseks soovitatav mälupiirangut suurendada."
 
-#. translators: %s are link.
-#: inc/classes/class-astra-sites.php:2537
-#, php-format
-msgid "This is a premium template available with Essential and Business Toolkits. you can purchase it from <a href=\"%s\" target=\"_blank\">here</a>."
-msgstr "See on premium mall, mis on saadaval Essential ja Business tööriistakomplektidega. Saate selle osta <a href=\"%s\" target=\"_blank\">siit</a>."
-
-#. translators: %s are link.
-#: inc/classes/class-astra-sites.php:2541
-#, php-format
-msgid "This is a premium template available with Essential and Business Toolkits. <a href=\"%s\" target=\"_blank\">Validate Your License</a> Key to import this template."
-msgstr "See on premium mall, mis on saadaval Essential ja Business tööriistakomplektidega. <a href=\"%s\" target=\"_blank\">Kinnitage oma litsents</a> võtmega, et seda malli importida."
-
-#: inc/classes/class-astra-sites.php:2595
+#: inc/classes/class-astra-sites.php:2603
 msgid "Template"
 msgstr "Mall"
 
-#: inc/classes/class-astra-sites.php:2596
+#: inc/classes/class-astra-sites.php:2604
 msgid "Block"
 msgstr "Blokeeri"
 
-#: inc/classes/class-astra-sites.php:2597
+#: inc/classes/class-astra-sites.php:2605
 #: inc/includes/templates.php:78
 #: inc/lib/zip-ai/sidebar/build/sidebar-app.js:14
 msgid "Dismiss"
 msgstr "Loobu"
 
-#: inc/classes/class-astra-sites.php:2598
+#: inc/classes/class-astra-sites.php:2606
 msgid "Install Required Plugins"
 msgstr "Installige vajalikud pistikprogrammid"
 
-#: inc/classes/class-astra-sites.php:2602
+#: inc/classes/class-astra-sites.php:2610
 msgid "You can locate <strong>Starter Templates Settings</strong> under the <strong>Page Settings</strong> of the Style Tab."
 msgstr "Leiad <strong>Starter Templates Settings</strong> <strong>Page Settings</strong> all Style Tabi alt."
 
-#: inc/classes/class-astra-sites.php:2604
+#: inc/classes/class-astra-sites.php:2612
 msgid "Read More →"
 msgstr "Loe edasi →"
 
-#: inc/classes/class-astra-sites.php:2978
+#: inc/classes/class-astra-sites.php:2986
 msgid "Template library refreshed!"
 msgstr "Mallide kogu värskendatud!"
 
-#: inc/classes/class-astra-sites.php:3058
+#: inc/classes/class-astra-sites.php:3066
 msgid "Build Your Dream Site in Minutes With AI"
 msgstr "Looge oma unistuste sait minutitega tehisintellekti abil"
 
-#: inc/classes/class-astra-sites.php:3059
+#: inc/classes/class-astra-sites.php:3067
 msgid "Say goodbye to the days of spending weeks designing and building your website.<br/> You can now create professional-grade websites in minutes."
 msgstr "Ütle hüvasti nädalatepikkusele veebisaidi kujundamisele ja ehitamisele.<br/> Nüüd saate luua professionaalse tasemega veebisaite minutitega."
 
-#: inc/classes/class-astra-sites.php:3061
+#: inc/classes/class-astra-sites.php:3069
 #: inc/lib/one-onboarding/build/main.js:16
 msgid "Let’s Get Started"
 msgstr "Alustame"
 
-#: inc/classes/class-astra-sites.php:3062
+#: inc/classes/class-astra-sites.php:3070
 msgid "I want to build this website from scratch"
 msgstr "Ma tahan seda veebisaiti nullist üles ehitada"
 
-#: inc/classes/class-astra-sites.php:3097
+#: inc/classes/class-astra-sites.php:3105
 msgid "Required WP_Filesystem Permissions to import the templates from Starter Templates are missing."
 msgstr "Starter Templates'i mallide importimiseks on vajalikud WP_Filesystemi õigused puudu."
 
 #: inc/importers/batch-processing/class-astra-sites-batch-processing.php:1060
 #: inc/importers/batch-processing/class-astra-sites-batch-processing.php:1078
-#: inc/lib/gutenberg-templates/inc/importer/plugin.php:1034
+#: inc/lib/gutenberg-templates/inc/importer/plugin.php:1043
 msgid "You are not allowed to perform this action."
 msgstr "Teil ei ole lubatud seda toimingut teha."
 
@@ -1110,27 +1089,27 @@ msgstr "Veebisaidi keele seadistamine ebaõnnestus."
 msgid "Sorry, you are not allowed to do that."
 msgstr "Kahjuks ei ole sul lubatud seda teha."
 
-#: inc/lib/ai-builder/inc/classes/zipwp/class-ai-builder-zipwp-api.php:701
-#: inc/lib/ai-builder/inc/classes/zipwp/class-ai-builder-zipwp-api.php:743
-#: inc/lib/ai-builder/inc/classes/zipwp/class-ai-builder-zipwp-api.php:870
-#: inc/lib/ai-builder/inc/classes/zipwp/class-ai-builder-zipwp-api.php:963
-#: inc/lib/ai-builder/inc/classes/zipwp/class-ai-builder-zipwp-api.php:1071
-#: inc/lib/ai-builder/inc/classes/zipwp/class-ai-builder-zipwp-api.php:1162
-#: inc/lib/ai-builder/inc/classes/zipwp/class-ai-builder-zipwp-api.php:1256
-#: inc/lib/ai-builder/inc/classes/zipwp/class-ai-builder-zipwp-api.php:1337
-#: inc/lib/ai-builder/inc/classes/zipwp/class-ai-builder-zipwp-api.php:1408
-#: inc/lib/ai-builder/inc/classes/zipwp/class-ai-builder-zipwp-api.php:1484
-#: inc/lib/ai-builder/inc/classes/zipwp/class-ai-builder-zipwp-api.php:1564
-#: inc/lib/ai-builder/inc/classes/zipwp/class-ai-builder-zipwp-api.php:1645
-#: inc/lib/ai-builder/inc/classes/zipwp/class-ai-builder-zipwp-api.php:1741
-#: inc/lib/ai-builder/inc/classes/zipwp/class-ai-builder-zipwp-api.php:1817
-#: inc/lib/ai-builder/inc/classes/zipwp/class-ai-builder-zipwp-api.php:1882
-#: inc/lib/ai-builder/inc/classes/zipwp/class-ai-builder-zipwp-api.php:1947
-#: inc/lib/ai-builder/inc/classes/zipwp/class-ai-builder-zipwp-api.php:2018
-#: inc/lib/ai-builder/inc/classes/zipwp/class-ai-builder-zipwp-api.php:2089
-#: inc/lib/ai-builder/inc/classes/zipwp/class-ai-builder-zipwp-api.php:2156
-#: inc/lib/ai-builder/inc/classes/zipwp/class-ai-builder-zipwp-api.php:2183
-#: inc/lib/ai-builder/inc/classes/zipwp/class-ai-builder-zipwp-api.php:2258
+#: inc/lib/ai-builder/inc/classes/zipwp/class-ai-builder-zipwp-api.php:703
+#: inc/lib/ai-builder/inc/classes/zipwp/class-ai-builder-zipwp-api.php:745
+#: inc/lib/ai-builder/inc/classes/zipwp/class-ai-builder-zipwp-api.php:872
+#: inc/lib/ai-builder/inc/classes/zipwp/class-ai-builder-zipwp-api.php:965
+#: inc/lib/ai-builder/inc/classes/zipwp/class-ai-builder-zipwp-api.php:1073
+#: inc/lib/ai-builder/inc/classes/zipwp/class-ai-builder-zipwp-api.php:1164
+#: inc/lib/ai-builder/inc/classes/zipwp/class-ai-builder-zipwp-api.php:1258
+#: inc/lib/ai-builder/inc/classes/zipwp/class-ai-builder-zipwp-api.php:1339
+#: inc/lib/ai-builder/inc/classes/zipwp/class-ai-builder-zipwp-api.php:1410
+#: inc/lib/ai-builder/inc/classes/zipwp/class-ai-builder-zipwp-api.php:1486
+#: inc/lib/ai-builder/inc/classes/zipwp/class-ai-builder-zipwp-api.php:1566
+#: inc/lib/ai-builder/inc/classes/zipwp/class-ai-builder-zipwp-api.php:1665
+#: inc/lib/ai-builder/inc/classes/zipwp/class-ai-builder-zipwp-api.php:1761
+#: inc/lib/ai-builder/inc/classes/zipwp/class-ai-builder-zipwp-api.php:1837
+#: inc/lib/ai-builder/inc/classes/zipwp/class-ai-builder-zipwp-api.php:1902
+#: inc/lib/ai-builder/inc/classes/zipwp/class-ai-builder-zipwp-api.php:1967
+#: inc/lib/ai-builder/inc/classes/zipwp/class-ai-builder-zipwp-api.php:2038
+#: inc/lib/ai-builder/inc/classes/zipwp/class-ai-builder-zipwp-api.php:2109
+#: inc/lib/ai-builder/inc/classes/zipwp/class-ai-builder-zipwp-api.php:2176
+#: inc/lib/ai-builder/inc/classes/zipwp/class-ai-builder-zipwp-api.php:2203
+#: inc/lib/ai-builder/inc/classes/zipwp/class-ai-builder-zipwp-api.php:2295
 #: inc/lib/getting-started/classes/class-gs-api.php:158
 #: inc/lib/getting-started/classes/class-gs-api.php:377
 #: inc/lib/gutenberg-templates/inc/api/blocks.php:93
@@ -1153,13 +1132,13 @@ msgstr "Kahjuks ei ole sul lubatud seda teha."
 msgid "Nonce verification failed."
 msgstr "Nonce'i kontrollimine ebaõnnestus."
 
-#: inc/lib/ai-builder/inc/classes/zipwp/class-ai-builder-zipwp-api.php:1023
-#: inc/lib/starter-templates-importer/importer/st-importer.php:493
+#: inc/lib/ai-builder/inc/classes/zipwp/class-ai-builder-zipwp-api.php:1025
+#: inc/lib/starter-templates-importer/importer/st-importer.php:614
 msgid "There was an error downloading the XML file."
 msgstr "XML-faili allalaadimisel tekkis viga."
 
 #: inc/lib/ai-builder/inc/ajax/importer.php:572
-#: inc/lib/ai-builder/inc/classes/zipwp/class-ai-builder-zipwp-api.php:1035
+#: inc/lib/ai-builder/inc/classes/zipwp/class-ai-builder-zipwp-api.php:1037
 #: inc/lib/ai-builder/inc/traits/helper.php:669
 #: inc/lib/ai-builder/inc/traits/helper.php:703
 #: inc/lib/ai-builder/inc/traits/helper.php:741
@@ -1233,20 +1212,20 @@ msgstr "Dok:"
 msgid "Resolve file permission issue"
 msgstr "Lahenda failiõiguste probleem"
 
-#: inc/lib/gutenberg-templates/inc/importer/plugin.php:280
-#: inc/lib/gutenberg-templates/inc/importer/plugin.php:291
-#: inc/lib/gutenberg-templates/inc/importer/plugin.php:467
+#: inc/lib/gutenberg-templates/inc/importer/plugin.php:279
+#: inc/lib/gutenberg-templates/inc/importer/plugin.php:290
+#: inc/lib/gutenberg-templates/inc/importer/plugin.php:466
 #: inc/lib/zip-ai/classes/sidebar-configurations.php:296
 #: inc/lib/ai-builder/inc/assets/build/main.js:184
 #: inc/lib/zip-ai/sidebar/build/sidebar-app.js:6
 msgid "Something went wrong"
 msgstr "Midagi läks valesti"
 
-#: inc/lib/gutenberg-templates/inc/importer/plugin.php:1176
+#: inc/lib/gutenberg-templates/inc/importer/plugin.php:1123
 msgid "Something wrong"
 msgstr "Midagi on valesti"
 
-#: inc/lib/gutenberg-templates/inc/importer/plugin.php:1409
+#: inc/lib/gutenberg-templates/inc/importer/plugin.php:1356
 #: inc/lib/gutenberg-templates/dist/main.js:2
 msgid "Design Library"
 msgstr "Disainiraamatukogu"
@@ -1311,11 +1290,11 @@ msgstr "Postitused on tühjad. Pole midagi töödelda."
 msgid "Posts are replaced"
 msgstr "Postitused on asendatud"
 
-#: inc/lib/starter-templates-importer/importer/batch/st-replace-images.php:552
+#: inc/lib/starter-templates-importer/importer/batch/st-replace-images.php:555
 msgid "Pages are empty"
 msgstr "Leheküljed on tühjad"
 
-#: inc/lib/starter-templates-importer/importer/batch/st-replace-images.php:602
+#: inc/lib/starter-templates-importer/importer/batch/st-replace-images.php:605
 msgid "Pages are replaced"
 msgstr "Leheküljed on asendatud"
 
@@ -1358,33 +1337,33 @@ msgstr "ID on tühi."
 msgid "Account is already created."
 msgstr "Konto on juba loodud."
 
-#: inc/lib/starter-templates-importer/importer/st-importer.php:367
+#: inc/lib/starter-templates-importer/importer/st-importer.php:488
 msgid "Customizer data is empty."
 msgstr "Kohandaja andmed on tühjad."
 
-#: inc/lib/starter-templates-importer/importer/st-importer.php:423
+#: inc/lib/starter-templates-importer/importer/st-importer.php:544
 msgid "Customizer data imported successfully."
 msgstr "Kohandaja andmed imporditi edukalt."
 
 #. Translators: %s is WXR URL.
-#: inc/lib/starter-templates-importer/importer/st-importer.php:452
+#: inc/lib/starter-templates-importer/importer/st-importer.php:573
 #, php-format
 msgid "Invalid WXR Request URL - %s"
 msgstr "Kehtetu WXR-i päringu URL - %s"
 
-#: inc/lib/starter-templates-importer/importer/st-importer.php:595
+#: inc/lib/starter-templates-importer/importer/st-importer.php:716
 msgid "Site options are empty!"
 msgstr "Saidi valikud on tühjad!"
 
-#: inc/lib/starter-templates-importer/importer/st-importer.php:695
+#: inc/lib/starter-templates-importer/importer/st-importer.php:816
 msgid "Options imported successfully."
 msgstr "Valikud imporditi edukalt."
 
-#: inc/lib/starter-templates-importer/importer/st-importer.php:744
+#: inc/lib/starter-templates-importer/importer/st-importer.php:865
 msgid "Widget data is empty!"
 msgstr "Vidina andmed on tühjad!"
 
-#: inc/lib/starter-templates-importer/importer/st-importer.php:762
+#: inc/lib/starter-templates-importer/importer/st-importer.php:883
 msgid "Widgets imported successfully."
 msgstr "Vidinad imporditi edukalt."
 
@@ -1588,7 +1567,7 @@ msgstr "Kommentaar %1$d imporditi koos autoriga %2$d, kuid seda ei leitud"
 msgid "Could not update comment #%d with mapped data"
 msgstr "Kommentaari #%d ei õnnestunud kaardistatud andmetega uuendada"
 
-#: inc/lib/starter-templates-importer/importer/wxr-importer/st-wxr-importer.php:1446
+#: inc/lib/starter-templates-importer/importer/wxr-importer/st-wxr-importer.php:1666
 msgid "Import complete!"
 msgstr "Import on lõpetatud!"
 
@@ -1805,14 +1784,14 @@ msgstr "Kui eelistate jätkata, klõpsake 'Tühista'."
 msgid "Exit"
 msgstr "Välju"
 
-#: inc/lib/gutenberg-templates/inc/importer/plugin.php:1666
-#: inc/lib/gutenberg-templates/inc/importer/plugin.php:1762
+#: inc/lib/gutenberg-templates/inc/importer/plugin.php:1613
+#: inc/lib/gutenberg-templates/inc/importer/plugin.php:1709
 #: inc/lib/ai-builder/inc/assets/build/main.js:2
 msgid "Light"
 msgstr "Valgus"
 
-#: inc/lib/gutenberg-templates/inc/importer/plugin.php:1672
-#: inc/lib/gutenberg-templates/inc/importer/plugin.php:1768
+#: inc/lib/gutenberg-templates/inc/importer/plugin.php:1619
+#: inc/lib/gutenberg-templates/inc/importer/plugin.php:1715
 #: inc/lib/ai-builder/inc/assets/build/main.js:2
 msgid "Dark"
 msgstr "Tume"
@@ -2870,10 +2849,6 @@ msgstr "Importimine - %1$s"
 #: inc/lib/ai-builder/inc/assets/build/main.js:217
 msgid "Failed to save Site Logo"
 msgstr "Saidi logo salvestamine ebaõnnestus"
-
-#: inc/lib/ai-builder/inc/assets/build/main.js:217
-msgid "Failed to save Color Palletes"
-msgstr "Värvipalettide salvestamine ebaõnnestus"
 
 #: inc/lib/ai-builder/inc/assets/build/main.js:217
 msgid "Failed to save Typography"
@@ -4736,7 +4711,7 @@ msgstr "(Maksimaalselt 20)"
 msgid "Batch process failed."
 msgstr "Partii protsess ebaõnnestus."
 
-#: inc/classes/class-astra-sites.php:1767
+#: inc/classes/class-astra-sites.php:1775
 #: inc/lib/onboarding/assets/dist/onboarding/main.js:149
 msgid "Get Premium Templates"
 msgstr "Hangi premium-malle"
@@ -4948,7 +4923,7 @@ msgstr "Järgmised pistikprogrammid installitakse ja aktiveeritakse valitud funk
 msgid "Required plugins for the website"
 msgstr "Veebisaidi jaoks vajalikud pistikprogrammid"
 
-#: inc/classes/class-astra-sites-nps-notice.php:127
+#: inc/classes/class-astra-sites-nps-notice.php:133
 msgid "Thanks for being part of the Starter Templates community! Got feedback or suggestions? We'd love to hear it."
 msgstr "Aitäh, et olete osa Starter Templates kogukonnast! Kas teil on tagasisidet või ettepanekuid? Meil oleks hea meel neid kuulda."
 
@@ -5430,21 +5405,21 @@ msgstr "Võtame teie uue veebisaidi täielikult valmis. Järgige seda kiiret kon
 msgid "Please check your internet connection and try again."
 msgstr "Palun kontrollige oma internetiühendust ja proovige uuesti."
 
-#: inc/classes/class-astra-sites-nps-notice.php:116
+#: inc/classes/class-astra-sites-nps-notice.php:122
 msgid "Quick Question!"
 msgstr "Kiire küsimus!"
 
 #. translators: %s is the plugin name
-#: inc/classes/class-astra-sites-nps-notice.php:119
+#: inc/classes/class-astra-sites-nps-notice.php:125
 #, php-format
 msgid "How would you rate %s? Love it, hate it, or somewhere in between? Your honest answer helps us understand how we're doing."
 msgstr "Kuidas hindaksite %s? Armastate seda, vihkate seda või olete kuskil vahepeal? Teie aus vastus aitab meil mõista, kuidas meil läheb."
 
-#: inc/classes/class-astra-sites-nps-notice.php:122
+#: inc/classes/class-astra-sites-nps-notice.php:128
 msgid "Hate it"
 msgstr "Vihkan seda"
 
-#: inc/classes/class-astra-sites-nps-notice.php:123
+#: inc/classes/class-astra-sites-nps-notice.php:129
 msgid "Love it"
 msgstr "Armastan seda"
 
@@ -5649,7 +5624,7 @@ msgid "Image downloaded successfully!"
 msgstr "Pilt edukalt alla laaditud!"
 
 #. translators: %s is the error message
-#: inc/lib/ai-builder/inc/classes/zipwp/class-ai-builder-zipwp-api.php:797
+#: inc/lib/ai-builder/inc/classes/zipwp/class-ai-builder-zipwp-api.php:799
 #, php-format
 msgid "Failed %s"
 msgstr "Ebaõnnestus %s"
@@ -5978,159 +5953,159 @@ msgstr "Mida saate järgmisena teha:"
 msgid "By submitting, you agree to our %s"
 msgstr "Esitades nõustute meie %s"
 
-#: inc/classes/class-astra-sites-importer.php:96
+#: inc/classes/class-astra-sites-importer.php:95
 msgid "Permission denied: You don't have the required capability to delete imported posts. Please contact your site administrator."
 msgstr "Luba keelatud: Teil puudub vajalik võimekus imporditud postituste kustutamiseks. Palun võtke ühendust oma saidi administraatoriga."
 
-#: inc/classes/class-astra-sites-importer.php:136
+#: inc/classes/class-astra-sites-importer.php:135
 msgid "Permission denied: You don't have the required capability to delete imported forms. Please contact your site administrator."
 msgstr "Luba keelatud: Teil puudub vajalik võimekus imporditud vormide kustutamiseks. Palun võtke ühendust oma saidi administraatoriga."
 
-#: inc/classes/class-astra-sites-importer.php:171
+#: inc/classes/class-astra-sites-importer.php:170
 msgid "Permission denied: You don't have the required capability to delete imported terms. Please contact your site administrator."
 msgstr "Luba keelatud: Teil puudub vajalik võimekus imporditud termineid kustutada. Palun võtke ühendust oma saidi administraatoriga."
 
 #. translators: %s: URL
-#: inc/classes/class-astra-sites-importer.php:374
+#: inc/classes/class-astra-sites-importer.php:333
 #, php-format
 msgid "Invalid URL format - %s"
 msgstr "Vigane URL-i vorming - %s"
 
 #. translators: %s: URL
-#: inc/classes/class-astra-sites-importer.php:386
+#: inc/classes/class-astra-sites-importer.php:345
 #, php-format
 msgid "Invalid data file URL - %s"
 msgstr "Vigane andmefaili URL - %s"
 
-#: inc/classes/class-astra-sites-importer.php:399
-#: inc/lib/starter-templates-importer/importer/st-importer.php:525
+#: inc/classes/class-astra-sites-importer.php:358
+#: inc/lib/starter-templates-importer/importer/st-importer.php:646
 msgid "Could not download data file. Please check your internet connection and try again."
 msgstr "Ei saanud andmefaili alla laadida. Palun kontrollige oma internetiühendust ja proovige uuesti."
 
 #. translators: %s: Error message
-#: inc/classes/class-astra-sites-importer.php:405
+#: inc/classes/class-astra-sites-importer.php:364
 #, php-format
 msgid "File download failed - %s"
 msgstr "Faili allalaadimine ebaõnnestus - %s"
 
-#: inc/classes/class-astra-sites-importer.php:414
+#: inc/classes/class-astra-sites-importer.php:373
 msgid "Downloaded file path is missing in the response."
 msgstr "Allalaaditud faili tee puudub vastuses."
 
-#: inc/classes/class-astra-sites-importer.php:424
+#: inc/classes/class-astra-sites-importer.php:383
 msgid "Downloaded file is missing. Please retry the import."
 msgstr "Allalaaditud fail puudub. Palun proovige importimist uuesti."
 
-#: inc/classes/class-astra-sites-importer.php:432
+#: inc/classes/class-astra-sites-importer.php:391
 msgid "Downloaded file is not readable. Please check server file permissions."
 msgstr "Allalaaditud fail ei ole loetav. Palun kontrollige serveri failiõigusi."
 
-#: inc/classes/class-astra-sites-importer.php:441
+#: inc/classes/class-astra-sites-importer.php:400
 msgid "The file must be in JSON format."
 msgstr "Fail peab olema JSON-vormingus."
 
-#: inc/classes/class-astra-sites-importer.php:456
+#: inc/classes/class-astra-sites-importer.php:415
 msgid "Could not read the file from the server."
 msgstr "Ei saanud serverist faili lugeda."
 
-#: inc/classes/class-astra-sites-importer.php:463
+#: inc/classes/class-astra-sites-importer.php:422
 msgid "The file is empty."
 msgstr "Fail on tühi."
 
 #. translators: %s: JSON error
-#: inc/classes/class-astra-sites-importer.php:476
+#: inc/classes/class-astra-sites-importer.php:435
 #, php-format
 msgid "Invalid JSON format - %s"
 msgstr "Vigane JSON-vorming - %s"
 
-#: inc/classes/class-astra-sites-importer.php:503
+#: inc/classes/class-astra-sites-importer.php:462
 msgid "Permission denied: You don't have the required capability to import forms. Please contact your site administrator."
 msgstr "Luba keelatud: Teil puudub vajalik võimekus vormide importimiseks. Palun võtke ühendust oma saidi administraatoriga."
 
 #. translators: %s is Elementor plugin name.
-#: inc/classes/class-astra-sites-importer.php:519
+#: inc/classes/class-astra-sites-importer.php:478
 #, php-format
 msgid "WPForms import failed: Template ID is missing. Unable to proceed with %s import."
 msgstr "WPFormsi import ebaõnnestus: Malli ID puudub. %s importimisega ei saa jätkata."
 
 #. translators: %s is the error message.
-#: inc/classes/class-astra-sites-importer.php:538
+#: inc/classes/class-astra-sites-importer.php:497
 #, php-format
 msgid "WPForms import failed: %s"
 msgstr "WPForms import ebaõnnestus: %s"
 
 #. translators: %s is exception error message.
-#: inc/classes/class-astra-sites-importer.php:653
+#: inc/classes/class-astra-sites-importer.php:612
 #, php-format
 msgid "WPForms import failed: Unexpected error - %s"
 msgstr "WPFormsi import ebaõnnestus: Ootamatu viga - %s"
 
 #. translators: %s: Fatal error message.
-#: inc/classes/class-astra-sites-importer.php:662
+#: inc/classes/class-astra-sites-importer.php:621
 #, php-format
 msgid "WPForms import failed: Fatal Error: %s"
 msgstr "WPFormsi import ebaõnnestus: Saatuslik viga: %s"
 
-#: inc/classes/class-astra-sites-importer.php:687
+#: inc/classes/class-astra-sites-importer.php:646
 msgid "Permission Denied: You don't have permission to import CartFlows flows. Please contact your site administrator."
 msgstr "Luba keelatud: Teil ei ole luba CartFlowsi voogude importimiseks. Palun võtke ühendust oma saidi administraatoriga."
 
 #. translators: %s is the error message.
 #. translators: Sending cartflows import failed.
-#: inc/classes/class-astra-sites-importer.php:710
-#: inc/classes/class-astra-sites-importer.php:749
+#: inc/classes/class-astra-sites-importer.php:669
+#: inc/classes/class-astra-sites-importer.php:708
 #, php-format
 msgid "CartFlows import failed: %s"
 msgstr "CartFlows import ebaõnnestus: %s"
 
 #. translators: %s: Exception error message.
-#: inc/classes/class-astra-sites-importer.php:757
+#: inc/classes/class-astra-sites-importer.php:716
 #, php-format
 msgid "CartFlows import failed: Unexpected error - %s"
 msgstr "CartFlows import ebaõnnestus: Ootamatu viga - %s"
 
 #. translators: %s: Fatal error message.
-#: inc/classes/class-astra-sites-importer.php:761
+#: inc/classes/class-astra-sites-importer.php:720
 #, php-format
 msgid "CartFlows import failed: Fatal Error - %s"
 msgstr "CartFlows import ebaõnnestus: Saatuslik viga - %s"
 
-#: inc/classes/class-astra-sites-importer.php:789
+#: inc/classes/class-astra-sites-importer.php:748
 msgid "Permission denied: You don't have permission to import Cart Abandonment Recovery data. Please contact your site administrator."
 msgstr "Luba keelatud: Teil ei ole luba importida ostukorvi hülgamise taastamise andmeid. Palun võtke ühendust oma saidi administraatoriga."
 
 #. translators: %s: Exception error message.
-#: inc/classes/class-astra-sites-importer.php:844
+#: inc/classes/class-astra-sites-importer.php:803
 #, php-format
 msgid "Cart Abandonment Recovery import failed: Unexpected error - %s"
 msgstr "Ostukorvi hülgamise taastamise import ebaõnnestus: Ootamatu viga - %s"
 
 #. translators: %s: Fatal error message.
-#: inc/classes/class-astra-sites-importer.php:847
+#: inc/classes/class-astra-sites-importer.php:806
 #, php-format
 msgid "Cart Abandonment Recovery import failed: Fatal Error - %s"
 msgstr "Ostukorvi mahajätmise taastamise import ebaõnnestus: Tõsine viga - %s"
 
-#: inc/classes/class-astra-sites-importer.php:869
+#: inc/classes/class-astra-sites-importer.php:828
 msgid "Permission denied: You don't have permission to import LatePoint data. Please contact your site administrator."
 msgstr "Luba keelatud: Teil ei ole luba LatePointi andmete importimiseks. Palun võtke ühendust oma saidi administraatoriga."
 
 #. translators: %s is the error message.
 #. translators: %s is exception error message.
-#: inc/classes/class-astra-sites-importer.php:883
-#: inc/classes/class-astra-sites-importer.php:910
+#: inc/classes/class-astra-sites-importer.php:842
+#: inc/classes/class-astra-sites-importer.php:869
 #, php-format
 msgid "LatePoint import failed: %s"
 msgstr "LatePoint import ebaõnnestus: %s"
 
 #. translators: %s is exception error message.
-#: inc/classes/class-astra-sites-importer.php:917
+#: inc/classes/class-astra-sites-importer.php:876
 #, php-format
 msgid "LatePoint import failed: Unexpected error - %s"
 msgstr "LatePoint import ebaõnnestus: Ootamatu viga - %s"
 
 #. translators: %s: Fatal error message.
-#: inc/classes/class-astra-sites-importer.php:922
+#: inc/classes/class-astra-sites-importer.php:881
 #, php-format
 msgid "LatePoint import failed: Fatal Error - %s"
 msgstr "LatePoint import ebaõnnestus: Saatuslik viga - %s"
@@ -6143,46 +6118,46 @@ msgstr "Import ebaõnnestus ebapiisava mälu tõttu. Palun suurendage oma server
 msgid "Failed to download the image. Please verify the URL and your network connection, then try again."
 msgstr "Pildi allalaadimine ebaõnnestus. Palun kontrollige URL-i ja oma võrguühendust ning proovige uuesti."
 
-#: inc/classes/class-astra-sites.php:1980
+#: inc/classes/class-astra-sites.php:1988
 msgid "<p>The import process was interrupted as Debug mode is currently enabled on your site.</p><p>Kindly disable debug mode and try importing Starter Template again.</p><p>You can add the following code into the wp-config.php file to disable debug mode.</p><p><code>define('WP_DEBUG', false);</code></p>"
 msgstr "<p>Importimisprotsess katkestati, kuna teie saidil on praegu lubatud silumisrežiim.</p><p>Palun keelake silumisrežiim ja proovige Starter Malli uuesti importida.</p><p>Silumisrežiimi keelamiseks saate lisada järgmise koodi wp-config.php faili.</p><p><code>define('WP_DEBUG', false);</code></p>"
 
 #. translators: %s is a documentation link.
-#: inc/classes/class-astra-sites.php:1982
+#: inc/classes/class-astra-sites.php:1990
 #, php-format
 msgid "<p>Template import was interrupted due to a temporary error.</p><p>Read <a href=\"%s\" target=\"_blank\">article</a> to resolve the issue and continue importing template.</p>"
 msgstr "<p>Malli importimine katkestati ajutise vea tõttu.</p><p>Lugege <a href=\"%s\" target=\"_blank\">artiklit</a>, et lahendada probleem ja jätkata malli importimist.</p>"
 
 #. translators: %s is a documentation link.
-#: inc/classes/class-astra-sites.php:1984
+#: inc/classes/class-astra-sites.php:1992
 #, php-format
 msgid "<p>Failed to install one or more required plugins.</p><p>Read&nbsp;<a href=\"%s\" target=\"_blank\">article</a>&nbsp;to resolve the issue and continue importing template.</p>"
 msgstr "<p>Ühe või mitme vajaliku pistikprogrammi installimine ebaõnnestus.</p><p>Lugege&nbsp;<a href=\"%s\" target=\"_blank\">artiklit</a>&nbsp;probleemi lahendamiseks ja malli importimise jätkamiseks.</p>"
 
 #. translators: %s are white label strings.
-#: inc/classes/class-astra-sites.php:1988
+#: inc/classes/class-astra-sites.php:1996
 #, php-format
 msgid "Warning! %1$s Closing this window will cancel the process. Do you still want to leave?"
 msgstr "Hoiatus! %1$s Selle akna sulgemine katkestab protsessi. Kas soovite siiski lahkuda?"
 
-#: inc/classes/class-astra-sites.php:2029
+#: inc/classes/class-astra-sites.php:2037
 msgid "Couldn't start import process. WordPress returned:"
 msgstr "Importimisprotsessi ei saanud alustada. WordPress tagastas:"
 
 #. translators: %s HTML tags
-#: inc/classes/class-astra-sites.php:2035
+#: inc/classes/class-astra-sites.php:2043
 #, php-format
 msgid "%1$sAJAX request failed. WordPress returned:%2$s"
 msgstr "%1$sAJAX päring ebaõnnestus. WordPress tagastas:%2$s"
 
 #. translators: %s URL to document.
-#: inc/classes/class-astra-sites.php:2046
+#: inc/classes/class-astra-sites.php:2054
 #, php-format
 msgid "%1$sImport process interrupted due to an AJAX error:%2$s"
 msgstr "%1$sImpordi protsess katkestati AJAX-i vea tõttu:%2$s"
 
 #. translators: %s update page link.
-#: inc/classes/class-astra-sites.php:2355
+#: inc/classes/class-astra-sites.php:2363
 msgid "Updates are available for one or more plugins used by this starter template."
 msgstr "Selle algmalli kasutatavate pistikprogrammide jaoks on saadaval värskendusi."
 
@@ -6420,13 +6395,13 @@ msgid "Spectra plugin installed but class not loaded. Please refresh and try aga
 msgstr "Spectra plugin on installitud, kuid klassi ei laaditud. Palun värskendage ja proovige uuesti."
 
 #. translators: %s is the error message.
-#: inc/lib/starter-templates-importer/importer/st-importer.php:485
+#: inc/lib/starter-templates-importer/importer/st-importer.php:606
 #, php-format
 msgid "Error occurred while inserting XML file: %s"
 msgstr "Tõrge XML-faili sisestamisel: %s"
 
 #. translators: %s is the download error message.
-#: inc/lib/starter-templates-importer/importer/st-importer.php:532
+#: inc/lib/starter-templates-importer/importer/st-importer.php:653
 #, php-format
 msgid "File download failed: %s"
 msgstr "Faili allalaadimine ebaõnnestus: %s"
@@ -6487,52 +6462,52 @@ msgstr "Plugin'i aktiveerimine ebaõnnestus: %s"
 msgid "Plugin activated successfully."
 msgstr "Plugin aktiveeriti edukalt."
 
-#: inc/lib/starter-templates-importer/importer/wxr-importer/st-wxr-importer.php:337
+#: inc/lib/starter-templates-importer/importer/wxr-importer/st-wxr-importer.php:557
 msgid "Permission denied: You don't have sufficient permissions to perform this action. Please contact your site administrator."
 msgstr "Luba keelatud: Teil pole piisavalt õigusi selle toimingu sooritamiseks. Palun võtke ühendust oma saidi administraatoriga."
 
-#: inc/lib/starter-templates-importer/importer/wxr-importer/st-wxr-importer.php:389
+#: inc/lib/starter-templates-importer/importer/wxr-importer/st-wxr-importer.php:609
 msgid "Template content file not found or inaccessible. The import process cannot continue without the content file. Please try importing again."
 msgstr "Mallifaili sisu ei leitud või pole sellele juurdepääsu. Importimisprotsess ei saa ilma sisufailita jätkuda. Palun proovige uuesti importida."
 
-#: inc/lib/starter-templates-importer/importer/wxr-importer/st-wxr-importer.php:412
+#: inc/lib/starter-templates-importer/importer/wxr-importer/st-wxr-importer.php:632
 msgid "Template content file does not exist on the server. The file may have been deleted or moved. Please try re-importing the template."
 msgstr "Malli sisufaili ei eksisteeri serveris. Fail võidi kustutada või teisaldada. Palun proovige malli uuesti importida."
 
-#: inc/lib/starter-templates-importer/importer/wxr-importer/st-wxr-importer.php:436
+#: inc/lib/starter-templates-importer/importer/wxr-importer/st-wxr-importer.php:656
 msgid "Template content file cannot be read due to file permission issues. Please contact your hosting provider to fix file permissions."
 msgstr "Malli sisufaili ei saa lugeda faililubade probleemide tõttu. Palun võtke ühendust oma majutusteenuse pakkujaga, et faililubasid parandada."
 
-#: inc/lib/starter-templates-importer/importer/wxr-importer/st-wxr-importer.php:560
+#: inc/lib/starter-templates-importer/importer/wxr-importer/st-wxr-importer.php:780
 msgid "A fatal error occurred during import, likely due to server resource limitations. Try a different template, or contact your hosting provider to increase server resources."
 msgstr "Impordi ajal ilmnes tõsine viga, tõenäoliselt serveri ressursside piirangute tõttu. Proovige teist malli või võtke ühendust oma majutusteenuse pakkujaga, et suurendada serveri ressursse."
 
-#: inc/lib/starter-templates-importer/importer/wxr-importer/st-wxr-importer.php:624
+#: inc/lib/starter-templates-importer/importer/wxr-importer/st-wxr-importer.php:844
 msgid "Import failed due to server memory limitations. This template may be too large for your current server configuration. Try importing a smaller template, or contact your hosting provider to increase memory limits."
 msgstr "Import ebaõnnestus serveri mälupiirangute tõttu. See mall võib olla teie praeguse serveri konfiguratsiooni jaoks liiga suur. Proovige importida väiksemat malli või võtke ühendust oma majutusteenuse pakkujaga, et suurendada mälupiiranguid."
 
-#: inc/lib/starter-templates-importer/importer/wxr-importer/st-wxr-importer.php:630
+#: inc/lib/starter-templates-importer/importer/wxr-importer/st-wxr-importer.php:850
 msgid "Import timed out due to server limitations. The template import process took too long to complete. Try again, or contact your hosting provider to increase execution time limits."
 msgstr "Import aegus katkestati serveri piirangute tõttu. Malli importimise protsess võttis liiga kaua aega. Proovige uuesti või võtke ühendust oma majutusteenuse pakkujaga, et suurendada täitmisaja piiranguid."
 
-#: inc/lib/starter-templates-importer/importer/wxr-importer/st-wxr-importer.php:637
+#: inc/lib/starter-templates-importer/importer/wxr-importer/st-wxr-importer.php:857
 msgid "Import failed due to database issues. This could be due to database connection problems or insufficient database permissions. Please contact your hosting provider."
 msgstr "Import ebaõnnestus andmebaasi probleemide tõttu. See võib olla tingitud andmebaasi ühenduse probleemidest või ebapiisavatest andmebaasi õigustest. Palun võtke ühendust oma majutusteenuse pakkujaga."
 
-#: inc/lib/starter-templates-importer/importer/wxr-importer/st-wxr-importer.php:644
+#: inc/lib/starter-templates-importer/importer/wxr-importer/st-wxr-importer.php:864
 msgid "Import failed due to file permission issues. The server cannot create or write files needed for the import. Please contact your hosting provider to fix file permissions."
 msgstr "Import ebaõnnestus faililubade probleemide tõttu. Server ei saa luua ega kirjutada impordi jaoks vajalikke faile. Palun võtke ühendust oma majutusteenuse pakkujaga, et faililubasid parandada."
 
-#: inc/lib/starter-templates-importer/importer/wxr-importer/st-wxr-importer.php:651
+#: inc/lib/starter-templates-importer/importer/wxr-importer/st-wxr-importer.php:871
 msgid "Import completed but some images or media files could not be downloaded. This could be due to network issues or the original files being unavailable. The template structure has been imported successfully."
 msgstr "Importimine on lõpetatud, kuid mõningaid pilte või meediafaile ei õnnestunud alla laadida. See võib olla tingitud võrgu probleemidest või algfailide kättesaamatusest. Malli struktuur on edukalt imporditud."
 
-#: inc/lib/starter-templates-importer/importer/wxr-importer/st-wxr-importer.php:657
+#: inc/lib/starter-templates-importer/importer/wxr-importer/st-wxr-importer.php:877
 msgid "Import failed due to corrupted template content. The template file appears to be damaged or incomplete. Please try importing again, or select a different template."
 msgstr "Importimine ebaõnnestus rikutud mallisisu tõttu. Mallifail näib olevat kahjustatud või puudulik. Palun proovige uuesti importida või valige teine mall."
 
 #. translators: Import encountered error text.
-#: inc/lib/starter-templates-importer/importer/wxr-importer/st-wxr-importer.php:663
+#: inc/lib/starter-templates-importer/importer/wxr-importer/st-wxr-importer.php:883
 #, php-format
 msgid "Import process encountered an error: %s. Please try again, or contact support if the issue persists."
 msgstr "Importimise protsessis ilmnes viga: %s. Palun proovige uuesti või võtke ühendust toega, kui probleem püsib."
@@ -6632,7 +6607,7 @@ msgstr "Lisa oma brändi stiiliga sobiv elegantne, välja libisev ostukorv, mis 
 msgid "Set and Enable Modern Cart"
 msgstr "Määra ja luba kaasaegne ostukorv"
 
-#: inc/lib/gutenberg-templates/inc/importer/plugin.php:502
+#: inc/lib/gutenberg-templates/inc/importer/plugin.php:501
 msgid "Empty SureForms URL"
 msgstr "Tühi SureForms URL"
 
@@ -6706,31 +6681,31 @@ msgstr "Mall edukalt lisatud."
 msgid "Insert Template"
 msgstr "Lisa mall"
 
-#: inc/classes/class-astra-sites-importer.php:548
+#: inc/classes/class-astra-sites-importer.php:507
 msgid "No WP Forms to import."
 msgstr "WP Forme pole importimiseks."
 
-#: inc/classes/class-astra-sites-importer.php:641
+#: inc/classes/class-astra-sites-importer.php:600
 msgid "WP Forms Imported."
 msgstr "WP Formid imporditud."
 
-#: inc/classes/class-astra-sites-importer.php:720
+#: inc/classes/class-astra-sites-importer.php:679
 msgid "No CartFlows data to import."
 msgstr "CartFlows andmeid pole importimiseks."
 
 #. translators: %s is the URL.
-#: inc/classes/class-astra-sites-importer.php:766
-#: inc/classes/class-astra-sites-importer.php:928
+#: inc/classes/class-astra-sites-importer.php:725
+#: inc/classes/class-astra-sites-importer.php:887
 #, php-format
 msgid "Imported from %s"
 msgstr "Imporditud alates %s"
 
-#: inc/classes/class-astra-sites-importer.php:812
+#: inc/classes/class-astra-sites-importer.php:771
 msgid "No Cart Abandonment Recovery data to import."
 msgstr "Cart Abandonment Recovery andmeid pole importimiseks."
 
 #. translators: %s is the URL.
-#: inc/classes/class-astra-sites-importer.php:840
+#: inc/classes/class-astra-sites-importer.php:799
 #, php-format
 msgid "Imported Cart Abandonment Recovery data from %s"
 msgstr "Imporditud Cart Abandonment Recovery andmed alates %s"
@@ -7008,11 +6983,11 @@ msgstr "Hoiatus: Ebaõnnestus Astra Builder Widget Controlleri initsialiseerimin
 msgid "Warning: Fatal error encountered while initializing Astra Builder Widget Controller. Error: %s"
 msgstr "Hoiatus: Tõsine viga Astra Builder Widget Controlleri initsialiseerimisel. Viga: %s"
 
-#: inc/lib/ai-builder/inc/classes/zipwp/class-ai-builder-zipwp-api.php:840
+#: inc/lib/ai-builder/inc/classes/zipwp/class-ai-builder-zipwp-api.php:842
 msgid "We couldn't verify an active plan for your account. Please check your ZipWP subscription."
 msgstr "Me ei saanud teie konto aktiivset plaani kinnitada. Palun kontrollige oma ZipWP tellimust."
 
-#: inc/lib/gutenberg-templates/inc/importer/plugin.php:1774
+#: inc/lib/gutenberg-templates/inc/importer/plugin.php:1721
 msgid "Highlight"
 msgstr "Esiletõst"
 
@@ -7041,19 +7016,19 @@ msgid "Your current site will be updated with the selected layout, design, conte
 msgstr "Teie praegune sait uuendatakse valitud paigutuse, kujunduse, sisu ja lehtedega."
 
 #. translators: %1$s: Plugin name
-#: inc/classes/class-astra-sites-importer.php:1200
+#: inc/classes/class-astra-sites-importer.php:1159
 #, php-format
 msgid "%1$s import failed: Plugin files not found. Please ensure %1$s is properly installed."
 msgstr "%1$s import ebaõnnestus: Plugin faile ei leitud. Palun veenduge, et %1$s on õigesti paigaldatud."
 
 #. translators: %1$s: Plugin name
-#: inc/classes/class-astra-sites-importer.php:1212
+#: inc/classes/class-astra-sites-importer.php:1171
 #, php-format
 msgid "%1$s import failed: Plugin is installed but not activated. Please activate %1$s and try again."
 msgstr "%1$s import ebaõnnestus: Plugin on paigaldatud, kuid mitte aktiveeritud. Palun aktiveerige %1$s ja proovige uuesti."
 
 #. translators: %s: Plugin name
-#: inc/classes/class-astra-sites-importer.php:1240
+#: inc/classes/class-astra-sites-importer.php:1199
 #, php-format
 msgid "%s import failed: Plugin class/functions not available after loading. Please try again or contact support."
 msgstr "%s import ebaõnnestus: Plugin klass/funktsioonid pole laadimise järel saadaval. Palun proovige uuesti või võtke ühendust toega."
@@ -7132,11 +7107,11 @@ msgstr "tähemärki (miinimum)"
 msgid "Error: Missing or invalid plugin initialization parameter."
 msgstr "Viga: Puuduv või vigane plugina initsialiseerimise parameeter."
 
-#: inc/lib/starter-templates-importer/importer/st-importer-log.php:670
+#: inc/lib/starter-templates-importer/importer/st-importer-log.php:664
 msgid "Log Files"
 msgstr "Logifailid"
 
-#: inc/lib/starter-templates-importer/importer/st-importer-log.php:684
+#: inc/lib/starter-templates-importer/importer/st-importer-log.php:678
 msgid "Backup Files"
 msgstr "Varukoopia failid"
 
@@ -7145,36 +7120,36 @@ msgid "Always open Design Library when creating new pages"
 msgstr "Avage alati disainiraamatukogu uute lehtede loomisel"
 
 #. translators: %s is the error message.
-#: inc/classes/class-astra-sites-importer.php:801
+#: inc/classes/class-astra-sites-importer.php:760
 #, php-format
 msgid "Cart Abandonment Recovery import failed: %s"
 msgstr "Ostukorvi hülgamise taastamise import ebaõnnestus: %s"
 
-#: inc/classes/class-astra-sites-importer.php:947
+#: inc/classes/class-astra-sites-importer.php:906
 msgid "Permission denied: You do not have permission to verify plugins."
 msgstr "Luba keelatud: Teil pole õigust pistikprogramme kontrollida."
 
-#: inc/classes/class-astra-sites-importer.php:966
+#: inc/classes/class-astra-sites-importer.php:925
 msgid "No plugins to verify."
 msgstr "Kontrollimiseks pole pistikprogramme."
 
-#: inc/classes/class-astra-sites-importer.php:1016
+#: inc/classes/class-astra-sites-importer.php:975
 msgid "Some required plugins are not ready."
 msgstr "Mõned vajalikud pistikprogrammid pole valmis."
 
-#: inc/classes/class-astra-sites-importer.php:1028
+#: inc/classes/class-astra-sites-importer.php:987
 msgid "All plugins verified."
 msgstr "Kõik pistikprogrammid on kontrollitud."
 
-#: inc/lib/ai-builder/inc/classes/zipwp/class-ai-builder-zipwp-api.php:445
+#: inc/lib/ai-builder/inc/classes/zipwp/class-ai-builder-zipwp-api.php:447
 msgid "Invalid sort parameter."
 msgstr "Kehtetu sorteerimisparameeter."
 
-#: inc/lib/ai-builder/inc/classes/zipwp/class-ai-builder-zipwp-api.php:450
+#: inc/lib/ai-builder/inc/classes/zipwp/class-ai-builder-zipwp-api.php:452
 msgid "Invalid sort.by value."
 msgstr "Kehtetu sort.by väärtus."
 
-#: inc/lib/ai-builder/inc/classes/zipwp/class-ai-builder-zipwp-api.php:453
+#: inc/lib/ai-builder/inc/classes/zipwp/class-ai-builder-zipwp-api.php:455
 msgid "Invalid sort.order value."
 msgstr "Kehtetu sort.order väärtus."
 
@@ -7562,19 +7537,19 @@ msgstr "Aktiveerimine ebaõnnestus."
 msgid "An error occurred while processing your request."
 msgstr "Teie päringu töötlemisel ilmnes viga."
 
-#: inc/classes/class-astra-sites.php:2386
+#: inc/classes/class-astra-sites.php:2394
 msgid "Low Max Execution Time"
 msgstr "Madal maksimaalne täitmise aeg"
 
-#: inc/classes/class-astra-sites.php:2387
+#: inc/classes/class-astra-sites.php:2395
 msgid "Your server's max_execution_time is below the recommended 300 seconds. This may cause import timeouts. Please contact your hosting provider to increase it."
 msgstr "Teie serveri max_execution_time on alla soovitatud 300 sekundi. See võib põhjustada impordi ajalõppe. Palun võtke ühendust oma majutusteenuse pakkujaga, et seda suurendada."
 
-#: inc/classes/class-astra-sites.php:2390
+#: inc/classes/class-astra-sites.php:2398
 msgid "MySQL Version Too Old"
 msgstr "MySQL versioon on liiga vana"
 
-#: inc/classes/class-astra-sites.php:2391
+#: inc/classes/class-astra-sites.php:2399
 msgid "Your MySQL version is below 5.7. Some templates require MySQL 5.7 or higher for full utf8mb4 collation support. Please upgrade your database server."
 msgstr "Teie MySQL versioon on alla 5.7. Mõned mallid nõuavad MySQL 5.7 või uuemat täieliku utf8mb4 kollatsiooni toe jaoks. Palun uuendage oma andmebaasi serverit."
 
@@ -7631,7 +7606,7 @@ msgstr "CRM ja kontaktid"
 msgid "Keep all your customer relationships in one place"
 msgstr "Hoidke kõik oma kliendisuhted ühes kohas"
 
-#: inc/lib/ai-builder/inc/classes/zipwp/class-ai-builder-zipwp-api.php:825
+#: inc/lib/ai-builder/inc/classes/zipwp/class-ai-builder-zipwp-api.php:827
 msgid "Your ZipWP team was not found. Please reconnect your account to continue."
 msgstr "Teie ZipWP meeskonda ei leitud. Jätkamiseks ühendage oma konto uuesti."
 
@@ -7659,7 +7634,7 @@ msgstr "Kohandaja pildid asendatud."
 msgid "Image replacement cleanup complete."
 msgstr "Pildi asendamise puhastamine lõpetatud."
 
-#: inc/lib/ai-builder/inc/classes/zipwp/class-ai-builder-zipwp-api.php:2101
+#: inc/lib/ai-builder/inc/classes/zipwp/class-ai-builder-zipwp-api.php:2121
 msgid "Site not found."
 msgstr "Saidi ei leitud."
 
@@ -7669,19 +7644,19 @@ msgstr "Saidi ei leitud."
 msgid "Sorry, you are not allowed to perform this action."
 msgstr "Vabandust, teil ei ole lubatud seda toimingut sooritada."
 
-#: inc/lib/gutenberg-templates/inc/importer/plugin.php:1042
+#: inc/lib/gutenberg-templates/inc/importer/plugin.php:1051
 msgid "Plugin slug is missing."
 msgstr "Plugin'i slug puudub."
 
-#: inc/lib/gutenberg-templates/inc/importer/plugin.php:1062
+#: inc/lib/gutenberg-templates/inc/importer/plugin.php:1071
 msgid "This plugin is not allowed to be activated."
 msgstr "Selle plugin'i aktiveerimine ei ole lubatud."
 
-#: inc/lib/gutenberg-templates/inc/importer/plugin.php:1926
+#: inc/lib/gutenberg-templates/inc/importer/plugin.php:1880
 msgid "Spectra Legacy"
 msgstr "Spectra Legacy"
 
-#: inc/lib/gutenberg-templates/inc/importer/plugin.php:1927
+#: inc/lib/gutenberg-templates/inc/importer/plugin.php:1881
 #: inc/lib/gutenberg-templates/dist/640.js:1
 #: inc/lib/gutenberg-templates/dist/main.js:2
 msgid "Spectra Blocks"
@@ -7939,7 +7914,7 @@ msgstr "Aita parandada %s, jagades mitte-tundlikke kasutusandmeid — nagu PHP v
 
 #: admin/bsf-analytics/class-bsf-analytics.php:550
 msgid " This will be applicable for all sites from the network."
-msgstr " See kehtib kõigi võrgustiku saitide kohta."
+msgstr "See kehtib kõigi võrgustiku saitide kohta."
 
 #: admin/bsf-analytics/class-bsf-analytics.php:555
 msgid "Learn More."
@@ -8124,14 +8099,44 @@ msgstr "Vaikimisi marsruudi varuvariant"
 msgid "Zip - Your AI Assistant"
 msgstr "Zip - Teie AI assistent"
 
+#: inc/lib/ai-builder/inc/assets/build/main.js:217
+msgid "Failed to save Color Palettes"
+msgstr "Värvipalettide salvestamine ebaõnnestus"
+
+#: inc/lib/onboarding/assets/dist/onboarding/main.js:171
+msgid "Cookie Consent"
+msgstr "Küpsiste nõusolek"
+
+#: inc/lib/onboarding/assets/dist/onboarding/main.js:171
+msgid "Add cookie consent and privacy compliance tools"
+msgstr "Lisa küpsiste nõusoleku ja privaatsuse vastavuse tööriistad"
+
+#. translators: %s is the Template ID.
+#: inc/classes/class-astra-sites.php:791
+#, php-format
+msgid "Invalid Template ID - %s"
+msgstr "Kehtetu malli ID - %s"
+
+#. translators: %s are link.
+#: inc/classes/class-astra-sites.php:2545
+#, php-format
+msgid "This is a premium template available with Essential and Business Toolkits. <a href=\"%s\" target=\"_blank\">View pricing</a> to get access."
+msgstr "See on premium mall, mis on saadaval Essential ja Business tööriistakomplektidega. <a href=\"%s\" target=\"_blank\">Vaata hindu</a>, et saada juurdepääs."
+
+#. translators: %s are link.
+#: inc/classes/class-astra-sites.php:2549
+#, php-format
+msgid "This is a premium template available with Essential and Business Toolkits. <a href=\"%s\" target=\"_blank\">Validate your license key</a> to import this template."
+msgstr "See on premium mall, mis on saadaval Essential ja Business tööriistakomplektidega. <a href=\"%s\" target=\"_blank\">Kinnita oma litsentsivõti</a>, et seda malli importida."
+
 #. translators: %1$s Memory Limit, %2$s Recommended memory limit.
-#: inc/lib/starter-templates-importer/importer/st-importer-log.php:469
+#: inc/lib/starter-templates-importer/importer/st-importer-log.php:463
 #, php-format
 msgctxt "Recommended Memory Limit"
 msgid "Current memory limit %1$s. We recommend setting memory to at least %2$s."
 msgstr "Praegune mälupiirang %1$s. Soovitame seada mälu vähemalt %2$s."
 
-#: inc/lib/starter-templates-importer/importer/st-importer-log.php:550
+#: inc/lib/starter-templates-importer/importer/st-importer-log.php:544
 msgctxt "PHP Version"
 msgid "We recommend to use php 5.4 or higher"
 msgstr "Soovitame kasutada php versiooni 5.4 või uuemat"

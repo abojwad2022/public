@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { emailsApi } from '../../api/endpoints.js'
 import { useToast } from '../../context/ToastContext.jsx'
-import { Badge, Button, Card, Checkbox, Field, Input, Modal, Select, Spinner, Textarea } from '../../components/ui/index.js'
+import { Badge, Button, Card, Field, Input, Modal, Select, Spinner, Textarea } from '../../components/ui/index.js'
 
 export default function EmailsPanel() {
   const toast = useToast()

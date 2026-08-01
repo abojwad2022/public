@@ -276,7 +276,7 @@ export default function ToolsPanel() {
                     <TD className="text-xs text-muted">{r.sku ? `SKU ${r.sku}` : '—'}</TD>
                   </TR>
                 ))}
-                {preview.plan.skip.map((r, i) => (
+                {preview.plan.skip.map((r) => (
                   <TR key={`s-${r.line}`}>
                     <TD className="text-faint">{r.line}</TD>
                     <TD>

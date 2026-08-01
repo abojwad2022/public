@@ -823,6 +823,10 @@ class Post_Types {
 							'instant_form_border_radius_link' => [
 								'type' => 'boolean',
 							],
+							// Disable default SureForms styling.
+							'disable_default_styles'      => [
+								'type' => 'boolean',
+							],
 						],
 					],
 				],
@@ -903,6 +907,8 @@ class Post_Types {
 					'instant_form_border_radius_left'   => 12,
 					'instant_form_border_radius_unit'   => 'px',
 					'instant_form_border_radius_link'   => true,
+					// Disable default SureForms styling.
+					'disable_default_styles'            => false,
 				],
 			]
 		);

@@ -51,12 +51,12 @@ class Ai_Builder_Error_Handler {
 	 * @return void
 	 */
 	public function start_error_handler() {
-		if ( ! interface_exists( 'Throwable' ) ) {
-			// Fatal error handler for PHP < 7.
-			register_shutdown_function( array( $this, 'shutdown_handler' ) );
-		}
+		// Engine fatals (OOM, timeout, parse/compile errors) are not thrown as
+		// Throwable on PHP 7+, so the exception handler never sees them — only a
+		// shutdown callback reading error_get_last() can capture them.
+		register_shutdown_function( array( $this, 'shutdown_handler' ) );
 
-		// Fatal error handler for PHP >= 7, and uncaught exception handler for all PHP versions.
+		// Uncaught exception handler for thrown Throwables.
 		set_exception_handler( array( $this, 'exception_handler' ) );
 	}
 
@@ -161,7 +161,7 @@ class Ai_Builder_Error_Handler {
 		if ( wp_doing_ajax() ) {
 			wp_send_json_error(
 				array(
-					'message' => __( 'There was an error your website.', 'astra-sites' ),
+					'message' => __( 'There was an error on your website.', 'astra-sites' ),
 					'stack'   => array(
 						'error-message' => $error,
 						'error'         => $e,

@@ -1,18 +1,19 @@
 import { Component, lazy, Suspense } from 'react'
-import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom'
+import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router'
 import { boot } from './api/client.js'
 import { AuthProvider, useAuth } from './context/AuthContext.jsx'
 import { MetaProvider, useMeta } from './context/MetaContext.jsx'
 import { OrderAlertsProvider } from './context/OrderAlertsContext.jsx'
 import { ToastProvider } from './context/ToastContext.jsx'
 import Layout, { PageHeader } from './components/Layout.jsx'
+import { Protected } from './components/Protected.jsx'
 import { Alert, Skeleton, SkeletonTable, Spinner } from './components/ui/index.js'
 
 // Eager: everything needed to paint the first screen. Login in particular must
 // never be lazy — it IS the first paint for a logged-out visitor, and a chunk
 // round trip in front of the sign-in form is a visible stall.
 import Login from './pages/Login.jsx'
-import { ComingSoon, DashboardHome } from './pages/Misc.jsx'
+import { DashboardHome } from './pages/Misc.jsx'
 
 const RELOAD_FLAG = 'yz-chunk-reload'
 
@@ -110,6 +111,11 @@ const AIStudio = lazyRoute(() => import('./pages/ai/AIStudio.jsx'))
 const AIInsights = lazyRoute(() => import('./pages/ai/AIInsights.jsx'))
 const AISettings = lazyRoute(() => import('./pages/ai/AISettings.jsx'))
 const RewardsEmbed = lazyRoute(() => import('./pages/RewardsEmbed.jsx'))
+const Users = lazyRoute(() => import('./pages/access/Users.jsx'))
+const UserEditor = lazyRoute(() => import('./pages/access/UserEditor.jsx'))
+const Roles = lazyRoute(() => import('./pages/access/Roles.jsx'))
+const RoleEditor = lazyRoute(() => import('./pages/access/RoleEditor.jsx'))
+const Permissions = lazyRoute(() => import('./pages/access/Permissions.jsx'))
 
 export default function App() {
   return (
@@ -178,55 +184,6 @@ function RouteFallback() {
   )
 }
 
-/**
- * Orders need `edit_shop_orders`, which a product-only role may not have. The server enforces
- * this on every route; this just gives a clear message instead of a wall of 403 toasts.
- */
-function OrdersGate({ view }) {
-  const { can } = useAuth()
-  if (!can('edit_shop_orders')) {
-    return (
-      <ComingSoon title="Orders" phase="—">
-        Your account does not have permission to view orders. Ask an administrator for the Shop
-        Manager role.
-      </ComingSoon>
-    )
-  }
-  if (view === 'new') return <NewOrder />
-  if (view === 'detail') return <OrderDetail />
-  return <Orders />
-}
-
-/** Customers read from the same order data, so they need the same capability. */
-function CustomersGate() {
-  const { can } = useAuth()
-  if (!can('edit_shop_orders')) {
-    return (
-      <ComingSoon title="Customers" phase="—">
-        Your account does not have permission to view customers. Ask an administrator for the Shop
-        Manager role.
-      </ComingSoon>
-    )
-  }
-  return <Customers />
-}
-
-/**
- * Feature pages that touch privileged areas gate on a capability — AI on the
- * WooCommerce-admin cap by default, Yazan Rewards on `manage_yazan_rewards`.
- */
-function AdminGate({ title, cap = 'manage_woo', children }) {
-  const { can } = useAuth()
-  if (!can(cap)) {
-    return (
-      <ComingSoon title={title} phase="—">
-        Your account does not have permission for this. Ask an administrator for the Shop Manager role.
-      </ComingSoon>
-    )
-  }
-  return children
-}
-
 /** The audit log is also a Settings tab, but it deserves a linkable route of its own. */
 function ActivityRoute() {
   return (
@@ -255,43 +212,42 @@ function Shell() {
   if (!meta) return <Spinner label="Loading store data…" />
 
   return (
+    /*
+     * Every screen declares the permission it needs. Editor routes gate on `.view`, not `.edit` —
+     * a viewer who can open a record must not hit a wall on a page they were told they could
+     * reach; the Save button inside carries the write permission instead.
+     */
     <Routes>
-      <Route path="/" element={<DashboardHome />} />
-      <Route path="/products" element={<Products />} />
-      <Route path="/products/new" element={<ProductEditor />} />
-      <Route path="/products/:id" element={<ProductEditor />} />
-      <Route path="/categories" element={<Categories />} />
-      <Route path="/attributes" element={<Attributes />} />
-      <Route path="/inventory" element={<Inventory />} />
-      <Route path="/orders" element={<OrdersGate />} />
+      <Route path="/" element={<Protected perm="dashboard.view" title="Dashboard"><DashboardHome /></Protected>} />
+      <Route path="/products" element={<Protected perm="products.view" title="Products"><Products /></Protected>} />
+      <Route path="/products/new" element={<Protected perm="products.create" title="Products"><ProductEditor /></Protected>} />
+      <Route path="/products/:id" element={<Protected perm="products.view" title="Products"><ProductEditor /></Protected>} />
+      <Route path="/categories" element={<Protected perm="categories.view" title="Categories"><Categories /></Protected>} />
+      <Route path="/attributes" element={<Protected perm="attributes.view" title="Attributes"><Attributes /></Protected>} />
+      <Route path="/inventory" element={<Protected perm="inventory.view" title="Inventory"><Inventory /></Protected>} />
+      <Route path="/orders" element={<Protected perm="orders.view" title="Orders"><Orders /></Protected>} />
       {/* Static segment must be declared before the dynamic :id route. */}
-      <Route path="/orders/new" element={<OrdersGate view="new" />} />
-      <Route path="/orders/:id" element={<OrdersGate view="detail" />} />
-      <Route path="/customers" element={<CustomersGate />} />
-      <Route path="/coupons" element={<Coupons />} />
-      <Route path="/reports" element={<Reports />} />
-      <Route
-        path="/activity"
-        element={
-          <AdminGate title="Activity log">
-            <ActivityRoute />
-          </AdminGate>
-        }
-      />
-      <Route path="/ai" element={<AIStudio />} />
-      <Route path="/ai/insights" element={<AdminGate title="AI Insights"><AIInsights /></AdminGate>} />
-      <Route path="/ai/settings" element={<AdminGate title="AI Settings"><AISettings /></AdminGate>} />
+      <Route path="/orders/new" element={<Protected perm="orders.create" title="Orders"><NewOrder /></Protected>} />
+      <Route path="/orders/:id" element={<Protected perm="orders.view" title="Orders"><OrderDetail /></Protected>} />
+      <Route path="/customers" element={<Protected perm="customers.view" title="Customers"><Customers /></Protected>} />
+      <Route path="/coupons" element={<Protected perm="coupons.view" title="Coupons"><Coupons /></Protected>} />
+      <Route path="/reports" element={<Protected perm="reports.view" title="Reports"><Reports /></Protected>} />
+      <Route path="/activity" element={<Protected perm="audit.view" title="Activity log"><ActivityRoute /></Protected>} />
+      <Route path="/ai" element={<Protected perm="ai.use" title="AI Studio"><AIStudio /></Protected>} />
+      <Route path="/ai/insights" element={<Protected perm="ai.insights_view" title="AI Insights"><AIInsights /></Protected>} />
+      <Route path="/ai/settings" element={<Protected perm="ai.configure" title="AI Settings"><AISettings /></Protected>} />
       {/* Yazan Rewards — each screen is an iframe of the plugin's chrome-less WP render. */}
       <Route path="/rewards" element={<Navigate to="/rewards/analytics" replace />} />
-      <Route
-        path="/rewards/:screen"
-        element={
-          <AdminGate title="Yazan Rewards" cap="manage_yazan_rewards">
-            <RewardsEmbed />
-          </AdminGate>
-        }
-      />
-      <Route path="/settings" element={<Settings />} />
+      <Route path="/rewards/:screen" element={<Protected perm="rewards.view" title="Yazan Rewards"><RewardsEmbed /></Protected>} />
+      {/* Access control. */}
+      <Route path="/users" element={<Protected perm="users.view" title="Users"><Users /></Protected>} />
+      <Route path="/users/new" element={<Protected perm="users.create" title="Users"><UserEditor /></Protected>} />
+      <Route path="/users/:id" element={<Protected perm="users.view" title="Users"><UserEditor /></Protected>} />
+      <Route path="/roles" element={<Protected perm="roles.view" title="Roles"><Roles /></Protected>} />
+      <Route path="/roles/new" element={<Protected perm="roles.create" title="Roles"><RoleEditor /></Protected>} />
+      <Route path="/roles/:id" element={<Protected perm="roles.view" title="Roles"><RoleEditor /></Protected>} />
+      <Route path="/permissions" element={<Protected perm="permissions.view" title="Permissions"><Permissions /></Protected>} />
+      <Route path="/settings" element={<Protected perm="settings.view" title="Settings"><Settings /></Protected>} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )

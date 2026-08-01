@@ -54,11 +54,7 @@ var EditorOneEventManager = exports.EditorOneEventManager = /*#__PURE__*/functio
       if (!this.isEventsManagerAvailable() || !this.canSendEvents()) {
         return false;
       }
-      try {
-        return this.getEventsManager().dispatchEvent(eventName, payload);
-      } catch (error) {
-        return false;
-      }
+      this.getEventsManager().dispatchEvent(eventName, payload);
     }
   }, {
     key: "toLowerSnake",
@@ -2929,7 +2925,7 @@ var Connect = function Connect(_ref) {
       maxWidth: 520,
       textAlign: 'center'
     }
-  }, (0, _i18n.__)('By clicking "Connect", I approve the ', 'elementor'), /*#__PURE__*/_react.default.createElement(_ui.Link, {
+  }, "       ", (0, _i18n.__)('By clicking "Connect", I approve the ', 'elementor'), /*#__PURE__*/_react.default.createElement(_ui.Link, {
     href: "https://go.elementor.com/ai-terms/",
     target: "_blank",
     color: "info.main"
@@ -5637,7 +5633,7 @@ var GetStarted = function GetStarted(_ref) {
     },
     component: "label",
     htmlFor: "e-ai-terms-approval"
-  }, (0, _i18n.__)('I approve the ', 'elementor'), /*#__PURE__*/_react.default.createElement(_ui.Link, {
+  }, "       ", (0, _i18n.__)('I approve the ', 'elementor'), /*#__PURE__*/_react.default.createElement(_ui.Link, {
     href: "https://go.elementor.com/ai-terms/",
     target: "_blank",
     color: "info.main"

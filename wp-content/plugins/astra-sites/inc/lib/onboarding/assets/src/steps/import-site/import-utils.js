@@ -462,6 +462,13 @@ export function getFeaturePluginList(
 					init: 'surecontact/surecontact.php',
 				} );
 				break;
+			case 'surecookie':
+				requiredPlugins.push( {
+					name: 'SureCookie',
+					slug: 'surecookie',
+					init: 'surecookie/surecookie.php',
+				} );
+				break;
 			default:
 				break;
 		}

@@ -54,11 +54,7 @@ var EditorOneEventManager = exports.EditorOneEventManager = /*#__PURE__*/functio
       if (!this.isEventsManagerAvailable() || !this.canSendEvents()) {
         return false;
       }
-      try {
-        return this.getEventsManager().dispatchEvent(eventName, payload);
-      } catch (error) {
-        return false;
-      }
+      this.getEventsManager().dispatchEvent(eventName, payload);
     }
   }, {
     key: "toLowerSnake",

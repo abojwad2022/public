@@ -2483,7 +2483,7 @@ const ImportAiSite = () => {
 
 	return (
 		<>
-			<div className="flex flex-1 flex-col items-center justify-start gap-6 w-full py-8 overflow-auto">
+			<div className="flex flex-1 flex-col items-center justify-start gap-6 w-full pb-8 overflow-auto">
 				{ importError ? (
 					<ErrorModel
 						error={ importErrorMessages }
@@ -2518,11 +2518,16 @@ const ImportAiSite = () => {
 						{ /* Feature carousel */ }
 						<FeatureCarousel />
 
-						{ /* Progress ring + status */ }
-						<div className="flex items-center gap-4">
+						{ /* Progress ring + status. The fixed-width box anchors
+					the ring + text pair as one centered unit; the absolute
+					inner overlay lets long text use more width without
+					shifting the ring. */ }
+						<div className="flex items-center justify-center gap-4">
 							<GradientProgressRing percent={ importPercent } />
-							<div className="zw-sm-normal text-[#475569] w-[240px] sm:w-[320px] shrink-0">
-								<ImportLoaderAi onClickNext={ nextStep } />
+							<div className="w-[200px] shrink-0 self-stretch relative">
+								<div className="absolute inset-y-0 left-0 w-[240px] sm:w-[420px] flex items-center zw-sm-normal text-[#475569]">
+									<ImportLoaderAi onClickNext={ nextStep } />
+								</div>
 							</div>
 						</div>
 					</>

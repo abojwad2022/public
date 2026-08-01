@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router'
 import { aiApi, mediaApi, productsApi } from '../../api/endpoints.js'
 import { useToast } from '../../context/ToastContext.jsx'
 import { PageHeader } from '../../components/Layout.jsx'

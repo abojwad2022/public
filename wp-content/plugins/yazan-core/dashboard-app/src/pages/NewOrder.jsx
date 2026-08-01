@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router'
 import { customersApi, ordersApi } from '../api/endpoints.js'
 import { useMeta } from '../context/MetaContext.jsx'
 import { useToast } from '../context/ToastContext.jsx'

@@ -16,6 +16,50 @@ export function setNonce(value) {
   nonce = value || ''
 }
 
+/** In-flight nonce renewal, shared so a burst of failures triggers one request, not one each. */
+let renewal = null
+
+/**
+ * Mint a fresh `wp_rest` nonce from the session cookie alone.
+ *
+ * The nonce printed into the page shell is only good for 12–24 hours, and it is also bound to the
+ * login session: expiring or re-issuing the auth cookie (signing in again in another tab) leaves an
+ * open dashboard holding a nonce the server no longer accepts. Core's `rest-nonce` admin-ajax
+ * action is the one endpoint that will renew it, because — unlike every REST route — it is not
+ * itself gated on a nonce.
+ *
+ * @returns {Promise<string>} The new nonce, or '' when the session is genuinely gone.
+ */
+async function renewNonce() {
+  if (renewal) return renewal
+
+  renewal = (async () => {
+    try {
+      const response = await fetch(boot.nonceUrl, { credentials: 'same-origin' })
+      if (!response.ok) return '' // Logged out: admin-ajax answers 400 for an action it won't run.
+      const value = (await response.text()).trim()
+      // A bare '0'/'-1' is admin-ajax's "no" — never treat it as a nonce.
+      if (!value || value === '0' || value === '-1') return ''
+      setNonce(value)
+      return value
+    } catch {
+      return '' // Offline or blocked — indistinguishable from here, and handled the same way.
+    } finally {
+      renewal = null
+    }
+  })()
+
+  return renewal
+}
+
+/**
+ * Fired when the server says the session is gone or the account is suspended.
+ *
+ * A DOM event rather than a context import: this module must stay free of React so it can be used
+ * from anywhere, and the auth provider is the only thing that needs to react.
+ */
+export const AUTH_LOST_EVENT = 'yazan:auth-lost'
+
 export class ApiError extends Error {
   constructor(message, status, code) {
     super(message)
@@ -37,7 +81,8 @@ function buildUrl(path, params) {
   return url.toString()
 }
 
-async function request(path, { method = 'GET', params, body, formData } = {}) {
+async function request(path, options = {}, isReplay = false) {
+  const { method = 'GET', params, body, formData } = options
   const headers = { 'X-WP-Nonce': nonce }
   let payload
 
@@ -61,7 +106,32 @@ async function request(path, { method = 'GET', params, body, formData } = {}) {
 
   if (!response.ok) {
     const message = (data && (data.message || data.error)) || `Request failed (${response.status})`
-    throw new ApiError(message, response.status, data && data.code)
+    const code = data && data.code
+
+    /*
+     * A stale nonce (aged out, or superseded by a newer login session) is rejected by core at
+     * authentication time — before routing — so nothing ran and replaying is safe even for a
+     * write. Renew once and repeat the call; if no nonce can be minted the session really is
+     * gone, so hand over to the sign-in screen instead of stranding the user on an error card.
+     */
+    if (response.status === 403 && code === 'rest_cookie_invalid_nonce' && !isReplay) {
+      if (await renewNonce()) return request(path, options, true)
+      window.dispatchEvent(new CustomEvent(AUTH_LOST_EVENT, { detail: { code, message } }))
+    }
+
+    /*
+     * 401 means the cookie or nonce is no longer valid; yazan_suspended means the account was
+     * switched off while this tab was open. Both leave the UI showing screens it can no longer
+     * use, so tell the app to fall back to the sign-in view.
+     *
+     * 403 deliberately does NOT trigger this — a forbidden action is a normal outcome for a
+     * limited role and must not sign them out.
+     */
+    if (response.status === 401 || code === 'yazan_suspended') {
+      window.dispatchEvent(new CustomEvent(AUTH_LOST_EVENT, { detail: { code, message } }))
+    }
+
+    throw new ApiError(message, response.status, code)
   }
   return data
 }

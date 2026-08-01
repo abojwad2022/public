@@ -1,3 +1,12 @@
+v1.1.38 - 28-July-2026
+- Improvement: Import log entries are now appended atomically so concurrent requests no longer overwrite each other, and PHP fatal errors during reset are captured in the import log.
+- Improvement: Added import compatibility for SureCart products with variants.
+- Fix: Added database fallback for demo content when JSON file write fails silently on shared hosting, preventing "Customizer data is empty" errors.
+
+v1.1.37 - 21-July-2026
+- Improvement: Added SureMembers import support — access group, post, and term ID remapping across restriction rule metas, restricted-content post meta, shortcodes, and block attributes.
+- Fix: Corrected a typo in a user-facing error message.
+
 v1.1.36 - 13-July-2026
 - Fix: Selected images were not replaced in content for V3 templates using core Image and Spectra v3 Container blocks.
 

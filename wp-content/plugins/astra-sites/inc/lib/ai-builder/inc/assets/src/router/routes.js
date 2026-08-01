@@ -31,6 +31,7 @@ const steps = [
 		component: BusinessDetails,
 		layoutConfig: {
 			stepNumber: 1,
+			stepSlug: 'type',
 			name: __( "Let's Start", 'ai-builder' ),
 			description: __( 'Name, language & type', 'ai-builder' ),
 			screen: 'type',
@@ -43,6 +44,7 @@ const steps = [
 		component: SiteGoals,
 		layoutConfig: {
 			stepNumber: 2,
+			stepSlug: 'goals',
 			name: __( 'Goals', 'ai-builder' ),
 			description: __( 'What do you want to achieve', 'ai-builder' ),
 			screen: 'goals',
@@ -55,6 +57,7 @@ const steps = [
 		component: DescribeBusiness,
 		layoutConfig: {
 			stepNumber: 3,
+			stepSlug: 'details',
 			name: __( 'Describe', 'ai-builder' ),
 			description: __( 'Some details please', 'ai-builder' ),
 			screen: 'details',
@@ -67,6 +70,7 @@ const steps = [
 		component: BusinessContact,
 		layoutConfig: {
 			stepNumber: 4,
+			stepSlug: 'contact-details',
 			name: __( 'Contact', 'ai-builder' ),
 			description: __( 'How can people get in touch', 'ai-builder' ),
 			screen: 'contact-details',
@@ -79,6 +83,7 @@ const steps = [
 		component: Images,
 		layoutConfig: {
 			stepNumber: 5,
+			stepSlug: 'images',
 			name: __( 'Images', 'ai-builder' ),
 			description: __( 'Select relevant images as needed', 'ai-builder' ),
 			screen: 'images',
@@ -93,6 +98,7 @@ const steps = [
 		component: SelectTemplate,
 		layoutConfig: {
 			stepNumber: 6,
+			stepSlug: 'design',
 			name: __( 'Design', 'ai-builder' ),
 			description: __(
 				'Choose a structure for your website',
@@ -113,6 +119,7 @@ const steps = [
 					component: Features,
 					layoutConfig: {
 						stepNumber: 7,
+						stepSlug: 'select-features',
 						name: __( 'Features', 'ai-builder' ),
 						description: __(
 							'Select features as you need',
@@ -132,6 +139,7 @@ const steps = [
 		component: ImportAiSite,
 		layoutConfig: {
 			stepNumber: 9,
+			stepSlug: 'done',
 			name: __( 'Done', 'ai-builder' ),
 			description: __( 'Your website is ready!', 'ai-builder' ),
 			screen: 'done',
@@ -145,6 +153,7 @@ const steps = [
 		path: '/done',
 		component: BuildDone,
 		layoutConfig: {
+			stepSlug: 'done',
 			name: __( 'Done', 'ai-builder' ),
 			description: __(
 				'Congratulations! Your website is ready!',

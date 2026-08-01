@@ -29,6 +29,8 @@ class Yazan_Dashboard_Boot {
 		require_once $dir . 'class-yazan-dashboard-audit.php';
 		require_once $dir . 'class-yazan-dashboard-auth.php';
 		require_once $dir . 'class-yazan-dashboard.php';
+		// Loaded before every controller — they all build their handlers with its args() helper.
+		require_once $dir . 'rest/class-yazan-rest-guard.php';
 		require_once $dir . 'rest/class-yazan-rest-products.php';
 		require_once $dir . 'rest/class-yazan-rest-media.php';
 		require_once $dir . 'rest/class-yazan-rest-meta.php';
@@ -51,11 +53,22 @@ class Yazan_Dashboard_Boot {
 		require_once $dir . 'rest/class-yazan-rest-status.php';
 		require_once $dir . 'rest/class-yazan-rest-backup.php';
 		require_once $dir . 'rest/class-yazan-rest-wishlist.php';
+		require_once $dir . 'rest/class-yazan-rest-social-auth.php';
+		require_once $dir . 'rest/class-yazan-rest-permissions.php';
+		require_once $dir . 'rest/class-yazan-rest-roles.php';
+		require_once $dir . 'rest/class-yazan-rest-users.php';
 
 		// AI subsystem (gateway, providers, pipelines, /ai/* REST). Self-contained: it requires its
 		// own classes and registers its own rest_api_init hook.
 		require_once YAZAN_CORE_DIR . 'includes/ai/class-yazan-ai-boot.php';
 		Yazan_AI_Boot::init();
+
+		/*
+		 * Central REST authorization for the whole yazan/v1 namespace. Registered here rather than
+		 * inside the rest_api_init closure because it hooks a different filter and must be in place
+		 * before any route is dispatched.
+		 */
+		Yazan_REST_Guard::register();
 
 		// Route + query var + shell.
 		add_action( 'init', array( 'Yazan_Dashboard', 'add_rewrite' ), 7 );
@@ -94,6 +107,12 @@ class Yazan_Dashboard_Boot {
 				Yazan_REST_Status::register_routes();
 				Yazan_REST_Backup::register_routes();
 				Yazan_REST_Wishlist::register_routes();
+				// Google / Apple sign-in credentials (write-only, encrypted at rest).
+				Yazan_REST_Social_Auth::register_routes();
+				// Access control: staff users, roles, and the read-only permission catalog.
+				Yazan_REST_Permissions::register_routes();
+				Yazan_REST_Roles::register_routes();
+				Yazan_REST_Users::register_routes();
 			}
 		);
 	}

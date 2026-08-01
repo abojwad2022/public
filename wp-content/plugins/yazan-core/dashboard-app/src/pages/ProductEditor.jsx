@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router'
 import { productsApi } from '../api/endpoints.js'
 import { useMeta } from '../context/MetaContext.jsx'
 import { useToast } from '../context/ToastContext.jsx'
 import { useAuth } from '../context/AuthContext.jsx'
 import { PageHeader } from '../components/Layout.jsx'
-import { Button, Card, Checkbox, Field, Input, Select, Spinner, Textarea } from '../components/ui/index.js'
+import { Button, Card, Checkbox, Field, Input, Select, Spinner, Textarea, useConfirm } from '../components/ui/index.js'
 import ProductDataTabs from '../components/product/ProductDataTabs.jsx'
 import { JewelryPanel, AuthenticityPanel } from '../components/product/YazanPanels.jsx'
 import { FeaturedImageField, GalleryField } from '../components/media/ImageFields.jsx'
@@ -274,7 +274,7 @@ export default function ProductEditor() {
                 )}
               </div>
 
-              {!isNew && can('delete_products') && (
+              {!isNew && can('products.delete') && (
                 <button
                   type="button"
                   onClick={remove}

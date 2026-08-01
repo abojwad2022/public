@@ -305,6 +305,24 @@ html:not([data-yz-theme="burgundy"]) .yazan.yz-comma-header .yz-header .ast-head
 .yazan .ast-primary-header-bar .site-primary-header-wrap {
 	min-height: var(--yz-header-h) !important;
 }
+
+/* Crowding guard. Astra lays the bar out as `grid-template-columns: auto auto`
+   with `flex-wrap: nowrap` on both sections and no 1fr / min-width:0 anywhere,
+   so once the logo + six tracked uppercase menu items + the icon cluster exceed
+   the container the row simply overflows to the right. The account icon is the
+   last child (and Astra gives it padding-right:0), so it is what gets shoved
+   past the viewport edge — the header is full-bleed by design, which is kept,
+   but "full-bleed" should not mean "allowed to overflow".
+
+   Giving the left track minmax(0, 1fr) and both sections min-width:0 lets the
+   NAV absorb the pressure instead of the cluster. Started roughly ≤1280px and
+   got worse after theme-switcher.js began injecting a fourth cluster item. */
+.yazan .ast-primary-header-bar .ast-builder-grid-row {
+	grid-template-columns: minmax(0, 1fr) auto;
+}
+.yazan .ast-primary-header-bar .ast-builder-grid-row > .site-header-section {
+	min-width: 0;
+}
 .yazan .ast-primary-header-bar.main-header-bar {
 	padding-top: 0 !important;
 	padding-bottom: 0 !important;
@@ -316,6 +334,26 @@ html:not([data-yz-theme="burgundy"]) .yazan.yz-comma-header .yz-header .ast-head
 .yazan .ast-primary-header-bar .ast-header-account {
 	line-height: var(--yz-header-h) !important;
 	min-height: var(--yz-header-h) !important;
+}
+
+/* …and the account element needs the flex centring its three cluster siblings
+   already get from elsewhere (theme slot: theme-switcher.css; search: §7 below;
+   cart: Astra's own dynamic CSS). Without it, the rule above leaves an 18px
+   inline-flex SVG baseline-aligned inside a 56px line box, so the person icon
+   rode ~4-5px above the optical centre of the other three — the "floating" icon.
+   line-height:1 neutralises that inherited line box; min-height above is left
+   alone so the bar keeps its height. */
+.yazan .ast-primary-header-bar .ast-header-account,
+.yazan .ast-primary-header-bar .ast-header-account-wrap,
+.yazan .ast-primary-header-bar .ast-header-account-inner-wrap,
+.yazan .ast-primary-header-bar .ast-header-account-link {
+	display: flex;
+	align-items: center;
+	line-height: 1;
+}
+.yazan .ast-primary-header-bar .ast-header-account .ahfb-svg-iconset,
+.yazan .ast-primary-header-bar .ast-header-account svg {
+	display: block;
 }
 /* Slim logo (keeps within the shorter bar; scroll-shrink in section 5 still scales it). */
 .yazan .ast-primary-header-bar .custom-logo-link img,

@@ -59,13 +59,26 @@ class Yazan_Core_Privacy {
 		return array(
 			$wpdb->prefix . 'yazan_audit_log'      => array(
 				'user_column' => 'user_id',
-				'pii'         => array( 'ip' ),
+				// The user agent is a browser fingerprint, so it is PII and must be blanked too.
+				'pii'         => array( 'ip', 'user_agent' ),
 				'label'       => __( 'Dashboard audit log', 'yazan' ),
 			),
 			$wpdb->prefix . 'yazan_ai_generations' => array(
 				'user_column' => 'user_id',
 				'pii'         => array(),
 				'label'       => __( 'AI generation history', 'yazan' ),
+			),
+			/*
+			 * Role assignments are DELETED rather than anonymised. Reassigning a grant to user 0
+			 * would leave a phantom row that the "who is a super admin" count could pick up, and
+			 * unlike the audit log there is no accountability value in keeping it — the audit log
+			 * already records who was granted what, and when.
+			 */
+			$wpdb->prefix . 'yazan_user_roles'     => array(
+				'user_column' => 'user_id',
+				'pii'         => array(),
+				'mode'        => 'delete',
+				'label'       => __( 'Dashboard role assignments', 'yazan' ),
 			),
 		);
 	}
@@ -112,6 +125,21 @@ class Yazan_Core_Privacy {
 
 		foreach ( self::tables() as $table => $spec ) {
 			if ( ! self::table_exists( $table ) ) {
+				continue;
+			}
+
+			/*
+			 * Most tables are anonymised so the history survives. A table marked 'delete' holds
+			 * rows whose only meaning is the user link itself — keeping a de-linked copy would be
+			 * a phantom record rather than a preserved fact.
+			 */
+			if ( 'delete' === ( $spec['mode'] ?? 'anonymize' ) ) {
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+				$rows = $wpdb->delete( $table, array( $spec['user_column'] => $user_id ), array( '%d' ) );
+
+				if ( $rows > 0 ) {
+					$affected[ $table ] = (int) $rows;
+				}
 				continue;
 			}
 
@@ -285,14 +313,30 @@ class Yazan_Core_Privacy {
 
 		$affected = self::anonymize( (int) $user->ID );
 
+		// The two modes report differently: anonymised rows are retained, deleted ones are removed.
+		$retained = false;
+		$removed  = false;
+		$specs    = self::tables();
+
+		foreach ( array_keys( $affected ) as $table ) {
+			if ( 'delete' === ( $specs[ $table ]['mode'] ?? 'anonymize' ) ) {
+				$removed = true;
+			} else {
+				$retained = true;
+			}
+		}
+
 		$messages = array();
-		if ( $affected ) {
+		if ( $retained ) {
 			$messages[] = __( 'Dashboard audit entries and AI generation history were anonymised rather than deleted: the audit trail is an accountability record and the AI rows carry billing totals. Neither identifies this person any more.', 'yazan' );
+		}
+		if ( $removed ) {
+			$messages[] = __( 'Dashboard role assignments for this account were deleted outright.', 'yazan' );
 		}
 
 		return array(
-			'items_removed'  => false,
-			'items_retained' => ! empty( $affected ),
+			'items_removed'  => $removed,
+			'items_retained' => $retained,
 			'messages'       => $messages,
 			'done'           => true,
 		);

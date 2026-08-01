@@ -76,7 +76,7 @@
 }
 
 .ast-sites-dark-mode #ast-sites-modal .ast-tooltip-wrap::before {
-	border: 8px solid #7d7e82;
+	border: 8px solid #3c4043;
 	border-bottom-style: solid;
 	border-right-color: transparent;
 	border-left-color: transparent;
@@ -84,7 +84,17 @@
 }
 
 .ast-sites-dark-mode #ast-sites-modal .ast-tooltip-wrap {
-	background: #7d7e82;
+	background: #3c4043;
+}
+
+.ast-sites-dark-mode #ast-sites-modal .ast-tooltip-inner-wrap a {
+	color: #7dd3f8;
+}
+
+.ast-sites-dark-mode #ast-sites-modal .ast-tooltip-inner-wrap a:hover,
+.ast-sites-dark-mode #ast-sites-modal .ast-tooltip-inner-wrap a:active,
+.ast-sites-dark-mode #ast-sites-modal .ast-tooltip-inner-wrap a:focus {
+	color: #a5e3ff;
 }
 
 .ast-sites-dark-mode #ast-sites-modal #wp-filter-search-input {

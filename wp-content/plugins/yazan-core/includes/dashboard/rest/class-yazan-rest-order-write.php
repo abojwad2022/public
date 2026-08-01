@@ -54,53 +54,37 @@ class Yazan_REST_Order_Write {
 	 * @return void
 	 */
 	public static function register_routes() {
-		$ns   = Yazan_Dashboard_Auth::NS;
-		$perm = Yazan_Dashboard_Auth::require_cap( self::CAP );
+		$ns = Yazan_Dashboard_Auth::NS;
 
 		register_rest_route(
 			$ns,
 			'/orders',
-			array(
-				'methods'             => WP_REST_Server::CREATABLE,
-				'callback'            => array( __CLASS__, 'create' ),
-				'permission_callback' => $perm,
-			)
+			Yazan_REST_Guard::args( WP_REST_Server::CREATABLE, array( __CLASS__, 'create' ), 'orders.create' )
 		);
 
+		/*
+		 * Each money-touching operation gets its own permission rather than sharing one broad
+		 * "edit order" grant — repricing line items, rewriting an address, and applying a discount
+		 * are genuinely different levels of trust.
+		 */
 		register_rest_route(
 			$ns,
 			'/orders/(?P<id>\d+)/items',
-			array(
-				'methods'             => WP_REST_Server::EDITABLE,
-				'callback'            => array( __CLASS__, 'update_items' ),
-				'permission_callback' => $perm,
-			)
+			Yazan_REST_Guard::args( WP_REST_Server::EDITABLE, array( __CLASS__, 'update_items' ), 'orders.items' )
 		);
 
 		register_rest_route(
 			$ns,
 			'/orders/(?P<id>\d+)/addresses',
-			array(
-				'methods'             => WP_REST_Server::EDITABLE,
-				'callback'            => array( __CLASS__, 'update_addresses' ),
-				'permission_callback' => $perm,
-			)
+			Yazan_REST_Guard::args( WP_REST_Server::EDITABLE, array( __CLASS__, 'update_addresses' ), 'orders.addresses' )
 		);
 
 		register_rest_route(
 			$ns,
 			'/orders/(?P<id>\d+)/coupons',
 			array(
-				array(
-					'methods'             => WP_REST_Server::CREATABLE,
-					'callback'            => array( __CLASS__, 'add_coupon' ),
-					'permission_callback' => $perm,
-				),
-				array(
-					'methods'             => WP_REST_Server::DELETABLE,
-					'callback'            => array( __CLASS__, 'remove_coupon' ),
-					'permission_callback' => $perm,
-				),
+				Yazan_REST_Guard::args( WP_REST_Server::CREATABLE, array( __CLASS__, 'add_coupon' ), 'orders.coupons' ),
+				Yazan_REST_Guard::args( WP_REST_Server::DELETABLE, array( __CLASS__, 'remove_coupon' ), 'orders.coupons' ),
 			)
 		);
 
@@ -108,27 +92,16 @@ class Yazan_REST_Order_Write {
 			$ns,
 			'/orders/(?P<id>\d+)/refunds',
 			array(
-				array(
-					'methods'             => WP_REST_Server::READABLE,
-					'callback'            => array( __CLASS__, 'list_refunds' ),
-					'permission_callback' => $perm,
-				),
-				array(
-					'methods'             => WP_REST_Server::CREATABLE,
-					'callback'            => array( __CLASS__, 'create_refund' ),
-					'permission_callback' => $perm,
-				),
+				Yazan_REST_Guard::args( WP_REST_Server::READABLE, array( __CLASS__, 'list_refunds' ), 'orders.view' ),
+				Yazan_REST_Guard::args( WP_REST_Server::CREATABLE, array( __CLASS__, 'create_refund' ), 'orders.refund' ),
 			)
 		);
 
+		// Deleting a refund reverses money at the gateway, which is the highest-trust order action.
 		register_rest_route(
 			$ns,
 			'/orders/(?P<id>\d+)/refunds/(?P<refund_id>\d+)',
-			array(
-				'methods'             => WP_REST_Server::DELETABLE,
-				'callback'            => array( __CLASS__, 'delete_refund' ),
-				'permission_callback' => Yazan_Dashboard_Auth::require_cap( self::CAP_GATEWAY_REFUND ),
-			)
+			Yazan_REST_Guard::args( WP_REST_Server::DELETABLE, array( __CLASS__, 'delete_refund' ), 'orders.refund_gateway' )
 		);
 	}
 
@@ -577,7 +550,7 @@ class Yazan_REST_Order_Write {
 		// Gateway refund: opt-in, extra capability, and the gateway must actually support it.
 		$via_gateway = (bool) $request->get_param( 'refund_payment' );
 		if ( $via_gateway ) {
-			if ( ! current_user_can( self::CAP_GATEWAY_REFUND ) ) {
+			if ( ! Yazan_Permissions::can( 'orders.refund_gateway' ) ) {
 				return new WP_Error(
 					'yazan_forbidden',
 					__( 'You do not have permission to send refunds through the payment gateway.', 'yazan' ),
