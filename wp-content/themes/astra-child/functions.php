@@ -58,6 +58,7 @@ require YAZAN_DIR . '/inc/woocommerce.php';  // Loop/product hooks: subject line
 require YAZAN_DIR . '/inc/cartflows-compat.php'; // Fix CartFlows Instant-Checkout thank-you template on Windows/Local.
 require YAZAN_DIR . '/inc/thankyou-enhancements.php'; // Thank-you page: progress stepper, delivery ETA, brand note, support.
 require YAZAN_DIR . '/inc/my-account.php';   // My Account: scoped styling + brand-voiced menu labels.
+require YAZAN_DIR . '/inc/signin-card.php';  // Sign-in / register card: account page + header dialog.
 require YAZAN_DIR . '/inc/taxonomy.php';     // Redesigned IA: extra shop facets (wearer/style/shape/…).
 require YAZAN_DIR . '/inc/page-authentication.php'; // /authentication/ — luxury assurance page.
 require YAZAN_DIR . '/inc/page-verify-ring.php';    // /verify-ring/ — public serial lookup + certificate.

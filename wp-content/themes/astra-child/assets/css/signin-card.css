@@ -1,0 +1,474 @@
+/* ==========================================================================
+   Yazan — sign-in / create-account card.
+
+   One component, two surfaces: centred on the account page, and inside the
+   header dialog on every other page. The card itself carries no positioning —
+   each surface places it — so the two can never drift apart.
+
+   New component, so it reads the SEMANTIC tokens from theme-tokens.css (with
+   hard fallbacks), and it is written in logical properties throughout, which
+   is why there is not one line of RTL here.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. The card
+   -------------------------------------------------------------------------- */
+
+.yz-signin {
+	inline-size: 100%;
+	max-inline-size: 27.5rem;   /* 440px — a single comfortable column of fields. */
+	margin-inline: auto;
+	color: var(--yz-text, #141210);
+	font-family: var(--yz-font-body, sans-serif);
+	text-align: start;
+}
+
+/* Without JavaScript both views render in full, one under the other; the rule
+   between them keeps that reading as two offers rather than one long form. */
+.yz-signin__view + .yz-signin__view {
+	margin-block-start: 2.5rem;
+	padding-block-start: 2.5rem;
+	border-block-start: 1px solid var(--yz-border, rgba(20, 18, 16, 0.14));
+}
+
+.yz-signin[data-yz-signin-js] .yz-signin__view + .yz-signin__view {
+	margin-block-start: 0;
+	padding-block-start: 0;
+	border-block-start: 0;
+}
+
+.yz-signin__head {
+	margin-block-end: 1.75rem;
+}
+
+.yz-signin__title {
+	margin: 0;
+	font-family: var(--yz-font-display, serif);
+	font-size: clamp(1.75rem, 4vw, 2.125rem);
+	font-weight: 600;
+	line-height: 1.15;
+	letter-spacing: 0.01em;
+	color: var(--yz-text, #141210);
+}
+
+.yz-signin__lede {
+	margin: 0.375rem 0 0;
+	font-size: 0.875rem;
+	line-height: 1.5;
+	color: var(--yz-text-2, #4a4540);
+}
+
+/* --------------------------------------------------------------------------
+   2. Fields
+   -------------------------------------------------------------------------- */
+
+.yz-signin__field {
+	position: relative;
+	margin: 0 0 1rem;
+}
+
+.yz-signin__field label {
+	display: block;
+	margin-block-end: 0.375rem;
+	font-size: 0.8125rem;
+	font-weight: 500;
+	letter-spacing: 0.02em;
+	color: var(--yz-text, #141210);
+}
+
+.yz-signin__field input {
+	inline-size: 100%;
+	box-sizing: border-box;
+	min-block-size: 48px;
+	padding: 0.75rem 0.875rem;
+
+	background-color: var(--yz-surface, #fff);
+	border: 1px solid var(--yz-border-strong, rgba(20, 18, 16, 0.28));
+	border-radius: var(--yz-radius, 0);
+
+	color: var(--yz-text, #141210);
+	font-family: inherit;
+	font-size: 1rem;   /* 16px — anything smaller makes iOS zoom on focus. */
+	line-height: 1.4;
+
+	transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.yz-signin__field input:focus {
+	outline: none;
+	border-color: var(--yz-focus, #8c2f24);
+	box-shadow: 0 0 0 2px color-mix(in srgb, var(--yz-focus, #8c2f24) 22%, transparent);
+}
+
+.yz-signin__field input:disabled {
+	opacity: 0.6;
+}
+
+/* The reveal toggle sits inside the password field, so the field keeps its
+   full width and the control never wraps to a line of its own. */
+.yz-signin__field--password input {
+	padding-inline-end: 3rem;
+}
+
+.yz-signin__eye {
+	position: absolute;
+	inset-block-end: 1px;
+	inset-inline-end: 1px;
+
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	inline-size: 2.875rem;
+	block-size: 46px;
+	padding: 0;
+
+	background: transparent;
+	border: 0;
+	border-radius: 0;
+	color: var(--yz-text-2, #4a4540);
+	cursor: pointer;
+	opacity: 0.75;
+	transition: opacity 0.2s ease;
+}
+
+.yz-signin__eye:hover,
+.yz-signin__eye:focus-visible {
+	opacity: 1;
+}
+
+.yz-signin__eye:focus-visible {
+	outline: 2px solid var(--yz-focus, #8c2f24);
+	outline-offset: -2px;
+}
+
+/* A struck-through eye reads as "hidden" without needing a second icon. */
+.yz-signin__eye[aria-pressed="true"] svg {
+	opacity: 0.55;
+}
+
+.yz-signin__remember {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	margin-block: 0.25rem 1.25rem;
+	font-size: 0.875rem;
+	color: var(--yz-text-2, #4a4540);
+	cursor: pointer;
+}
+
+.yz-signin__remember input {
+	inline-size: 1rem;
+	block-size: 1rem;
+	margin: 0;
+	accent-color: var(--yz-primary, #141210);
+}
+
+/* Honeypot — off-screen rather than display:none, which some bots skip. */
+.yz-signin__hp {
+	position: absolute;
+	inset-inline-start: -9999px;
+	inline-size: 1px;
+	block-size: 1px;
+	opacity: 0;
+}
+
+/* --------------------------------------------------------------------------
+   3. Buttons
+   -------------------------------------------------------------------------- */
+
+.yz-signin__submit {
+	inline-size: 100%;
+	min-block-size: 48px;
+	padding: 0.875rem 1.25rem;
+
+	background-color: var(--yz-primary, #141210);
+	border: 1px solid var(--yz-primary, #141210);
+	border-radius: var(--yz-radius, 0);
+	color: var(--yz-on-primary, #f5f1e9);
+
+	font-family: inherit;
+	font-size: 0.75rem;
+	font-weight: 500;
+	letter-spacing: var(--yz-tracking-label, 0.14em);
+	text-transform: uppercase;
+	cursor: pointer;
+
+	transition: background-color 0.22s var(--mo-ease-out, ease), color 0.22s var(--mo-ease-out, ease);
+}
+
+.yz-signin__submit:hover {
+	background-color: transparent;
+	color: var(--yz-primary, #141210);
+}
+
+.yz-signin__submit:focus-visible {
+	outline: 2px solid var(--yz-focus, #8c2f24);
+	outline-offset: 2px;
+}
+
+.yz-signin__submit[disabled] {
+	opacity: 0.6;
+	cursor: default;
+}
+
+.yz-signin__submit[disabled]:hover {
+	background-color: var(--yz-primary, #141210);
+	color: var(--yz-on-primary, #f5f1e9);
+}
+
+/* Inline text button — used for "Change", "Get started", "Sign in" switches. */
+.yz-signin__link {
+	padding: 0;
+	background: none;
+	border: 0;
+	color: var(--yz-accent, #8c2f24);
+	font: inherit;
+	text-decoration: underline;
+	text-underline-offset: 0.2em;
+	cursor: pointer;
+}
+
+.yz-signin__link:hover {
+	color: var(--yz-text, #141210);
+}
+
+.yz-signin__link:focus-visible {
+	outline: 2px solid var(--yz-focus, #8c2f24);
+	outline-offset: 2px;
+}
+
+/* --------------------------------------------------------------------------
+   4. Supporting text
+   -------------------------------------------------------------------------- */
+
+/* "you@example.com · Change" — the receipt for step one. */
+.yz-signin__identity {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.75rem;
+
+	margin: 0 0 1rem;
+	padding: 0.625rem 0.875rem;
+
+	background-color: var(--yz-surface-2, #f4f1ec);
+	border: 1px solid var(--yz-border, rgba(20, 18, 16, 0.14));
+
+	font-size: 0.875rem;
+	color: var(--yz-text-2, #4a4540);
+	overflow-wrap: anywhere;
+}
+
+.yz-signin__lost {
+	margin: 1rem 0 0;
+	font-size: 0.875rem;
+}
+
+.yz-signin__lost a {
+	color: var(--yz-text-2, #4a4540);
+	text-decoration: underline;
+	text-underline-offset: 0.2em;
+}
+
+.yz-signin__lost a:hover {
+	color: var(--yz-text, #141210);
+}
+
+.yz-signin__foot {
+	margin: 1.5rem 0 0;
+	font-size: 0.875rem;
+	color: var(--yz-text-2, #4a4540);
+}
+
+.yz-signin__error {
+	margin: 0 0 1rem;
+	padding: 0.625rem 0.875rem;
+
+	background-color: color-mix(in srgb, var(--yz-accent, #8c2f24) 8%, transparent);
+	border-inline-start: 2px solid var(--yz-accent, #8c2f24);
+
+	font-size: 0.875rem;
+	line-height: 1.45;
+	color: var(--yz-accent, #8c2f24);
+}
+
+/* [hidden] loses to any class-level display, so state it plainly. */
+.yz-signin [hidden] {
+	display: none;
+}
+
+/* --------------------------------------------------------------------------
+   5. "or" rule + provider tiles
+   -------------------------------------------------------------------------- */
+
+.yz-signin__rule {
+	display: flex;
+	align-items: center;
+	gap: 0.875rem;
+	margin-block: 1.5rem;
+
+	font-size: 0.75rem;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: var(--yz-text-muted, #8a8279);
+}
+
+.yz-signin__rule::before,
+.yz-signin__rule::after {
+	content: "";
+	flex: 1 1 auto;
+	block-size: 1px;
+	background-color: var(--yz-border, rgba(20, 18, 16, 0.14));
+}
+
+/* --------------------------------------------------------------------------
+   6. Account-page surface
+   -------------------------------------------------------------------------- */
+
+.yz-signin-page {
+	display: flex;
+	justify-content: center;
+	padding-block: clamp(2rem, 6vw, 4.5rem);
+}
+
+.yz-signin-page .yz-signin {
+	padding: clamp(1.75rem, 5vw, 2.75rem);
+	background-color: var(--yz-surface, #fff);
+	border: 1px solid var(--yz-border, rgba(20, 18, 16, 0.14));
+	border-radius: var(--yz-radius, 0);
+	box-shadow: var(--yz-shadow-md, 0 12px 28px -18px rgba(20, 18, 16, 0.3));
+}
+
+/*
+ * Astra's .u-columns / .col2-set clearfix pseudo-elements become grid or flex
+ * items the moment their parent stops being a plain block, which is how the
+ * account page grew phantom gaps before. The card does not use those wrappers
+ * at all, but the account page still carries the classes for plugins that
+ * target them — so neutralise the pseudo-elements rather than the classes.
+ */
+body.woocommerce-account .yz-signin-page .u-columns::before,
+body.woocommerce-account .yz-signin-page .u-columns::after {
+	content: none;
+}
+
+/* --------------------------------------------------------------------------
+   7. Dialog surface
+   -------------------------------------------------------------------------- */
+
+.yz-signin-modal {
+	position: fixed;
+	inset: 0;
+	/* Above the promo dialog (100000), the chat launcher (99990) and the cart
+	   drawer: a sign-in prompt is always the thing being answered right now. */
+	z-index: 100010;
+
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 1.25rem;
+}
+
+.yz-signin-modal[hidden] {
+	display: none;
+}
+
+.yz-signin-modal__overlay {
+	position: absolute;
+	inset: 0;
+	background-color: var(--yz-scrim, rgba(12, 11, 10, 0.55));
+	opacity: 0;
+	transition: opacity 320ms var(--mo-ease-out, ease);
+}
+
+.yz-signin-modal.is-open .yz-signin-modal__overlay {
+	opacity: 1;
+}
+
+.yz-signin-modal__dialog {
+	position: relative;
+	z-index: 1;
+
+	inline-size: min(94vw, 30rem);
+	max-block-size: calc(100vh - 2.5rem);
+	overflow: auto;
+
+	padding: clamp(1.75rem, 5vw, 2.5rem);
+	background-color: var(--yz-surface, #fff);
+	border-radius: var(--yz-radius, 0);
+	box-shadow: var(--yz-shadow-lg, 0 24px 48px -24px rgba(20, 18, 16, 0.4));
+
+	opacity: 0;
+	transform: translateY(18px) scale(0.98);
+	transition: opacity 360ms var(--mo-ease-out, ease), transform 360ms var(--mo-ease-out, ease);
+}
+
+.yz-signin-modal.is-open .yz-signin-modal__dialog {
+	opacity: 1;
+	transform: none;
+}
+
+.yz-signin-modal__close {
+	position: absolute;
+	inset-block-start: 0.75rem;
+	inset-inline-end: 0.75rem;
+	z-index: 2;
+
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	inline-size: 2rem;
+	block-size: 2rem;
+	padding: 0;
+
+	background: transparent;
+	border: 0;
+	border-radius: 0;
+	color: var(--yz-text-2, #4a4540);
+	cursor: pointer;
+	opacity: 0.7;
+	transition: opacity 200ms ease, transform 200ms ease;
+}
+
+.yz-signin-modal__close:hover,
+.yz-signin-modal__close:focus-visible {
+	opacity: 1;
+	transform: scale(1.06);
+}
+
+/* The dialog is the surface here, so the card inside it must not add a second. */
+.yz-signin-modal .yz-signin {
+	max-inline-size: none;
+	padding: 0;
+	background: none;
+	border: 0;
+	box-shadow: none;
+}
+
+/* Leave room for the close button beside the title. */
+.yz-signin-modal .yz-signin__head {
+	padding-inline-end: 2rem;
+}
+
+/* --------------------------------------------------------------------------
+   8. Motion
+   -------------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+	.yz-signin-modal__overlay,
+	.yz-signin-modal__dialog,
+	.yz-signin-modal__close,
+	.yz-signin__submit,
+	.yz-signin__field input,
+	.yz-signin__eye {
+		transition: none;
+	}
+
+	.yz-signin-modal__dialog {
+		transform: none;
+	}
+
+	.yz-signin-modal__close:hover,
+	.yz-signin-modal__close:focus-visible {
+		transform: none;
+	}
+}

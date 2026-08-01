@@ -39,7 +39,7 @@ body.woocommerce-account .elementor-widget-shortcode .woocommerce {
 
 /* --------------------------------------------------------------------------
    Two-column layout (signed in): dark nav rail + content. Collapses on mobile.
-   Logged-out (login/register) keeps its own centred card layout below.
+   Logged out, the page is the sign-in card instead — see assets/css/auth-card.css.
 
    Astra + WooCommerce float the nav/content (float:left/right; width:30%/68%),
    which would override any grid — so we NEUTRALISE those floats/widths on the
@@ -286,7 +286,7 @@ body.woocommerce-account .woocommerce-MyAccount-content table.shop_table td {
 }
 
 /* --------------------------------------------------------------------------
-   Forms — account details, addresses, and the login/register cards.
+   Forms — account details, addresses, and password reset.
    -------------------------------------------------------------------------- */
 body.woocommerce-account .woocommerce form .form-row label,
 body.woocommerce-account .woocommerce-EditAccountForm label,
@@ -298,13 +298,20 @@ body.woocommerce-account .woocommerce-address-fields label {
 	color: var(--yz-muted, #6e6a63);
 	margin-block-end: 6px;
 }
-body.woocommerce-account .woocommerce input.input-text,
-body.woocommerce-account .woocommerce input[type="text"],
-body.woocommerce-account .woocommerce input[type="email"],
-body.woocommerce-account .woocommerce input[type="password"],
-body.woocommerce-account .woocommerce input[type="tel"],
-body.woocommerce-account .woocommerce select,
-body.woocommerce-account .woocommerce .select2-container .select2-selection {
+/*
+ * Scoped to the signed-in screens and the password-reset forms — deliberately NOT to every input on
+ * the page. The signed-out account page is now the sign-in card, which brings its own field metrics
+ * in auth-card.css (a 16px font size among them, because anything smaller makes iOS zoom on focus).
+ * An unscoped `body.woocommerce-account .woocommerce input` would silently overwrite them.
+ */
+body.woocommerce-account.logged-in .woocommerce input.input-text,
+body.woocommerce-account.logged-in .woocommerce input[type="text"],
+body.woocommerce-account.logged-in .woocommerce input[type="email"],
+body.woocommerce-account.logged-in .woocommerce input[type="password"],
+body.woocommerce-account.logged-in .woocommerce input[type="tel"],
+body.woocommerce-account.logged-in .woocommerce select,
+body.woocommerce-account.logged-in .woocommerce .select2-container .select2-selection,
+body.woocommerce-account .woocommerce form.lost_reset_password input.input-text {
 	border-radius: 0 !important;
 	border: 1px solid var(--yz-hairline-on-white);
 	background: #fff;
@@ -313,207 +320,14 @@ body.woocommerce-account .woocommerce .select2-container .select2-selection {
 	color: var(--yz-ink);
 	transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
-body.woocommerce-account .woocommerce input.input-text:focus,
-body.woocommerce-account .woocommerce input:focus,
-body.woocommerce-account .woocommerce select:focus {
+body.woocommerce-account.logged-in .woocommerce input.input-text:focus,
+body.woocommerce-account.logged-in .woocommerce input:focus,
+body.woocommerce-account.logged-in .woocommerce select:focus,
+body.woocommerce-account .woocommerce form.lost_reset_password input.input-text:focus {
 	border-color: var(--yz-ink);
 	box-shadow: 0 0 0 3px rgba(20, 18, 16, 0.06);
 	outline: none;
 }
-
-/* --------------------------------------------------------------------------
-   Login / Register (logged out) — centred, two elegant cards.
-   -------------------------------------------------------------------------- */
-.yz-account-auth {
-	max-width: 960px;
-	margin-inline: auto;
-}
-.yz-account-auth__head {
-	text-align: center;
-	max-width: 620px;
-	margin-inline: auto;
-	margin-block-end: clamp(30px, 4vw, 48px);
-}
-.yz-account-auth__eyebrow {
-	display: block;
-	font-size: 12px;
-	font-weight: 500;
-	text-transform: uppercase;
-	letter-spacing: 0.2em;
-	color: var(--yz-agate);
-	margin-block-end: 12px;
-}
-.yz-account-auth__title {
-	margin: 0;
-	font-family: var(--yz-font-display, serif);
-	font-weight: 500;
-	font-size: clamp(30px, 5vw, 50px);
-	line-height: 1.05;
-	letter-spacing: -0.015em;
-	color: var(--yz-ink);
-}
-.yz-account-auth__lede {
-	max-width: 52ch;
-	margin: 0.7em auto 0;
-	font-size: 16px;
-	line-height: 1.66;
-	color: var(--yz-muted, #6e6a63);
-}
-
-/* Astra ships a float clearfix for .col2-set (woocommerce-layout-grid.min.css):
-       .woocommerce .col2-set::before,::after { content:" "; display:table }
-   Harmless under floats — but a GRID container's own ::before/::after are grid
-   ITEMS. With two columns they auto-placed as:
-
-       row 1 | ::before (empty) | Sign In
-       row 2 | Create an Account | ::after (empty)
-
-   …which is exactly the reported bug: an empty top-left quadrant, Sign In pushed
-   right, Register dropped below-left. `clear:both` is a no-op on a grid item, so
-   nothing rescued it. Killing the generated content removes both phantom items.
-   Must come BEFORE the grid declaration is relied upon; keep the two together. */
-body.woocommerce-account:not(.logged-in) #customer_login.u-columns::before,
-body.woocommerce-account:not(.logged-in) #customer_login.u-columns::after {
-	content: none;
-}
-
-/* ONE centred card, not two columns.
-   Sign-in (and the social buttons above it) is the card; registration is the
-   quiet <details> below it and carries no card treatment of its own, so the page
-   reads as a single decision instead of two competing forms. `#customer_login`
-   keeps its .u-columns/.col2-set class names for compatibility but is no longer
-   laid out as columns — hence display:block and the explicit float/width reset
-   on the children, which Astra and WooCommerce both still try to set. */
-body.woocommerce-account:not(.logged-in) #customer_login.u-columns {
-	display: block;
-	max-inline-size: 520px;
-	margin-inline: auto;
-}
-body.woocommerce-account:not(.logged-in) #customer_login .u-column1,
-body.woocommerce-account:not(.logged-in) #customer_login .u-column2 {
-	width: auto;
-	float: none;
-	margin: 0;
-	min-inline-size: 0;
-}
-/* The card itself — sign-in only. */
-body.woocommerce-account:not(.logged-in) #customer_login .u-column1 {
-	padding: clamp(28px, 3.4vw, 40px);
-	border: 1px solid var(--yz-hairline-on-white);
-	background: #fff;
-}
-/* Registration sits under the card, unstyled, so it never competes with it. */
-body.woocommerce-account:not(.logged-in) #customer_login .u-column2 {
-	padding: 0;
-	border: 0;
-	background: none;
-	margin-block-start: 18px;
-}
-
-/* --------------------------------------------------------------------------
-   "New to Yazan? Create an account" — native <details>, so it opens with no
-   JavaScript and is keyboard/AT addressable for free.
-   -------------------------------------------------------------------------- */
-.yz-auth-more {
-	text-align: center;
-}
-.yz-auth-more__toggle {
-	display: inline-block;
-	padding: 10px 4px;
-	font-size: 13.5px;
-	color: var(--yz-muted, #6e6a63);
-	cursor: pointer;
-	list-style: none; /* Firefox */
-	transition: color 0.2s ease;
-}
-/* Kill the default disclosure triangle in WebKit/Blink; the underline is the affordance. */
-.yz-auth-more__toggle::-webkit-details-marker {
-	display: none;
-}
-.yz-auth-more__toggle::after {
-	content: "";
-	display: block;
-	inline-size: 100%;
-	block-size: 1px;
-	margin-block-start: 3px;
-	background: currentColor;
-	opacity: 0.35;
-	transition: opacity 0.2s ease;
-}
-.yz-auth-more__toggle:hover,
-.yz-auth-more[open] > .yz-auth-more__toggle {
-	color: var(--yz-ink);
-}
-.yz-auth-more__toggle:hover::after {
-	opacity: 0.7;
-}
-.yz-auth-more__toggle:focus-visible {
-	outline: 2px solid var(--yz-focus, var(--yz-gold, #b08d57));
-	outline-offset: 3px;
-}
-/* Once open, the registration form gets the same card surface as sign-in. */
-.yz-auth-more[open] > :not(.yz-auth-more__toggle) {
-	text-align: start;
-}
-.yz-auth-more[open] > .yz-auth-card__note {
-	margin-block-start: 14px;
-}
-.yz-auth-more[open] > form.register {
-	margin-block-start: 10px;
-	padding: clamp(24px, 3vw, 34px);
-	border: 1px solid var(--yz-hairline-on-white);
-	background: #fff;
-}
-
-/* When registration is OFF, WooCommerce prints only the bare login form — centre it as one card. */
-body.woocommerce-account:not(.logged-in) form.woocommerce-form-login {
-	max-width: 460px;
-	margin-inline: auto;
-	padding: clamp(28px, 3.4vw, 44px);
-	border: 1px solid var(--yz-hairline-on-white);
-	background: #fff;
-}
-body.woocommerce-account:not(.logged-in) #customer_login form.woocommerce-form-login {
-	max-width: none;
-	margin: 0;
-	padding: 0;
-	border: 0;
-	background: none;
-}
-
-/* Card headings. */
-body.woocommerce-account:not(.logged-in) .woocommerce h2 {
-	margin: 0 0 6px;
-	font-family: var(--yz-font-display, serif);
-	font-weight: 500;
-	font-size: 26px;
-	letter-spacing: -0.01em;
-	color: var(--yz-ink);
-}
-.yz-auth-card__note {
-	margin: 0 0 22px;
-	font-size: 14px;
-	line-height: 1.6;
-	color: var(--yz-muted, #6e6a63);
-}
-
-/* Login/register submit buttons go full width for a decisive CTA. */
-body.woocommerce-account:not(.logged-in) .woocommerce-form-login__submit,
-body.woocommerce-account:not(.logged-in) .woocommerce-form-register__submit {
-	width: 100%;
-	margin-block-start: 6px;
-}
-body.woocommerce-account:not(.logged-in) .woocommerce-form-login__rememberme {
-	font-size: 13px;
-	color: var(--yz-muted, #6e6a63);
-	text-transform: none;
-	letter-spacing: 0;
-}
-body.woocommerce-account .woocommerce-LostPassword {
-	margin-block-start: 14px;
-	font-size: 13px;
-}
-
 /* --------------------------------------------------------------------------
    Responsive.
    -------------------------------------------------------------------------- */

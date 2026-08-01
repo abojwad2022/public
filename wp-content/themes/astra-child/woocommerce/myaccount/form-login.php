@@ -2,22 +2,20 @@
 /**
  * Login / Register Form — Yazan override.
  *
- * ONE CARD, not two. WooCommerce ships login and register as side-by-side columns, which meant the
- * page showed two forms asking for the same email and password — redundant on its own, and flatly
- * at odds with a store whose headline promise is "one tap, no registration form". So: the social
- * buttons and the sign-in fields lead, and registration is folded behind a quiet toggle for the
- * minority who still want to type their details.
+ * This template is now a placement, not a design. Everything inside the card — the two-step email
+ * flow, the fields, the provider tiles, the no-JavaScript fallback — is `yazan_signin_card()` in
+ * inc/signin-card.php, and the very same call renders the dialog the header account icon opens on
+ * every other page of the store. One component, two surfaces: the account page and the dialog
+ * cannot drift apart, because there is only one of them.
  *
- * The toggle is a native <details>, deliberately not a JS widget: it opens without JavaScript, is
- * keyboard- and screen-reader-addressable for free, and it is re-opened server-side when a
- * registration attempt comes back with errors so nobody loses their place.
+ * WooCommerce ships login and register as side-by-side columns, which meant the page showed two
+ * forms asking for the same email and password. The card asks for the address once and decides
+ * which of the two the shopper actually needs.
  *
- * All form logic is untouched from core: field names, nonces (woocommerce-login /
- * woocommerce-register), the registration/username/password option checks, and every do_action
- * hook are preserved so authentication and third-party integrations keep working — including the
- * social sign-in buttons, which attach to woocommerce_login_form_start. Only the arrangement and
- * the wrapper markup are ours; the .u-columns / .u-column1 / .u-column2 class names are kept even
- * though the layout no longer uses columns, because plugins and CSS in the wild target them.
+ * All form logic is still untouched core: field names, nonces (woocommerce-login /
+ * woocommerce-register) and every do_action hook are emitted by the card, so authentication and
+ * third-party integrations keep working — including the social sign-in buttons, which the card
+ * renders itself as icon tiles rather than through woocommerce_login_form_start.
  *
  * @see     https://woocommerce.com/document/template-structure/
  * @package Yazan
@@ -29,137 +27,18 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 do_action( 'woocommerce_before_customer_login_form' );
-
-$yz_registration = ( 'yes' === get_option( 'woocommerce_enable_myaccount_registration' ) );
-
-/*
- * Keep the registration panel open when the shopper just tried to register — otherwise a failed
- * attempt ("that email is already registered") collapses the form and hides both their input and
- * the reason it failed. Display hint only; it performs no action, so it needs no nonce of its own
- * (the register form's own nonce is checked by WooCommerce as usual).
- */
-// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Presentation-only: decides whether a panel renders expanded.
-$yz_register_open = isset( $_POST['register'] );
 ?>
 
-<div class="yz-account-auth">
-
-	<div class="yz-account-auth__head">
-		<span class="yz-account-auth__eyebrow"><?php esc_html_e( 'Your Account', 'yazan' ); ?></span>
-		<h1 class="yz-account-auth__title"><?php esc_html_e( 'Welcome to Yazan', 'yazan' ); ?></h1>
-		<p class="yz-account-auth__lede">
-			<?php
-			echo $yz_registration
-				? esc_html__( 'Sign in to follow your orders, or begin your collection of genuine Yemeni agate and sterling silver.', 'yazan' )
-				: esc_html__( 'Sign in to follow your orders and manage the details of your Yazan account.', 'yazan' );
-			?>
-		</p>
-	</div>
-
-	<?php if ( $yz_registration ) : ?>
-
-	<div class="u-columns col2-set" id="customer_login">
-
-		<div class="u-column1 col-1">
-
-	<?php endif; ?>
-
-			<h2><?php esc_html_e( 'Sign In', 'yazan' ); ?></h2>
-			<p class="yz-auth-card__note"><?php esc_html_e( 'Already have an account? Welcome back.', 'yazan' ); ?></p>
-
-			<form class="woocommerce-form woocommerce-form-login login" method="post" novalidate>
-
-				<?php do_action( 'woocommerce_login_form_start' ); ?>
-
-				<p class="woocommerce-form-row woocommerce-form-row--wide form-row form-row-wide">
-					<label for="username"><?php esc_html_e( 'Email address', 'yazan' ); ?>&nbsp;<span class="required" aria-hidden="true">*</span><span class="screen-reader-text"><?php esc_html_e( 'Required', 'yazan' ); ?></span></label>
-					<input type="text" class="woocommerce-Input woocommerce-Input--text input-text" name="username" id="username" autocomplete="username" value="<?php echo ( ! empty( $_POST['username'] ) && is_string( $_POST['username'] ) ) ? esc_attr( wp_unslash( $_POST['username'] ) ) : ''; ?>" required aria-required="true" /><?php // @codingStandardsIgnoreLine ?>
-				</p>
-				<p class="woocommerce-form-row woocommerce-form-row--wide form-row form-row-wide">
-					<label for="password"><?php esc_html_e( 'Password', 'yazan' ); ?>&nbsp;<span class="required" aria-hidden="true">*</span><span class="screen-reader-text"><?php esc_html_e( 'Required', 'yazan' ); ?></span></label>
-					<input class="woocommerce-Input woocommerce-Input--text input-text" type="password" name="password" id="password" autocomplete="current-password" required aria-required="true" />
-				</p>
-
-				<?php do_action( 'woocommerce_login_form' ); ?>
-
-				<p class="form-row">
-					<label class="woocommerce-form__label woocommerce-form__label-for-checkbox woocommerce-form-login__rememberme">
-						<input class="woocommerce-form__input woocommerce-form__input-checkbox" name="rememberme" type="checkbox" id="rememberme" value="forever" /> <span><?php esc_html_e( 'Remember me', 'yazan' ); ?></span>
-					</label>
-					<?php wp_nonce_field( 'woocommerce-login', 'woocommerce-login-nonce' ); ?>
-					<button type="submit" class="woocommerce-button button woocommerce-form-login__submit<?php echo esc_attr( wc_wp_theme_get_element_class_name( 'button' ) ? ' ' . wc_wp_theme_get_element_class_name( 'button' ) : '' ); ?>" name="login" value="<?php esc_attr_e( 'Sign in', 'yazan' ); ?>"><?php esc_html_e( 'Sign in', 'yazan' ); ?></button>
-				</p>
-				<p class="woocommerce-LostPassword lost_password">
-					<a href="<?php echo esc_url( wp_lostpassword_url() ); ?>"><?php esc_html_e( 'Lost your password?', 'yazan' ); ?></a>
-				</p>
-
-				<?php do_action( 'woocommerce_login_form_end' ); ?>
-
-			</form>
-
-	<?php if ( $yz_registration ) : ?>
-
-		</div>
-
-		<div class="u-column2 col-2">
-
-			<details class="yz-auth-more"<?php echo $yz_register_open ? ' open' : ''; ?>>
-
-				<summary class="yz-auth-more__toggle">
-					<?php esc_html_e( 'New to Yazan? Create an account', 'yazan' ); ?>
-				</summary>
-
-			<p class="yz-auth-card__note"><?php esc_html_e( 'Join Yazan to keep your orders and details in one quiet place.', 'yazan' ); ?></p>
-
-			<form method="post" class="woocommerce-form woocommerce-form-register register" <?php do_action( 'woocommerce_register_form_tag' ); ?> >
-
-				<?php do_action( 'woocommerce_register_form_start' ); ?>
-
-				<?php if ( 'no' === get_option( 'woocommerce_registration_generate_username' ) ) : ?>
-
-					<p class="woocommerce-form-row woocommerce-form-row--wide form-row form-row-wide">
-						<label for="reg_username"><?php esc_html_e( 'Username', 'yazan' ); ?>&nbsp;<span class="required" aria-hidden="true">*</span><span class="screen-reader-text"><?php esc_html_e( 'Required', 'yazan' ); ?></span></label>
-						<input type="text" class="woocommerce-Input woocommerce-Input--text input-text" name="username" id="reg_username" autocomplete="username" value="<?php echo ( ! empty( $_POST['username'] ) ) ? esc_attr( wp_unslash( $_POST['username'] ) ) : ''; ?>" required aria-required="true" /><?php // @codingStandardsIgnoreLine ?>
-					</p>
-
-				<?php endif; ?>
-
-				<p class="woocommerce-form-row woocommerce-form-row--wide form-row form-row-wide">
-					<label for="reg_email"><?php esc_html_e( 'Email address', 'yazan' ); ?>&nbsp;<span class="required" aria-hidden="true">*</span><span class="screen-reader-text"><?php esc_html_e( 'Required', 'yazan' ); ?></span></label>
-					<input type="email" class="woocommerce-Input woocommerce-Input--text input-text" name="email" id="reg_email" autocomplete="email" value="<?php echo ( ! empty( $_POST['email'] ) ) ? esc_attr( wp_unslash( $_POST['email'] ) ) : ''; ?>" required aria-required="true" /><?php // @codingStandardsIgnoreLine ?>
-				</p>
-
-				<?php if ( 'no' === get_option( 'woocommerce_registration_generate_password' ) ) : ?>
-
-					<p class="woocommerce-form-row woocommerce-form-row--wide form-row form-row-wide">
-						<label for="reg_password"><?php esc_html_e( 'Password', 'yazan' ); ?>&nbsp;<span class="required" aria-hidden="true">*</span><span class="screen-reader-text"><?php esc_html_e( 'Required', 'yazan' ); ?></span></label>
-						<input type="password" class="woocommerce-Input woocommerce-Input--text input-text" name="password" id="reg_password" autocomplete="new-password" required aria-required="true" />
-					</p>
-
-				<?php else : ?>
-
-					<p><?php esc_html_e( 'A link to set a new password will be sent to your email address.', 'yazan' ); ?></p>
-
-				<?php endif; ?>
-
-				<?php do_action( 'woocommerce_register_form' ); ?>
-
-				<p class="woocommerce-form-row form-row">
-					<?php wp_nonce_field( 'woocommerce-register', 'woocommerce-register-nonce' ); ?>
-					<button type="submit" class="woocommerce-Button woocommerce-button button<?php echo esc_attr( wc_wp_theme_get_element_class_name( 'button' ) ? ' ' . wc_wp_theme_get_element_class_name( 'button' ) : '' ); ?> woocommerce-form-register__submit" name="register" value="<?php esc_attr_e( 'Create account', 'yazan' ); ?>"><?php esc_html_e( 'Create account', 'yazan' ); ?></button>
-				</p>
-
-				<?php do_action( 'woocommerce_register_form_end' ); ?>
-
-			</form>
-
-			</details>
-
-		</div>
-
-	</div>
-	<?php endif; ?>
-
+<div class="yz-signin-page">
+	<?php
+	// h1 here: on this page the card's title is the page's own heading.
+	yazan_signin_card(
+		array(
+			'instance' => 'page',
+			'tag'      => 'h1',
+		)
+	);
+	?>
 </div>
 
 <?php do_action( 'woocommerce_after_customer_login_form' ); ?>
