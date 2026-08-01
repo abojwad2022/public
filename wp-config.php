@@ -120,8 +120,8 @@ if ( ! defined( 'WP_DEBUG' ) ) {
 define( 'WP_ENVIRONMENT_TYPE', 'local' );
 
 /* -----------------------------------------------------------------------------
- * Google sign-in testing — CURRENTLY OFF (site runs on http://yazan.local).
- * Added 2026-08-01, switched off 2026-08-01 at the owner's request.
+ * Google sign-in testing — CURRENTLY ON.  The site answers on
+ * http://localhost:10029 while these two lines are live.
  *
  * Google refuses any redirect URI that is not HTTPS, with ONE exception: a
  * loopback host.  http://localhost:10029 is this site's own nginx listener, so
@@ -130,18 +130,24 @@ define( 'WP_ENVIRONMENT_TYPE', 'local' );
  * and redirects still resolve to yazan.local and the login cookie (set on
  * localhost) would not travel with the shopper.
  *
- * The cost of leaving them on is /dashboard/: its bundle is a
- * <script type="module">, and a module served from a different origin than the
- * page is blocked by CORS, so opening the dashboard on yazan.local while these
- * point at localhost gives a blank screen with no error on the page.  Browse the
- * SAME host these name, or leave them commented out.
+ * yazan.local KEEPS WORKING: Yazan_Canonical_Host (yazan-core) redirects any
+ * front-end request arriving on yazan.local to whichever host these name.  It
+ * exists because the dashboard bundle is a <script type="module"> — a module
+ * from a different origin than the page is refused by the browser with nothing
+ * shown on the page, which is a blank screen and no clue.  WordPress will not
+ * fix that itself: redirect_canonical() corrects a wrong port but leaves a
+ * wrong host alone.
  *
- * TO RESUME OAUTH TESTING: uncomment both lines, re-derive the port (Local
- * reassigns it on restart), and match it in the Google console:
+ * ⚠ 10029 is assigned by Local and CHANGES when Local restarts.  Re-derive with:
  *     grep -rh "listen" ~/AppData/Roaming/Local/run/<id>/conf/nginx/site.conf
+ * and update BOTH lines here and the redirect URI in the Google console:
+ *     http://localhost:10029/yazan-auth/google/callback/
+ *
+ * TO GO BACK TO yazan.local: comment both lines out.  Nothing else to undo —
+ * the canonical-host guard simply starts pointing the other way.
  * -------------------------------------------------------------------------- */
-// define( 'WP_HOME', 'http://localhost:10029' );
-// define( 'WP_SITEURL', 'http://localhost:10029' );
+define( 'WP_HOME', 'http://localhost:10029' );
+define( 'WP_SITEURL', 'http://localhost:10029' );
 
 /* That's all, stop editing! Happy publishing. */
 

@@ -46,6 +46,12 @@ require YAZAN_CORE_DIR . 'includes/class-yazan-core-list-print.php';
 require YAZAN_CORE_DIR . 'includes/class-yazan-core-privacy.php';
 require YAZAN_CORE_DIR . 'includes/class-yazan-core-headers.php';
 
+// Answer on one host: send yazan.local ⇄ localhost:PORT traffic to whichever one WP_HOME names, so
+// the dashboard's module bundle and every same-origin fetch keep working while OAuth testing moves
+// the site between them.
+require YAZAN_CORE_DIR . 'includes/class-yazan-canonical-host.php';
+Yazan_Canonical_Host::register();
+
 // Full-site backup & restore engine (shared by the dashboard REST controller and the wp-admin page).
 require YAZAN_CORE_DIR . 'includes/backup/class-yazan-backup-engine.php';
 
