@@ -177,6 +177,32 @@ Nothing outside `astra-child/` was touched. No products, no plugins, no parent t
 
 ## 5. Known issues / next steps
 
+- **⚠️ THE SITE IS ON `http://localhost:10029` RIGHT NOW, on purpose (2026-08-01).**
+  `wp-config.php` defines `WP_HOME`/`WP_SITEURL` as the loopback host because **Google refuses any
+  OAuth redirect URI that is neither HTTPS nor a loopback address** — `yazan.local` is rejected, and
+  a tunnel is the only alternative. Comment those two lines out to go back to `yazan.local`; nothing
+  else needs undoing.
+  - **`yazan.local` still works** — `Yazan_Canonical_Host` (`yazan-core/includes/class-yazan-canonical-host.php`,
+    `template_redirect` @5) 302s any front-end request on `yazan.local` to whichever host `WP_HOME`
+    names, and back again when the constants are commented out. GET/HEAD only, known hosts only
+    (`yazan.local` · `localhost` · `127.0.0.1`), and it never touches `^yazan-auth/`, which must
+    answer on the host registered with the provider.
+  - **Why the guard had to exist:** opening `/dashboard/` on the *other* host gives a **blank black
+    screen with nothing in the console**. The bundle is a `<script type="module">`, and a module from
+    a different origin than the page is refused outright. WordPress does not rescue this —
+    `redirect_canonical()` fixes a wrong *port* but deliberately leaves a wrong *host* alone. Same
+    trap silently breaks any `fetch(admin_url())` with `credentials: 'same-origin'` (sign-in card,
+    concierge chat). Half an hour was lost to this before the cause was found; the guard closes it.
+  - **⚠️ The port is Local's and CHANGES on restart.** Re-derive from
+    `~/AppData/Roaming/Local/run/<id>/conf/nginx/site.conf` (`listen 127.0.0.1:PORT`) and update BOTH
+    wp-config lines AND the redirect URI in the Google console. Current run dir `ZxDGXcWIP`,
+    **HTTP 10029**, **MySQL 10028** — CLAUDE.md still says 10029 for MySQL, which is wrong.
+  - Registered redirect URI must be exactly `http://localhost:10029/yazan-auth/google/callback/`.
+    Google credentials are **configured** (encrypted `yazan_social_auth_credentials` option, not
+    wp-config constants); `Yazan_Social_Auth::is_enabled()` returns true and the Google tile renders
+    on the sign-in card. Apple is not configured and cannot be — it refuses loopback outright and
+    needs the tunnel described in `social-auth/README.md`.
+
 - **✅ BUILT (2026-08-01) — Sign-in / create-account card (`inc/signin-card.php`).** One component
   on two surfaces: the signed-out `/my-account/` page and a dialog the header account icon opens on
   every other page. Shopify-style two steps — email → password *or* register (email + first name +
