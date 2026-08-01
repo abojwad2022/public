@@ -384,7 +384,15 @@ a handler nobody labelled. `/users`, `/roles` and `/permissions` are always hard
 - **Suspension** bites in three places: the `authenticate` filter, session destruction, and a
   per-request check in the guard.
 - **Password reset** defaults to WordPress's own emailed link. Setting one directly is refused on
-  your own account, because `wp_set_password()` destroys every session you hold.
+  your own account, because `wp_set_password()` destroys every session you hold. Minimum length is
+  `Yazan_REST_Users::MIN_PASSWORD` (8) — enforced server-side on both write paths; the UI only
+  displays the number.
+- **Profile photos are optional.** A new account's photo is held in the browser and uploaded
+  immediately *after* the account is created, so abandoning the form cannot leave an orphan
+  attachment in the media library. With no photo, the UI draws a local `UserRound` icon rather than
+  falling back to Gravatar. ⚠️ Note for anyone touching this: the REST payload's `avatar` field is
+  **never empty** (`get_avatar_url()` always returns a Gravatar URL), so "has a photo" must be read
+  from **`avatar_id`**. Clearing is `PUT /users/{id}` with `avatar_id: 0`.
 
 ### WordPress role vs Yazan role
 
