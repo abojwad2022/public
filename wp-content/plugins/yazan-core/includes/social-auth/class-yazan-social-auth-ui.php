@@ -59,7 +59,18 @@ class Yazan_Social_Auth_UI {
 			return;
 		}
 
-		if ( ! function_exists( 'is_account_page' ) || ! ( is_account_page() || is_checkout() ) ) {
+		$needed = function_exists( 'is_account_page' ) && ( is_account_page() || is_checkout() );
+
+		/**
+		 * Whether the social sign-in stylesheet is needed on this request.
+		 *
+		 * The default is "wherever a WooCommerce login form renders". A surface that shows the
+		 * buttons somewhere else — the theme's sign-in card, which opens over any page of the
+		 * store — filters this to true so the buttons are not left unstyled.
+		 *
+		 * @param bool $needed Whether the stylesheet is needed.
+		 */
+		if ( ! apply_filters( 'yazan_social_auth_enqueue_css', $needed ) ) {
 			return;
 		}
 
@@ -97,7 +108,7 @@ class Yazan_Social_Auth_UI {
 	}
 
 	/**
-	 * Render the button block.
+	 * Render the button block through a WooCommerce hook, at most once per page.
 	 *
 	 * @param string $intro Short line above the buttons.
 	 * @return void
@@ -107,40 +118,86 @@ class Yazan_Social_Auth_UI {
 			return;
 		}
 
-		$providers = Yazan_Social_Auth::providers();
-		if ( empty( $providers ) ) {
+		$html = self::buttons_html( $intro );
+		if ( '' === $html ) {
 			return;
 		}
 
 		self::$rendered = true;
 
+		echo $html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Built and escaped in buttons_html().
+	}
+
+	/**
+	 * The provider buttons as markup, for a surface that is not a WooCommerce login form.
+	 *
+	 * Public and guard-free on purpose: the once-per-page guard belongs to the hook path above, and
+	 * a caller that asks for this markup explicitly (the theme's sign-in card) knows where it is
+	 * putting it. Returns '' when no provider is configured, so the caller can leave out the
+	 * divider and heading that would otherwise sit above nothing.
+	 *
+	 * The markup must be built per request and never cached: start_url() embeds a one-shot
+	 * `yazan_social_auth` nonce, and a stale one lands the shopper on "That sign-in link has
+	 * expired."
+	 *
+	 * @param string $intro  Short line above the buttons. Pass '' to omit it.
+	 * @param string $layout 'list' for full-width labelled buttons, 'icons' for a row of square tiles.
+	 * @return string
+	 */
+	public static function buttons_html( $intro = '', $layout = 'list' ) {
+		if ( is_user_logged_in() ) {
+			return '';
+		}
+
+		$providers = Yazan_Social_Auth::providers();
+		if ( empty( $providers ) ) {
+			return '';
+		}
+
+		$icons    = ( 'icons' === $layout );
 		$redirect = self::current_url();
 
-		echo '<div class="yz-social-auth">';
-		echo '<p class="yz-social-auth__intro">' . esc_html( $intro ) . '</p>';
+		$html = '<div class="yz-social-auth' . ( $icons ? ' yz-social-auth--icons' : '' ) . '">';
+
+		if ( '' !== $intro ) {
+			$html .= '<p class="yz-social-auth__intro">' . esc_html( $intro ) . '</p>';
+		}
+
+		$html .= $icons ? '<div class="yz-social-auth__tiles">' : '';
 
 		foreach ( $providers as $key => $provider ) {
-			printf(
+			/* translators: %s: provider name, e.g. Google or Apple. */
+			$label = sprintf( __( 'Continue with %s', 'yazan' ), $provider->label() );
+			$url   = Yazan_Social_Auth::start_url( $key, $redirect );
+
+			if ( $icons ) {
+				// Icon-only tile: the accessible name carries the label the eye gets from the mark.
+				$html .= sprintf(
+					'<a class="yz-social-auth__tile yz-social-auth__tile--%1$s" href="%2$s" rel="nofollow" aria-label="%3$s" title="%3$s">%4$s</a>',
+					esc_attr( $key ),
+					esc_url( $url ),
+					esc_attr( $label ),
+					self::icon( $key )
+				);
+				continue;
+			}
+
+			$html .= sprintf(
 				'<a class="yz-social-auth__btn yz-social-auth__btn--%1$s" href="%2$s" rel="nofollow">%3$s<span class="yz-social-auth__label">%4$s</span></a>',
 				esc_attr( $key ),
-				esc_url( Yazan_Social_Auth::start_url( $key, $redirect ) ),
-				self::icon( $key ), // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Static inline SVG defined below; contains no dynamic data.
-				esc_html(
-					sprintf(
-						/* translators: %s: provider name, e.g. Google or Apple. */
-						__( 'Continue with %s', 'yazan' ),
-						$provider->label()
-					)
-				)
+				esc_url( $url ),
+				self::icon( $key ),
+				esc_html( $label )
 			);
 		}
 
-		printf(
-			'<div class="yz-social-auth__divider"><span>%s</span></div>',
-			esc_html__( 'or use your email', 'yazan' )
-		);
+		$html .= $icons ? '</div>' : '';
 
-		echo '</div>';
+		if ( ! $icons ) {
+			$html .= '<div class="yz-social-auth__divider"><span>' . esc_html__( 'or use your email', 'yazan' ) . '</span></div>';
+		}
+
+		return $html . '</div>';
 	}
 
 	/**
