@@ -177,6 +177,35 @@ Nothing outside `astra-child/` was touched. No products, no plugins, no parent t
 
 ## 5. Known issues / next steps
 
+- **✅ BUILT (2026-08-01) — Sign-in / create-account card (`inc/signin-card.php`).** One component
+  on two surfaces: the signed-out `/my-account/` page and a dialog the header account icon opens on
+  every other page. Shopify-style two steps — email → password *or* register (email + first name +
+  password; the username is generated from the address). AJAX, so nobody leaves the page they were
+  shopping.
+  - **`yazan_signin_card()` is the whole thing.** `woocommerce/myaccount/form-login.php` is now a
+    four-line placement, and `wp_footer` puts the same call inside `.yz-signin-modal`. They cannot
+    drift apart.
+  - **Works with JavaScript off.** The card renders two ordinary WooCommerce forms (core field
+    names, core nonces, every core `do_action`) that POST to `/my-account/`; an inline script folds
+    them into the stepped flow before first paint (same technique as `inc/shop-filters.php`).
+    `woocommerce_new_customer_data` carries the first name through core's own handler.
+  - **⚠️ Namespace:** it is `signin`, *not* `auth` — `inc/page-authentication.php` already owns
+    `yazan_auth_*` and `.yz-auth*` for the `/authentication/` provenance page. A first draft using
+    `auth` fatal-errored on `Cannot redeclare yazan_auth_enqueue()`. Keep them apart.
+  - **⚠️ Known trade-off:** the lookup step reveals whether an address has an account here — the
+    price of any email-first flow (Shopify, Etsy and Amazon all pay it). Mitigated by a 30/15min
+    per-IP lookup throttle, a 12/15min attempt throttle, a honeypot, and one generic
+    "Incorrect email address or password" for every sign-in failure. `add_filter(
+    'yazan_signin_two_step', '__return_false' )` collapses it to a single form if that is ever
+    unacceptable.
+  - Provider buttons come from yazan-core (`Yazan_Social_Auth_UI::buttons_html( '', 'icons' )`,
+    added this session together with the `yazan_social_auth_enqueue_css` filter so the stylesheet
+    can load off the account page). They render only when Google/Apple credentials are configured —
+    which they are not yet, so the card currently shows no "or" rule at all.
+  - `assets/css/my-account.css` lost its whole logged-out block (~190 lines), and its generic input
+    styling is now scoped to `.logged-in` + `form.lost_reset_password` so it cannot overwrite the
+    card's field metrics (the 16px font size that stops iOS zooming on focus).
+
 - **✅ BUILT (yazan-core v1.8.0, 2026-08-01) — Users · Roles · Permissions (RBAC) in `/dashboard`.**
   Full documentation in **`plugins/yazan-core/DASHBOARD.md` → "Roles & permissions (RBAC)"**. Nothing
   in `astra-child/` changed; this is entirely a yazan-core feature.
