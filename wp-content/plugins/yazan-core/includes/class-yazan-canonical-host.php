@@ -118,6 +118,29 @@ class Yazan_Canonical_Host {
 		}
 
 		/*
+		 * A request proxied through Local's Live Link tunnel carries X-Original-Host, and
+		 * wp-content/mu-plugins/local-by-flywheel-live-link-helper.php responds to that header by
+		 * filtering home_url() (and every other *_url() function) to return the TUNNEL's hostname —
+		 * while `$_SERVER['HTTP_HOST']` stays the site's own local name, since nginx still needs
+		 * that to route the vhost. canonical_host() below calls home_url(), so under Live Link it
+		 * reads back the tunnel host while requested_host() reads the local one: two different
+		 * values for what is, in fact, the same single valid request. This class would conclude the
+		 * request is off-canonical and redirect to home_url($path) — which is ALREADY the tunnel
+		 * URL — and the mu-plugin's own `wp_redirect` filter rewrites the local host inside that
+		 * target to the tunnel host too, producing a Location identical to the URL that was already
+		 * requested. The result is an infinite same-URL redirect loop, found live on 2026-08-01
+		 * testing Google sign-in over a Live Link tunnel — every page, including the homepage,
+		 * 302'd to itself.
+		 *
+		 * Live Link already keeps every URL it emits self-consistent (that is the whole job of the
+		 * filters in that mu-plugin), so there is nothing for this class to correct here — it steps
+		 * aside instead of comparing two values that were never meant to be compared.
+		 */
+		if ( ! empty( $_SERVER['HTTP_X_ORIGINAL_HOST'] ) ) {
+			return false;
+		}
+
+		/*
 		 * The OAuth start/callback pair must answer on the host that was registered with the
 		 * provider, whichever host that is — moving them would produce a redirect_uri_mismatch, and
 		 * moving the callback specifically would strand the browser-binding cookie set at /start/.
