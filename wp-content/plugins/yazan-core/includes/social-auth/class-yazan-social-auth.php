@@ -653,6 +653,31 @@ class Yazan_Social_Auth {
 		exit;
 	}
 
+	/**
+	 * Redirect to the identity provider — deliberately off-site, so wp_safe_redirect() is the
+	 * wrong tool here.
+	 *
+	 * wp_safe_redirect() only allows the site's own host by default; anything else (unless added
+	 * via the `allowed_redirect_hosts` filter) is silently swapped for admin_url(). That is exactly
+	 * the right behaviour for redirect_to-style values that trace back to user input, and exactly
+	 * the wrong one for this URL, which is never influenced by a request parameter — it is built
+	 * entirely by Yazan_Social_Auth_Provider::authorize_url() from a hardcoded provider endpoint
+	 * (accounts.google.com / appleid.apple.com) plus our own generated state.
+	 *
+	 * Caught live on 2026-08-01: with real Google credentials configured, tapping the button
+	 * silently landed the shopper on /wp-admin/ instead of Google's account picker — no error, no
+	 * log entry pointing at the cause, just a dead end. Every check before this line (nonce, rate
+	 * limit, provider lookup) had already passed, which is what made it easy to miss in a codebase
+	 * where wp_safe_redirect() is everywhere else the correct choice.
+	 *
+	 * @param string $url Absolute provider URL.
+	 * @return void
+	 */
+	private static function redirect_external( $url ) {
+		wp_redirect( $url, 302 ); // phpcs:ignore WordPress.Security.SafeRedirect.wp_redirect_wp_redirect -- Intentionally off-site; see docblock.
+		exit;
+	}
+
 	/* --------------------------------------------------------------------- */
 	/* Failure handling                                                       */
 	/* --------------------------------------------------------------------- */
