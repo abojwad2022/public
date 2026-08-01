@@ -120,34 +120,36 @@ if ( ! defined( 'WP_DEBUG' ) ) {
 define( 'WP_ENVIRONMENT_TYPE', 'local' );
 
 /* -----------------------------------------------------------------------------
- * Google sign-in testing — CURRENTLY ON.  The site answers on
- * http://localhost:10029 while these two lines are live.
+ * Google sign-in testing — CURRENTLY OFF (site answers on http://yazan.local).
+ * Turned off 2026-08-01: OAuth testing moved to Local's Live Link tunnel
+ * (HTTPS, e.g. https://married-show.localsite.io), which needs home_url() left
+ * on yazan.local — Live Link's own proxy maps the public tunnel hostname to
+ * this site transparently, and every URL WordPress prints already resolves to
+ * the tunnel's own host automatically when a request arrives through it. No
+ * wp-config change is needed for that path at all.
  *
- * Google refuses any redirect URI that is not HTTPS, with ONE exception: a
- * loopback host.  http://localhost:10029 is this site's own nginx listener, so
- * pointing WordPress at it lets the whole OAuth round trip run locally with no
- * tunnel.  Both constants are required together — with only one of them, links
- * and redirects still resolve to yazan.local and the login cookie (set on
- * localhost) would not travel with the shopper.
+ * These two lines are the OTHER, no-tunnel path: pointing WP_HOME at this
+ * site's own loopback listener so Google's HTTPS-or-loopback rule is satisfied
+ * without HTTPS. Google refuses any redirect URI that is neither HTTPS nor a
+ * loopback host; http://localhost:10029 qualifies as loopback, yazan.local does
+ * not (Google checks the literal hostname string, not where it resolves).
  *
- * yazan.local KEEPS WORKING: Yazan_Canonical_Host (yazan-core) redirects any
- * front-end request arriving on yazan.local to whichever host these name.  It
- * exists because the dashboard bundle is a <script type="module"> — a module
- * from a different origin than the page is refused by the browser with nothing
- * shown on the page, which is a blank screen and no clue.  WordPress will not
- * fix that itself: redirect_canonical() corrects a wrong port but leaves a
- * wrong host alone.
+ * ⚠ Turning these back on WHILE ALSO USING LIVE LINK breaks the tunnel: with
+ * WP_HOME on localhost:10029, Yazan_Canonical_Host (yazan-core) treats any
+ * other host as non-canonical and Local's own redirect_canonical() then
+ * corrects the PORT but leaves the tunnel's own HOST alone — the two combine
+ * into a 302 to `<tunnel-host>:10029`, which nothing listens on. Use ONE path
+ * at a time: either Live Link with this block OFF, or localhost with it ON.
  *
- * ⚠ 10029 is assigned by Local and CHANGES when Local restarts.  Re-derive with:
+ * ⚠ 10029 is assigned by Local and CHANGES when Local restarts. Re-derive with:
  *     grep -rh "listen" ~/AppData/Roaming/Local/run/<id>/conf/nginx/site.conf
  * and update BOTH lines here and the redirect URI in the Google console:
  *     http://localhost:10029/yazan-auth/google/callback/
  *
- * TO GO BACK TO yazan.local: comment both lines out.  Nothing else to undo —
- * the canonical-host guard simply starts pointing the other way.
+ * TO RE-ENABLE: uncomment both lines below.
  * -------------------------------------------------------------------------- */
-define( 'WP_HOME', 'http://localhost:10029' );
-define( 'WP_SITEURL', 'http://localhost:10029' );
+// define( 'WP_HOME', 'http://localhost:10029' );
+// define( 'WP_SITEURL', 'http://localhost:10029' );
 
 /* That's all, stop editing! Happy publishing. */
 
