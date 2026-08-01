@@ -113,6 +113,57 @@
 }
 
 /* ------------------------------------------------------------------ */
+/* Icon tiles — the compact layout used inside the sign-in card        */
+/* ------------------------------------------------------------------ */
+
+/*
+ * Same destinations as the buttons above, reduced to the marks alone. Used where the providers are
+ * a secondary route offered under an "or" rule rather than the headline action, so a stack of
+ * full-width labelled buttons would out-shout the form it sits beneath. The accessible name lives
+ * on aria-label; nothing here is icon-only to a screen reader.
+ */
+
+.yz-social-auth--icons {
+	gap: 0;
+	margin-block-end: 0;
+}
+
+.yz-social-auth__tiles {
+	display: grid;
+	grid-auto-flow: column;
+	grid-auto-columns: 1fr;
+	gap: 0.625rem;
+}
+
+.yz-social-auth__tile {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+
+	min-height: 48px;
+	padding: 0.625rem;
+
+	background-color: var(--yz-surface, #fff);
+	border: 1px solid var(--yz-border, #d8d3cc);
+	border-radius: var(--yz-radius, 0);
+	color: var(--yz-text, #141210);
+
+	transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.yz-social-auth__tile:hover,
+.yz-social-auth__tile:focus-visible {
+	background-color: var(--yz-surface-2, #f4f1ec);
+	border-color: var(--yz-border-strong, #b8b0a6);
+	text-decoration: none;
+}
+
+.yz-social-auth__tile:focus-visible {
+	outline: 2px solid var(--yz-focus, var(--yz-gold, #b08d57));
+	outline-offset: 2px;
+}
+
+/* ------------------------------------------------------------------ */
 /* Divider                                                            */
 /* ------------------------------------------------------------------ */
 
