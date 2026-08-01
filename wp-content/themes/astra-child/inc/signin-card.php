@@ -538,7 +538,7 @@ function yazan_signin_card( $args = array() ) {
 		<section class="yz-signin__view" data-yz-signin-view="signin">
 
 			<header class="yz-signin__head">
-				<<?php echo esc_html( $tag ); ?> class="yz-signin__title" data-yz-signin-title><?php esc_html_e( 'Sign in', 'yazan' ); ?></<?php echo esc_html( $tag ); ?>>
+				<<?php echo esc_html( $tag ); ?> class="yz-signin__title"><?php esc_html_e( 'Sign in', 'yazan' ); ?></<?php echo esc_html( $tag ); ?>>
 				<p class="yz-signin__lede"><?php esc_html_e( 'Continue to Yazan', 'yazan' ); ?></p>
 			</header>
 

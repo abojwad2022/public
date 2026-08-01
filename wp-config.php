@@ -118,6 +118,25 @@ if ( ! defined( 'WP_DEBUG' ) ) {
 }
 
 define( 'WP_ENVIRONMENT_TYPE', 'local' );
+
+/* -----------------------------------------------------------------------------
+ * TEMPORARY — Google sign-in testing.  Added 2026-08-01.  DELETE THIS BLOCK to
+ * put the site back on http://yazan.local.
+ *
+ * Google refuses any redirect URI that is not HTTPS, with ONE exception: a
+ * loopback host.  http://localhost:10029 is this site's own nginx listener, so
+ * pointing WordPress at it lets the whole OAuth round trip run locally with no
+ * tunnel.  Both constants are required together — with only one of them, links
+ * and redirects still resolve to yazan.local and the login cookie (set on
+ * localhost) would not travel with the shopper.
+ *
+ * ⚠ 10029 is assigned by Local and CHANGES when Local restarts.  Re-derive with:
+ *     grep -rh "listen" ~/AppData/Roaming/Local/run/<id>/conf/nginx/site.conf
+ * and update BOTH lines here and the redirect URI in the Google console.
+ * -------------------------------------------------------------------------- */
+define( 'WP_HOME', 'http://localhost:10029' );
+define( 'WP_SITEURL', 'http://localhost:10029' );
+
 /* That's all, stop editing! Happy publishing. */
 
 /** Absolute path to the WordPress directory. */
