@@ -120,8 +120,8 @@ if ( ! defined( 'WP_DEBUG' ) ) {
 define( 'WP_ENVIRONMENT_TYPE', 'local' );
 
 /* -----------------------------------------------------------------------------
- * TEMPORARY — Google sign-in testing.  Added 2026-08-01.  DELETE THIS BLOCK to
- * put the site back on http://yazan.local.
+ * Google sign-in testing — CURRENTLY OFF (site runs on http://yazan.local).
+ * Added 2026-08-01, switched off 2026-08-01 at the owner's request.
  *
  * Google refuses any redirect URI that is not HTTPS, with ONE exception: a
  * loopback host.  http://localhost:10029 is this site's own nginx listener, so
@@ -130,12 +130,18 @@ define( 'WP_ENVIRONMENT_TYPE', 'local' );
  * and redirects still resolve to yazan.local and the login cookie (set on
  * localhost) would not travel with the shopper.
  *
- * ⚠ 10029 is assigned by Local and CHANGES when Local restarts.  Re-derive with:
+ * The cost of leaving them on is /dashboard/: its bundle is a
+ * <script type="module">, and a module served from a different origin than the
+ * page is blocked by CORS, so opening the dashboard on yazan.local while these
+ * point at localhost gives a blank screen with no error on the page.  Browse the
+ * SAME host these name, or leave them commented out.
+ *
+ * TO RESUME OAUTH TESTING: uncomment both lines, re-derive the port (Local
+ * reassigns it on restart), and match it in the Google console:
  *     grep -rh "listen" ~/AppData/Roaming/Local/run/<id>/conf/nginx/site.conf
- * and update BOTH lines here and the redirect URI in the Google console.
  * -------------------------------------------------------------------------- */
-define( 'WP_HOME', 'http://localhost:10029' );
-define( 'WP_SITEURL', 'http://localhost:10029' );
+// define( 'WP_HOME', 'http://localhost:10029' );
+// define( 'WP_SITEURL', 'http://localhost:10029' );
 
 /* That's all, stop editing! Happy publishing. */
 
