@@ -120,7 +120,7 @@ const YAZAN_SIGNIN_RATE_WINDOW = 900;
 function yazan_signin_rate_limited( $bucket ) {
 	$max = ( 'lookup' === $bucket ) ? YAZAN_SIGNIN_LOOKUP_MAX : YAZAN_SIGNIN_ATTEMPT_MAX;
 	$ip  = isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : '';
-	$key = 'yz_auth_' . $bucket . '_' . md5( $ip );
+	$key = 'yz_signin_' . $bucket . '_' . md5( $ip );
 
 	$hits = (int) get_transient( $key );
 
