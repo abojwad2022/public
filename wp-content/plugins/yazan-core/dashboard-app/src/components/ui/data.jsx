@@ -8,9 +8,60 @@ import {
   Minus,
   TrendingDown,
   TrendingUp,
+  UserRound,
 } from './icons.js'
 import { DirIcon } from './primitives.jsx'
 import { ChevronLeft, ChevronRight } from './icons.js'
+
+/* ----------------------------------------------------------------- Avatar */
+
+/**
+ * A person's picture, or a neutral stand-in when there isn't one.
+ *
+ * ⚠️ Pass `src` ONLY when the account genuinely has an uploaded photo. The REST payload's `avatar`
+ * field is never empty — WordPress's get_avatar_url() always returns *something* (a Gravatar URL,
+ * falling back to their generated default), so testing `avatar` for emptiness silently never fires.
+ * The real signal is `avatar_id`:
+ *
+ *     <Avatar src={user.avatar_id ? user.avatar : ''} name={user.name} />
+ *
+ * The fallback is drawn locally rather than deferring to Gravatar's default image, which also keeps
+ * these screens free of third-party requests.
+ *
+ * @param {string} src   Image URL, or '' for the icon fallback.
+ * @param {string} name  Used for the alt text only — decorative here, since every call site shows
+ *                       the name next to the avatar, so it stays empty to avoid a screen reader
+ *                       announcing it twice.
+ * @param {number} size  Pixel box; the icon scales with it.
+ */
+export function Avatar({ src, name = '', size = 40, className = '' }) {
+  const box = { width: size, height: size }
+
+  if (src) {
+    return (
+      <img
+        src={src}
+        alt=""
+        width={size}
+        height={size}
+        loading="lazy"
+        style={box}
+        className={`shrink-0 rounded-full bg-surface2 object-cover ${className}`}
+      />
+    )
+  }
+
+  return (
+    <span
+      style={box}
+      role="img"
+      aria-label={name ? `${name} — no photo` : 'No photo'}
+      className={`grid shrink-0 place-items-center rounded-full bg-surface2 text-faint ${className}`}
+    >
+      <Icon as={UserRound} size={Math.round(size * 0.55)} />
+    </span>
+  )
+}
 
 /* ------------------------------------------------------------------ Badge */
 

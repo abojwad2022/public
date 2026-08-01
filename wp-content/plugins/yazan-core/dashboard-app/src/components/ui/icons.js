@@ -40,6 +40,7 @@ export {
   Printer,
   Eye,
   ExternalLink,
+  EyeOff,
   RefreshCw,
   RotateCcw,
   Check,
@@ -91,6 +92,7 @@ export {
   Bell, // Notifications
   DatabaseZap, // Data Integrity
   // Access control — users, roles, permissions
+  UserRound, // The neutral stand-in when an account has no uploaded photo
   UserCog, // Users (staff)
   ShieldCheck, // Roles
   KeyRound, // Permissions
