@@ -31,11 +31,15 @@ do_action( 'woocommerce_before_customer_login_form' );
 
 <div class="yz-signin-page">
 	<?php
-	// h1 here: on this page the card's title is the page's own heading.
+	/*
+	 * h2, not h1: the account page already carries an <h1> in its title banner, and a second one
+	 * here would leave the document with two competing top-level headings. The card's title is
+	 * sized by CSS, so nothing about it looks smaller for being an h2.
+	 */
 	yazan_signin_card(
 		array(
 			'instance' => 'page',
-			'tag'      => 'h1',
+			'tag'      => 'h2',
 		)
 	);
 	?>
