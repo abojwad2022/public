@@ -333,7 +333,7 @@ class Yazan_Social_Auth {
 		set_transient( self::FLOW_PREFIX . hash( 'sha256', $state ), $flow, self::FLOW_TTL );
 		self::set_state_cookie( $provider, $browser_secret );
 
-		self::redirect( $provider->authorize_url( $flow ) );
+		self::redirect_external( $provider->authorize_url( $flow ) );
 	}
 
 	/* --------------------------------------------------------------------- */
