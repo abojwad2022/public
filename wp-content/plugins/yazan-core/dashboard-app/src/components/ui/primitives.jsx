@@ -1,5 +1,5 @@
-import { cloneElement, forwardRef, isValidElement, useId } from 'react'
-import { LoaderCircle, Search, X } from './icons.js'
+import { cloneElement, forwardRef, isValidElement, useId, useState } from 'react'
+import { Eye, EyeOff, LoaderCircle, Search, X } from './icons.js'
 
 /* ------------------------------------------------------------------ Icons */
 
@@ -142,6 +142,50 @@ export function Field({ label, help, error, htmlFor, required, children, classNa
 
 export const Input = forwardRef(function Input(props, ref) {
   return <input ref={ref} {...props} className={`yz-input ${props.className || ''}`} />
+})
+
+/**
+ * Password field with a reveal toggle.
+ *
+ * Typing a credential you cannot read is how typos become "the password doesn't work" support
+ * tickets — worse when an administrator is setting a password *for someone else* and has no way to
+ * confirm what they typed. Hidden by default; revealing is a deliberate act.
+ *
+ * The toggle is a real <button> rather than a click handler on an icon, so it is keyboard
+ * reachable, and it is padded with logical properties (`end-*`) so it flips side in RTL.
+ */
+export const PasswordInput = forwardRef(function PasswordInput(
+  { className = '', ...props },
+  ref
+) {
+  const [visible, setVisible] = useState(false)
+  const label = visible ? 'Hide password' : 'Show password'
+
+  return (
+    <div className="relative flex items-center">
+      <input
+        ref={ref}
+        {...props}
+        type={visible ? 'text' : 'password'}
+        // Room for the button, so a long value never slides underneath it.
+        className={`yz-input pe-9 ${className}`}
+      />
+      <button
+        type="button"
+        onClick={() => setVisible((v) => !v)}
+        // aria-pressed carries the state; without it the button reads identically in both
+        // positions to a screen reader.
+        aria-pressed={visible}
+        aria-label={label}
+        title={label}
+        tabIndex={props.disabled ? -1 : 0}
+        disabled={props.disabled}
+        className="absolute end-1 grid size-7 place-items-center rounded-md text-faint transition-colors hover:text-fg disabled:opacity-50"
+      >
+        <Icon as={visible ? EyeOff : Eye} size={15} />
+      </button>
+    </div>
+  )
 })
 
 export const Textarea = forwardRef(function Textarea(props, ref) {

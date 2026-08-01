@@ -19,11 +19,13 @@ export {
   Radio,
   Switch,
   SearchInput,
+  PasswordInput,
 } from './primitives.jsx'
 
 export { Card, Modal, Drawer, Alert, ConfirmDialog, useConfirm } from './surfaces.jsx'
 
 export {
+  Avatar,
   Badge,
   Table,
   THead,

@@ -16,6 +16,7 @@ import { PageHeader } from '../../components/Layout.jsx'
 import { Can } from '../../components/Protected.jsx'
 import {
   Alert,
+  Avatar,
   Badge,
   Button,
   Card,
@@ -23,6 +24,7 @@ import {
   Field,
   Icon,
   Input,
+  PasswordInput,
   Select,
   Skeleton,
   SkeletonTable,
@@ -44,8 +46,15 @@ import {
   Lock,
   LogOut,
   Save,
+  Trash2,
   UserCheck,
 } from '../../components/ui/icons.js'
+
+/**
+ * Client-side courtesy limit. PHP's own upload_max_filesize still has the final say — this just
+ * fails a 40 MB photo instantly instead of after the whole upload.
+ */
+const MAX_PHOTO_BYTES = 5 * 1024 * 1024
 
 const TABS = [
   { value: 'profile', label: 'Profile' },
@@ -76,6 +85,25 @@ export default function UserEditor() {
   })
   const [sendInvite, setSendInvite] = useState(true)
   const fileRef = useRef(null)
+
+  /*
+   * A new account has no id yet, so its photo cannot be attached to anything. Rather than making
+   * the operator save first and come back, the file is held here and previewed from a local object
+   * URL; it is uploaded immediately after the account exists.
+   *
+   * Deliberately NOT uploaded up-front in exchange for an attachment id: someone who picks a photo
+   * and then abandons the form would leave an orphan in the media library with no owner and nothing
+   * to clean it up.
+   */
+  const [photoFile, setPhotoFile] = useState(null)
+  const [photoPreview, setPhotoPreview] = useState('')
+
+  // Object URLs are held by the browser until explicitly released.
+  useEffect(() => {
+    return () => {
+      if (photoPreview) URL.revokeObjectURL(photoPreview)
+    }
+  }, [photoPreview])
 
   const tab = params.get('tab') === 'activity' && !isNew ? 'activity' : 'profile'
 
@@ -121,6 +149,7 @@ export default function UserEditor() {
 
   const editable = Boolean(staff?.editable)
   const isSelf = Boolean(staff?.is_self)
+  const hasPhoto = isNew ? Boolean(photoPreview) : Boolean(staff?.avatar_id)
 
   const onSave = async () => {
     if (!form.name.trim() || !form.email.trim()) {
@@ -154,9 +183,29 @@ export default function UserEditor() {
           password: form.password || undefined,
           send_invite: sendInvite,
         })
-        toast.success(
-          sendInvite ? `${created.name} created — reset link sent.` : `${created.name} created.`
-        )
+
+        /*
+         * The account now exists, so the held photo can be attached. A failure here is reported but
+         * never rolls anything back — the account is the record that matters, and the photo can be
+         * retried in one click from the page we are about to land on.
+         */
+        let photoFailed = false
+        if (photoFile) {
+          try {
+            await usersApi.uploadPhoto(created.id, photoFile)
+          } catch {
+            photoFailed = true
+          }
+        }
+
+        if (photoFailed) {
+          toast.error(`${created.name} was created, but the photo could not be uploaded. Try again below.`)
+        } else {
+          toast.success(
+            sendInvite ? `${created.name} created — reset link sent.` : `${created.name} created.`
+          )
+        }
+
         navigate(`/users/${created.id}`, { replace: true })
       } else {
         const saved = await usersApi.update(id, payload)
@@ -171,10 +220,34 @@ export default function UserEditor() {
     }
   }
 
+  /** Reject obvious non-starters here rather than after a round trip that ends in a 400. */
+  const rejectFile = (file) => {
+    if (!file.type.startsWith('image/')) return 'Profile photos must be an image.'
+    if (file.size > MAX_PHOTO_BYTES) return 'That image is larger than 5 MB. Please pick a smaller one.'
+    return ''
+  }
+
   const onPhoto = async (event) => {
     const file = event.target.files?.[0]
-    if (!file || isNew) return
+    if (fileRef.current) fileRef.current.value = '' // Allow re-picking the same file.
+    if (!file) return
 
+    const problem = rejectFile(file)
+    if (problem) {
+      toast.error(problem)
+      return
+    }
+
+    // New account: hold it locally and preview. Nothing is sent until the account exists.
+    if (isNew) {
+      if (photoPreview) URL.revokeObjectURL(photoPreview)
+      setPhotoFile(file)
+      setPhotoPreview(URL.createObjectURL(file))
+      return
+    }
+
+    // Existing account: the record is already saved, so uploading straight away is the honest
+    // behaviour — there is nothing to defer it until.
     setUploading(true)
     try {
       const result = await usersApi.uploadPhoto(id, file)
@@ -185,7 +258,29 @@ export default function UserEditor() {
       toast.error(err.message)
     } finally {
       setUploading(false)
-      if (fileRef.current) fileRef.current.value = ''
+    }
+  }
+
+  /** Back to the generic icon. A photo is optional, so removing one is a first-class action. */
+  const onRemovePhoto = async () => {
+    if (isNew) {
+      if (photoPreview) URL.revokeObjectURL(photoPreview)
+      setPhotoFile(null)
+      setPhotoPreview('')
+      return
+    }
+
+    setUploading(true)
+    try {
+      // avatar_id 0 makes Yazan_Users::set_avatar_id() delete the meta outright.
+      const saved = await usersApi.update(id, { avatar_id: 0 })
+      setStaff(saved)
+      toast.success('Photo removed.')
+      if (isSelf) await refresh()
+    } catch (err) {
+      toast.error(err.message)
+    } finally {
+      setUploading(false)
     }
   }
 
@@ -391,12 +486,11 @@ export default function UserEditor() {
                     label="Password"
                     help="Leave blank to generate a strong one — they will set their own from the emailed link."
                   >
-                    <Input
-                      type="password"
+                    <PasswordInput
                       autoComplete="new-password"
                       value={form.password}
                       onChange={(event) => set('password', event.target.value)}
-                      placeholder="At least 12 characters"
+                      placeholder="At least 8 characters"
                     />
                   </Field>
                   <Switch
@@ -434,28 +528,29 @@ export default function UserEditor() {
 
           {/* --------------------------------------------------- Sidebar */}
           <div className="space-y-4">
-            <Card title="Photo">
-              {isNew ? (
-                <p className="text-sm text-muted">
-                  Save the account first, then add a photo.
-                </p>
-              ) : (
-                <div className="flex items-center gap-4">
-                  <img
-                    src={staff.avatar}
-                    alt=""
-                    width={72}
-                    height={72}
-                    className="size-[72px] shrink-0 rounded-full bg-surface2 object-cover"
+            <Card title="Photo" subtitle="Optional.">
+              <div className="flex items-center gap-4">
+                {/*
+                  * `staff.avatar` is never empty — WordPress always returns a Gravatar URL — so the
+                  * real "has a photo" signal is `avatar_id`. Avatar draws the neutral icon locally
+                  * when there is none.
+                  */}
+                <Avatar
+                  src={isNew ? photoPreview : staff.avatar_id ? staff.avatar : ''}
+                  name={form.name}
+                  size={72}
+                />
+
+                <div className="min-w-0">
+                  <input
+                    ref={fileRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={onPhoto}
                   />
-                  <div className="min-w-0">
-                    <input
-                      ref={fileRef}
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={onPhoto}
-                    />
+
+                  <div className="flex flex-wrap gap-2">
                     <Button
                       small
                       icon={ImagePlus}
@@ -463,14 +558,29 @@ export default function UserEditor() {
                       disabled={!editable}
                       onClick={() => fileRef.current?.click()}
                     >
-                      Upload photo
+                      {hasPhoto ? 'Replace' : 'Upload photo'}
                     </Button>
-                    <p className="mt-1.5 text-2xs leading-relaxed text-muted">
-                      Stored in the media library, like any WordPress avatar.
-                    </p>
+
+                    {hasPhoto && (
+                      <Button
+                        small
+                        variant="quiet"
+                        icon={Trash2}
+                        disabled={!editable || uploading}
+                        onClick={onRemovePhoto}
+                      >
+                        Remove
+                      </Button>
+                    )}
                   </div>
+
+                  <p className="mt-1.5 text-2xs leading-relaxed text-muted">
+                    {isNew && photoFile
+                      ? 'Uploaded when you create the account.'
+                      : 'Leave it empty to use a generic icon. Stored in the media library, like any WordPress avatar.'}
+                  </p>
                 </div>
-              )}
+              </div>
             </Card>
 
             {!isNew && (

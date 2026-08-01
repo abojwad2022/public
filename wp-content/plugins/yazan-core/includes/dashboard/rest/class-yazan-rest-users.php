@@ -23,8 +23,13 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class Yazan_REST_Users {
 
-	/** Minimum length for an administrator-set password. */
-	const MIN_PASSWORD = 12;
+	/**
+	 * Minimum length for an administrator-set password.
+	 *
+	 * Enforced on both write paths (create, and the `set` mode of reset-password). The UI shows the
+	 * number but never enforces it — this constant is the only authority.
+	 */
+	const MIN_PASSWORD = 8;
 
 	/**
 	 * Register routes. Hook: rest_api_init.
