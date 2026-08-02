@@ -173,8 +173,11 @@ belong to **yazan-social-rewards** — they are listed in `Yazan_REST_Guard::FOR
 | POST · PUT/PATCH | `/products/{id}` | `products.edit` |
 | DELETE | `/products/{id}` | `products.delete` |
 | POST | `/products/{id}/duplicate` | `products.duplicate` |
+| POST | `/products/{id}/restore` | `products.restore` |
 | POST | `/products/bulk` | `products.bulk` |
+| POST | `/products/bulk-edit` | `products.bulk` |
 | POST | `/products/quick-edit` | `products.edit` |
+| POST | `/products/trash/empty` | `products.delete` |
 | GET | `/reports/sales` | `reports.view` |
 | GET | `/reports/stock` | `inventory.view` |
 | GET | `/roles` | `roles.view` |
@@ -600,6 +603,39 @@ Guard rails enforced server-side (the UI mirrors them, the API re-checks them):
 | Deleting a term | Reports how many products used it, and how many children were promoted |
 | Managed-stock rows | Setting a status moves the quantity too, so WooCommerce doesn't discard it |
 | Variable products | Reported as `skipped: variable_parent` — their stock lives on the variations |
+
+### Products list — parity with wp-admin
+
+The products screen is a deliberate reproduction of WooCommerce's own list table, not a
+loose equivalent. What that buys, and the traps behind each piece:
+
+- **Status views with counts** (All / Published / Drafts / Pending / Private / Trash). Counts
+  come from `wp_count_posts()` and are **not** filter-aware — same as wp-admin, where the tabs
+  describe the catalogue rather than the current search.
+- **Trash is a first-class view.** Before this existed the dashboard could trash a product but
+  never show it again: `index()` accepted only the four live statuses and no restore route
+  existed, even though `products.restore` was already in the permission catalogue. On this
+  install that had already stranded **32 products**. Restore goes through `wp_untrash_post()`,
+  so a draft comes back a draft rather than silently going live.
+- **Search covers SKU, GTIN and a bare product id**, via
+  `WC_Data_Store::load('product')->search_products()` — the same call the wp-admin list uses.
+  ⚠️ A no-match search must return early: an empty `post__in` is *ignored* by `WP_Query`, so
+  short-circuiting is what stops "no results" becoming "every product".
+- **Bulk Edit** (`POST /products/bulk-edit`) reproduces wp-admin's panel, including the
+  percentage arithmetic of `WC_Admin_Post_Types::set_new_price()` down to its quirks: an unset
+  sale price uses the regular price as its base, results clamp at 0 and round to the store's
+  price precision, and any price change clears a scheduled sale. Prices are skipped for
+  variable products, whose prices live on their variations.
+- **Quick Edit** carries wp-admin's full field set. Every value it needs already travels with
+  the row, so the panel opens without a request — the same reason WooCommerce embeds a hidden
+  `<div>` per row.
+- **Permissions are re-checked per field, not per route.** `products.bulk` only grants access
+  to the mechanism; `products.change_price` / `products.change_stock` decide what actually
+  lands, and blocked fields are dropped and **reported back** (`blocked` in the response) so
+  the operator is told rather than watching an edit quietly revert.
+- Screen Options (visible columns, rows per page) persist in `localStorage`, not user meta —
+  a display preference is not worth a REST route and an RBAC surface. Per browser, like the
+  theme toggle.
 
 ### Orders — what's covered
 
