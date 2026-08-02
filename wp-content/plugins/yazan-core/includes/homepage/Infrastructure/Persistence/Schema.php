@@ -20,7 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 final class Schema {
 
 	/** Bump when any table below changes. */
-	const SCHEMA_VERSION = '3';
+	const SCHEMA_VERSION = '4';
 
 	/** Option holding the installed schema version. */
 	const SCHEMA_OPTION = 'yazan_homepage_schema_version';
@@ -58,9 +58,17 @@ final class Schema {
 		 * itself, and the storefront read is a single row. The cost is that SQL cannot see inside a
 		 * section — paid back by the section index table in a later phase, when something actually
 		 * needs it.
+		 *
+		 * ⚠️ `store_id` AND THE WIDENED UNIQUE KEYS BELONG IN THESE STATEMENTS, not only in
+		 * Yazan_Store_Schema. That class ALTERs an existing installation; these CREATE a new one. A
+		 * fresh install that skipped them would produce tables the query layer writes a missing
+		 * column to — and $wpdb->insert() returns false, which nothing here checks. The keys must
+		 * match what the migrator produces, or the same site ends up with two different schemas
+		 * depending on how it was installed.
 		 */
 		$sql_documents = "CREATE TABLE {$docs} (
 			id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+			store_id BIGINT UNSIGNED NOT NULL DEFAULT 1,
 			doc_key VARCHAR(64) NOT NULL,
 			title VARCHAR(191) NOT NULL DEFAULT '',
 			status VARCHAR(20) NOT NULL DEFAULT 'draft',
@@ -76,13 +84,14 @@ final class Schema {
 			updated_at DATETIME NOT NULL DEFAULT '0000-00-00 00:00:00',
 			created_at DATETIME NOT NULL DEFAULT '0000-00-00 00:00:00',
 			PRIMARY KEY  (id),
-			UNIQUE KEY doc_key (doc_key),
+			UNIQUE KEY doc_key (store_id, doc_key),
 			KEY status_scheduled (status, scheduled_at),
 			KEY bound_page (bound_page_id)
 		) {$charset};";
 
 		$sql_revisions = "CREATE TABLE {$revs} (
 			id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+			store_id BIGINT UNSIGNED NOT NULL DEFAULT 1,
 			doc_key VARCHAR(64) NOT NULL,
 			revision_no BIGINT UNSIGNED NOT NULL DEFAULT 1,
 			payload LONGTEXT NULL,
@@ -92,12 +101,14 @@ final class Schema {
 			size_bytes INT UNSIGNED NOT NULL DEFAULT 0,
 			created_at DATETIME NOT NULL DEFAULT '0000-00-00 00:00:00',
 			PRIMARY KEY  (id),
+			KEY store_doc (store_id, doc_key),
 			KEY doc_revision (doc_key, revision_no),
 			KEY doc_created (doc_key, created_at)
 		) {$charset};";
 
 		$sql_templates = "CREATE TABLE {$tpls} (
 			id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+			store_id BIGINT UNSIGNED NOT NULL DEFAULT 1,
 			kind VARCHAR(20) NOT NULL DEFAULT 'section',
 			component_type VARCHAR(64) NOT NULL DEFAULT '',
 			name VARCHAR(191) NOT NULL DEFAULT '',
@@ -107,6 +118,7 @@ final class Schema {
 			created_by BIGINT UNSIGNED NOT NULL DEFAULT 0,
 			created_at DATETIME NOT NULL DEFAULT '0000-00-00 00:00:00',
 			PRIMARY KEY  (id),
+			KEY store_id (store_id),
 			KEY kind_type (kind, component_type)
 		) {$charset};";
 
@@ -122,6 +134,7 @@ final class Schema {
 		 */
 		$sql_ab_stats = "CREATE TABLE {$stats} (
 			id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+			store_id BIGINT UNSIGNED NOT NULL DEFAULT 1,
 			doc_key VARCHAR(64) NOT NULL,
 			arm VARCHAR(64) NOT NULL,
 			stat_date DATE NOT NULL,
@@ -129,7 +142,8 @@ final class Schema {
 			orders BIGINT UNSIGNED NOT NULL DEFAULT 0,
 			revenue DECIMAL(18,2) NOT NULL DEFAULT 0,
 			PRIMARY KEY  (id),
-			UNIQUE KEY arm_day (doc_key, arm, stat_date),
+			UNIQUE KEY arm_day (store_id, doc_key, arm, stat_date),
+			KEY store_doc (store_id, doc_key),
 			KEY doc_date (doc_key, stat_date)
 		) {$charset};";
 
