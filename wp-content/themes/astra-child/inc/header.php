@@ -295,3 +295,106 @@ function yazan_account_link_url( $value ) {
 }
 add_filter( 'astra_get_option_header-account-logout-link', 'yazan_account_link_url' );
 add_filter( 'astra_get_option_header-account-login-link', 'yazan_account_link_url' );
+
+/**
+ * Give the account avatar a usable size on phones.
+ *
+ * The mobile value of `header-account-image-width` was never set in the Customizer, and Astra's
+ * dynamic CSS substitutes a hardcoded 20 for an empty one (account/dynamic-css/dynamic.css.php),
+ * emitting `@media (max-width:544px){ … .avatar { width:20px } }`. A 20px avatar inside a drawer row
+ * that Astra pads to `15px 20px` reads as a stray dot, which is exactly what it looked like.
+ *
+ * Filtered rather than overridden in CSS on purpose: Astra's rule lives inside its own
+ * `max-width:544px` block at specificity 0,3,0, so a child-theme override would have to match that
+ * breakpoint AND out-specify it — two things to get wrong every time Astra changes. Feeding the
+ * option the right number instead means Astra generates the correct CSS itself, and the Customizer
+ * still wins if someone later sets a value there.
+ *
+ * @param mixed $value Stored responsive value: array{desktop:int,tablet:int,mobile:int|string}.
+ * @return mixed
+ */
+function yazan_account_avatar_size( $value ) {
+	if ( ! is_array( $value ) ) {
+		return $value;
+	}
+
+	// Only fill a blank — never overwrite a real choice made in the Customizer.
+	if ( '' === ( $value['mobile'] ?? '' ) || null === ( $value['mobile'] ?? null ) ) {
+		$value['mobile'] = 44;
+	}
+
+	return $value;
+}
+add_filter( 'astra_get_option_header-account-image-width', 'yazan_account_avatar_size' );
+
+/**
+ * Match the logged-out account icon to the logged-in avatar on phones.
+ *
+ * Without this the drawer jumps between a 44px photo and an 18px glyph depending on who is looking,
+ * and the row height changes with it.
+ *
+ * @param mixed $value Stored responsive value.
+ * @return mixed
+ */
+function yazan_account_icon_size( $value ) {
+	if ( is_array( $value ) ) {
+		$value['mobile'] = 34; // Slightly smaller than the photo: the glyph is a filled silhouette.
+	}
+	return $value;
+}
+add_filter( 'astra_get_option_header-account-icon-size', 'yazan_account_icon_size' );
+
+/**
+ * Print the account name beside the avatar, in the mobile drawer only.
+ *
+ * Astra renders the account element as an avatar OR an icon OR a text label — never an avatar
+ * *with* a name — and Astra_Builder_UI_Controller::render_account() contains no filter or action to
+ * inject into (verified: zero apply_filters/do_action in the whole method). The one supported seam
+ * is `astra_header_account`, the action components.php fires inside `.ast-header-account`, so this
+ * appends a sibling block rather than reaching into Astra's anchor.
+ *
+ * It is emitted for every header row Astra builds — desktop bar included — and hidden everywhere
+ * except `.ast-mobile-popup-content` by CSS. Scoping by ancestor is what makes it correct no matter
+ * how many times, or in what order, the action fires.
+ *
+ * @return void
+ */
+function yazan_account_drawer_identity() {
+	if ( ! function_exists( 'wc_get_page_permalink' ) ) {
+		return;
+	}
+
+	$href = wc_get_page_permalink( 'myaccount' );
+	if ( ! $href ) {
+		return;
+	}
+
+	if ( is_user_logged_in() ) {
+		$user     = wp_get_current_user();
+		$title    = $user->display_name ? $user->display_name : $user->user_login;
+		$subtitle = __( 'View account', 'yazan' );
+		$attrs    = '';
+	} else {
+		$title    = __( 'Log in', 'yazan' );
+		$subtitle = __( 'Orders and favourites', 'yazan' );
+		/*
+		 * signin-card.js delegates clicks on `.ast-header-account-link, [data-yz-signin-open]` and
+		 * opens the modal instead of navigating. Carrying the documented attribute keeps this text
+		 * behaving exactly like the avatar next to it; without it, tapping the name would leave the
+		 * drawer for wp-login while tapping the photo opened the dialog.
+		 *
+		 * (The script is only enqueued for signed-out visitors, so the logged-in branch above needs
+		 * nothing — its link simply navigates.)
+		 */
+		$attrs = ' data-yz-signin-open';
+	}
+
+	printf(
+		'<a class="yz-account-id" href="%1$s"%2$s><span class="yz-account-id__name">%3$s</span><span class="yz-account-id__sub">%4$s</span></a>',
+		esc_url( $href ),
+		$attrs, // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- literal above.
+		esc_html( $title ),
+		esc_html( $subtitle )
+	);
+}
+add_action( 'astra_header_account', 'yazan_account_drawer_identity', 15 );
