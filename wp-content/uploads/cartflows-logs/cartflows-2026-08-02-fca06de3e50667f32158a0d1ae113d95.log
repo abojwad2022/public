@@ -46,3 +46,7 @@
 2026-08-02T10:41:33+00:00 INFO Webhook dispatch: No webhooks found for event cartflows_step_visited
 2026-08-02T10:45:20+00:00 INFO Webhook event: cartflows_step_visited - Step 11 (Type: thankyou)
 2026-08-02T10:45:20+00:00 INFO Webhook dispatch: No webhooks found for event cartflows_step_visited
+2026-08-02T23:19:51+00:00 INFO Start-Cartflows_Admin_Report_Emails::send_weekly_report_email
+2026-08-02T23:19:51+00:00 INFO Send weekly emails to dev-email@wpengine.local
+2026-08-02T23:19:51+00:00 INFO Total Revenue: <span class="woocommerce-Price-amount amount"><bdi><span class="woocommerce-Price-currencySymbol" translate="no">&#36;</span>3,480.00</bdi></span>
+2026-08-02T23:19:51+00:00 INFO Email send status for email dev-email@wpengine.local is 1
