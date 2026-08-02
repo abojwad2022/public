@@ -228,6 +228,8 @@ class Yazan_Backup_Engine {
 			'db_name'    => defined( 'DB_NAME' ) ? DB_NAME : '',
 			'db_prefix'  => $GLOBALS['wpdb']->prefix,
 			'tables'     => (int) $dump['tables'],
+			// Restore compares against this. A count that does not match is a failed restore.
+			'statements' => isset( $dump['statements'] ) ? (int) $dump['statements'] : 0,
 			'files'      => (int) $file_count,
 			'php'        => PHP_VERSION,
 		);
@@ -331,11 +333,26 @@ class Yazan_Backup_Engine {
 			return new WP_Error( 'yazan_dump_open', __( 'Could not open a temporary file for the database dump.', 'yazan' ), array( 'status' => 500 ) );
 		}
 
-		$write = static function ( $sql ) use ( $handle ) {
+		/*
+		 * Count what we emit so restore can prove it executed the same number. Without this the
+		 * only evidence a restore worked was that it did not crash.
+		 */
+		$statements = 0;
+
+		$write = static function ( $sql ) use ( $handle, &$statements ) {
 			fwrite( $handle, $sql . self::STMT_SENTINEL ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fwrite
+			++$statements;
 		};
 
-		fwrite( $handle, "-- Yazan Core database backup\n-- Generated: " . gmdate( 'Y-m-d H:i:s' ) . " UTC\n" ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fwrite
+		/*
+		 * THE HEADER GETS ITS OWN SENTINEL. Without one it fused to the statement that follows,
+		 * and since the combined buffer then began with `--` the importer skipped the whole thing
+		 * as a comment — so `SET FOREIGN_KEY_CHECKS=0` was NEVER executed on any restore. Every
+		 * `DROP TABLE` ran with foreign-key checks on, which is exactly the condition under which
+		 * dropping WooCommerce's constrained tables fails. Silently, because errors are suppressed.
+		 */
+		fwrite( $handle, '-- Yazan Core database backup' . "\n" . '-- Generated: ' . gmdate( 'Y-m-d H:i:s' ) . ' UTC' . self::STMT_SENTINEL ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fwrite
+
 		$write( 'SET FOREIGN_KEY_CHECKS=0' );
 		$write( 'SET NAMES ' . ( defined( 'DB_CHARSET' ) && DB_CHARSET ? DB_CHARSET : 'utf8mb4' ) );
 
@@ -362,7 +379,10 @@ class Yazan_Backup_Engine {
 		$write( 'SET FOREIGN_KEY_CHECKS=1' );
 		fclose( $handle ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose
 
-		return array( 'tables' => count( $tables ) );
+		return array(
+			'tables'     => count( $tables ),
+			'statements' => $statements,
+		);
 	}
 
 	/**
@@ -374,6 +394,32 @@ class Yazan_Backup_Engine {
 	 * @param string   $quoted  Back-quoted table name.
 	 * @return void
 	 */
+	/**
+	 * Escape a value for a literal SQL string in the dump.
+	 *
+	 * ⚠️ NOT `$wpdb->_real_escape()` ALONE — THAT SILENTLY DESTROYS EVERY `%`.
+	 *
+	 * `_real_escape()` ends with `add_placeholder_escape()`, which swaps each `%` for a random
+	 * per-request hash so that a later `prepare()` cannot mistake data for a placeholder. That is
+	 * correct for a query about to be prepared and catastrophic for text about to be written to a
+	 * file: the hash goes into the dump verbatim, and on restore it comes back as literal data.
+	 * Every "20% off" coupon, every `width: 100%`, every percent-encoded URL was being replaced by
+	 * a 66-character hash — and because the hash is regenerated per request, it was not even
+	 * reversible afterwards.
+	 *
+	 * `remove_placeholder_escape()` undoes exactly that last step and nothing else, so quotes,
+	 * backslashes, newlines and control bytes stay properly escaped. Verified to round-trip
+	 * through MySQL for `%`, newlines, quotes and backslashes.
+	 *
+	 * @param string $value Raw column value.
+	 * @return string
+	 */
+	private static function escape_value( $value ) {
+		global $wpdb;
+
+		return $wpdb->remove_placeholder_escape( $wpdb->_real_escape( (string) $value ) );
+	}
+
 	private static function dump_table_rows( $handle, callable $write, $table, $quoted ) {
 		global $wpdb;
 
@@ -407,7 +453,7 @@ class Yazan_Backup_Engine {
 					if ( null === $val ) {
 						$cells[] = 'NULL';
 					} else {
-						$cells[] = "'" . $wpdb->_real_escape( $val ) . "'";
+						$cells[] = "'" . self::escape_value( $val ) . "'";
 					}
 				}
 				$values[] = '(' . implode( ', ', $cells ) . ')';
@@ -663,18 +709,39 @@ class Yazan_Backup_Engine {
 		$sentinel = trim( self::STMT_SENTINEL );
 		$buffer   = '';
 		$count    = 0;
+		$skipped  = 0;
+		$failed   = array();
 		$suppress = $wpdb->suppress_errors( true );
 
-		$run = static function ( $statement ) use ( $wpdb, &$count ) {
+		/*
+		 * Errors are suppressed so one bad statement does not abort the whole import — but they are
+		 * now COLLECTED rather than discarded. Previously a restore in which half the statements
+		 * failed reported success, which made the backup engine worse than useless as a rollback
+		 * path: it told you that you were safe when you were not.
+		 *
+		 * Only the first few messages are kept; a systemic failure produces thousands of identical
+		 * ones and the useful signal is the count, not the list.
+		 */
+		$run = static function ( $statement ) use ( $wpdb, &$count, &$skipped, &$failed ) {
 			$statement = trim( $statement );
 			if ( '' === $statement || 0 === strpos( $statement, '--' ) ) {
+				++$skipped;
 				return true;
 			}
 			// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 			$result = $wpdb->query( $statement );
-			if ( false !== $result ) {
+
+			if ( false === $result ) {
+				if ( count( $failed ) < 10 ) {
+					$failed[] = array(
+						'error'     => (string) $wpdb->last_error,
+						'statement' => substr( $statement, 0, 160 ),
+					);
+				}
+			} else {
 				++$count;
 			}
+
 			return $result;
 		};
 
@@ -696,7 +763,12 @@ class Yazan_Backup_Engine {
 
 		$wpdb->suppress_errors( $suppress );
 
-		return $count;
+		return array(
+			'executed' => $count,
+			'skipped'  => $skipped,
+			'failed'   => count( $failed ),
+			'errors'   => $failed,
+		);
 	}
 
 	/* --------------------------------------------------------------------- */
