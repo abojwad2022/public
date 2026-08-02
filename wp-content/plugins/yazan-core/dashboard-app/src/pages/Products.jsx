@@ -20,6 +20,7 @@ import {
   Modal,
   Pagination,
   Select,
+  SkeletonTable,
 } from '../components/ui/index.js'
 import { Package, Plus, Trash2 } from '../components/ui/icons.js'
 

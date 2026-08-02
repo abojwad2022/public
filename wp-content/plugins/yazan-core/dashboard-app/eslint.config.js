@@ -35,6 +35,13 @@ export default [
     rules: {
       ...js.configs.recommended.rules,
       'react/jsx-uses-vars': 'error',
+      /*
+       * `no-undef` does NOT see an identifier in JSX element position — <Foo /> is a
+       * JSXIdentifier, not a reference it resolves. So an un-imported COMPONENT sailed
+       * past lint and only turned up as a white screen ("SkeletonTable is not defined").
+       * This rule is the one that covers that half of the same bug class.
+       */
+      'react/jsx-no-undef': 'error',
       'react-hooks/rules-of-hooks': 'error',
       'react-hooks/exhaustive-deps': 'warn',
       'no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
