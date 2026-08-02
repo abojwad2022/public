@@ -350,9 +350,8 @@ export default function Products() {
 
   const hasFilters = Object.values(filters).some(Boolean)
   const clearFilters = () => {
-    setFilters(EMPTY_FILTERS)
     setSearchInput('')
-    setPage(1)
+    patchParams(EMPTY_FILTERS)
   }
 
   return (
@@ -374,9 +373,8 @@ export default function Products() {
         counts={data?.counts}
         value={view}
         onChange={(next) => {
-          setView(next)
           setBulkAction('')
-          setPage(1)
+          patchParams({ status: next })
         }}
       />
 
@@ -474,7 +472,7 @@ export default function Products() {
             icon={inTrash ? Trash2 : Package}
             action={
               inTrash ? (
-                <Button onClick={() => setView('')}>Back to all products</Button>
+                <Button onClick={() => patchParams({ status: '' })}>Back to all products</Button>
               ) : hasFilters ? (
                 <Button onClick={clearFilters}>Clear filters</Button>
               ) : (

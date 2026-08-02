@@ -60,6 +60,40 @@ async function renewNonce() {
  */
 export const AUTH_LOST_EVENT = 'yazan:auth-lost'
 
+/**
+ * Guards the one-shot silent reload below against looping forever.
+ *
+ * sessionStorage, not a module-level variable: the reload we are guarding against wipes JS memory,
+ * so only storage that survives a reload can actually count attempts across it.
+ */
+const RELOAD_GUARD_KEY = 'yazan_dash_reload_guard'
+
+/**
+ * The self-heal every mature site does silently when a session turns out to be unrecoverable:
+ * reload, once. The page is served with nocache_headers() (class-yazan-dashboard.php), so the
+ * reload is guaranteed a genuinely fresh document — new nonce, current cookie state read from
+ * scratch — which is exactly what a manual hard-refresh accomplishes, minus the visitor ever
+ * needing to know that trick exists.
+ *
+ * The guard exists for the one case a reload can't fix: cookies actually blocked or unsupported in
+ * this browser. Without it that would reload forever; with it, the second failure in the same tab
+ * falls through to the plain sign-in screen and its friendly copy instead.
+ *
+ * @returns {boolean} True if a reload was triggered (caller should stop — the page is going away).
+ */
+function reloadOnceOrGiveUp() {
+  if (sessionStorage.getItem(RELOAD_GUARD_KEY)) return false
+
+  try {
+    sessionStorage.setItem(RELOAD_GUARD_KEY, '1')
+  } catch {
+    return false // Storage unavailable (private mode, quota) — can't guard, so don't risk a loop.
+  }
+
+  window.location.reload()
+  return true
+}
+
 export class ApiError extends Error {
   constructor(message, status, code) {
     super(message)
@@ -82,8 +116,16 @@ function buildUrl(path, params) {
 }
 
 async function request(path, options = {}, isReplay = false) {
-  const { method = 'GET', params, body, formData } = options
-  const headers = { 'X-WP-Nonce': nonce }
+  const { method = 'GET', params, body, formData, skipNonce = false } = options
+  // Most calls need X-WP-Nonce — it IS the CSRF protection for cookie auth, never strip it here.
+  // The one exception is login: that route is deliberately public (the credentials themselves are
+  // the proof), so it has nothing to gain from a nonce and everything to lose from a stale one —
+  // core's global cookie-nonce gate (rest_cookie_check_errors) runs BEFORE any route's own
+  // permission_callback, so a nonce left over from a browser's earlier, unrelated session against
+  // this same origin can fail that gate and block sign-in before our code ever sees the request.
+  // Omitting the header entirely takes the login POST down core's other path instead: no nonce
+  // present -> treated as anonymous -> always let through, whatever stale cookie is sitting there.
+  const headers = skipNonce ? {} : { 'X-WP-Nonce': nonce }
   let payload
 
   if (formData) {
