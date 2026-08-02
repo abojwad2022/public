@@ -189,8 +189,21 @@ final class StoreService {
 		$host = StoreResolver::normalise_host( $host );
 		$path = DomainType::PATH === $type ? StoreResolver::normalise_path( $path ) : '';
 
-		if ( DomainType::is_host_based( $type ) && '' === $host ) {
-			return new \WP_Error( 'yazan_domain_invalid', __( 'A subdomain or custom domain needs a hostname.', 'yazan-stores' ), array( 'status' => 400 ) );
+		if ( '' === $host ) {
+			/*
+			 * EVERY address needs an explicit host, including a path address.
+			 *
+			 * A path row with a blank host would mean "this prefix, on any domain this install
+			 * answers to" — and that is a tenancy hole: store A's `/jewelry` would resolve on
+			 * store B's domain, making one store reachable from another store's address. Pinning
+			 * the host is what confines a path to the domain it was meant for, and it is also what
+			 * lets the resolver prefer host+path over host alone without reopening that hole.
+			 */
+			return new \WP_Error(
+				'yazan_domain_invalid',
+				__( 'Every address needs a hostname — including a path address, which is confined to the host it is registered on.', 'yazan-stores' ),
+				array( 'status' => 400 )
+			);
 		}
 
 		if ( DomainType::PATH === $type && ( '' === $path || '/' === $path ) ) {

@@ -54,9 +54,19 @@ final class StoreResolver {
 	/**
 	 * Resolve the store for an address.
 	 *
-	 * Host wins over path. A request to `jewelry.yazan.com/honey` belongs to the jewelry store —
-	 * the host is the stronger claim, and treating the path as an override would let any store be
-	 * addressed from any other store's domain, which is a tenancy hole rather than a feature.
+	 * THE MOST SPECIFIC ADDRESS WINS: host + path is checked before host alone.
+	 *
+	 * The obvious rule — "host always beats path" — is wrong, and wrong in a way that silently
+	 * disables path routing altogether. The platform host is itself a registered address (it is how
+	 * store 1 is reached), so a bare host match would claim EVERY request to `yazan.com`, and
+	 * `yazan.com/jewelry` could never resolve to anything but store 1. Path routing would look
+	 * implemented and never fire.
+	 *
+	 * Specificity ordering fixes that without opening the hole the naive ordering was guarding
+	 * against, because a path row is pinned to an exact host (see add_domain). So
+	 * `shadow.example/platform-path` does NOT match store 1's path row — that row belongs to
+	 * `yazan.com` — and falls through to the host match, which is the correct answer. One store's
+	 * path can never be borrowed from another store's domain.
 	 *
 	 * @param string $host Request host (port and case are normalised here).
 	 * @param string $path Request path, e.g. '/jewelry/product/x'.
@@ -67,16 +77,16 @@ final class StoreResolver {
 
 		$domains = $this->repository->all_domains();
 
-		$host_match = $this->match_host( $domains, $host );
-
-		if ( null !== $host_match ) {
-			return $this->repository->find( (int) $host_match['store_id'] );
-		}
-
 		$path_match = $this->match_path( $domains, $host, $path );
 
 		if ( null !== $path_match ) {
 			return $this->repository->find( (int) $path_match['store_id'] );
+		}
+
+		$host_match = $this->match_host( $domains, $host );
+
+		if ( null !== $host_match ) {
+			return $this->repository->find( (int) $host_match['store_id'] );
 		}
 
 		return null;
@@ -113,11 +123,18 @@ final class StoreResolver {
 	}
 
 	/**
-	 * Path-prefix match, scoped to the platform host the row was registered against.
+	 * Path-prefix match, pinned to the exact host the row was registered against.
 	 *
-	 * The host check is what stops a path row from matching on a foreign domain. Longest prefix
-	 * wins, so `/jewelry-vintage` cannot be swallowed by `/jewelry` — a plain `str_starts_with`
-	 * ordered by insertion would have made store creation order decide routing.
+	 * TWO RULES, BOTH LOad-BEARING.
+	 *
+	 * The host must match EXACTLY. A path row with a wildcard host would match on every domain this
+	 * install answers to, which means store A's path prefix would resolve on store B's domain —
+	 * one store reachable from another store's address, which is a tenancy hole rather than a
+	 * convenience. add_domain() refuses to create such a row; this is the read-side half of that.
+	 *
+	 * The LONGEST prefix wins. With a first-match-wins loop, `/jewelry-vintage` would be swallowed
+	 * by `/jewelry` whenever the shorter row happened to be created first — routing decided by
+	 * insertion order is routing nobody can reason about.
 	 *
 	 * @param array<int,array<string,mixed>> $domains Domain rows.
 	 * @param string                         $host    Normalised host.
@@ -125,8 +142,12 @@ final class StoreResolver {
 	 * @return array<string,mixed>|null
 	 */
 	private function match_path( array $domains, string $host, string $path ): ?array {
-		$path = self::normalise_path( $path );
-		$best = null;
+		if ( '' === $host ) {
+			return null;
+		}
+
+		$path     = self::normalise_path( $path );
+		$best     = null;
 		$best_len = -1;
 
 		foreach ( $domains as $row ) {
@@ -134,10 +155,7 @@ final class StoreResolver {
 				continue;
 			}
 
-			$row_host = strtolower( (string) ( $row['host'] ?? '' ) );
-
-			// A blank host on a path row means "any host this install answers to".
-			if ( '' !== $row_host && $row_host !== $host ) {
+			if ( strtolower( (string) ( $row['host'] ?? '' ) ) !== $host ) {
 				continue;
 			}
 
@@ -147,6 +165,7 @@ final class StoreResolver {
 				continue;
 			}
 
+			// Segment-aware: `/jewel` must not match `/jewellery`.
 			$is_match = ( $path === $prefix ) || str_starts_with( $path, rtrim( $prefix, '/' ) . '/' );
 
 			if ( $is_match && strlen( $prefix ) > $best_len ) {
