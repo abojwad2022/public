@@ -370,4 +370,6 @@ function StockCell({ product }) {
       {product.manage_stock && product.stock_qty !== null && product.stock_qty !== undefined
         ? ` · ${product.stock_qty}`
         : ''}
-    </Bad
+    </Badge>
+  )
+}
