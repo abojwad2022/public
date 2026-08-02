@@ -43,6 +43,15 @@ class Yazan_Permissions {
 	const VERSION_OPTION = 'yazan_rbac_version';
 
 	/**
+	 * The store id that means "every store".
+	 *
+	 * A grant row with this store_id is a PLATFORM grant. Zero is safe as a sentinel because store
+	 * ids are AUTO_INCREMENT and start at 1, and because the tenant column everywhere else defaults
+	 * to 1 — nothing can accidentally become a platform grant.
+	 */
+	const PLATFORM_STORE = 0;
+
+	/**
 	 * Per-request memo, keyed "user_id|version".
 	 *
 	 * @var array<string,array>
@@ -252,11 +261,13 @@ class Yazan_Permissions {
 		 */
 		$user = get_userdata( $user_id );
 		if ( $user && in_array( 'administrator', (array) $user->roles, true ) ) {
-			$set['super'] = true;
+			$set['super']          = true;
+			$set['platform_super'] = true;
 		}
 
 		if ( ! Yazan_RBAC_Schema::is_installed() ) {
 			if ( $set['super'] ) {
+				$set['platform_perms'] = array_fill_keys( Yazan_Permission_Registry::active_slugs(), true );
 				$set['perms'] = array_fill_keys( Yazan_Permission_Registry::active_slugs(), true );
 			}
 			return $set;
@@ -266,26 +277,80 @@ class Yazan_Permissions {
 		$pivot = Yazan_RBAC_Schema::user_roles_table();
 		$roles = Yazan_RBAC_Schema::roles_table();
 
+		/*
+		 * TWO TIERS OF MEMBERSHIP, READ IN ONE QUERY.
+		 *
+		 * `store_id = 0` means "every store" — a PLATFORM grant. `store_id = N` means that store
+		 * alone. Both are returned here, and `ur.store_id` is carried through so each role can be
+		 * attributed to the tier it came from.
+		 *
+		 * That attribution is the entire fix. Membership became per-store in the previous phase, but
+		 * the grant lookup below has no store predicate — role DEFINITIONS are global, deliberately —
+		 * so a role granted only in store 2 handed out whatever slugs it listed, including
+		 * `stores.create` and `users.delete`. The check was scoped to a tenant; the effect was not.
+		 * Knowing WHICH tier a permission arrived through is what lets can() refuse that.
+		 */
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		$rows = $wpdb->get_results(
 			$wpdb->prepare(
-				"SELECT r.id, r.is_super FROM {$pivot} ur JOIN {$roles} r ON r.id = ur.role_id WHERE ur.user_id = %d AND ur.store_id = %d",
+				"SELECT r.id, r.is_super, ur.store_id FROM {$pivot} ur JOIN {$roles} r ON r.id = ur.role_id
+				  WHERE ur.user_id = %d AND ur.store_id IN ( %d, %d )",
 				$user_id,
+				self::PLATFORM_STORE,
 				$store_id
 			)
 		);
 
+		$platform_roles = array();
+
 		foreach ( (array) $rows as $row ) {
-			$set['roles'][] = (int) $row->id;
+			$role_id        = (int) $row->id;
+			$is_platform    = self::PLATFORM_STORE === (int) $row->store_id;
+			$set['roles'][] = $role_id;
+
+			if ( $is_platform ) {
+				$platform_roles[] = $role_id;
+			}
+
 			if ( (int) $row->is_super ) {
 				$set['super'] = true;
+
+				/*
+				 * A super role granted IN A STORE makes you super of that store — not of the
+				 * platform. Without this split, assigning yourself the super-admin role in a store
+				 * you administer would short-circuit every guard in the system, which is exactly
+				 * the escalation this phase closes.
+				 */
+				if ( $is_platform ) {
+					$set['platform_super'] = true;
+				}
 			}
 		}
 
+		$set['roles'] = array_values( array_unique( $set['roles'] ) );
+
+		if ( $set['platform_super'] ) {
+			// Materialise the full active catalog so the SPA gets a complete map.
+			$set['perms']          = array_fill_keys( Yazan_Permission_Registry::active_slugs(), true );
+			$set['platform_perms'] = $set['perms'];
+			return $set;
+		}
+
 		if ( $set['super'] ) {
-			// Materialise the full active catalog so the SPA gets a complete map. can() still
-			// short-circuits on `super` and never reads this.
-			$set['perms'] = array_fill_keys( Yazan_Permission_Registry::active_slugs(), true );
+			/*
+			 * Super WITHIN a store: every store-scoped permission, and no platform one. This is the
+			 * Store Owner tier — total authority over one tenant, none over the platform.
+			 */
+			$store_scoped = array_values(
+				array_filter(
+					Yazan_Permission_Registry::active_slugs(),
+					static function ( $slug ) {
+						return ! Yazan_Permission_Registry::is_platform( $slug );
+					}
+				)
+			);
+
+			$set['perms'] = array_fill_keys( $store_scoped, true );
 			return $set;
 		}
 
@@ -293,17 +358,39 @@ class Yazan_Permissions {
 			return $set;
 		}
 
-		$grants       = Yazan_RBAC_Schema::role_permissions_table();
-		$placeholders = implode( ',', array_fill( 0, count( $set['roles'] ), '%d' ) );
+		$grants = Yazan_RBAC_Schema::role_permissions_table();
+
+		$set['perms']          = self::grants_for( $grants, $set['roles'] );
+		$set['platform_perms'] = $platform_roles ? self::grants_for( $grants, $platform_roles ) : array();
+
+		return $set;
+	}
+
+	/**
+	 * The union of permission slugs a set of roles grants.
+	 *
+	 * Role definitions carry no store, on purpose: a role is a definition, not a tenancy fact.
+	 * Which TIER the membership came from is the caller's business, not this query's.
+	 *
+	 * @param string $grants   Grants table.
+	 * @param int[]  $role_ids Roles.
+	 * @return array<string,true>
+	 */
+	private static function grants_for( $grants, array $role_ids ) {
+		global $wpdb;
+
+		if ( ! $role_ids ) {
+			return array();
+		}
+
+		$placeholders = implode( ',', array_fill( 0, count( $role_ids ), '%d' ) );
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		$slugs = $wpdb->get_col(
-			$wpdb->prepare( "SELECT DISTINCT permission_slug FROM {$grants} WHERE role_id IN ({$placeholders})", $set['roles'] )
+			$wpdb->prepare( "SELECT DISTINCT permission_slug FROM {$grants} WHERE role_id IN ({$placeholders})", $role_ids )
 		);
 
-		$set['perms'] = array_fill_keys( (array) $slugs, true );
-
-		return $set;
+		return array_fill_keys( (array) $slugs, true );
 	}
 
 	/**
@@ -313,9 +400,11 @@ class Yazan_Permissions {
 	 */
 	private static function blank() {
 		return array(
-			'super' => false,
-			'perms' => array(),
-			'roles' => array(),
+			'super'          => false,
+			'platform_super' => false,
+			'perms'          => array(),
+			'platform_perms' => array(),
+			'roles'          => array(),
 		);
 	}
 
@@ -336,6 +425,23 @@ class Yazan_Permissions {
 	public static function can( $slug, $user_id = null, $store_id = null ) {
 		$set = self::for_user( $user_id, $store_id );
 
+		/*
+		 * ⚠️ THE SCOPE GATE. Read this before changing anything below it.
+		 *
+		 * A PLATFORM-scoped permission may only be satisfied by a PLATFORM grant (store_id = 0).
+		 * Holding `stores.create` through a role you were given in one store does not let you
+		 * create stores — the check would be scoped to that tenant while the effect is not.
+		 *
+		 * This one branch closes the whole family of escalations that came from making membership
+		 * per-store while role definitions stayed global: `stores.create` and `stores.clone` from a
+		 * store role, `users.*`/`roles.*`/`backup.*`/`audit.purge` reached from a store's dashboard,
+		 * and — because platform_super is a separate flag — assigning yourself a super role inside a
+		 * store you administer.
+		 */
+		if ( Yazan_Permission_Registry::is_platform( $slug ) ) {
+			return $set['platform_super'] || isset( $set['platform_perms'][ $slug ] );
+		}
+
 		if ( $set['super'] ) {
 			return true;
 		}
@@ -352,14 +458,10 @@ class Yazan_Permissions {
 	 * @return bool
 	 */
 	public static function can_any( array $slugs, $user_id = null, $store_id = null ) {
-		$set = self::for_user( $user_id, $store_id );
-
-		if ( $set['super'] ) {
-			return true;
-		}
-
+		// Delegated so the scope gate is written once. A loop that re-implemented can() would be a
+		// second place for the platform rule to be forgotten.
 		foreach ( $slugs as $slug ) {
-			if ( isset( $set['perms'][ $slug ] ) ) {
+			if ( self::can( $slug, $user_id, $store_id ) ) {
 				return true;
 			}
 		}
@@ -373,9 +475,28 @@ class Yazan_Permissions {
 	 * @param int|null $user_id User id.
 	 * @return bool
 	 */
-	public static function is_super( $user_id = null ) {
-		$set = self::for_user( $user_id );
+	public static function is_super( $user_id = null, $store_id = null ) {
+		$set = self::for_user( $user_id, $store_id );
 		return (bool) $set['super'];
+	}
+
+	/**
+	 * Is this user a super admin OF THE PLATFORM?
+	 *
+	 * The distinction `is_super()` cannot make. A Store Owner is super within their tenant —
+	 * `is_super( $u, 2 )` is true — and has no authority over the platform at all. Every guard that
+	 * protects a global object (roles, users, WordPress roles, backups) must ask THIS question, not
+	 * the other one; asking the wrong one is how "super in the store I was given" became "super
+	 * everywhere".
+	 *
+	 * A real WordPress administrator is always platform super — the lockout backstop.
+	 *
+	 * @param int|null $user_id User id.
+	 * @return bool
+	 */
+	public static function is_platform_super( $user_id = null ) {
+		$set = self::for_user( $user_id, self::PLATFORM_STORE );
+		return (bool) $set['platform_super'];
 	}
 
 	/**
@@ -388,14 +509,36 @@ class Yazan_Permissions {
 	 * @param int|null $user_id User id.
 	 * @return string[]
 	 */
-	public static function grantable_by( $user_id = null ) {
-		$set = self::for_user( $user_id );
+	public static function grantable_by( $user_id = null, $store_id = null ) {
+		$set = self::for_user( $user_id, $store_id );
 
-		if ( $set['super'] ) {
+		if ( $set['platform_super'] ) {
 			return Yazan_Permission_Registry::slugs();
 		}
 
-		return array_keys( $set['perms'] );
+		/*
+		 * You can never hand out a platform permission you hold only through a store. Without this
+		 * filter a Store Owner could write `stores.create` into a role definition — which is global —
+		 * and then grant that role to themselves at platform scope later.
+		 */
+		$out = array_keys( $set['perms'] );
+
+		if ( $set['super'] ) {
+			$out = array_values(
+				array_filter(
+					Yazan_Permission_Registry::active_slugs(),
+					static function ( $slug ) {
+						return ! Yazan_Permission_Registry::is_platform( $slug );
+					}
+				)
+			);
+		}
+
+		$platform = array_keys( $set['platform_perms'] );
+
+		return array_values( array_unique( array_merge( array_filter( $out, static function ( $slug ) {
+			return ! Yazan_Permission_Registry::is_platform( $slug );
+		} ), $platform ) ) );
 	}
 
 	/**
@@ -404,8 +547,23 @@ class Yazan_Permissions {
 	 * @param int|null $user_id User id.
 	 * @return array<string,bool>
 	 */
-	public static function map_for_client( $user_id = null ) {
-		$set = self::for_user( $user_id );
-		return $set['perms'];
+	public static function map_for_client( $user_id = null, $store_id = null ) {
+		$set = self::for_user( $user_id, $store_id );
+
+		// The map the SPA branches on must agree with can(), or the UI offers buttons the server
+		// then refuses. Platform slugs are included only when held at platform scope.
+		$out = array();
+
+		foreach ( array_keys( $set['perms'] ) as $slug ) {
+			if ( ! Yazan_Permission_Registry::is_platform( $slug ) ) {
+				$out[ $slug ] = true;
+			}
+		}
+
+		foreach ( array_keys( $set['platform_perms'] ) as $slug ) {
+			$out[ $slug ] = true;
+		}
+
+		return $out;
 	}
 }

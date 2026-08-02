@@ -28,12 +28,28 @@ if ( ! defined( 'ABSPATH' ) ) {
 class Yazan_Permission_Registry {
 
 	/** Bump whenever the catalog below changes. Drives sync_catalog() and the cache key. */
-	const REGISTRY_VERSION = '3';
+	const REGISTRY_VERSION = '4';
 
 	/** Option storing the synced registry version. */
 	const VERSION_OPTION = 'yazan_rbac_registry_version';
 
 	/** A permission that exists and is enforced today. */
+	/**
+	 * Permission SCOPE — the axis that decides which grants can satisfy a slug.
+	 *
+	 * Orthogonal to STATUS (shipped / not shipped). Status answers "does this exist yet"; scope
+	 * answers "whose data does using it touch".
+	 *
+	 * ⚠️ THIS IS THE PROPERTY WHOSE ABSENCE WAS THE ESCALATION BUG. Role memberships became
+	 * per-store, but nothing recorded that `stores.create` reaches the whole platform while
+	 * `products.edit` reaches one tenant — so a role granted only in store 2 could hold
+	 * `stores.create` and genuinely create stores. The check was scoped; the effect was not.
+	 */
+	const SCOPE_PLATFORM = 'platform';
+
+	/** Affects one tenant's data only. The default — a new module is store-scoped unless it says otherwise. */
+	const SCOPE_STORE = 'store';
+
 	const STATUS_ACTIVE = 'active';
 
 	/** A permission for a module that has not shipped yet. Grantable, inert until the module exists. */
@@ -548,6 +564,102 @@ class Yazan_Permission_Registry {
 	 *
 	 * @return array<string,array{slug:string,module:string,module_label:string,action:string,label:string,description:string,status:string,sort:int}>
 	 */
+	/**
+	 * Modules whose every action reaches beyond a single tenant.
+	 *
+	 * Declared as a list rather than a `scope` key per module so the classification is reviewable in
+	 * one place — the question "which permissions cross tenants" should be answerable by reading
+	 * fifteen lines, not by grepping forty module definitions.
+	 *
+	 * The reasoning, per entry:
+	 *
+	 *   stores      — create/clone have no target tenant; `domains` rewrites `yazan_store_hostmap`,
+	 *                 which decides which store EVERY future request belongs to. Editing store 2's
+	 *                 domain to store 1's host is a tenancy takeover. (The targeted read/edit
+	 *                 actions are re-classified back to store scope below.)
+	 *   users       — WordPress users are one global table; create/delete/suspend cross every store.
+	 *   roles       — role DEFINITIONS are global rows with a global unique slug. Editing a role in
+	 *   permissions   store 2 edits store 1's copy.
+	 *   backup      — operates on the whole database.
+	 *   porting     — bulk import/export through code paths with no store predicate.
+	 *   status      — cache flush and regeneration, process-wide.
+	 *   settings    — `wp_options`. Per-store settings live in wp_yazan_store_settings and are
+	 *                 reached through `stores.settings`, which stays store-scoped.
+	 *   audit       — one table; `audit.purge` erases every tenant's history.
+	 *   webhooks    — global endpoints and credentials.
+	 *   api_keys
+	 *
+	 * @var string[]
+	 */
+	const PLATFORM_MODULES = array(
+		'stores',
+		'users',
+		'roles',
+		'permissions',
+		'backup',
+		'porting',
+		'status',
+		'settings',
+		'audit',
+		'webhooks',
+		'api_keys',
+	);
+
+	/**
+	 * Slugs inside a platform module that are nonetheless store-scoped.
+	 *
+	 * These take an explicit `{id}` and StoreAdminContext::authorise() already checks the caller's
+	 * permission IN that store — so the scope of the check and the scope of the effect match, which
+	 * is exactly the property platform scope exists to enforce.
+	 *
+	 * @var string[]
+	 */
+	const STORE_SCOPED_EXCEPTIONS = array(
+		'stores.view',
+		'stores.edit',
+		'stores.settings',
+		'stores.modules',
+		'audit.view',
+		'audit.export',
+		'settings.view',
+	);
+
+	/**
+	 * The scope of one slug.
+	 *
+	 * An unknown slug is treated as PLATFORM. Fail closed: a permission nobody classified is more
+	 * likely to be a new platform capability nobody thought about than a harmless store read, and
+	 * the cost of being wrong in that direction is an outage rather than a leak.
+	 *
+	 * @param string $slug Permission slug.
+	 * @return string One of SCOPE_PLATFORM | SCOPE_STORE.
+	 */
+	public static function scope( $slug ) {
+		$slug = (string) $slug;
+
+		if ( in_array( $slug, self::STORE_SCOPED_EXCEPTIONS, true ) ) {
+			return self::SCOPE_STORE;
+		}
+
+		$module = strtok( $slug, '.' );
+
+		return in_array( $module, self::PLATFORM_MODULES, true ) ? self::SCOPE_PLATFORM : self::SCOPE_STORE;
+	}
+
+	/** Convenience. @param string $slug Slug. @return bool */
+	public static function is_platform( $slug ) {
+		return self::SCOPE_PLATFORM === self::scope( $slug );
+	}
+
+	/**
+	 * Every platform-scoped slug in the catalogue.
+	 *
+	 * @return string[]
+	 */
+	public static function platform_slugs() {
+		return array_values( array_filter( array_keys( self::all() ), array( __CLASS__, 'is_platform' ) ) );
+	}
+
 	public static function all() {
 		static $all = null;
 		if ( null !== $all ) {
@@ -573,6 +685,7 @@ class Yazan_Permission_Registry {
 					'label'        => $labels[ $action ] ?? ucfirst( str_replace( '_', ' ', $action ) ),
 					'description'  => (string) $description,
 					'status'       => $module_status,
+					'scope'        => self::scope( $slug ),
 					'sort'         => ( (int) $spec['sort'] * 100 ) + $order,
 				);
 			}

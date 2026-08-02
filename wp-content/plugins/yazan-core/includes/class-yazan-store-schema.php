@@ -37,7 +37,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 class Yazan_Store_Schema {
 
 	/** Bump to re-run the migration. */
-	const VERSION = '2';
+	const VERSION = '3';
 
 	/** Option holding the applied version. */
 	const VERSION_OPTION = 'yazan_store_schema_version';
@@ -242,6 +242,8 @@ class Yazan_Store_Schema {
 		self::step_columns();
 		self::step_unique_keys();
 		self::step_primary_keys();
+		// Must run AFTER the primary key gains store_id, or the UPDATE has nowhere to land.
+		self::step_platform_grants();
 
 		$log    = Yazan_Schema_Migrator::log();
 		$counts = array(
@@ -336,6 +338,82 @@ class Yazan_Store_Schema {
 			$wpdb->prefix . 'yazan_rw_analytics_daily',
 			array( 'store_id', 'stat_date', 'metric', 'dimension' )
 		);
+	}
+
+	/**
+	 * Promote the platform-level role grants to `store_id = 0`.
+	 *
+	 * ⚠️ WITHOUT THIS STEP, INSTALLING THE SCOPE GATE IS A SILENT LOCKOUT.
+	 *
+	 * Every existing grant is `store_id = 1`, because store 1 was the only store and therefore also
+	 * *was* the platform. The moment `can()` starts refusing platform slugs that arrive through a
+	 * store grant, the seven users holding `super-admin` — and anyone holding `admin` — stop being
+	 * able to create stores, manage users, edit roles or run a backup. Nothing would report it;
+	 * buttons would simply start returning 403.
+	 *
+	 * So the grants that ARE platform authority are moved to the platform tier, which preserves
+	 * today's behaviour exactly. Everything else stays where it is: a Manager of store 1 remains a
+	 * Manager of store 1 and gains nothing.
+	 *
+	 * Idempotent — the second run finds nothing at store 1 to move.
+	 *
+	 * @return void
+	 */
+	private static function step_platform_grants() {
+		global $wpdb;
+
+		if ( ! class_exists( 'Yazan_DB' ) || ! class_exists( 'Yazan_RBAC_Schema' ) ) {
+			return;
+		}
+
+		$pivot = Yazan_DB::table( 'user_roles' );
+		$roles = Yazan_DB::table( 'roles' );
+
+		if ( ! Yazan_Schema_Migrator::column_exists( $pivot, 'store_id' ) ) {
+			return;
+		}
+
+		/*
+		 * Which roles carry platform authority: the super-admin flag, or the seeded `admin` role.
+		 * Deliberately NOT "any role holding a platform slug" — a custom role that happens to list
+		 * `settings.view` should not be silently promoted to platform scope.
+		 */
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$platform_role_ids = $wpdb->get_col( "SELECT id FROM {$roles} WHERE is_super = 1 OR slug = 'admin'" );
+
+		if ( empty( $platform_role_ids ) ) {
+			return;
+		}
+
+		$placeholders = implode( ',', array_fill( 0, count( $platform_role_ids ), '%d' ) );
+
+		/*
+		 * UPDATE IGNORE: the primary key is (store_id, user_id, role_id), so a user who somehow
+		 * already holds the row at store 0 would collide. Ignoring keeps the migration re-runnable
+		 * instead of failing on a duplicate that is already correct.
+		 */
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$moved = $wpdb->query(
+			$wpdb->prepare(
+				"UPDATE IGNORE {$pivot} SET store_id = %d WHERE store_id = %d AND role_id IN ({$placeholders})",
+				Yazan_Permissions::PLATFORM_STORE,
+				1,
+				...array_map( 'intval', $platform_role_ids )
+			)
+		);
+
+		if ( $moved && class_exists( 'Yazan_Dashboard_Audit' ) ) {
+			Yazan_Dashboard_Audit::log(
+				'rbac.platform_grants',
+				'role',
+				0,
+				array( 'moved' => (int) $moved, 'roles' => array_map( 'intval', $platform_role_ids ) )
+			);
+		}
+
+		if ( $moved ) {
+			Yazan_Permissions::bump();
+		}
 	}
 
 	/**
