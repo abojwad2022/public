@@ -359,11 +359,22 @@ export default function Products() {
         subtitle={data ? `${data.total} product${data.total === 1 ? '' : 's'}` : ' '}
         breadcrumbs={[{ label: 'Catalog' }, { label: 'Products' }]}
         actions={
-          <Can perm="products.create">
-            <Button variant="primary" icon={Plus} onClick={() => navigate('/products/new')}>
-              Add product
-            </Button>
-          </Can>
+          <>
+            <ScreenOptions
+              columns={visibleColumns}
+              onToggleColumn={toggleColumn}
+              perPage={perPage}
+              onPerPage={(next) => {
+                setPerPage(next)
+                setPage(1)
+              }}
+            />
+            <Can perm="products.create">
+              <Button variant="primary" icon={Plus} onClick={() => navigate('/products/new')}>
+                Add product
+              </Button>
+            </Can>
+          </>
         }
       />
 
@@ -480,7 +491,7 @@ export default function Products() {
               page={data.page}
               pages={data.total_pages}
               total={data.total}
-              perPage={20}
+              perPage={perPage}
               onPage={setPage}
               label="products"
             />
