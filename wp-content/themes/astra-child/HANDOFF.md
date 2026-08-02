@@ -177,6 +177,32 @@ Nothing outside `astra-child/` was touched. No products, no plugins, no parent t
 
 ## 5. Known issues / next steps
 
+- **✅ FIXED (2026-08-01) — 20px account avatar in the mobile drawer.** The off-canvas menu showed a
+  tiny grey dot where the account block should be, with no name.
+  - **Root cause:** `astra-settings[header-account-image-width]['mobile']` is an **empty string** in
+    the DB, and Astra substitutes a hardcoded `20` for an empty value
+    (`astra/inc/builder/type/header/account/dynamic-css/dynamic.css.php:50`), emitting
+    `@media (max-width:544px){ .ast-header-account-wrap .ast-header-account-type-avatar .avatar { width:20px } }`.
+  - **Fixed by FILTER, not CSS** — `yazan_account_avatar_size()` / `yazan_account_icon_size()` in
+    `inc/header.php` hook `astra_get_option_header-account-image-width` / `-icon-size` and fill only
+    a *blank* mobile value (44px photo / 34px icon). Astra then generates the right CSS itself.
+    Overriding in CSS would mean matching Astra's `max-width:544px` block **and** out-specifying
+    `0,3,0` — two things to re-break every Astra update. A Customizer value still wins.
+  - **Name + second line:** `yazan_account_drawer_identity()` on the `astra_header_account` action
+    (priority 15). ⚠️ `Astra_Builder_UI_Controller::render_account()` has **zero** `apply_filters` /
+    `do_action` inside it — verified — so there is no way into Astra's anchor; this appends a
+    sibling `<a class="yz-account-id">` instead. The action fires for **every** header row, so the
+    block is printed twice and hidden everywhere except `.ast-mobile-popup-content` by CSS
+    (`header.css` §9). Scoping by ancestor, not by hook order, is what keeps the desktop bar clean.
+  - Signed out it renders "Log in" and carries **`data-yz-signin-open`**, the attribute
+    `signin-card.js` already delegates on — without it, tapping the name would go to wp-login while
+    tapping the photo opened the modal. (That script is only enqueued for signed-out visitors, so
+    the signed-in link just navigates.)
+  - Verified with real CDP mobile emulation, drawer opened by script: signed in **44×44** avatar +
+    "admin / VIEW ACCOUNT"; signed out **34×34** icon + "Log in / ORDERS AND FAVOURITES"; desktop bar
+    unchanged at 38px with its copy of the block `display:none`.
+
+
 - **⚠️ THE SITE IS ON `http://localhost:10029` RIGHT NOW, on purpose (2026-08-01).**
   `wp-config.php` defines `WP_HOME`/`WP_SITEURL` as the loopback host because **Google refuses any
   OAuth redirect URI that is neither HTTPS nor a loopback address** — `yazan.local` is rejected, and

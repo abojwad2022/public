@@ -2,14 +2,14 @@
  * Typed-ish wrappers around the yazan/v1 REST surface.
  * Keeping every path in one place makes the API contract easy to audit.
  */
-import { api, request } from './client.js'
+import { api } from './client.js'
 
 export const authApi = {
   me: () => api.get('/auth/me'),
   // Bypasses X-WP-Nonce (see client.js) — this route is public and a stale nonce from an earlier,
   // unrelated session on this browser must never be able to block signing in.
   login: (username, password, remember) =>
-    request('/auth/login', { method: 'POST', body: { username, password, remember }, skipNonce: true }),
+    api.post('/auth/login', { username, password, remember }, { skipNonce: true }),
   logout: () => api.post('/auth/logout', {}),
 }
 

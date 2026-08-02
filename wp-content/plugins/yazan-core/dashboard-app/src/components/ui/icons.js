@@ -45,6 +45,8 @@ export {
   RotateCcw,
   Check,
   Minus,
+  Star, // Featured toggle on the products table
+  Columns3, // Screen options — which columns are shown
   X,
   Menu,
   LogOut,

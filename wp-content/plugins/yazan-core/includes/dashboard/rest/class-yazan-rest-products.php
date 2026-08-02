@@ -131,9 +131,22 @@ class Yazan_REST_Products {
 			'return'   => 'objects',
 		);
 
+		/*
+		 * Search through WooCommerce's own product search, not WP_Query's `s`.
+		 * `s` only looks at title/excerpt/content, so searching a SKU — the single most
+		 * common thing an operator types into this box — found nothing. search_products()
+		 * is what the wp-admin list uses: it covers title, excerpt, content, SKU, GTIN and
+		 * a bare product ID, including a variation's parent SKU.
+		 */
 		$search = sanitize_text_field( (string) $request->get_param( 'search' ) );
 		if ( '' !== $search ) {
-			$args['s'] = $search;
+			$matches = WC_Data_Store::load( 'product' )->search_products( $search, '', false, true );
+			if ( empty( $matches ) ) {
+				// An empty post__in is IGNORED by WP_Query — it would return the whole
+				// catalogue. A no-match search must short-circuit instead.
+				return self::empty_page( $page, $per_page );
+			}
+			$args['include'] = array_map( 'absint', $matches );
 		}
 
 		/*
@@ -146,8 +159,15 @@ class Yazan_REST_Products {
 			$args['status'] = $status;
 		}
 
+		/*
+		 * "virtual" and "downloadable" are not product types — WooCommerce's own type dropdown
+		 * lists them under Simple as flag filters, and so do we, so the two dropdowns behave
+		 * identically for an operator moving between the screens.
+		 */
 		$type = sanitize_key( (string) $request->get_param( 'type' ) );
-		if ( $type && in_array( $type, array_keys( wc_get_product_types() ), true ) ) {
+		if ( 'virtual' === $type || 'downloadable' === $type ) {
+			$args[ $type ] = true;
+		} elseif ( $type && in_array( $type, array_keys( wc_get_product_types() ), true ) ) {
 			$args['type'] = $type;
 		}
 
@@ -161,8 +181,21 @@ class Yazan_REST_Products {
 			$args['category'] = array( $category ); // wc_get_products expects an array of category slugs.
 		}
 
+		$tag = sanitize_title( (string) $request->get_param( 'tag' ) );
+		if ( '' !== $tag ) {
+			$args['tag'] = array( $tag );
+		}
+
+		$featured = $request->get_param( 'featured' );
+		if ( null !== $featured && '' !== $featured ) {
+			$args['featured'] = wc_string_to_bool( $featured );
+		}
+
 		$result = wc_get_products( $args );
-		$items  = array();
+
+		self::prime_row_caches( $result->products );
+
+		$items = array();
 		foreach ( $result->products as $product ) {
 			$items[] = self::summary( $product );
 		}
@@ -178,6 +211,57 @@ class Yazan_REST_Products {
 			),
 			200
 		);
+	}
+
+	/**
+	 * A well-formed, empty page — used when a filter can be answered without a query at all.
+	 *
+	 * @param int $page     Requested page.
+	 * @param int $per_page Requested page size.
+	 * @return WP_REST_Response
+	 */
+	private static function empty_page( $page, $per_page ) {
+		return new WP_REST_Response(
+			array(
+				'items'       => array(),
+				'total'       => 0,
+				'total_pages' => 0,
+				'page'        => $page,
+				'per_page'    => $per_page,
+				'counts'      => self::status_counts(),
+			),
+			200
+		);
+	}
+
+	/**
+	 * Warm the caches every row is about to read, in two queries instead of 3N.
+	 *
+	 * summary() asks each product for its permalink, its category list and its thumbnail URL.
+	 * Left alone that is a term query and an attachment query per row. WooCommerce solves the
+	 * same problem on its admin list with prime_thumbnail_caches(); this is that, plus terms.
+	 *
+	 * @param WC_Product[] $products Products about to be serialised.
+	 * @return void
+	 */
+	private static function prime_row_caches( $products ) {
+		$ids    = array();
+		$thumbs = array();
+
+		foreach ( $products as $product ) {
+			$ids[] = $product->get_id();
+			$img   = $product->get_image_id();
+			if ( $img ) {
+				$thumbs[] = (int) $img;
+			}
+		}
+
+		if ( $ids ) {
+			update_object_term_cache( $ids, 'product' );
+		}
+		if ( $thumbs ) {
+			_prime_post_caches( $thumbs, false, true );
+		}
 	}
 
 	/**
@@ -1073,15 +1157,49 @@ class Yazan_REST_Products {
 			'manage_stock' => $p->get_manage_stock(),
 			'stock_status' => $p->get_stock_status(),
 			'stock_qty'    => $p->get_stock_quantity(),
-			'categories'   => wp_strip_all_tags( wc_get_product_category_list( $p->get_id(), ', ' ) ),
+			'categories'   => self::term_list( $p->get_id(), 'product_cat' ),
+			'tags'         => self::term_list( $p->get_id(), 'product_tag' ),
 			'thumb'        => $img_id ? wp_get_attachment_image_url( $img_id, 'thumbnail' ) : '',
 			'date'         => $p->get_date_created() ? $p->get_date_created()->date( 'Y-m-d' ) : '',
 			'permalink'    => get_permalink( $p->get_id() ),
+			// A draft has no public permalink, so the row's "view" action has to be a nonced
+			// preview link or it 404s for anyone who is not already logged in.
+			'preview_url'  => 'publish' === $p->get_status()
+				? get_permalink( $p->get_id() )
+				: get_preview_post_link( $p->get_id() ),
+			'global_unique_id'   => (string) $p->get_global_unique_id(),
+			'catalog_visibility' => $p->get_catalog_visibility(),
+			'menu_order'   => (int) $p->get_menu_order(),
 			// Drives the "this product has produced sales" warning before a trash, the same
 			// guard WooCommerce puts in front of trashing a product orders already reference.
 			'total_sales'  => (int) $p->get_total_sales(),
 			'edit_serial'  => (string) $p->get_meta( Yazan_Core_Verify::SERIAL_META ),
 		);
+	}
+
+	/**
+	 * Terms of one taxonomy as {name, slug} pairs.
+	 *
+	 * Pairs rather than the joined string wc_get_product_category_list() returns, because the
+	 * table renders each term as a control that filters the list by its slug — the same
+	 * click-through wp-admin gives on its Categories and Tags cells.
+	 *
+	 * @param int    $product_id Product id.
+	 * @param string $taxonomy   Taxonomy name.
+	 * @return array<int,array{name:string,slug:string}>
+	 */
+	private static function term_list( $product_id, $taxonomy ) {
+		$terms = get_the_terms( $product_id, $taxonomy );
+		if ( ! $terms || is_wp_error( $terms ) ) {
+			return array();
+		}
+
+		$out = array();
+		foreach ( $terms as $term ) {
+			$out[] = array( 'name' => $term->name, 'slug' => $term->slug );
+		}
+
+		return $out;
 	}
 
 	/**
