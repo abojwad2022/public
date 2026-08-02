@@ -477,6 +477,13 @@ class Yazan_Backup_Engine {
 		return '';
 	}
 
+	/**
+	 * Restore from any archive on disk (a stored backup or a freshly uploaded one).
+	 *
+	 * @param string $zip_path     Absolute path to the .zip.
+	 * @param bool   $safety_first Take an automatic DB-only snapshot before overwriting.
+	 * @return array|WP_Error
+	 */
 	public static function restore_from_file( $zip_path, $safety_first = true ) {
 		if ( ! self::is_supported() ) {
 			return new WP_Error( 'yazan_no_zip', __( 'The PHP ZipArchive extension is not available on this server.', 'yazan' ), array( 'status' => 501 ) );
