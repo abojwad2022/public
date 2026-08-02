@@ -94,7 +94,12 @@ class Yazan_AI_Settings {
 	 * @return array
 	 */
 	public static function all() {
-		$stored = get_option( self::OPTION, array() );
+		/*
+		 * Resolved against the active store: its own configuration if it has any, the platform's
+		 * otherwise. The API keys are NOT part of this — see Yazan_AI_Secrets, which stays global on
+		 * purpose so a store owner never sees the key that bills the platform.
+		 */
+		$stored = Yazan_Store_Options::get( self::OPTION, array() );
 		$stored = is_array( $stored ) ? $stored : array();
 		$config = array_merge( self::defaults(), $stored );
 
@@ -305,7 +310,8 @@ class Yazan_AI_Settings {
 			$config['support'] = $sp;
 		}
 
-		update_option( self::OPTION, $config, true );
+		Yazan_Store_Options::set( self::OPTION, $config );
+
 		return $config;
 	}
 

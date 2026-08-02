@@ -26,6 +26,15 @@ final class Database {
 	public const TABLE_PREFIX = 'yazan_payment_';
 
 	/**
+	 * The store this request belongs to.
+	 *
+	 * @return int
+	 */
+	public function store_id(): int {
+		return \class_exists( 'Yazan_Store_Context' ) ? \Yazan_Store_Context::current() : 1;
+	}
+
+	/**
 	 * The global $wpdb instance.
 	 *
 	 * @return \wpdb

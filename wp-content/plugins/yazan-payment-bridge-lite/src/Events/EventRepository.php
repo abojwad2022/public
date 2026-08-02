@@ -55,6 +55,9 @@ final class EventRepository {
 		$table = $this->db->events_table();
 		$row   = $event->to_row( $this->db->now() );
 
+		// Appended, not inserted: $formats is positional against $row, and to_row() owns that order.
+		$row['store_id'] = $this->db->store_id();
+
 		$formats = array(
 			'event_uuid'         => '%s',
 			'order_id'           => '%d',
@@ -71,6 +74,7 @@ final class EventRepository {
 			'error_message'      => '%s',
 			'created_at'         => '%s',
 			'updated_at'         => '%s',
+			'store_id'           => '%d',
 		);
 
 		// A duplicate insert is an expected outcome here, not a fault: suppress
@@ -122,10 +126,12 @@ final class EventRepository {
 				"UPDATE {$table}
 					SET integration_status = %s, updated_at = %s
 					WHERE id = %d
+					AND store_id = %d
 					AND integration_status IN ( %s, %s )",
 				IntegrationStatus::PROCESSING,
 				$this->db->now(),
 				$event_id,
+				$this->db->store_id(),
 				IntegrationStatus::PENDING,
 				IntegrationStatus::FAILED
 			)
@@ -161,9 +167,9 @@ final class EventRepository {
 				'error_message'      => null === $error ? null : Sanitizer::scrub_error( $error ),
 				'updated_at'         => $this->db->now(),
 			),
-			array( 'id' => $event_id ),
+			array( 'id' => $event_id, 'store_id' => $this->db->store_id() ),
 			array( '%s', '%d', '%s', '%s' ),
-			array( '%d' )
+			array( '%d', '%d' )
 		);
 	}
 
@@ -194,9 +200,9 @@ final class EventRepository {
 				'integration_status' => $status,
 				'updated_at'         => $this->db->now(),
 			),
-			array( 'id' => $event_id ),
+			array( 'id' => $event_id, 'store_id' => $this->db->store_id() ),
 			array( '%s', '%s', '%s' ),
-			array( '%d' )
+			array( '%d', '%d' )
 		);
 	}
 
@@ -211,7 +217,9 @@ final class EventRepository {
 		$table = $this->db->events_table();
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-		$row = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$table} WHERE id = %d", $event_id ) );
+		$row = $wpdb->get_row(
+			$wpdb->prepare( "SELECT * FROM {$table} WHERE id = %d AND store_id = %d", $event_id, $this->db->store_id() )
+		);
 
 		return $row ?: null;
 	}
@@ -230,9 +238,10 @@ final class EventRepository {
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		$row = $wpdb->get_row(
 			$wpdb->prepare(
-				"SELECT * FROM {$table} WHERE order_id = %d AND event_type = %s",
+				"SELECT * FROM {$table} WHERE order_id = %d AND event_type = %s AND store_id = %d",
 				$order_id,
-				$event_type
+				$event_type,
+				$this->db->store_id()
 			)
 		);
 
@@ -308,7 +317,12 @@ final class EventRepository {
 		}
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-		$rows = $wpdb->get_results( "SELECT integration_status, COUNT(*) AS total FROM {$table} GROUP BY integration_status" );
+		$rows = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT integration_status, COUNT(*) AS total FROM {$table} WHERE store_id = %d GROUP BY integration_status",
+				$this->db->store_id()
+			)
+		);
 
 		foreach ( (array) $rows as $row ) {
 			$status = (string) ( $row->integration_status ?? '' );
@@ -321,7 +335,11 @@ final class EventRepository {
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		$counts['successful_payments'] = (int) $wpdb->get_var(
-			$wpdb->prepare( "SELECT COUNT(*) FROM {$table} WHERE event_type = %s", EventTypes::PAYMENT_COMPLETED )
+			$wpdb->prepare(
+				"SELECT COUNT(*) FROM {$table} WHERE event_type = %s AND store_id = %d",
+				EventTypes::PAYMENT_COMPLETED,
+				$this->db->store_id()
+			)
 		);
 
 		return $counts;
@@ -335,7 +353,11 @@ final class EventRepository {
 	 */
 	public function delete( int $event_id ): void {
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DeleteQuery
-		$this->db->wpdb()->delete( $this->db->events_table(), array( 'id' => $event_id ), array( '%d' ) );
+		$this->db->wpdb()->delete(
+			$this->db->events_table(),
+			array( 'id' => $event_id, 'store_id' => $this->db->store_id() ),
+			array( '%d', '%d' )
+		);
 	}
 
 	/**
@@ -346,8 +368,9 @@ final class EventRepository {
 	 */
 	private function build_where( array $args ): array {
 		$wpdb   = $this->db->wpdb();
-		$where  = array( '1=1' );
-		$params = array();
+		// Seeded with the store rather than `1=1`, which scopes every list and count built from here.
+		$where  = array( 'store_id = %d' );
+		$params = array( $this->db->store_id() );
 
 		$search = trim( (string) ( $args['search'] ?? '' ) );
 		if ( '' !== $search ) {

@@ -25,8 +25,15 @@ final class Settings {
 	/** Settings API group. */
 	public const GROUP = 'yazan_payment_bridge';
 
-	/** @var array<string,mixed>|null Lazily loaded, merged with defaults. */
-	private ?array $cache = null;
+	/**
+	 * Merged settings, keyed by store and store-context epoch.
+	 *
+	 * Keyed rather than a plain `?array` because this object outlives a store switch: a job that
+	 * iterates stores would otherwise process all of them with the first store's gateway config.
+	 *
+	 * @var array<string,array<string,mixed>>
+	 */
+	private array $cache = array();
 
 	/**
 	 * Shipped defaults.
@@ -44,11 +51,30 @@ final class Settings {
 	 * @return array<string,mixed>
 	 */
 	public function all(): array {
-		if ( null === $this->cache ) {
-			$stored      = get_option( self::OPTION, array() );
-			$this->cache = array_merge( self::defaults(), is_array( $stored ) ? $stored : array() );
+		$key = $this->cache_key();
+
+		if ( ! isset( $this->cache[ $key ] ) ) {
+			$stored = \class_exists( 'Yazan_Store_Options' )
+				? \Yazan_Store_Options::get( self::OPTION, array() )
+				: \get_option( self::OPTION, array() );
+
+			$this->cache[ $key ] = array_merge( self::defaults(), is_array( $stored ) ? $stored : array() );
 		}
-		return $this->cache;
+
+		return $this->cache[ $key ];
+	}
+
+	/**
+	 * Cache key for the active store.
+	 *
+	 * @return string
+	 */
+	private function cache_key(): string {
+		if ( ! \class_exists( 'Yazan_Store_Context' ) ) {
+			return 'global';
+		}
+
+		return \Yazan_Store_Context::current() . '|' . \Yazan_Store_Context::epoch();
 	}
 
 	/**
@@ -79,7 +105,7 @@ final class Settings {
 	 * @return void
 	 */
 	public function flush(): void {
-		$this->cache = null;
+		$this->cache = array();
 	}
 
 	/**
