@@ -326,8 +326,8 @@ class Yazan_Permissions {
 	 * @param int|null $user_id User id, or null for the current user.
 	 * @return bool
 	 */
-	public static function can( $slug, $user_id = null ) {
-		$set = self::for_user( $user_id );
+	public static function can( $slug, $user_id = null, $store_id = null ) {
+		$set = self::for_user( $user_id, $store_id );
 
 		if ( $set['super'] ) {
 			return true;
@@ -343,8 +343,8 @@ class Yazan_Permissions {
 	 * @param int|null $user_id User id.
 	 * @return bool
 	 */
-	public static function can_any( array $slugs, $user_id = null ) {
-		$set = self::for_user( $user_id );
+	public static function can_any( array $slugs, $user_id = null, $store_id = null ) {
+		$set = self::for_user( $user_id, $store_id );
 
 		if ( $set['super'] ) {
 			return true;
