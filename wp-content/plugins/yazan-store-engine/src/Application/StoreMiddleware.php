@@ -41,6 +41,9 @@ final class StoreMiddleware implements Hookable {
 			// Stamp the store's theme identity before the first stylesheet is parsed.
 			array( 'type' => 'filter', 'hook' => 'language_attributes', 'method' => 'stamp_theme', 'priority' => 10, 'args' => 1 ),
 
+			// And make it the default the theme's own pre-paint script falls back to.
+			array( 'type' => 'filter', 'hook' => 'yazan_themes', 'method' => 'prefer_store_theme', 'priority' => 10, 'args' => 1 ),
+
 			// Make the active store visible to CSS and to anyone debugging a page.
 			array( 'type' => 'filter', 'hook' => 'body_class', 'method' => 'body_class', 'priority' => 10, 'args' => 1 ),
 		);
@@ -102,6 +105,42 @@ final class StoreMiddleware implements Hookable {
 		}
 
 		return trim( (string) $output ) . ' data-yz-theme="' . esc_attr( $theme ) . '"';
+	}
+
+	/**
+	 * Move the store's theme to the front of the registry, making it the default.
+	 *
+	 * WITHOUT THIS, THE SERVER-SIDE STAMP ABOVE IS OVERWRITTEN ON EVERY FIRST VISIT.
+	 *
+	 * The theme ships a pre-paint script that sets `data-yz-theme` from localStorage, and when
+	 * localStorage is empty — which is every first visit — it falls back to the platform default.
+	 * So a store pinned to `burgundy` would render `black` for every new visitor, and correctly
+	 * only for people who had already used the switcher. The bug would look intermittent, which is
+	 * the worst kind.
+	 *
+	 * `yazan_default_theme()` has no filter of its own; it returns the FIRST key of `yazan_themes()`.
+	 * Reordering that array is therefore the supported way to change the default, and it needs no
+	 * edit to the theme. The catalogue is unchanged — every theme stays available, and a visitor who
+	 * picks one still wins, which is the correct precedence: the store decides the default, the
+	 * visitor decides their preference.
+	 *
+	 * @param array<string,mixed> $themes Registered theme identities.
+	 * @return array<string,mixed>
+	 */
+	public function prefer_store_theme( $themes ) {
+		if ( ! is_array( $themes ) || array() === $themes ) {
+			return $themes;
+		}
+
+		$store = $this->context->store();
+		$theme = $store ? $store->theme() : '';
+
+		// Not set, unknown, or already first — nothing to do.
+		if ( '' === $theme || ! isset( $themes[ $theme ] ) || array_key_first( $themes ) === $theme ) {
+			return $themes;
+		}
+
+		return array( $theme => $themes[ $theme ] ) + $themes;
 	}
 
 	/**
