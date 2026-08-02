@@ -413,6 +413,67 @@ html:not([data-yz-theme="burgundy"]) .yazan.yz-comma-header .yz-header .ast-head
 	fill: var(--yz-ink) !important;
 }
 
+/* --- Account identity block (avatar + name), drawer only ------------------ */
+
+/* Lay the account element out as one row so the name sits beside the photo instead of stacking
+   under it. Astra ships no flex here; the element is a plain block wrapper. */
+.yazan .ast-mobile-popup-content .ast-header-account {
+	display: flex;
+	align-items: center;
+	gap: 14px;
+}
+
+/* Keep the photo circular at whatever size the option filter sets. Astra only ever writes `width`
+   (see yazan_account_avatar_size() in inc/header.php), so a non-square source would letterbox —
+   aspect-ratio + object-fit make it crop instead. */
+.yazan .ast-mobile-popup-content .ast-header-account-type-avatar .avatar {
+	aspect-ratio: 1;
+	height: auto;
+	object-fit: cover;
+	border-radius: 100%;
+}
+
+/*
+ * yazan_account_drawer_identity() prints this into EVERY header row Astra builds, because the
+ * astra_header_account action is shared. Hidden by default and revealed only inside the drawer —
+ * scoping by ancestor rather than by hook order is what keeps the desktop bar untouched.
+ */
+.yazan .yz-account-id {
+	display: none;
+}
+.yazan .ast-mobile-popup-content .yz-account-id {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	min-width: 0; /* Lets the long-name truncation below actually engage inside a flex row. */
+	text-decoration: none;
+	line-height: 1.25;
+}
+.yazan .ast-mobile-popup-content .yz-account-id__name {
+	font-family: var(--yz-font-body);
+	font-size: 14px;
+	font-weight: 600;
+	letter-spacing: 0.02em;
+	color: var(--yz-ink);
+	/* Arabic display names run long; one clean line beats a wrap that shoves the menu down. */
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+.yazan .ast-mobile-popup-content .yz-account-id__sub {
+	font-family: var(--yz-font-body);
+	font-size: 11px;
+	font-weight: 400;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+	color: var(--yz-muted);
+}
+
+/* Same press feedback the drawer's other tap targets already use. */
+.yazan .ast-mobile-popup-content .yz-account-id:active {
+	transform: scale( 0.97 );
+}
+
 /* Comma-style rows: bold tracked uppercase, tall touch rows, hairline dividers. */
 .yazan .ast-mobile-popup-drawer .main-header-menu .menu-link {
 	font-family: var(--yz-font-body);

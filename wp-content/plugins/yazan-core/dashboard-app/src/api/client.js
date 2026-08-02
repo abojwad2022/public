@@ -207,7 +207,8 @@ function safeJson(text) {
 
 export const api = {
   get: (path, params) => request(path, { params }),
-  post: (path, body) => request(path, { method: 'POST', body }),
+  // `extra` is deliberately narrow — today it exists only to pass { skipNonce: true } for /auth/login.
+  post: (path, body, extra) => request(path, { method: 'POST', body, ...extra }),
   put: (path, body) => request(path, { method: 'PUT', body }),
   del: (path, params) => request(path, { method: 'DELETE', params }),
   upload: (path, formData) => request(path, { method: 'POST', formData }),

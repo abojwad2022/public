@@ -20,7 +20,16 @@ export default function Login() {
     try {
       await login(username, password, remember)
     } catch (err) {
-      setError(err.message || 'Sign in failed.')
+      // client.js already tries a silent reload before a cookie/nonce failure ever reaches here —
+      // this branch only fires for a browser that genuinely can't hold cookies (blocked, private
+      // mode with storage disabled, etc.), where reloading again would just repeat the same result.
+      // WordPress's own wording ("Cookie check failed") is written for a developer reading a log,
+      // not a shopper staring at a sign-in form, so it is replaced rather than shown verbatim.
+      setError(
+        err.code === 'rest_cookie_invalid_nonce'
+          ? 'Your browser blocked or cleared a required cookie, so the session could not be verified. Please enable cookies for this site and try again.'
+          : err.message || 'Sign in failed.'
+      )
     }
   }
 
