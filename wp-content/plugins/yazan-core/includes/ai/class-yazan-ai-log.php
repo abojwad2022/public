@@ -20,7 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 class Yazan_AI_Log {
 
 	/** Bump when the schema below changes. */
-	const SCHEMA_VERSION = '1';
+	const SCHEMA_VERSION = '2';
 
 	/** Option storing the installed schema version. */
 	const SCHEMA_OPTION = 'yazan_ai_schema_version';
@@ -68,10 +68,12 @@ class Yazan_AI_Log {
 			duration_ms int(11) unsigned NOT NULL DEFAULT 0,
 			request_id varchar(40) NOT NULL DEFAULT '',
 			created_at datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
+			store_id bigint(20) unsigned NOT NULL DEFAULT 1,
 			PRIMARY KEY  (id),
 			KEY created_at (created_at),
 			KEY module (module),
-			KEY object (object_type,object_id)
+			KEY object (object_type,object_id),
+			KEY store_created (store_id,created_at)
 		) {$collate};";
 
 		dbDelta( $sql );
@@ -91,6 +93,7 @@ class Yazan_AI_Log {
 		$wpdb->insert( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 			self::table(),
 			array(
+				'store_id'    => Yazan_DB::store_id(),
 				'user_id'     => get_current_user_id(),
 				'module'      => substr( sanitize_key( $row['module'] ?? '' ), 0, 40 ),
 				'task'        => substr( sanitize_text_field( $row['task'] ?? '' ), 0, 60 ),
@@ -108,7 +111,8 @@ class Yazan_AI_Log {
 				'request_id'  => substr( sanitize_text_field( $row['request_id'] ?? '' ), 0, 40 ),
 				'created_at'  => current_time( 'mysql' ),
 			),
-			array( '%d', '%s', '%s', '%s', '%d', '%s', '%s', '%s', '%s', '%d', '%d', '%f', '%d', '%d', '%s', '%s' )
+			// Positional, so this list moves with the array above. The leading %d is store_id.
+			array( '%d', '%d', '%s', '%s', '%s', '%d', '%s', '%s', '%s', '%s', '%d', '%d', '%f', '%d', '%d', '%s', '%s' )
 		);
 	}
 
@@ -127,8 +131,9 @@ class Yazan_AI_Log {
 			$wpdb->prepare(
 				"SELECT COALESCE(SUM(cost_usd),0) AS cost, COUNT(*) AS cnt,
 				        COALESCE(SUM(tokens_in),0) AS tin, COALESCE(SUM(tokens_out),0) AS tout
-				 FROM {$table} WHERE created_at >= %s AND status = 'ok'",
-				sanitize_text_field( $since )
+				 FROM {$table} WHERE created_at >= %s AND status = 'ok' AND store_id = %d",
+				sanitize_text_field( $since ),
+				Yazan_DB::store_id()
 			)
 		);
 		// phpcs:enable
@@ -155,8 +160,13 @@ class Yazan_AI_Log {
 		$page     = max( 1, absint( $args['page'] ?? 1 ) );
 		$offset   = ( $page - 1 ) * $per_page;
 
-		$where  = array( '1=1' );
-		$params = array();
+		/*
+		 * Seeded with the store rather than `1=1`. The generation log records prompts, model names
+		 * and costs — a competitor's roadmap, in effect — and it was readable across tenants by
+		 * anyone holding `ai.view_logs` in any store.
+		 */
+		$where  = array( 'store_id = %d' );
+		$params = array( Yazan_DB::store_id() );
 
 		if ( ! empty( $args['module'] ) ) {
 			$where[]  = 'module = %s';
