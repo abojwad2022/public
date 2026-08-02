@@ -76,7 +76,7 @@ class Yazan_Dashboard {
 		header( 'X-Content-Type-Options: nosniff' );
 		status_header( 200 );
 
-		$logged_in = is_user_logged_in() && current_user_can( Yazan_Dashboard_Auth::CAP );
+		$logged_in = is_user_logged_in() && Yazan_Dashboard_Auth::can_access();
 		$boot       = array(
 			'restRoot'  => esc_url_raw( rest_url( Yazan_Dashboard_Auth::NS ) ),
 			'nonce'     => wp_create_nonce( 'wp_rest' ),

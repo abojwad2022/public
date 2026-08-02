@@ -34,8 +34,13 @@ class Yazan_Dashboard_Auth {
 	 * ⚠️ Do not check this constant directly — call {@see self::can_access()}. See the note there:
 	 * a real WordPress administrator does NOT receive this capability, and gating on it alone
 	 * locks every administrator out of /dashboard.
+	 *
+	 * Written as a literal, not as Yazan_Cap_Projection::ACCESS_CAP, because yazan-core has no
+	 * autoloader: a class-constant reference would make this file unloadable if the RBAC files had
+	 * not been required first, turning a load-order change into a fatal error on every request.
+	 * `tests/run.php guard` asserts the two stay equal.
 	 */
-	const CAP = Yazan_Cap_Projection::ACCESS_CAP;
+	const CAP = 'yazan_dashboard_access';
 
 	/** Max failed logins per IP before a temporary block. */
 	const MAX_ATTEMPTS = 6;
@@ -114,7 +119,7 @@ class Yazan_Dashboard_Auth {
 	 * @return true|WP_Error
 	 */
 	public static function require_login() {
-		if ( ! current_user_can( self::CAP ) ) {
+		if ( ! self::can_access() ) {
 			return new WP_Error( 'yazan_forbidden', __( 'You do not have access to the Yazan dashboard.', 'yazan' ), array( 'status' => rest_authorization_required_code() ) );
 		}
 		return true;
@@ -229,7 +234,7 @@ class Yazan_Dashboard_Auth {
 			);
 		}
 
-		if ( ! user_can( $user, self::CAP ) ) {
+		if ( ! self::can_access( $user ) ) {
 			// Authenticated but not allowed here — don't leave them half-logged-into the dashboard.
 			return new WP_Error(
 				'yazan_forbidden',
