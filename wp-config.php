@@ -20,8 +20,17 @@
  */
 
 // ** Database settings - You can get this info from your web host ** //
-/** The name of the database for WordPress */
-define( 'DB_NAME', 'local' );
+/**
+ * The name of the database for WordPress.
+ *
+ * Guarded so a CLI caller that has already defined DB_NAME wins — this is the seam the test
+ * harness uses to point itself at `local_tests` (tests/bootstrap.php, before wp-load). Without
+ * the guard a second define() would keep this value AND emit a PHP 8 warning into every run.
+ * Nothing in a web request can reach this: the harness is CLI-only and refuses to boot otherwise.
+ */
+if ( ! defined( 'DB_NAME' ) ) {
+	define( 'DB_NAME', 'local' );
+}
 
 /** Database username */
 define( 'DB_USER', 'root' );
