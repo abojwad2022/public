@@ -25,6 +25,9 @@ final class Events {
 	public const STORE_UPDATED   = 'store/updated';
 	public const STORE_ACTIVATED = 'store/activated';
 	public const STORE_SUSPENDED = 'store/suspended';
+	public const STORE_ARCHIVED  = 'store/archived';
+	public const STORE_CLONED    = 'store/cloned';
+	public const USERS_CHANGED   = 'store/users_changed';
 	public const DOMAIN_ADDED    = 'store/domain_added';
 	public const DOMAIN_REMOVED  = 'store/domain_removed';
 	public const SETTING_CHANGED = 'store/setting_changed';

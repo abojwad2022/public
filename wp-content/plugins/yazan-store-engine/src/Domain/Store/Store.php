@@ -52,6 +52,7 @@ final class Store {
 	 */
 	public function __construct(
 		private int $id,
+		private string $uuid,
 		private string $slug,
 		private string $name,
 		private string $status = StoreStatus::ACTIVE,
@@ -60,10 +61,23 @@ final class Store {
 		private string $currency = '',
 		private string $locale = '',
 		private string $theme = '',
+		private string $languages = '',
+		private string $timezone = '',
+		private int $logo_attachment_id = 0,
 		private int $owner_user_id = 0,
 		private string $created_at = '',
 		private string $updated_at = ''
 	) {
+		/*
+		 * Mint a uuid when the caller has none. `to_array()` used to omit the field entirely, so
+		 * every store created through the service was written with `uuid = ''` and only a later
+		 * activation-time backfill repaired it. The uuid is the identity that survives a restore
+		 * into another environment, where the numeric id may not — it must exist from birth.
+		 */
+		if ( '' === trim( $this->uuid ) ) {
+			$this->uuid = function_exists( 'wp_generate_uuid4' ) ? wp_generate_uuid4() : '';
+		}
+
 		$this->slug = strtolower( trim( $this->slug ) );
 
 		if ( ! preg_match( self::SLUG_PATTERN, $this->slug ) ) {
@@ -140,6 +154,22 @@ final class Store {
 
 	public function theme(): string {
 		return $this->theme;
+	}
+
+	public function uuid(): string {
+		return $this->uuid;
+	}
+
+	public function languages(): string {
+		return $this->languages;
+	}
+
+	public function timezone(): string {
+		return $this->timezone;
+	}
+
+	public function logo_attachment_id(): int {
+		return $this->logo_attachment_id;
 	}
 
 	public function owner_user_id(): int {
@@ -228,6 +258,7 @@ final class Store {
 	public function to_array(): array {
 		return array(
 			'id'              => $this->id,
+			'uuid'            => $this->uuid,
 			'slug'            => $this->slug,
 			'name'            => $this->name,
 			'status'          => $this->status,
@@ -236,6 +267,9 @@ final class Store {
 			'currency'        => $this->currency,
 			'locale'          => $this->locale,
 			'theme'           => $this->theme,
+			'languages'       => $this->languages,
+			'timezone'        => $this->timezone,
+			'logo_attachment_id' => $this->logo_attachment_id,
 			'owner_user_id'   => $this->owner_user_id,
 			'created_at'      => $this->created_at,
 			'updated_at'      => $this->updated_at,
@@ -254,6 +288,7 @@ final class Store {
 
 		return new self(
 			(int) ( $row['id'] ?? 0 ),
+			(string) ( $row['uuid'] ?? '' ),
 			(string) ( $row['slug'] ?? '' ),
 			(string) ( $row['name'] ?? '' ),
 			(string) ( $row['status'] ?? StoreStatus::ACTIVE ),
@@ -262,6 +297,9 @@ final class Store {
 			(string) ( $row['currency'] ?? '' ),
 			(string) ( $row['locale'] ?? '' ),
 			(string) ( $row['theme'] ?? '' ),
+			(string) ( $row['languages'] ?? '' ),
+			(string) ( $row['timezone'] ?? '' ),
+			(int) ( $row['logo_attachment_id'] ?? 0 ),
 			(int) ( $row['owner_user_id'] ?? 0 ),
 			(string) ( $row['created_at'] ?? '' ),
 			(string) ( $row['updated_at'] ?? '' )

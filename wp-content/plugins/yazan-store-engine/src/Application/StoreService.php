@@ -158,10 +158,20 @@ final class StoreService {
 		$this->reproject();
 
 		if ( $store->status() !== $updated->status() ) {
-			$this->events->emit(
-				$updated->is_active() ? Events::STORE_ACTIVATED : Events::STORE_SUSPENDED,
-				array( 'store' => $updated )
-			);
+			/*
+			 * Three outcomes, not two. The old binary branch emitted STORE_SUSPENDED for an archive,
+			 * so a listener could not tell "temporarily off the web, will return" from "finished".
+			 * Those warrant different handling — a suspension might page someone; an archive should not.
+			 */
+			if ( $updated->is_active() ) {
+				$event = Events::STORE_ACTIVATED;
+			} elseif ( StoreStatus::ARCHIVED === $updated->status() ) {
+				$event = Events::STORE_ARCHIVED;
+			} else {
+				$event = Events::STORE_SUSPENDED;
+			}
+
+			$this->events->emit( $event, array( 'store' => $updated ) );
 		}
 
 		return $updated;
@@ -289,6 +299,149 @@ final class StoreService {
 	/** @return array<string,string> */
 	public function settings( int $store_id ): array {
 		return $this->repository->settings( $store_id );
+	}
+
+	/**
+	 * Copy a store's CONFIGURATION into a new one.
+	 *
+	 * ⚠️ ADDRESSES ARE NEVER COPIED. `UNIQUE (host, path)` would reject them anyway, but the deeper
+	 * reason is that a clone inheriting an address would either steal traffic from its source or
+	 * fail half-way through leaving both stores broken. A clone is born addressless and draft, and
+	 * someone has to give it a home deliberately.
+	 *
+	 * Catalogue membership is not copied either: nothing reads `object_map` yet, so copying it would
+	 * write rows whose effect is invisible and therefore unverifiable.
+	 *
+	 * @param int    $source_id Store to copy.
+	 * @param string $slug      New slug.
+	 * @param string $name      New name.
+	 * @return Store|\WP_Error
+	 */
+	public function clone_store( int $source_id, string $slug, string $name ) {
+		$source = $this->repository->find( $source_id );
+
+		if ( null === $source ) {
+			return new \WP_Error( 'yazan_store_not_found', __( 'That store does not exist.', 'yazan-stores' ), array( 'status' => 404 ) );
+		}
+
+		$data = $source->to_array();
+
+		// A clone is a new identity, never reachable, and never live until someone says so.
+		$data['id']     = 0;
+		$data['uuid']   = '';
+		$data['slug']   = $slug;
+		$data['name']   = $name;
+		$data['status'] = StoreStatus::DRAFT;
+
+		unset( $data['created_at'], $data['updated_at'] );
+
+		$created = $this->create( $data );
+
+		if ( is_wp_error( $created ) ) {
+			return $created;
+		}
+
+		foreach ( $this->repository->settings( $source_id ) as $key => $value ) {
+			$this->repository->set_setting( $created->id(), (string) $key, (string) $value );
+		}
+
+		$this->events->emit( Events::STORE_CLONED, array( 'store' => $created, 'source_id' => $source_id ) );
+
+		return $created;
+	}
+
+	/**
+	 * Take a store off the web permanently.
+	 *
+	 * Archive rather than delete: orders, ledgers and audit rows reference the store id, and a hard
+	 * delete would orphan every one of them. Reversible by an explicit status change.
+	 *
+	 * @param int $id Store.
+	 * @return Store|\WP_Error
+	 */
+	public function archive( int $id ) {
+		return $this->update( $id, array( 'status' => StoreStatus::ARCHIVED ) );
+	}
+
+	/**
+	 * Write several settings at once.
+	 *
+	 * @param int                  $store_id Store.
+	 * @param array<string,string> $settings key => value.
+	 * @return int Rows written.
+	 */
+	public function set_settings( int $store_id, array $settings ): int {
+		$written = 0;
+
+		foreach ( $settings as $key => $value ) {
+			if ( $this->set_setting( $store_id, (string) $key, (string) $value ) ) {
+				++$written;
+			}
+		}
+
+		return $written;
+	}
+
+	/**
+	 * Staff of a store, with the roles they hold THERE.
+	 *
+	 * Delegates to yazan-core's RBAC rather than keeping a second membership list — two sources of
+	 * truth for "who may do what" is the one thing an authorisation system must not have.
+	 *
+	 * @param int $store_id Store.
+	 * @return array<int,array<string,mixed>>
+	 */
+	public function users( int $store_id ): array {
+		if ( ! class_exists( 'Yazan_Roles' ) ) {
+			return array();
+		}
+
+		$out = array();
+
+		foreach ( \Yazan_Roles::staff_ids( $store_id ) as $user_id ) {
+			$user = get_userdata( (int) $user_id );
+
+			if ( ! $user ) {
+				continue;
+			}
+
+			$out[] = array(
+				'id'      => (int) $user_id,
+				'login'   => $user->user_login,
+				'name'    => $user->display_name,
+				'email'   => $user->user_email,
+				'roles'   => array_map( 'intval', \Yazan_Roles::for_user( (int) $user_id, $store_id ) ),
+			);
+		}
+
+		return $out;
+	}
+
+	/**
+	 * Replace one user's roles within a store.
+	 *
+	 * @param int   $store_id Store.
+	 * @param int   $user_id  User.
+	 * @param int[] $role_ids Roles.
+	 * @return array<string,mixed>|\WP_Error
+	 */
+	public function set_user_roles( int $store_id, int $user_id, array $role_ids ) {
+		if ( ! class_exists( 'Yazan_Roles' ) ) {
+			return new \WP_Error( 'yazan_stores_no_rbac', __( 'Permissions are unavailable.', 'yazan-stores' ), array( 'status' => 503 ) );
+		}
+
+		if ( ! get_userdata( $user_id ) ) {
+			return new \WP_Error( 'yazan_store_user_missing', __( 'That user does not exist.', 'yazan-stores' ), array( 'status' => 404 ) );
+		}
+
+		$result = \Yazan_Roles::set_user_roles( $user_id, $role_ids, $store_id );
+
+		$this->events->emit(
+			Events::USERS_CHANGED,
+			array( 'store_id' => $store_id, 'user_id' => $user_id, 'result' => $result )
+		);
+
+		return $result;
 	}
 
 	/**

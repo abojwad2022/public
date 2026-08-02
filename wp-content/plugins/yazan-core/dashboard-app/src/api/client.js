@@ -103,8 +103,11 @@ export class ApiError extends Error {
   }
 }
 
+// A path that already carries its own root — produced by namespace() below — opts out of the
+// default namespace. Everything else is resolved against boot.restRoot, which is yazan/v1.
 function buildUrl(path, params) {
-  const url = new URL(`${boot.restRoot}${path}`, window.location.origin)
+  const base = /^https?:\/\//.test(path) || path.startsWith('/wp-json/') ? '' : boot.restRoot
+  const url = new URL(`${base}${path}`, window.location.origin)
   if (params) {
     Object.entries(params).forEach(([key, value]) => {
       if (value !== undefined && value !== null && value !== '') {
@@ -202,6 +205,30 @@ function safeJson(text) {
     return JSON.parse(text)
   } catch {
     return null
+  }
+}
+
+// Every yazan/v1 root ends in that namespace; swapping the tail is how a sibling plugin's
+// namespace is reached without a second boot value or a second copy of the nonce/renewal logic.
+const REST_BASE = (boot.restRoot || '').replace(/\/yazan\/v1\/?$/, '')
+
+/**
+ * Bind the same client to a different REST namespace.
+ *
+ * The store engine publishes `yazan-stores/v1` — it owns its namespace deliberately, because
+ * `yazan/v1` is default-denied by yazan-core's guard and a foreign route there would be refused
+ * at runtime with no registration-time warning. Rather than hand-rolling fetch calls for it and
+ * losing nonce renewal, 401 handling and the shared error shape, this returns the identical
+ * surface pointed somewhere else.
+ */
+export function namespace(ns) {
+  const root = `${REST_BASE}/${ns.replace(/^\/+|\/+$/g, '')}`
+  const at = (path) => `${root}${path}`
+  return {
+    get: (path, params) => request(at(path), { params }),
+    post: (path, body, extra) => request(at(path), { method: 'POST', body, ...extra }),
+    put: (path, body) => request(at(path), { method: 'PUT', body }),
+    del: (path, params) => request(at(path), { method: 'DELETE', params }),
   }
 }
 

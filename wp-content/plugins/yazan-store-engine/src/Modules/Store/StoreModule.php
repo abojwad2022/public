@@ -40,6 +40,37 @@ final class StoreModule extends AbstractModule implements Installable {
 	public function boot( Container $container ): void {
 		$container->get( HookLoader::class )->register( $container->get( StoreMiddleware::class ) );
 
+		/*
+		 * ONE SUBSCRIBER AUDITS EVERY STORE EVENT.
+		 *
+		 * EventBus fires ANY_HOOK for every event as well as the named hook, so a single listener
+		 * covers the whole stream — and any event added later is audited automatically rather than
+		 * needing its own add_action that somebody will forget.
+		 */
+		add_action(
+			\Yazan\Stores\Core\Events\EventBus::ANY_HOOK,
+			static function ( \Yazan\Stores\Core\Events\Event $event ) {
+				if ( ! class_exists( 'Yazan_Dashboard_Audit' ) ) {
+					return;
+				}
+
+				$store = $event->get( 'store' );
+				$id    = $store && is_object( $store ) && method_exists( $store, 'id' )
+					? $store->id()
+					: (int) $event->get( 'store_id', 0 );
+
+				// Field NAMES only — sanitize_changes() has no notion of secrets.
+				\Yazan_Dashboard_Audit::log(
+					str_replace( '/', '.', $event->name() ),
+					'store',
+					$id,
+					array( 'fields' => array_keys( $event->payload() ) )
+				);
+			},
+			10,
+			1
+		);
+
 		add_action(
 			'rest_api_init',
 			static function () use ( $container ) {

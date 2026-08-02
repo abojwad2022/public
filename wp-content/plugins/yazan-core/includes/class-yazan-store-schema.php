@@ -37,7 +37,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 class Yazan_Store_Schema {
 
 	/** Bump to re-run the migration. */
-	const VERSION = '1';
+	const VERSION = '2';
 
 	/** Option holding the applied version. */
 	const VERSION_OPTION = 'yazan_store_schema_version';
@@ -308,6 +308,29 @@ class Yazan_Store_Schema {
 	 */
 	private static function step_primary_keys() {
 		global $wpdb;
+
+		/*
+		 * MEMBERSHIP BECOMES PER-STORE.
+		 *
+		 * `wp_yazan_user_roles` is the grant pivot, and its PRIMARY KEY was `(user_id, role_id)` —
+		 * one membership per person per role, globally. Adding the store to the key is what lets the
+		 * same person be a Manager of one store and nothing at all in another. Until this ran, the
+		 * store dimension in Yazan_Permissions was cache-keying with no data behind it: `can($p,$u,1)`
+		 * and `can($p,$u,2)` resolved from identical rows and could only ever agree.
+		 *
+		 * ROLE DEFINITIONS STAY GLOBAL. `role_permissions` is deliberately untouched — a role is a
+		 * definition, not a tenancy fact, and duplicating every role per store would multiply the
+		 * Role Editor by the number of stores for no gain.
+		 *
+		 * `DEFAULT 1` attributes every existing grant to store 1 inside the ALTER itself, so nobody
+		 * loses access at the moment of migration.
+		 */
+		Yazan_Schema_Migrator::add_column( Yazan_DB::table( 'user_roles' ), 'store_id', self::STORE_COLUMN );
+		Yazan_Schema_Migrator::add_index( Yazan_DB::table( 'user_roles' ), 'user_id', array( 'user_id' ) );
+		Yazan_Schema_Migrator::rebuild_primary_key(
+			Yazan_DB::table( 'user_roles' ),
+			array( 'store_id', 'user_id', 'role_id' )
+		);
 
 		Yazan_Schema_Migrator::rebuild_primary_key(
 			$wpdb->prefix . 'yazan_rw_analytics_daily',

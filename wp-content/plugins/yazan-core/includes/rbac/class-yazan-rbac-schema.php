@@ -36,7 +36,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 class Yazan_RBAC_Schema {
 
 	/** Bump when the DDL below changes (drives re-install via dbDelta). */
-	const SCHEMA_VERSION = '1';
+	const SCHEMA_VERSION = '2';
 
 	/** Option storing the installed schema version. */
 	const SCHEMA_OPTION = 'yazan_rbac_schema_version';
@@ -188,8 +188,10 @@ class Yazan_RBAC_Schema {
 		$sql[] = "CREATE TABLE {$user_roles} (
 			user_id bigint(20) unsigned NOT NULL DEFAULT 0,
 			role_id bigint(20) unsigned NOT NULL DEFAULT 0,
+			store_id bigint(20) unsigned NOT NULL DEFAULT 1,
 			assigned_at datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
-			PRIMARY KEY  (user_id,role_id),
+			PRIMARY KEY  (store_id,user_id,role_id),
+			KEY user_id (user_id),
 			KEY role_id (role_id)
 		) {$collate};";
 

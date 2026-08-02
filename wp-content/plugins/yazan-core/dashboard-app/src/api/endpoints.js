@@ -2,7 +2,7 @@
  * Typed-ish wrappers around the yazan/v1 REST surface.
  * Keeping every path in one place makes the API contract easy to audit.
  */
-import { api } from './client.js'
+import { api, namespace } from './client.js'
 
 export const authApi = {
   me: () => api.get('/auth/me'),
@@ -319,4 +319,45 @@ export const homepageApi = {
 // so the role editor can disable the rest without a second request.
 export const permissionsApi = {
   list: () => api.get('/permissions'),
+}
+
+
+/**
+ * Store engine — a namespace this plugin does not own.
+ *
+ * `yazan-stores/v1` belongs to yazan-store-engine. Every admin call carries the target store as
+ * `?store=`; the server checks the permission IN that store before doing anything, so switching
+ * stores in the UI can never grant rights the user does not hold there.
+ */
+const stores = namespace('yazan-stores/v1')
+
+const withStore = (params, storeId) => (storeId ? { ...(params || {}), store: storeId } : params)
+
+export const storesApi = {
+  list: (params) => stores.get('/stores', params),
+  get: (id) => stores.get(`/stores/${id}`, { store: id }),
+  create: (payload) => stores.post('/stores', payload),
+  update: (id, payload) => stores.put(`/stores/${id}?store=${id}`, payload),
+
+  activate: (id) => stores.post(`/stores/${id}/activate?store=${id}`, {}),
+  suspend: (id) => stores.post(`/stores/${id}/suspend?store=${id}`, {}),
+  archive: (id) => stores.post(`/stores/${id}/archive?store=${id}`, {}),
+  clone: (id, payload) => stores.post(`/stores/${id}/clone?store=${id}`, payload),
+
+  settings: (id) => stores.get(`/stores/${id}/settings`, { store: id }),
+  saveSettings: (id, settings) => stores.put(`/stores/${id}/settings?store=${id}`, { settings }),
+
+  domains: (id) => stores.get(`/stores/${id}/domains`, { store: id }),
+  addDomain: (id, payload) => stores.post(`/stores/${id}/domains?store=${id}`, payload),
+  removeDomain: (id, domainId) => stores.del(`/stores/${id}/domains/${domainId}`, { store: id }),
+
+  modules: (id) => stores.get(`/stores/${id}/modules`, { store: id }),
+  saveModules: (id, modules) => stores.put(`/stores/${id}/modules?store=${id}`, { modules }),
+
+  users: (id) => stores.get(`/stores/${id}/users`, { store: id }),
+  setUserRoles: (id, userId, roleIds) =>
+    stores.put(`/stores/${id}/users?store=${id}`, { user_id: userId, role_ids: roleIds }),
+
+  context: (storeId) => stores.get('/context', withStore(undefined, storeId)),
+  switchable: () => stores.get('/switchable'),
 }

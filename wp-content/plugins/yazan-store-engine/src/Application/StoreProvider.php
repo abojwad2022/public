@@ -86,6 +86,11 @@ final class StoreProvider {
 		);
 
 		$c->singleton(
+			StoreAdminContext::class,
+			fn( Container $c ): StoreAdminContext => new StoreAdminContext( $c->get( StoreRepositoryInterface::class ) )
+		);
+
+		$c->singleton(
 			StoreService::class,
 			fn( Container $c ): StoreService => new StoreService(
 				$c->get( StoreRepositoryInterface::class ),

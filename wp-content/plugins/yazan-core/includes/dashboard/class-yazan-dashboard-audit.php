@@ -113,9 +113,18 @@ class Yazan_Dashboard_Audit {
 				'changes'     => $payload,
 				'ip'          => self::client_ip(),
 				'user_agent'  => self::client_user_agent(),
+				/*
+				 * The column has existed since the tenant migration and nothing was writing it, so
+				 * every row from every store was landing in store 1. An audit trail that cannot say
+				 * which tenant an action happened in is not an audit trail once there are two.
+				 *
+				 * Inside Yazan_Store_Context::run_for() this records the store the admin was acting
+				 * ON, which is the useful answer — not the host they happened to be viewing from.
+				 */
+				'store_id'    => class_exists( 'Yazan_DB' ) ? Yazan_DB::store_id() : 1,
 				'created_at'  => current_time( 'mysql' ),
 			),
-			array( '%d', '%s', '%s', '%d', '%s', '%s', '%s', '%s' )
+			array( '%d', '%s', '%s', '%d', '%s', '%s', '%s', '%d', '%s' )
 		);
 	}
 
