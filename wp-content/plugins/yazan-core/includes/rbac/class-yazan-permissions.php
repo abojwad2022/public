@@ -81,7 +81,22 @@ class Yazan_Permissions {
 	 * @return void
 	 */
 	public static function flush_user( $user_id ) {
-		delete_user_meta( absint( $user_id ), self::SNAPSHOT_META );
+		$user_id = absint( $user_id );
+
+		/*
+		 * Drop the snapshot for the ACTIVE store as well as the un-suffixed store-1 key.
+		 *
+		 * With one store these are the same row, so this is a no-op today. It is written this way
+		 * because a flush that silently missed a store would leave a stale permission set readable
+		 * — the one failure this whole subsystem is built to make impossible.
+		 */
+		delete_user_meta( $user_id, self::SNAPSHOT_META );
+
+		$store = self::store();
+		if ( 1 !== $store ) {
+			delete_user_meta( $user_id, self::snapshot_meta_key( $store ) );
+		}
+
 		self::$memo = array();
 	}
 
@@ -90,33 +105,89 @@ class Yazan_Permissions {
 	/* --------------------------------------------------------------------- */
 
 	/**
-	 * The effective permission set for a user.
+	 * The active store, or the caller's explicit choice.
 	 *
-	 * @param int|null $user_id User id, or null for the current user.
+	 * Resolution is delegated to the mu-plugin so this class never has to know how a store is
+	 * determined. The literal fallback matters: this method sits on the `user_has_cap` path, which
+	 * runs on requests where an mu-plugin may legitimately be absent (a partial deploy, a rescue
+	 * copy of the site), and a fatal there takes down wp-login.php with it.
+	 *
+	 * @param int|null $store_id Explicit store, or null for the active one.
+	 * @return int
+	 */
+	private static function store( $store_id = null ) {
+		if ( null !== $store_id ) {
+			return absint( $store_id );
+		}
+
+		return class_exists( 'Yazan_Store_Context' ) ? Yazan_Store_Context::current() : 1;
+	}
+
+	/**
+	 * The user-meta key holding a user's cached permission snapshot for a store.
+	 *
+	 * Store 1 keeps the original, un-suffixed key. That is what makes this change a no-op today —
+	 * every existing `_yazan_rbac_snapshot` row stays valid and nothing needs migrating — while a
+	 * second store gets its own row rather than a shared array. A shared array would be worse than
+	 * verbose: it would turn every snapshot write into a read-modify-write on a hot path, with two
+	 * requests for different stores able to clobber each other.
+	 *
+	 * @param int $store_id Store.
+	 * @return string
+	 */
+	private static function snapshot_meta_key( $store_id ) {
+		return 1 === (int) $store_id
+			? self::SNAPSHOT_META
+			: self::SNAPSHOT_META . '_s' . (int) $store_id;
+	}
+
+	/**
+	 * The effective permission set for a user, in a store.
+	 *
+	 * @param int|null $user_id  User id, or null for the current user.
+	 * @param int|null $store_id Store id, or null for the active store.
 	 * @return array{super:bool,perms:array<string,true>,roles:int[]}
 	 */
-	public static function for_user( $user_id = null ) {
+	public static function for_user( $user_id = null, $store_id = null ) {
 		$user_id = ( null === $user_id ) ? get_current_user_id() : absint( $user_id );
 
 		if ( $user_id <= 0 ) {
 			return self::blank();
 		}
 
+		$store = self::store( $store_id );
+
+		/*
+		 * THE STORE GOES IN THE KEY, AT ALL THREE TIERS.
+		 *
+		 * This class already documents why the version is part of the cache KEY rather than its
+		 * value: "a stale entry is unreachable rather than merely wrong, so there is no delete to
+		 * forget". The store dimension is added the same way and inherits the same property — no
+		 * new invalidation path, nothing to remember to flush when the active store changes.
+		 *
+		 * Getting this wrong is the highest-consequence bug available in a store_id design: a memo
+		 * populated under store A and read under store B is a privilege set crossing tenants inside
+		 * a single request, with no error and no log.
+		 *
+		 * Today every store resolves to 1, so every key below is byte-identical to what it was.
+		 */
 		$version  = self::version();
-		$memo_key = $user_id . '|' . $version;
+		$memo_key = $user_id . '|' . $store . '|' . $version;
 
 		if ( isset( self::$memo[ $memo_key ] ) ) {
 			return self::$memo[ $memo_key ];
 		}
 
-		$cache_key = "perm:{$user_id}:{$version}";
-		$cached    = wp_cache_get( $cache_key, self::CACHE_GROUP );
+		$cache_group = self::cache_group( $store );
+		$cache_key   = "perm:{$user_id}:{$store}:{$version}";
+		$cached      = wp_cache_get( $cache_key, $cache_group );
 		if ( is_array( $cached ) && isset( $cached['perms'] ) ) {
 			self::$memo[ $memo_key ] = $cached;
 			return $cached;
 		}
 
-		$snapshot = get_user_meta( $user_id, self::SNAPSHOT_META, true );
+		$snapshot_key = self::snapshot_meta_key( $store );
+		$snapshot     = get_user_meta( $user_id, $snapshot_key, true );
 		if ( is_array( $snapshot ) && isset( $snapshot['v'] ) && $snapshot['v'] === $version ) {
 			$set = array(
 				'super' => ! empty( $snapshot['super'] ),
@@ -125,17 +196,17 @@ class Yazan_Permissions {
 			);
 
 			self::$memo[ $memo_key ] = $set;
-			wp_cache_set( $cache_key, $set, self::CACHE_GROUP, HOUR_IN_SECONDS );
+			wp_cache_set( $cache_key, $set, $cache_group, HOUR_IN_SECONDS );
 			return $set;
 		}
 
 		$set = self::resolve( $user_id );
 
 		self::$memo[ $memo_key ] = $set;
-		wp_cache_set( $cache_key, $set, self::CACHE_GROUP, HOUR_IN_SECONDS );
+		wp_cache_set( $cache_key, $set, $cache_group, HOUR_IN_SECONDS );
 		update_user_meta(
 			$user_id,
-			self::SNAPSHOT_META,
+			$snapshot_key,
 			array(
 				'v'     => $version,
 				'super' => $set['super'],
@@ -145,6 +216,20 @@ class Yazan_Permissions {
 		);
 
 		return $set;
+	}
+
+	/**
+	 * Object-cache group for a store.
+	 *
+	 * Store 1 keeps the original group name, for the same no-op reason as the snapshot key.
+	 *
+	 * @param int $store_id Store.
+	 * @return string
+	 */
+	private static function cache_group( $store_id ) {
+		return 1 === (int) $store_id
+			? self::CACHE_GROUP
+			: self::CACHE_GROUP . '_s' . (int) $store_id;
 	}
 
 	/**
