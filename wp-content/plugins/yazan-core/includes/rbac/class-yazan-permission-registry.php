@@ -634,9 +634,13 @@ class Yazan_Permission_Registry {
 	/**
 	 * The scope of one slug.
 	 *
-	 * An unknown slug is treated as PLATFORM. Fail closed: a permission nobody classified is more
-	 * likely to be a new platform capability nobody thought about than a harmless store read, and
-	 * the cost of being wrong in that direction is an outage rather than a leak.
+	 * An unknown MODULE is store-scoped. Module registration is an extension point — a third-party
+	 * module filtered into the catalogue should work without also being handed platform authority,
+	 * and platform capability must be a deliberate declaration rather than an accident of naming.
+	 *
+	 * A new ACTION inside a known platform module IS platform, which is the fail-closed property
+	 * that actually matters: adding `stores.transfer` tomorrow does not quietly become grantable
+	 * from a store.
 	 *
 	 * @param string $slug Permission slug.
 	 * @return string One of SCOPE_PLATFORM | SCOPE_STORE.
