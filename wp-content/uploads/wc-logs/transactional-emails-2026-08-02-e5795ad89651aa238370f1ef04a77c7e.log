@@ -14,3 +14,7 @@
 2026-08-02T10:34:22+00:00 INFO Email "customer_processing_order" for order #8608 sent CONTEXT: {"email_type":"customer_processing_order","status":"sent","recipient":"yazanyourk","order":8608}
 2026-08-02T10:41:32+00:00 INFO Email "new_order" for order #8609 sent CONTEXT: {"email_type":"new_order","status":"sent","recipient":"admin","order":8609}
 2026-08-02T10:41:32+00:00 INFO Email "customer_processing_order" for order #8609 sent CONTEXT: {"email_type":"customer_processing_order","status":"sent","recipient":"yazanyourk","order":8609}
+2026-08-02T12:47:04+00:00 NOTICE Email "customer_partially_refunded_order" for order #8630 not sent: no_recipient CONTEXT: {"email_type":"customer_partially_refunded_order","status":"skipped","recipient":"guest","reason":"no_recipient","order":8630}
+2026-08-02T12:47:04+00:00 NOTICE Email "customer_partially_refunded_order" for order #8630 not sent: no_recipient CONTEXT: {"email_type":"customer_partially_refunded_order","status":"skipped","recipient":"guest","reason":"no_recipient","order":8630}
+2026-08-02T12:47:04+00:00 NOTICE Email "customer_refunded_order" for order #8630 not sent: no_recipient CONTEXT: {"email_type":"customer_refunded_order","status":"skipped","recipient":"guest","reason":"no_recipient","order":8630}
+2026-08-02T12:47:13+00:00 INFO Email "customer_new_account" for user #512 sent CONTEXT: {"email_type":"customer_new_account","status":"sent","recipient":"yazan.tester","user":512}
