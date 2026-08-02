@@ -80,6 +80,12 @@ class Yazan_REST_Porting {
 	 */
 	public static function export( WP_REST_Request $request ) {
 		$type = sanitize_key( (string) $request->get_param( 'type' ) );
+
+		$denied = self::require_subject( $type, 'export' );
+		if ( is_wp_error( $denied ) ) {
+			return $denied;
+		}
+
 		if ( 'orders' === $type ) {
 			return self::export_orders( $request );
 		}
@@ -183,6 +189,12 @@ class Yazan_REST_Porting {
 		}
 
 		$type = sanitize_key( (string) $request->get_param( 'type' ) );
+
+		$denied = self::require_subject( $type, 'import' );
+		if ( is_wp_error( $denied ) ) {
+			return $denied;
+		}
+
 		if ( 'customers' === $type ) {
 			return self::import_customers( $request, $csv );
 		}
