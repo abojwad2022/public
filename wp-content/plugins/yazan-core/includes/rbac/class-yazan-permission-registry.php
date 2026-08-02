@@ -28,7 +28,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 class Yazan_Permission_Registry {
 
 	/** Bump whenever the catalog below changes. Drives sync_catalog() and the cache key. */
-	const REGISTRY_VERSION = '4';
+	const REGISTRY_VERSION = '5';
 
 	/** Option storing the synced registry version. */
 	const VERSION_OPTION = 'yazan_rbac_registry_version';

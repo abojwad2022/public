@@ -77,6 +77,50 @@ add_action(
 );
 
 /* -------------------------------------------------------------------------
+ * Multi-store declaration.
+ *
+ * ⚠️ BOTH FILTERS ARE ATTACHED HERE, AT PLUGIN-LOAD, AND NOT IN Plugin::boot().
+ *
+ * `Yazan_Permission_Registry::modules()` memoises its result into a static that
+ * `Yazan_RBAC_Boot` reads on `init` priority 1. A filter attached any later is
+ * never seen — and the failure is completely silent: no error, no section in the
+ * Role Editor, and every `payments.*` check resolving false for everyone but a
+ * platform super admin. The store engine and the homepage module both attach at
+ * plugin-load for exactly this reason.
+ * ---------------------------------------------------------------------- */
+
+add_filter(
+	'yazan_permission_modules',
+	static function ( $modules ) {
+		$modules['payments'] = array(
+			'label'   => __( 'Payments', 'yazan-payment-bridge' ),
+			'sort'    => 460,
+			'actions' => array(
+				'view'      => __( 'See the payment event log for this store.', 'yazan-payment-bridge' ),
+				'retry'     => __( 'Re-run a failed payment integration.', 'yazan-payment-bridge' ),
+				'configure' => __( 'Change the gateway settings for this store.', 'yazan-payment-bridge' ),
+			),
+		);
+
+		return $modules;
+	}
+);
+
+/*
+ * The per-store feature flag. Unlike the permission filter above, the catalogue is read at request
+ * time rather than memoised at boot, so its timing is relaxed — it is registered here only to keep
+ * both declarations in one readable place.
+ */
+add_filter(
+	'yazan_stores_module_catalogue',
+	static function ( $modules ) {
+		$modules['payment_bridge'] = true;
+
+		return $modules;
+	}
+);
+
+/* -------------------------------------------------------------------------
  * Lifecycle hooks — thin wrappers that delegate to the installer.
  * Deactivation never deletes data; see uninstall.php for the opt-in purge.
  * ---------------------------------------------------------------------- */

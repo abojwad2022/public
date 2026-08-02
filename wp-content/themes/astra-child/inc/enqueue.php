@@ -175,8 +175,28 @@ function yazan_enqueue_assets() {
 	// Base: typography, layout utilities, header, footer.
 	wp_enqueue_style( 'yazan-main', $css . 'main.css', array( 'yazan-theme-tokens' ), yazan_asset_ver( 'assets/css/main.css' ) );
 
-	// Motion: tokens, reveals, hero, image, card motion, reduced-motion guard.
+	/*
+	 * Motion: tokens, reveals, hero, image, card motion, reduced-motion guard.
+	 *
+	 * The stylesheet is enqueued even for a store with motion off, because `header.css` and
+	 * `megamenu.css` declare it as a dependency and dropping it would take the header's layout with
+	 * it. What the flag controls is the BEHAVIOUR — the observer script below, and the intensity
+	 * variable that the animations scale from. Setting it to zero is what "off" means here.
+	 */
 	wp_enqueue_style( 'yazan-motion', $css . 'motion.css', array( 'yazan-main' ), yazan_asset_ver( 'assets/css/motion.css' ) );
+
+	$yz_motion = function_exists( 'yazan_motion_settings' ) ? yazan_motion_settings() : array( 'enabled' => true, 'parallax' => true, 'intensity' => 1.0 );
+
+	if ( function_exists( 'yazan_store_module_on' ) && ! yazan_store_module_on( 'motion' ) ) {
+		$yz_motion['enabled']  = false;
+		$yz_motion['parallax'] = false;
+	}
+
+	// One custom property the whole motion system scales from — no per-store branching in the CSS.
+	wp_add_inline_style(
+		'yazan-motion',
+		':root{--yz-motion-intensity:' . ( $yz_motion['enabled'] ? (float) $yz_motion['intensity'] : 0 ) . '}'
+	);
 
 	// Luxury header — transparent/sticky/hide-show/logo/menu/mobile.
 	wp_enqueue_style( 'yazan-header', $css . 'header.css', array( 'yazan-main', 'yazan-motion' ), yazan_asset_ver( 'assets/css/header.css' ) );
@@ -219,8 +239,12 @@ function yazan_enqueue_assets() {
 
 	/* ------------------------------------------------------------- Scripts */
 
-	// Scroll-reveal observer — runs the whole site (~1KB, deferred).
-	wp_enqueue_script( 'yazan-motion', $js . 'motion.js', array(), yazan_asset_ver( 'assets/js/motion.js' ), array( 'strategy' => 'defer', 'in_footer' => true ) );
+	// Scroll-reveal observer — runs the whole site (~1KB, deferred). Skipped entirely for a store
+	// with motion off: elements keep their final state, which is what the reduced-motion path
+	// already renders, so nothing is left invisible.
+	if ( $yz_motion['enabled'] ) {
+		wp_enqueue_script( 'yazan-motion', $js . 'motion.js', array(), yazan_asset_ver( 'assets/js/motion.js' ), array( 'strategy' => 'defer', 'in_footer' => true ) );
+	}
 
 	// Luxury header controller: transparent→solid, sticky, smart hide/show, logo shrink.
 	wp_enqueue_script( 'yazan-header', $js . 'header.js', array(), yazan_asset_ver( 'assets/js/header.js' ), array( 'strategy' => 'defer', 'in_footer' => true ) );
@@ -240,7 +264,7 @@ function yazan_enqueue_assets() {
 	);
 
 	// Parallax (GSAP + ScrollTrigger) — front page only, desktop-only behaviour handled in JS.
-	if ( is_front_page() ) {
+	if ( is_front_page() && $yz_motion['enabled'] && $yz_motion['parallax'] ) {
 		// Hosted locally (assets/js/vendor/) so the front page makes ZERO external requests — better for
 		// privacy, reliability, and LCP than the cdnjs CDN. GSAP 3.12.5 (see vendor/ for the pinned copy).
 		wp_enqueue_script( 'gsap', $js . 'vendor/gsap.min.js', array(), '3.12.5', true );

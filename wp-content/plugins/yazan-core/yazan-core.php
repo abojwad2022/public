@@ -50,6 +50,11 @@ require YAZAN_CORE_DIR . 'includes/class-yazan-store-schema.php';
  */
 require YAZAN_CORE_DIR . 'includes/class-yazan-store-options.php';
 
+// Store-registry events -> yazan-core's modules. Registered at plugin-load: the engine boots later,
+// and a listener attached after it has finished dispatching would never hear anything.
+require YAZAN_CORE_DIR . 'includes/class-yazan-store-events.php';
+Yazan_Store_Events::init();
+
 require YAZAN_CORE_DIR . 'includes/class-yazan-core-taxonomies.php';
 require YAZAN_CORE_DIR . 'includes/class-yazan-core-menu.php';
 require YAZAN_CORE_DIR . 'includes/class-yazan-core-verify.php';
