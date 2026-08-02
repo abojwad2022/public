@@ -12,3 +12,5 @@
 2026-08-02T02:43:48+00:00 INFO Email "customer_new_account" for user #506 sent CONTEXT: {"email_type":"customer_new_account","status":"sent","recipient":"yazan.tester","user":506}
 2026-08-02T10:34:22+00:00 INFO Email "new_order" for order #8608 sent CONTEXT: {"email_type":"new_order","status":"sent","recipient":"admin","order":8608}
 2026-08-02T10:34:22+00:00 INFO Email "customer_processing_order" for order #8608 sent CONTEXT: {"email_type":"customer_processing_order","status":"sent","recipient":"yazanyourk","order":8608}
+2026-08-02T10:41:32+00:00 INFO Email "new_order" for order #8609 sent CONTEXT: {"email_type":"new_order","status":"sent","recipient":"admin","order":8609}
+2026-08-02T10:41:32+00:00 INFO Email "customer_processing_order" for order #8609 sent CONTEXT: {"email_type":"customer_processing_order","status":"sent","recipient":"yazanyourk","order":8609}
