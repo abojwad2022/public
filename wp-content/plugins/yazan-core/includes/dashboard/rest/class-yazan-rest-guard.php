@@ -37,14 +37,28 @@ class Yazan_REST_Guard {
 
 	/**
 	 * 'report' — an undeclared route is ALLOWED but logged, so a missed handler is a warning
-	 *            rather than an outage. This is the safe first deploy.
-	 * 'enforce' — an undeclared route is denied. Flip once GET /status reports zero untagged
-	 *            routes and the log has been clean for a day.
+	 *            rather than an outage. This was the safe first deploy.
+	 * 'enforce' — an undeclared route is denied.
 	 *
 	 * A declared-but-denied route is refused in BOTH modes; the mode only decides what happens to
 	 * a handler nobody labelled.
+	 *
+	 * NOW 'enforce'. The preconditions were met and are now enforced continuously rather than
+	 * checked by eye:
+	 *
+	 *   - Zero untagged handlers. All 125 registrations in this namespace go through args() or
+	 *     public_args(); there is not one raw handler literal in the plugin. `tests/run.php golden`
+	 *     asserts audit_routes() === [] on every run, so a new untagged route fails the build
+	 *     instead of quietly becoming publicly reachable.
+	 *   - The namespace can no longer be dodged by changing the case of the URL — see enforce().
+	 *     Without that fix this flip would have been theatre.
+	 *   - yazan-payment-bridge-lite and the rewards public controllers moved to namespaces they
+	 *     own, so enforcement here cannot break a sibling plugin's routes.
+	 *
+	 * 'report' was the right default while the count was unknown. It is a fail-open, and a
+	 * fail-open is invisible with one tenant and a breach with two.
 	 */
-	const MODE = 'report';
+	const MODE = 'enforce';
 
 	/** Handler key naming the required permission. */
 	const KEY_PERM = 'yazan_perm';
