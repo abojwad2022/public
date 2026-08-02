@@ -31,7 +31,6 @@ class Yazan_AI_Log {
 	 * @return string
 	 */
 	public static function table() {
-		global $wpdb;
 		return Yazan_DB::table( 'ai_generations' );
 	}
 

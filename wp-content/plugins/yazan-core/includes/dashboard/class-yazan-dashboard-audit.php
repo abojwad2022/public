@@ -30,7 +30,6 @@ class Yazan_Dashboard_Audit {
 	 * @return string
 	 */
 	public static function table() {
-		global $wpdb;
 		return Yazan_DB::table( 'audit_log' );
 	}
 

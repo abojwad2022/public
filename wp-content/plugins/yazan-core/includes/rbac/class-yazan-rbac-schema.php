@@ -47,7 +47,6 @@ class Yazan_RBAC_Schema {
 	 * @return string
 	 */
 	public static function roles_table() {
-		global $wpdb;
 		return Yazan_DB::table( 'roles' );
 	}
 
@@ -57,7 +56,6 @@ class Yazan_RBAC_Schema {
 	 * @return string
 	 */
 	public static function permissions_table() {
-		global $wpdb;
 		return Yazan_DB::table( 'permissions' );
 	}
 
@@ -67,7 +65,6 @@ class Yazan_RBAC_Schema {
 	 * @return string
 	 */
 	public static function role_permissions_table() {
-		global $wpdb;
 		return Yazan_DB::table( 'role_permissions' );
 	}
 
@@ -77,7 +74,6 @@ class Yazan_RBAC_Schema {
 	 * @return string
 	 */
 	public static function user_roles_table() {
-		global $wpdb;
 		return Yazan_DB::table( 'user_roles' );
 	}
 

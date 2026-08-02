@@ -54,16 +54,14 @@ class Yazan_Core_Privacy {
 	 * @return array<string,array{user_column:string,pii:array<int,string>,label:string}>
 	 */
 	private static function tables() {
-		global $wpdb;
-
 		return array(
-			$wpdb->prefix . 'yazan_audit_log'      => array(
+			Yazan_DB::table( 'audit_log' )      => array(
 				'user_column' => 'user_id',
 				// The user agent is a browser fingerprint, so it is PII and must be blanked too.
 				'pii'         => array( 'ip', 'user_agent' ),
 				'label'       => __( 'Dashboard audit log', 'yazan' ),
 			),
-			$wpdb->prefix . 'yazan_ai_generations' => array(
+			Yazan_DB::table( 'ai_generations' ) => array(
 				'user_column' => 'user_id',
 				'pii'         => array(),
 				'label'       => __( 'AI generation history', 'yazan' ),
@@ -74,7 +72,7 @@ class Yazan_Core_Privacy {
 			 * unlike the audit log there is no accountability value in keeping it — the audit log
 			 * already records who was granted what, and when.
 			 */
-			$wpdb->prefix . 'yazan_user_roles'     => array(
+			Yazan_DB::table( 'user_roles' )     => array(
 				'user_column' => 'user_id',
 				'pii'         => array(),
 				'mode'        => 'delete',

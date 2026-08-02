@@ -32,7 +32,6 @@ final class Schema {
 	 * @return string
 	 */
 	public static function table( $suffix ) {
-		global $wpdb;
 		return \Yazan_DB::table( 'homepage_' . $suffix );
 	}
 
