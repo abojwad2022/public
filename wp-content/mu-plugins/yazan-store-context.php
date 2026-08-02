@@ -33,9 +33,20 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-if ( class_exists( 'Yazan_Store_Context' ) ) {
+/*
+ * Load-once guard.
+ *
+ * NOT `class_exists( 'Yazan_Store_Context' )`. PHP hoists an unconditional top-level class
+ * declaration at compile time, so by the time this line executes the class in THIS file already
+ * exists — the guard matches on the very first load and returns before register() is ever called.
+ * The class and the helper function still exist (both are hoisted), so everything looks fine until
+ * you notice no hook was ever added. A constant is evaluated at runtime and does not lie.
+ */
+if ( defined( 'YAZAN_STORE_CONTEXT_LOADED' ) ) {
 	return;
 }
+
+define( 'YAZAN_STORE_CONTEXT_LOADED', true );
 
 /**
  * The active store for this request.
