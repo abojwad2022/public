@@ -20,10 +20,13 @@ use Yazan\Homepage\Domain\Exception\SectionNotFound;
 use Yazan\Homepage\Domain\Exception\ValidationFailed;
 use Yazan\Homepage\Domain\Experiment\Experiment;
 use Yazan\Homepage\Domain\Experiment\ExperimentResult;
+use Yazan\Homepage\Domain\Event\DomainEvent;
 use Yazan\Homepage\Domain\Port\AuthorizationPort;
 use Yazan\Homepage\Domain\Port\ClockPort;
+use Yazan\Homepage\Domain\Port\EventDispatcherPort;
 use Yazan\Homepage\Domain\Port\HomepageRepositoryPort;
-use Yazan\Homepage\Infrastructure\Persistence\ExperimentStore;
+use Yazan\Homepage\Application\Service\ExperimentCsv;
+use Yazan\Homepage\Domain\Port\ExperimentRepositoryPort;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -37,7 +40,7 @@ final class ExperimentHandler {
 	/** @var HomepageRepositoryPort */
 	private $documents;
 
-	/** @var ExperimentStore */
+	/** @var ExperimentRepositoryPort */
 	private $store;
 
 	/** @var AuthorizationPort */
@@ -47,16 +50,55 @@ final class ExperimentHandler {
 	private $clock;
 
 	/**
-	 * @param HomepageRepositoryPort $documents Documents.
-	 * @param ExperimentStore        $store     Experiment storage.
-	 * @param AuthorizationPort      $auth      Authorization.
-	 * @param ClockPort              $clock     Clock.
+	 * @var EventDispatcherPort|null
+	 *
+	 * Optional so an existing caller that built this handler with four arguments still works, but
+	 * every route passes it. Without it the A/B lifecycle writes nothing to the audit trail, and
+	 * starting a test is one of the largest changes anybody can make from this screen.
 	 */
-	public function __construct( HomepageRepositoryPort $documents, ExperimentStore $store, AuthorizationPort $auth, ClockPort $clock ) {
+	private $events;
+
+	/**
+	 * @param HomepageRepositoryPort   $documents Documents.
+	 * @param ExperimentRepositoryPort $store     Experiment storage.
+	 * @param AuthorizationPort        $auth      Authorization.
+	 * @param ClockPort                $clock     Clock.
+	 * @param EventDispatcherPort|null $events    Dispatcher, for the audit trail.
+	 */
+	public function __construct( HomepageRepositoryPort $documents, ExperimentRepositoryPort $store, AuthorizationPort $auth, ClockPort $clock, EventDispatcherPort $events = null ) {
 		$this->documents = $documents;
 		$this->store     = $store;
 		$this->auth      = $auth;
 		$this->clock     = $clock;
+		$this->events    = $events;
+	}
+
+	/**
+	 * Raise an audit event, if anyone is listening.
+	 *
+	 * @param string      $name   Event name.
+	 * @param DocumentKey $key    Control document.
+	 * @param array       $before State before, or an empty array.
+	 * @param array       $after  State after, or an empty array.
+	 * @return void
+	 */
+	private function announce( $name, DocumentKey $key, array $before = array(), array $after = array() ) {
+		if ( ! $this->events ) {
+			return;
+		}
+
+		// Old value and new value, both named, because that is what the audit screen prints and
+		// what "the split was changed" is useless without.
+		$this->events->dispatch(
+			DomainEvent::document(
+				$name,
+				$key->value(),
+				array(
+					'old' => $before,
+					'new' => $after,
+				)
+			)
+		);
 	}
 
 	/**
@@ -71,14 +113,10 @@ final class ExperimentHandler {
 		$experiment = $this->store->get( $key );
 
 		if ( ! $experiment ) {
-			return array( 'experiment' => null, 'results' => array(), 'uplift' => null );
+			return array( 'experiment' => null, 'results' => array(), 'uplift' => null, 'daily' => array() );
 		}
 
-		$labels = array(
-			Experiment::CONTROL             => __( 'Current layout', 'yazan' ),
-			$experiment->variant()->value() => $this->title_of( $experiment->variant() ),
-		);
-
+		$labels = $this->labels( $experiment );
 		$totals = $this->store->totals( $key->value(), $experiment->started_at() );
 
 		// Both arms always appear, even at zero. An arm missing from a report reads as "no data
@@ -96,6 +134,70 @@ final class ExperimentHandler {
 			'results'    => $summary,
 			'uplift'     => ExperimentResult::uplift( $summary ),
 			'min_views'  => ExperimentResult::MIN_VIEWS,
+			'daily'      => ExperimentResult::by_day(
+				$this->store->daily( $key->value(), $experiment->started_at() ),
+				array_keys( $labels ),
+				$labels
+			),
+		);
+	}
+
+	/**
+	 * The run as a CSV file, for whoever wants to do their own arithmetic.
+	 *
+	 * Returned as text through the normal REST route rather than streamed from a separate endpoint:
+	 * a download URL of its own would need its own authentication, and a second way into the same
+	 * data is a second place for it to be got at. The browser turns this into a file.
+	 *
+	 * Reading needs `homepage.view`, the same as looking at the numbers on screen — but it is
+	 * audited, because a copy of the shop's conversion data leaving the site is worth a line in the
+	 * log even when the person was entitled to it.
+	 *
+	 * @param DocumentKey $key Control document.
+	 * @return array{filename:string,csv:string,rows:int}
+	 * @throws SectionNotFound When there is no experiment to export.
+	 */
+	public function export( DocumentKey $key ) {
+		$this->auth->require_permission( 'homepage.view' );
+
+		$experiment = $this->require_experiment( $key );
+		$labels     = $this->labels( $experiment );
+
+		$days = ExperimentResult::by_day(
+			$this->store->daily( $key->value(), $experiment->started_at() ),
+			array_keys( $labels ),
+			$labels
+		);
+
+		$today = (string) wp_date( 'Y-m-d', $this->clock->now() );
+
+		$this->announce(
+			DomainEvent::EXPERIMENT_EXPORTED,
+			$key,
+			array(),
+			array(
+				'variant' => $experiment->variant()->value(),
+				'days'    => count( $days ),
+			)
+		);
+
+		return array(
+			'filename' => ExperimentCsv::filename( $key->value(), $today ),
+			'csv'      => ExperimentCsv::build( $days ),
+			'rows'     => count( $days ),
+		);
+	}
+
+	/**
+	 * Arm labels for a report: the control is named for what it is, the variant by its title.
+	 *
+	 * @param Experiment $experiment Experiment.
+	 * @return array<string,string>
+	 */
+	private function labels( Experiment $experiment ) {
+		return array(
+			Experiment::CONTROL             => __( 'Current layout', 'yazan' ),
+			$experiment->variant()->value() => $this->title_of( $experiment->variant() ),
 		);
 	}
 
@@ -138,6 +240,13 @@ final class ExperimentHandler {
 
 		$this->store->save( $experiment );
 
+		$this->announce(
+			DomainEvent::EXPERIMENT_CONFIGURED,
+			$key,
+			$existing ? $existing->to_array() : array(),
+			$experiment->to_array()
+		);
+
 		return $experiment->to_array();
 	}
 
@@ -160,6 +269,8 @@ final class ExperimentHandler {
 		$started = $experiment->start( $this->clock->now() );
 		$this->store->save( $started );
 
+		$this->announce( DomainEvent::EXPERIMENT_STARTED, $key, $experiment->to_array(), $started->to_array() );
+
 		return $started->to_array();
 	}
 
@@ -170,8 +281,11 @@ final class ExperimentHandler {
 	public function stop( DocumentKey $key ) {
 		$this->auth->require_permission( 'homepage.experiment' );
 
-		$stopped = $this->require_experiment( $key )->stop();
+		$running = $this->require_experiment( $key );
+		$stopped = $running->stop();
 		$this->store->save( $stopped );
+
+		$this->announce( DomainEvent::EXPERIMENT_STOPPED, $key, $running->to_array(), $stopped->to_array() );
 
 		return $stopped->to_array();
 	}
@@ -185,8 +299,23 @@ final class ExperimentHandler {
 	public function remove( DocumentKey $key ) {
 		$this->auth->require_permission( 'homepage.experiment' );
 
+		$existing = $this->store->get( $key );
+		$totals   = $existing ? $this->store->totals( $key->value(), $existing->started_at() ) : array();
+
 		$this->store->remove( $key );
 		$this->store->clear( $key->value() );
+
+		// The numbers go with it, and they are not recoverable. The audit row carries the totals
+		// that were destroyed, so "we deleted a test that had 4,000 views" is answerable later.
+		$this->announce(
+			DomainEvent::EXPERIMENT_REMOVED,
+			$key,
+			array(
+				'experiment' => $existing ? $existing->to_array() : array(),
+				'totals'     => $totals,
+			),
+			array()
+		);
 
 		return array( 'removed' => true );
 	}
@@ -212,6 +341,10 @@ final class ExperimentHandler {
 
 		$control = $this->documents->get( $key );
 
+		// Counted BEFORE the copy: after it, "old" and "new" would both be the new value, which is
+		// the classic way an audit trail ends up recording nothing.
+		$replaced = count( (array) $control->live_sections() );
+
 		$sections = array();
 
 		foreach ( (array) $variant->live_sections() as $row ) {
@@ -226,6 +359,18 @@ final class ExperimentHandler {
 		$result = $publish->handle( $key, 'Promoted the A/B variant', $control->version()->value() );
 
 		$this->store->save( $experiment->stop() );
+
+		// The publish is already audited by PublishHandler; this row records the DECISION — which
+		// challenger won and against what — which the publish row alone does not say.
+		$this->announce(
+			DomainEvent::EXPERIMENT_PROMOTED,
+			$key,
+			array( 'sections' => $replaced ),
+			array(
+				'variant'  => $experiment->variant()->value(),
+				'sections' => count( $sections ),
+			)
+		);
 
 		return array(
 			'promoted' => $experiment->variant()->value(),

@@ -90,6 +90,10 @@ final class ThemeBridge {
 		 */
 		self::prepare();
 
+		// Only now is it known whether the arm this visitor was sent to renders anything. An arm
+		// that renders nothing is not an audience — see ExperimentRunner::commit().
+		ExperimentRunner::commit( self::has_plan() );
+
 		add_filter( 'yazan_home_sections', array( __CLASS__, 'sections' ), 10, 1 );
 		add_filter( 'yazan_home_render_section', array( __CLASS__, 'render_section' ), 10, 3 );
 		add_action( 'yazan_home_before_section', array( __CLASS__, 'before_section' ), 10, 2 );

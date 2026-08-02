@@ -310,6 +310,9 @@ export const homepageApi = {
   stopExperiment: (payload) => api.post('/homepage/experiment/stop', payload),
   removeExperiment: (params) => api.del('/homepage/experiment', params),
   promoteExperiment: (payload) => api.post('/homepage/experiment/promote', payload),
+  // Returns the CSV as text rather than a download URL: a second way into the same data would
+  // need a second way of proving who you are.
+  exportExperiment: (params) => api.get('/homepage/experiment/export', params),
 }
 
 // The permission catalog, grouped by module. `grantable` is the subset the CALLER may hand out,

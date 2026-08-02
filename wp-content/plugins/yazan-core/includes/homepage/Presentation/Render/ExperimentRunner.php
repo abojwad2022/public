@@ -84,13 +84,46 @@ final class ExperimentRunner {
 			'arm'        => $arm,
 		);
 
+		// The view is NOT counted here — see commit(). Counting before the page is planned records
+		// an audience for a layout that may render nothing at all.
+		return $experiment->document_for( $arm );
+	}
+
+	/**
+	 * Count this request's view, now that we know whether the arm actually rendered anything.
+	 *
+	 * `save()` refuses a variant with nothing published, but a layout can be emptied after a test
+	 * has started — and an emptied variant falls back to the theme's own homepage, which is what
+	 * the CONTROL arm shows. Counting that as a visit to the variant reports a comparison between
+	 * two identical pages as though it were a comparison of two designs. Silently serving the same
+	 * page to both halves and calling the result a test is the worst outcome available here, so
+	 * the enrolment is dropped instead: the visitor sees what they would have seen anyway, and
+	 * nothing is added to a report that would be a lie.
+	 *
+	 * The control arm IS counted with nothing published, because "the homepage as it is today" is
+	 * a legitimate thing to test against.
+	 *
+	 * @param bool $rendered Did the chosen document produce a plan?
+	 * @return void
+	 */
+	public static function commit( $rendered ) {
+		if ( ! self::$current ) {
+			return;
+		}
+
+		$experiment = self::$current['experiment'];
+		$arm        = self::$current['arm'];
+
+		if ( ! $rendered && Experiment::CONTROL !== $arm ) {
+			self::$current = null;
+			return;
+		}
+
 		ServiceFactory::experiments()->record_view(
 			$experiment->control()->value(),
 			$arm,
 			self::today()
 		);
-
-		return $experiment->document_for( $arm );
 	}
 
 	/**
@@ -202,6 +235,11 @@ final class ExperimentRunner {
 	 * @return void
 	 */
 	private static function remember( Experiment $experiment, $arm ) {
+		// Recorded for THIS request first, so the page behaves like the next one instead of
+		// re-rolling itself halfway down — and so it stays self-consistent even when the header
+		// below cannot be written.
+		$_COOKIE[ self::COOKIE . $experiment->control()->value() ] = $arm;
+
 		if ( headers_sent() ) {
 			// Assignment happens on template_redirect, long before output — but if some other
 			// plugin has already flushed, setting a cookie would emit a warning and change
@@ -223,9 +261,6 @@ final class ExperimentRunner {
 				'samesite' => 'Lax',
 			)
 		);
-
-		// So THIS request behaves like the next one rather than re-rolling itself.
-		$_COOKIE[ self::COOKIE . $experiment->control()->value() ] = $arm;
 	}
 
 	/**

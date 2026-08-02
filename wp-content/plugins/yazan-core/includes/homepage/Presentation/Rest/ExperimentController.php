@@ -54,6 +54,16 @@ final class ExperimentController {
 
 		register_rest_route(
 			RestSupport::NAMESPACE_V1,
+			'/homepage/experiment/export',
+			array(
+				// A read, guarded like the report it is a copy of — and audited, because a copy of
+				// the shop's conversion data leaving the site is worth a line in the log.
+				\Yazan_REST_Guard::args( \WP_REST_Server::READABLE, array( __CLASS__, 'export' ), 'homepage.view' ),
+			)
+		);
+
+		register_rest_route(
+			RestSupport::NAMESPACE_V1,
 			'/homepage/experiment/promote',
 			array(
 				\Yazan_REST_Guard::args( \WP_REST_Server::CREATABLE, array( __CLASS__, 'promote' ), 'homepage.publish' ),
@@ -121,6 +131,18 @@ final class ExperimentController {
 		return RestSupport::run(
 			static function () use ( $request ) {
 				return ServiceFactory::experiment_handler()->remove( RestSupport::key( $request ) );
+			}
+		);
+	}
+
+	/**
+	 * @param \WP_REST_Request $request Request.
+	 * @return \WP_REST_Response|\WP_Error
+	 */
+	public static function export( $request ) {
+		return RestSupport::run(
+			static function () use ( $request ) {
+				return ServiceFactory::experiment_handler()->export( RestSupport::key( $request ) );
 			}
 		);
 	}

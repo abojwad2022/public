@@ -63,6 +63,76 @@ final class ExperimentResult {
 	}
 
 	/**
+	 * The run, day by day.
+	 *
+	 * Deliberately WITHOUT a conversion rate per day. A single day of a normal shop is far below
+	 * MIN_VIEWS, so a daily rate would be a column of numbers that swing wildly and mean nothing —
+	 * exactly the figure somebody stops a test on. What a day CAN honestly show is how many people
+	 * each arm reached and what they bought; the rate stays where the sample is.
+	 *
+	 * Every arm appears on every day that has any row at all, at zero if it had none, so a gap is
+	 * visible as a gap rather than as a missing line.
+	 *
+	 * @param array    $rows   Rows from the store: date, arm, views, orders, revenue.
+	 * @param string[] $arms   Every arm the test has, in display order.
+	 * @param array    $labels [ arm => human label ].
+	 * @return array<int,array{date:string,arms:array}>
+	 */
+	public static function by_day( array $rows, array $arms, array $labels = array() ) {
+		$days = array();
+
+		foreach ( $rows as $row ) {
+			$date = (string) ( $row['date'] ?? '' );
+			$arm  = (string) ( $row['arm'] ?? '' );
+
+			if ( '' === $date || '' === $arm ) {
+				continue;
+			}
+
+			if ( ! isset( $days[ $date ] ) ) {
+				$days[ $date ] = array();
+			}
+
+			// A day/arm pair is unique in the table, but a row arriving twice must add rather than
+			// overwrite — losing a count silently is the one thing a tally must never do.
+			$prior = $days[ $date ][ $arm ] ?? array( 'views' => 0, 'orders' => 0, 'revenue' => 0.0 );
+
+			$days[ $date ][ $arm ] = array(
+				'views'   => $prior['views'] + max( 0, (int) ( $row['views'] ?? 0 ) ),
+				'orders'  => $prior['orders'] + max( 0, (int) ( $row['orders'] ?? 0 ) ),
+				'revenue' => round( $prior['revenue'] + (float) ( $row['revenue'] ?? 0 ), 2 ),
+			);
+		}
+
+		ksort( $days );
+
+		$out = array();
+
+		foreach ( $days as $date => $found ) {
+			$line = array();
+
+			foreach ( $arms as $arm ) {
+				$arm  = (string) $arm;
+				$cell = $found[ $arm ] ?? array( 'views' => 0, 'orders' => 0, 'revenue' => 0.0 );
+
+				$line[ $arm ] = array(
+					'label'   => isset( $labels[ $arm ] ) ? (string) $labels[ $arm ] : $arm,
+					'views'   => (int) $cell['views'],
+					'orders'  => (int) $cell['orders'],
+					'revenue' => round( (float) $cell['revenue'], 2 ),
+				);
+			}
+
+			$out[] = array(
+				'date' => (string) $date,
+				'arms' => $line,
+			);
+		}
+
+		return $out;
+	}
+
+	/**
 	 * How much better the variant converted, as a percentage of the control's rate.
 	 *
 	 * Returns null rather than a number whenever the comparison would be meaningless — one arm

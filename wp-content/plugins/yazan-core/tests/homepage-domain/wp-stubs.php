@@ -4,6 +4,18 @@ define( 'YAZAN_CORE_DIR', dirname( __DIR__, 2 ) . '/' );
 define( 'YAZAN_CORE_VERSION', '1.9.0' );
 define( 'HOUR_IN_SECONDS', 3600 );
 define( 'MINUTE_IN_SECONDS', 60 );
+define( 'DAY_IN_SECONDS', 86400 );
+
+/*
+ * The front-page assignment path. `wp_rand` is the roll — fixed here, and varied by the tests that
+ * care through $GLOBALS['__roll'], because a test of a 50/50 split that actually rolls dice is a
+ * test that fails one run in a thousand and teaches everyone to re-run the suite.
+ */
+$GLOBALS['__roll']       = 0;
+$GLOBALS['__nocache']    = 0;
+function wp_rand( $min = 0, $max = 99 ) { return (int) $GLOBALS['__roll']; }
+function nocache_headers() { $GLOBALS['__nocache']++; }
+function is_ssl() { return false; }
 
 function __( $t, $d = null ) { return $t; }
 function _x( $t, $c, $d = null ) { return $t; }
@@ -117,6 +129,12 @@ function get_option( $k, $d = false ) { return array_key_exists( $k, $GLOBALS['_
 function update_option( $k, $v, $a = null ) { $GLOBALS['__options'][ $k ] = $v; return true; }
 function delete_option( $k ) { unset( $GLOBALS['__options'][ $k ] ); return true; }
 function wp_unslash( $v ) { return is_string( $v ) ? stripslashes( $v ) : $v; }
+/*
+ * Site-timezone formatting. Pinned to UTC here so a test asserting a filename does not start
+ * failing at 21:00 in Riyadh — the production behaviour this stands in for (the SITE's day, not
+ * UTC's) is asserted where it matters, in the store's date-boundary tests.
+ */
+function wp_date( $format, $ts = null, $tz = null ) { return gmdate( (string) $format, null === $ts ? time() : (int) $ts ); }
 function get_transient( $k ) { return false; }
 function set_transient( $k, $v, $t = 0 ) { return true; }
 function wp_cache_get( $k, $g = '', $f = false, &$found = null ) { $found = false; return false; }

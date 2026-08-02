@@ -38,6 +38,19 @@ final class DomainEvent {
 	const DOCUMENT_EXPORTED  = 'homepage.exported';
 	const FIELDS_BLOCKED     = 'homepage.permission_blocked';
 
+	/*
+	 * The A/B lifecycle. These were missing, and their absence was a hole in the audit requirement
+	 * rather than an omission of detail: starting a test changes what half the shop's visitors see,
+	 * and until now the only record of it was the option row it wrote. Deleting a test — which also
+	 * destroys its numbers — left nothing at all behind.
+	 */
+	const EXPERIMENT_CONFIGURED = 'homepage.experiment_configured';
+	const EXPERIMENT_STARTED    = 'homepage.experiment_started';
+	const EXPERIMENT_STOPPED    = 'homepage.experiment_stopped';
+	const EXPERIMENT_REMOVED    = 'homepage.experiment_removed';
+	const EXPERIMENT_PROMOTED   = 'homepage.experiment_promoted';
+	const EXPERIMENT_EXPORTED   = 'homepage.experiment_exported';
+
 	/** @var string */
 	private $name;
 

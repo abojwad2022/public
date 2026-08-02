@@ -18,6 +18,7 @@ namespace Yazan\Homepage\Infrastructure\Persistence;
 
 use Yazan\Homepage\Domain\Document\DocumentKey;
 use Yazan\Homepage\Domain\Experiment\Experiment;
+use Yazan\Homepage\Domain\Port\ExperimentRepositoryPort;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -26,7 +27,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Experiment configuration and counters.
  */
-final class ExperimentStore {
+final class ExperimentStore implements ExperimentRepositoryPort {
 
 	/** Option holding every experiment, keyed by control document. */
 	const OPTION = 'yazan_homepage_experiments';
@@ -156,6 +157,66 @@ final class ExperimentStore {
 
 		foreach ( (array) $rows as $row ) {
 			$out[ (string) $row['arm'] ] = array(
+				'views'   => (int) $row['views'],
+				'orders'  => (int) $row['orders'],
+				'revenue' => (float) $row['revenue'],
+			);
+		}
+
+		return $out;
+	}
+
+	/**
+	 * The same numbers, one row per arm per DAY.
+	 *
+	 * The table has stored per-day rows since it was created — the report simply never read them
+	 * that way, which meant "the variant only won at the weekend" was invisible in a total that
+	 * averaged it away. No new writes and no migration: this is the same data, ungrouped.
+	 *
+	 * Ordered oldest first, because that is the direction a run is read in.
+	 *
+	 * @param string   $control Control document key.
+	 * @param int|null $since   UTC timestamp, or null for everything.
+	 * @return array<int,array{date:string,arm:string,views:int,orders:int,revenue:float}>
+	 */
+	public function daily( $control, $since = null ) {
+		global $wpdb;
+
+		$table = Schema::table( 'ab_stats' );
+
+		if ( $since ) {
+			// Same site-timezone boundary as totals(): the two reports must not disagree about
+			// which day a view belongs to.
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+			$rows = $wpdb->get_results(
+				$wpdb->prepare(
+					"SELECT stat_date, arm, views, orders, revenue
+					 FROM {$table} WHERE doc_key = %s AND stat_date >= %s
+					 ORDER BY stat_date ASC, arm ASC",
+					$control,
+					(string) wp_date( 'Y-m-d', (int) $since )
+				),
+				ARRAY_A
+			);
+		} else {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+			$rows = $wpdb->get_results(
+				$wpdb->prepare(
+					"SELECT stat_date, arm, views, orders, revenue
+					 FROM {$table} WHERE doc_key = %s
+					 ORDER BY stat_date ASC, arm ASC",
+					$control
+				),
+				ARRAY_A
+			);
+		}
+
+		$out = array();
+
+		foreach ( (array) $rows as $row ) {
+			$out[] = array(
+				'date'    => (string) $row['stat_date'],
+				'arm'     => (string) $row['arm'],
 				'views'   => (int) $row['views'],
 				'orders'  => (int) $row['orders'],
 				'revenue' => (float) $row['revenue'],

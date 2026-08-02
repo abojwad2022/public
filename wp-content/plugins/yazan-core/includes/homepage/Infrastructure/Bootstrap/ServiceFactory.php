@@ -74,6 +74,22 @@ final class ServiceFactory {
 		return self::$instances[ $key ];
 	}
 
+	/**
+	 * Put a different implementation in front of one of these.
+	 *
+	 * The composition root is the only honest place for this. Everything below is built against a
+	 * port, so swapping an adapter is legitimate — and the render path reaches this class
+	 * statically, which is what made the front-page assignment untestable until now: there was no
+	 * way to hand it an in-memory store. This is the seam that lets a test drive it.
+	 *
+	 * @param string $key     Service key, as used by once().
+	 * @param object $service Replacement.
+	 * @return void
+	 */
+	public static function set( $key, $service ) {
+		self::$instances[ (string) $key ] = $service;
+	}
+
 	/** @return ComponentRegistry */
 	public static function components() {
 		return ComponentBootstrap::registry();
@@ -223,7 +239,9 @@ final class ServiceFactory {
 				self::documents(),
 				self::experiments(),
 				self::auth(),
-				self::clock()
+				self::clock(),
+				// Starting, stopping and deleting a test are audited like any other change.
+				self::events()
 			);
 		} );
 	}
