@@ -18,8 +18,14 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class Yazan_Dashboard_Audit {
 
-	/** Bump when the table schema changes (drives re-install via dbDelta). */
-	const SCHEMA_VERSION = '2';
+	/**
+	 * Bump when the table schema changes (drives re-install via dbDelta).
+	 *
+	 * v3 added `store_id`. It had been created out-of-band by Yazan_Store_Schema while log() already
+	 * wrote to it — so a FRESH install, where the tenant migration may not have run first, would
+	 * have inserted into a column dbDelta never created.
+	 */
+	const SCHEMA_VERSION = '3';
 
 	/** Option storing the installed schema version. */
 	const SCHEMA_OPTION = 'yazan_audit_schema_version';
@@ -67,11 +73,13 @@ class Yazan_Dashboard_Audit {
 			ip varchar(45) NOT NULL DEFAULT '',
 			user_agent varchar(255) NOT NULL DEFAULT '',
 			created_at datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
+			store_id bigint(20) unsigned NOT NULL DEFAULT 1,
 			PRIMARY KEY  (id),
 			KEY created_at (created_at),
 			KEY object (object_type,object_id),
 			KEY user_id (user_id),
-			KEY action (action)
+			KEY action (action),
+			KEY store_created (store_id,created_at)
 		) {$collate};";
 
 		dbDelta( $sql );
@@ -159,6 +167,26 @@ class Yazan_Dashboard_Audit {
 
 		$where  = array( '1=1' );
 		$params = array();
+
+		/*
+		 * ⚠️ THE STORE PREDICATE. The column was being written and never read back, so every
+		 * tenant's activity log listed every other tenant's rows — which users exist elsewhere and
+		 * what they did.
+		 *
+		 * A PLATFORM administrator sees everything, deliberately: the audit trail is how a platform
+		 * operator investigates, and a trail with tenant-shaped holes cannot do that. Everyone else
+		 * sees the store they are acting in PLUS platform rows (store 0), because an action taken
+		 * against the platform is context a store admin needs to explain their own history.
+		 */
+		$all_stores = array_key_exists( 'all_stores', $args )
+			? (bool) $args['all_stores']
+			: ( class_exists( 'Yazan_Permissions' ) && Yazan_Permissions::is_platform_super() );
+
+		if ( ! $all_stores ) {
+			$where[]  = 'store_id IN ( %d, %d )';
+			$params[] = 0;
+			$params[] = isset( $args['store_id'] ) ? absint( $args['store_id'] ) : self::scope_store();
+		}
 
 		if ( ! empty( $args['action'] ) ) {
 			$where[] = 'action = %s';
