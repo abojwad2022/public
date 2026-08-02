@@ -20,6 +20,7 @@ export const productsApi = {
   update: (id, payload) => api.put(`/products/${id}`, payload),
   remove: (id, force = false) => api.del(`/products/${id}`, force ? { force: 1 } : undefined),
   bulk: (action, ids) => api.post('/products/bulk', { action, ids }),
+  bulkEdit: (ids, changes) => api.post('/products/bulk-edit', { ids, changes }),
   duplicate: (id) => api.post(`/products/${id}/duplicate`, {}),
   restore: (id) => api.post(`/products/${id}/restore`, {}),
   emptyTrash: () => api.post('/products/trash/empty', {}),

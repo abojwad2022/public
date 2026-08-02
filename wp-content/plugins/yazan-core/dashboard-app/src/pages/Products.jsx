@@ -11,6 +11,7 @@ import ProductFilters from '../components/product/ProductFilters.jsx'
 import ProductsTable from '../components/product/ProductsTable.jsx'
 import ScreenOptions, { useScreenOptions } from '../components/product/ScreenOptions.jsx'
 import ProductQuickEdit, { quickEditStateFrom } from '../components/product/ProductQuickEdit.jsx'
+import ProductBulkEditPanel from '../components/product/ProductBulkEditPanel.jsx'
 import {
   Button,
   Card,
@@ -179,8 +180,35 @@ export default function Products() {
     }
   }
 
+  // Bulk Edit is not a one-shot action like the rest — it opens a panel of fields.
+  const [bulkEditOpen, setBulkEditOpen] = useState(false)
+  const applyBulkEdit = async (changes) => {
+    setBusy(true)
+    try {
+      const result = await productsApi.bulkEdit(selected, changes)
+      if (result.blocked?.length) {
+        toast.info(
+          `${result.count} product(s) updated, but some fields were not changed: ${result.blocked.join(', ')}.`,
+        )
+      } else {
+        toast.success(`${result.count} product${result.count === 1 ? '' : 's'} updated.`)
+      }
+      setBulkEditOpen(false)
+      setBulkAction('')
+      load()
+    } catch (err) {
+      toast.error(err.message)
+    } finally {
+      setBusy(false)
+    }
+  }
+
   const runBulk = () => {
     if (!bulkAction || !selected.length) return
+    if (bulkAction === 'edit') {
+      setBulkEditOpen(true)
+      return
+    }
     if (bulkAction !== 'delete') {
       applyBulk()
       return
