@@ -85,6 +85,9 @@ export {
   Sun,
   Moon,
   Store,
+  // Added for Administration → Stores: Globe labels a store address, Rocket the publish action.
+  Globe,
+  Rocket,
   BadgeCheck,
   TrendingUp,
   TrendingDown,
