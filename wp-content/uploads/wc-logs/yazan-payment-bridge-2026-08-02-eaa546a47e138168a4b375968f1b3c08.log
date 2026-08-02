@@ -408,3 +408,17 @@
 2026-08-02T20:45:09+00:00 INFO Additional partial refund recorded against the existing event. {"event_id":706,"order_id":9330,"event_type":"payment_partially_refunded"}
 2026-08-02T20:45:09+00:00 INFO Payment event recorded. {"event_id":710,"event_uuid":"43357cf5-919f-4087-b333-5ca0ce555fbc","order_id":9330,"event_type":"payment_refunded","source":"gateway","gateway":"cod"}
 2026-08-02T20:45:09+00:00 INFO Integration run finished. {"event_id":710,"event_uuid":"43357cf5-919f-4087-b333-5ca0ce555fbc","order_id":9330,"event_type":"payment_refunded","integration_status":"skipped","source":"gateway"}
+2026-08-02T21:37:03+00:00 INFO Payment event recorded. {"event_id":716,"event_uuid":"2105232f-ce11-43fd-a055-adbbff2e1b00","order_id":9352,"event_type":"payment_completed","source":"gateway","gateway":"cod"}
+2026-08-02T21:37:03+00:00 INFO Integration run finished. {"event_id":716,"event_uuid":"2105232f-ce11-43fd-a055-adbbff2e1b00","order_id":9352,"event_type":"payment_completed","integration_status":"completed","source":"gateway"}
+2026-08-02T21:37:03+00:00 INFO Integration run finished. {"event_id":716,"event_uuid":"2105232f-ce11-43fd-a055-adbbff2e1b00","order_id":9352,"event_type":"payment_completed","integration_status":"completed","source":"gateway"}
+2026-08-02T21:37:04+00:00 INFO Payment event recorded. {"event_id":718,"event_uuid":"884033ae-5109-4295-9717-66aa6af28e17","order_id":9354,"event_type":"payment_completed","source":"gateway","gateway":"cod"}
+2026-08-02T21:37:04+00:00 INFO Integration run finished. {"event_id":718,"event_uuid":"884033ae-5109-4295-9717-66aa6af28e17","order_id":9354,"event_type":"payment_completed","integration_status":"skipped","source":"gateway"}
+2026-08-02T21:37:05+00:00 INFO Payment event recorded. {"event_id":719,"event_uuid":"2a16a7fc-776c-4536-90a4-1fb871a0dd37","order_id":9356,"event_type":"payment_completed","source":"gateway","gateway":"cod"}
+2026-08-02T21:37:05+00:00 ERROR Integration run failed. {"event_id":719,"event_uuid":"2a16a7fc-776c-4536-90a4-1fb871a0dd37","order_id":9356,"event_type":"payment_completed","code":"0"}
+2026-08-02T21:37:05+00:00 INFO Payment event recorded. {"event_id":720,"event_uuid":"23cbe183-1d73-4016-86c2-83c1ab3f4dce","order_id":9358,"event_type":"payment_partially_refunded","source":"gateway","gateway":"cod"}
+2026-08-02T21:37:05+00:00 INFO Integration run finished. {"event_id":720,"event_uuid":"23cbe183-1d73-4016-86c2-83c1ab3f4dce","order_id":9358,"event_type":"payment_partially_refunded","integration_status":"review","source":"gateway"}
+2026-08-02T21:37:05+00:00 INFO Additional partial refund recorded against the existing event. {"event_id":720,"order_id":9358,"event_type":"payment_partially_refunded"}
+2026-08-02T21:37:06+00:00 INFO Additional partial refund recorded against the existing event. {"event_id":720,"order_id":9358,"event_type":"payment_partially_refunded"}
+2026-08-02T21:37:06+00:00 INFO Additional partial refund recorded against the existing event. {"event_id":720,"order_id":9358,"event_type":"payment_partially_refunded"}
+2026-08-02T21:37:06+00:00 INFO Payment event recorded. {"event_id":724,"event_uuid":"fb4dcc57-28fb-4212-8359-74062b0a1963","order_id":9358,"event_type":"payment_refunded","source":"gateway","gateway":"cod"}
+2026-08-02T21:37:06+00:00 INFO Integration run finished. {"event_id":724,"event_uuid":"fb4dcc57-28fb-4212-8359-74062b0a1963","order_id":9358,"event_type":"payment_refunded","integration_status":"skipped","source":"gateway"}

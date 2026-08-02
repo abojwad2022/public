@@ -35,7 +35,7 @@ class Yazan_RBAC_Guard {
 	 * @param int $exclude_role Role id to pretend is gone (or no longer super).
 	 * @return int[]
 	 */
-	public static function super_user_ids( $exclude_user = 0, $exclude_role = 0 ) {
+	public static function super_user_ids( $exclude_user = 0, $exclude_role = 0, $store_id = null ) {
 		$exclude_user = absint( $exclude_user );
 		$exclude_role = absint( $exclude_role );
 
@@ -46,8 +46,23 @@ class Yazan_RBAC_Guard {
 			$pivot = Yazan_RBAC_Schema::user_roles_table();
 			$roles = Yazan_RBAC_Schema::roles_table();
 
-			$sql    = "SELECT DISTINCT ur.user_id FROM {$pivot} ur JOIN {$roles} r ON r.id = ur.role_id WHERE r.is_super = 1";
-			$params = array();
+			/*
+			 * SCOPED TO THE STORE. Without the predicate this counted supers across every tenant, so
+			 * the rail promising "the store will not be left without an administrator" was satisfied
+			 * by an administrator of a DIFFERENT store — store B's last admin could be demoted
+			 * because store A had one. The error message already said "leave the store with no super
+			 * admin"; it simply stopped being true when membership became per-store.
+			 *
+			 * Platform grants (store_id = 0) count for every store — a platform super genuinely can
+			 * administer any of them.
+			 */
+			$store = null === $store_id
+				? ( class_exists( 'Yazan_Store_Context' ) ? Yazan_Store_Context::current() : 1 )
+				: absint( $store_id );
+
+			$sql    = "SELECT DISTINCT ur.user_id FROM {$pivot} ur JOIN {$roles} r ON r.id = ur.role_id"
+				. " WHERE r.is_super = 1 AND ur.store_id IN ( %d, %d )";
+			$params = array( Yazan_Permissions::PLATFORM_STORE, $store );
 
 			if ( $exclude_role ) {
 				$sql     .= ' AND r.id <> %d';
@@ -98,8 +113,8 @@ class Yazan_RBAC_Guard {
 	 * @param int $exclude_role Role id being deleted or stripped of is_super.
 	 * @return true|WP_Error
 	 */
-	public static function assert_super_remains( $exclude_user = 0, $exclude_role = 0 ) {
-		if ( self::super_user_ids( $exclude_user, $exclude_role ) ) {
+	public static function assert_super_remains( $exclude_user = 0, $exclude_role = 0, $store_id = null ) {
+		if ( self::super_user_ids( $exclude_user, $exclude_role, $store_id ) ) {
 			return true;
 		}
 
@@ -225,8 +240,10 @@ class Yazan_RBAC_Guard {
 	 * @param int|null $user_id  Caller.
 	 * @return true|WP_Error
 	 */
-	public static function assert_can_assign_roles( array $role_ids, $user_id = null ) {
-		if ( Yazan_Permissions::is_super( $user_id ) ) {
+	public static function assert_can_assign_roles( array $role_ids, $user_id = null, $store_id = null ) {
+		// Platform super, not store super: role assignment is a global act because role
+		// definitions are global, even when the membership it writes is store-scoped.
+		if ( Yazan_Permissions::is_platform_super( $user_id ) ) {
 			return true;
 		}
 
@@ -237,9 +254,16 @@ class Yazan_RBAC_Guard {
 				continue;
 			}
 			if ( $role['is_super'] ) {
+				/*
+				 * ⚠️ THE SELF-ELEVATION GATE. A super role assigned inside a store makes its holder
+				 * super OF THAT STORE — a legitimate tier (Store Owner). But only a PLATFORM super
+				 * may hand it out. Without this, anyone who could edit a store's staff could grant
+				 * themselves that role, and the store-engine route that does exactly that called no
+				 * guard at all.
+				 */
 				return new WP_Error(
 					'yazan_escalation',
-					__( 'Only a super admin can assign a super-admin role.', 'yazan' ),
+					__( 'Only a platform super admin can assign a super-admin role.', 'yazan' ),
 					array( 'status' => 403 )
 				);
 			}
@@ -359,7 +383,9 @@ class Yazan_RBAC_Guard {
 	 * @return true|WP_Error
 	 */
 	public static function assert_can_set_wp_role( $role, $user_id = null ) {
-		if ( ! Yazan_Permissions::is_super( $user_id ) ) {
+		// Site-level authorisation, so it asks the site-level question. Super-in-one-store must
+		// not reach WordPress role assignment for the whole installation.
+		if ( ! Yazan_Permissions::is_platform_super( $user_id ) ) {
 			return new WP_Error(
 				'yazan_escalation',
 				__( 'Only a super admin can change a WordPress role.', 'yazan' ),

@@ -581,7 +581,12 @@ class Yazan_Permission_Registry {
 	 *   roles       — role DEFINITIONS are global rows with a global unique slug. Editing a role in
 	 *   permissions   store 2 edits store 1's copy.
 	 *   backup      — operates on the whole database.
-	 *   porting     — bulk import/export through code paths with no store predicate.
+	 *
+	 * ⚠️ `porting` is deliberately NOT here. Exporting a store's own catalogue and customers is a
+	 * store operation, and the seeded Accountant role legitimately holds `porting.export`. Its
+	 * export query has no store predicate today — but that is a QUERY-LAYER gap, and classifying the
+	 * permission as platform would paper over it while breaking a real role. The isolation suite
+	 * pins the leak; the query layer is where it gets fixed.
 	 *   status      — cache flush and regeneration, process-wide.
 	 *   settings    — `wp_options`. Per-store settings live in wp_yazan_store_settings and are
 	 *                 reached through `stores.settings`, which stays store-scoped.
@@ -597,7 +602,6 @@ class Yazan_Permission_Registry {
 		'roles',
 		'permissions',
 		'backup',
-		'porting',
 		'status',
 		'settings',
 		'audit',

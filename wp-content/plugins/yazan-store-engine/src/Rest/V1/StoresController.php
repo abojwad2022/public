@@ -500,8 +500,21 @@ final class StoresController {
 	}
 
 	/** GET /stores/{id}/users */
-	public function users_index( \WP_REST_Request $request ): \WP_REST_Response {
-		$roles = class_exists( 'Yazan_Roles' ) ? \Yazan_Roles::all() : array();
+	public function users_index( \WP_REST_Request $request, int $store_id ): \WP_REST_Response {
+		/*
+		 * Only offer roles the caller could actually assign here. Handing the raw catalogue to the
+		 * UI meant the staff screen listed super-admin to anyone who could edit a store — a button
+		 * that either escalates or always fails, and both are worse than its absence.
+		 */
+		$roles = array();
+
+		if ( class_exists( 'Yazan_Roles' ) && class_exists( 'Yazan_RBAC_Guard' ) ) {
+			foreach ( \Yazan_Roles::all() as $role ) {
+				if ( ! is_wp_error( \Yazan_RBAC_Guard::assert_can_assign_roles( array( (int) $role['id'] ), null, $store_id ) ) ) {
+					$roles[] = $role;
+				}
+			}
+		}
 
 		return new \WP_REST_Response(
 			array(

@@ -206,7 +206,16 @@ class Yazan_Roles {
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		$rows = $wpdb->get_results(
-			$wpdb->prepare( "SELECT role_id, COUNT(*) AS total FROM {$pivot} WHERE store_id = %d GROUP BY role_id", self::store( $store_id ) )
+			/*
+			 * Platform grants (store_id = 0) count in every store. Without them the Roles screen
+			 * showed "0 members" for super-admin the moment those grants were promoted to platform
+			 * scope — the members were still there, the count was just asking the wrong question.
+			 */
+			$wpdb->prepare(
+				"SELECT role_id, COUNT(DISTINCT user_id) AS total FROM {$pivot} WHERE store_id IN ( %d, %d ) GROUP BY role_id",
+				Yazan_Permissions::PLATFORM_STORE,
+				self::store( $store_id )
+			)
 		);
 
 		$out = array();
@@ -503,8 +512,9 @@ class Yazan_Roles {
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		$rows = $wpdb->get_col(
 			$wpdb->prepare(
-				"SELECT role_id FROM {$pivot} WHERE user_id = %d AND store_id = %d",
+				"SELECT DISTINCT role_id FROM {$pivot} WHERE user_id = %d AND store_id IN ( %d, %d )",
 				absint( $user_id ),
+				Yazan_Permissions::PLATFORM_STORE,
 				self::store( $store_id )
 			)
 		);
@@ -633,7 +643,11 @@ class Yazan_Roles {
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		$rows = $wpdb->get_col(
-			$wpdb->prepare( "SELECT DISTINCT user_id FROM {$pivot} WHERE store_id = %d", self::store( $store_id ) )
+			$wpdb->prepare(
+				"SELECT DISTINCT user_id FROM {$pivot} WHERE store_id IN ( %d, %d )",
+				Yazan_Permissions::PLATFORM_STORE,
+				self::store( $store_id )
+			)
 		);
 
 		return array_map( 'intval', (array) $rows );

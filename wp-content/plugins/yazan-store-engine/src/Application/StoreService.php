@@ -434,6 +434,51 @@ final class StoreService {
 			return new \WP_Error( 'yazan_store_user_missing', __( 'That user does not exist.', 'yazan-stores' ), array( 'status' => 404 ) );
 		}
 
+		/*
+		 * ⚠️ THE GUARDS THIS METHOD SHIPPED WITHOUT.
+		 *
+		 * yazan-core wraps the identical operation in three assertions (see
+		 * class-yazan-rest-users.php). This path called none of them, which made it the shortest
+		 * privilege-escalation route in the platform: anyone who could edit a store's staff could
+		 * assign THEMSELVES the super-admin role there, and before permission scope existed that was
+		 * indistinguishable from becoming super everywhere.
+		 *
+		 * Order matters. Self-edit is refused first because it is the escalation shape; then the
+		 * roles being handed out are checked against what the caller may grant; then the store is
+		 * checked for still having an administrator afterwards.
+		 */
+		if ( ! class_exists( 'Yazan_RBAC_Guard' ) ) {
+			return new \WP_Error( 'yazan_stores_no_rbac', __( 'Permissions are unavailable.', 'yazan-stores' ), array( 'status' => 503 ) );
+		}
+
+		$self = \Yazan_RBAC_Guard::assert_not_self(
+			$user_id,
+			__( 'You cannot change your own roles. Ask another administrator.', 'yazan-stores' )
+		);
+
+		if ( is_wp_error( $self ) ) {
+			return $self;
+		}
+
+		$grantable = \Yazan_RBAC_Guard::assert_can_assign_roles( $role_ids, null, $store_id );
+
+		if ( is_wp_error( $grantable ) ) {
+			return $grantable;
+		}
+
+		/*
+		 * Removing every role from someone must not leave the store unadministered. Only checked
+		 * when the change actually strips them of a super role — otherwise every ordinary staff
+		 * edit would pay for a query it cannot fail.
+		 */
+		if ( array() === $role_ids ) {
+			$remains = \Yazan_RBAC_Guard::assert_super_remains( $user_id, 0, $store_id );
+
+			if ( is_wp_error( $remains ) ) {
+				return $remains;
+			}
+		}
+
 		$result = \Yazan_Roles::set_user_roles( $user_id, $role_ids, $store_id );
 
 		$this->events->emit(
