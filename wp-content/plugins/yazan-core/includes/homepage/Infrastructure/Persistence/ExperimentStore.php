@@ -50,7 +50,7 @@ final class ExperimentStore implements ExperimentRepositoryPort {
 	 * @return array<string,Experiment>
 	 */
 	public function all() {
-		$raw = get_option( self::OPTION, array() );
+		$raw = \Yazan_Store_Options::get( self::OPTION, array() );
 		$out = array();
 
 		foreach ( (array) $raw as $control => $row ) {
@@ -69,13 +69,13 @@ final class ExperimentStore implements ExperimentRepositoryPort {
 	 * @return void
 	 */
 	public function save( Experiment $experiment ) {
-		$raw = (array) get_option( self::OPTION, array() );
+		$raw = (array) \Yazan_Store_Options::get( self::OPTION, array() );
 
 		$raw[ $experiment->control()->value() ] = $experiment->to_array();
 
 		// Not autoloaded: the storefront reads this on the front page only, and autoloading it
 		// would put it in every single request's option cache including wp-admin and REST.
-		update_option( self::OPTION, $raw, false );
+		\Yazan_Store_Options::set( self::OPTION, $raw );
 	}
 
 	/**
@@ -83,11 +83,11 @@ final class ExperimentStore implements ExperimentRepositoryPort {
 	 * @return void
 	 */
 	public function remove( DocumentKey $key ) {
-		$raw = (array) get_option( self::OPTION, array() );
+		$raw = (array) \Yazan_Store_Options::get( self::OPTION, array() );
 
 		unset( $raw[ $key->value() ] );
 
-		update_option( self::OPTION, $raw, false );
+		\Yazan_Store_Options::set( self::OPTION, $raw );
 	}
 
 	/**
@@ -132,8 +132,9 @@ final class ExperimentStore implements ExperimentRepositoryPort {
 			$rows = $wpdb->get_results(
 				$wpdb->prepare(
 					"SELECT arm, SUM(views) AS views, SUM(orders) AS orders, SUM(revenue) AS revenue
-					 FROM {$table} WHERE doc_key = %s AND stat_date >= %s GROUP BY arm",
+					 FROM {$table} WHERE doc_key = %s AND store_id = %d AND stat_date >= %s GROUP BY arm",
 					$control,
+					\Yazan_DB::store_id(),
 					// wp_date, not gmdate: rows are written with the SITE's date, and a UTC
 					// boundary would drop or add a day's worth of a running test for any shop
 					// that is not on UTC.
@@ -146,8 +147,9 @@ final class ExperimentStore implements ExperimentRepositoryPort {
 			$rows = $wpdb->get_results(
 				$wpdb->prepare(
 					"SELECT arm, SUM(views) AS views, SUM(orders) AS orders, SUM(revenue) AS revenue
-					 FROM {$table} WHERE doc_key = %s GROUP BY arm",
-					$control
+					 FROM {$table} WHERE doc_key = %s AND store_id = %d GROUP BY arm",
+					$control,
+					\Yazan_DB::store_id()
 				),
 				ARRAY_A
 			);
@@ -191,9 +193,10 @@ final class ExperimentStore implements ExperimentRepositoryPort {
 			$rows = $wpdb->get_results(
 				$wpdb->prepare(
 					"SELECT stat_date, arm, views, orders, revenue
-					 FROM {$table} WHERE doc_key = %s AND stat_date >= %s
+					 FROM {$table} WHERE doc_key = %s AND store_id = %d AND stat_date >= %s
 					 ORDER BY stat_date ASC, arm ASC",
 					$control,
+					\Yazan_DB::store_id(),
 					(string) wp_date( 'Y-m-d', (int) $since )
 				),
 				ARRAY_A
@@ -203,9 +206,10 @@ final class ExperimentStore implements ExperimentRepositoryPort {
 			$rows = $wpdb->get_results(
 				$wpdb->prepare(
 					"SELECT stat_date, arm, views, orders, revenue
-					 FROM {$table} WHERE doc_key = %s
+					 FROM {$table} WHERE doc_key = %s AND store_id = %d
 					 ORDER BY stat_date ASC, arm ASC",
-					$control
+					$control,
+					\Yazan_DB::store_id()
 				),
 				ARRAY_A
 			);
@@ -265,9 +269,17 @@ final class ExperimentStore implements ExperimentRepositoryPort {
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		$wpdb->query(
 			$wpdb->prepare(
-				"INSERT INTO {$table} (doc_key, arm, stat_date, views, orders, revenue)
-				 VALUES (%s, %s, %s, %d, %d, %f)
+				/*
+				 * ⚠️ `store_id` IS PART OF THE UNIQUE KEY — `(store_id, doc_key, arm, stat_date)`.
+				 * Omitting it here would not simply mislabel the row: the column defaults to 1, so
+				 * ON DUPLICATE KEY would settle EVERY store's views onto store 1's row. Two shops
+				 * would silently share one experiment's counts, and the A/B report would read as a
+				 * clean result while measuring nothing.
+				 */
+				"INSERT INTO {$table} (store_id, doc_key, arm, stat_date, views, orders, revenue)
+				 VALUES (%d, %s, %s, %s, %d, %d, %f)
 				 ON DUPLICATE KEY UPDATE views = views + %d, orders = orders + %d, revenue = revenue + %f",
+				\Yazan_DB::store_id(),
 				(string) $control,
 				(string) $arm,
 				(string) $date,

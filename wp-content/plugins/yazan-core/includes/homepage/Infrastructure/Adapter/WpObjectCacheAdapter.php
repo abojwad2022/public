@@ -34,7 +34,7 @@ final class WpObjectCacheAdapter implements CachePort {
 	/** @return string */
 	public function version() {
 		if ( null === $this->version ) {
-			$stored        = (string) get_option( self::VERSION_OPTION, '1' );
+			$stored        = (string) \Yazan_Store_Options::get( self::VERSION_OPTION, '1' );
 			$this->version = $stored . '.' . ( defined( 'YAZAN_CORE_VERSION' ) ? YAZAN_CORE_VERSION : '0' );
 		}
 
@@ -42,11 +42,23 @@ final class WpObjectCacheAdapter implements CachePort {
 	}
 
 	/**
+	 * Namespace a key with the version AND the store.
+	 *
+	 * ⚠️ THE STORE IN THIS KEY IS NOT AN OPTIMISATION. Without it `live:default` means one thing for
+	 * the whole installation, so the first store to warm the cache serves its rendered homepage to
+	 * every other store. The page returns 200 and renders perfectly — it is simply the wrong brand,
+	 * which is the hardest kind of bug to notice and the worst kind to explain.
+	 *
+	 * The version segment is now per-store too, so invalidating one store's homepage no longer
+	 * empties everybody's cache.
+	 *
 	 * @param string $key Key.
 	 * @return string
 	 */
 	private function full_key( $key ) {
-		return 'yzhp:' . $this->version() . ':' . $key;
+		$store = class_exists( 'Yazan_Store_Context' ) ? \Yazan_Store_Context::current() : 1;
+
+		return 'yzhp:' . $store . ':' . $this->version() . ':' . $key;
 	}
 
 	/**
@@ -85,9 +97,10 @@ final class WpObjectCacheAdapter implements CachePort {
 	 * @return void
 	 */
 	public function flush() {
-		$next = (int) get_option( self::VERSION_OPTION, '1' ) + 1;
+		// Per-store, so one store's publish does not cost every other store a cold cache.
+		$next = (int) \Yazan_Store_Options::get( self::VERSION_OPTION, '1' ) + 1;
 
-		update_option( self::VERSION_OPTION, (string) $next, false );
+		\Yazan_Store_Options::set( self::VERSION_OPTION, (string) $next );
 
 		$this->version = null;
 	}
