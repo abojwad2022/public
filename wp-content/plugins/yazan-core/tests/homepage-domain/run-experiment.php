@@ -138,6 +138,53 @@ $never = ExperimentResult::summarise(
 check( 'a control that never converted gives no uplift', null === ExperimentResult::uplift( $never ) );
 check( 'one arm alone gives no uplift',                  null === ExperimentResult::uplift( array( $never[0] ) ) );
 
+echo "\n[12] The arm survives into the checkout — the bug a live order caught\n";
+
+/*
+ * This is the regression test for the one defect no unit test found: the order stamp used to read
+ * the arm from per-request state that only exists while the FRONT PAGE renders. Checkout is a
+ * different request, so every real order was stamped empty and the report showed zero conversions
+ * for ever, while the visitor counters climbed happily.
+ *
+ * The cookie is what crosses the gap between the two requests, so that is what this asserts.
+ */
+$store = new \Yazan\Homepage\Infrastructure\Persistence\ExperimentStore();
+$live  = ( new Experiment( $control, $variant, 50 ) )->start( 1000 );
+$store->save( $live );
+
+$_COOKIE = array();
+check( 'no cookie, no stamp', '' === \Yazan\Homepage\Presentation\Render\ExperimentRunner::stamp() );
+
+$_COOKIE['yz_ab_default'] = 'eid';
+check( 'the variant arm is stamped from the cookie', 'default|eid' === \Yazan\Homepage\Presentation\Render\ExperimentRunner::stamp() );
+
+$_COOKIE['yz_ab_default'] = Experiment::CONTROL;
+check( 'the control arm is stamped too',            'default|control' === \Yazan\Homepage\Presentation\Render\ExperimentRunner::stamp() );
+
+$_COOKIE['yz_ab_default'] = 'ramadan';
+check( 'a cookie naming a layout this test does not use is refused', '' === \Yazan\Homepage\Presentation\Render\ExperimentRunner::stamp() );
+
+$_COOKIE['yz_ab_default'] = 'eid';
+$store->save( $live->stop() );
+check( 'a stopped test stamps nothing', '' === \Yazan\Homepage\Presentation\Render\ExperimentRunner::stamp() );
+
+$store->remove( $control );
+check( 'no experiment, no stamp', '' === \Yazan\Homepage\Presentation\Render\ExperimentRunner::stamp() );
+$_COOKIE = array();
+
+echo "\n[13] A stamp only counts when it names both sides\n";
+$counted = array();
+// record_order() splits the stamp; anything malformed must be dropped rather than half-recorded.
+foreach ( array( '', 'default', '|eid', 'default|', 'default|eid' ) as $stamp ) {
+	$parts = explode( '|', $stamp, 2 );
+	$counted[ $stamp ] = ( 2 === count( $parts ) && '' !== $parts[0] && '' !== $parts[1] );
+}
+check( 'empty stamp dropped',        false === $counted[''] );
+check( 'no arm dropped',             false === $counted['default'] );
+check( 'no document dropped',        false === $counted['|eid'] );
+check( 'trailing separator dropped', false === $counted['default|'] );
+check( 'a complete stamp counts',    true === $counted['default|eid'] );
+
 echo "\n----------------------------------------\n";
 echo "  passed: $pass   failed: $fail\n";
 exit( $fail ? 1 : 0 );

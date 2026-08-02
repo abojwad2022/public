@@ -104,8 +104,19 @@ function sanitize_key_stub() {}
 function wp_strip_all_tags( $t, $break = false ) { return trim( strip_tags( (string) $t ) ); }
 function get_post_time( $format = 'U', $gmt = false, $post = null ) { return '2026-01-15T09:00:00+00:00'; }
 function get_current_user_id() { return 1; }
-function get_option( $k, $d = false ) { return $d; }
-function update_option( $k, $v, $a = null ) { return true; }
+/*
+ * A REAL option store, not a stub that always answers the default.
+ *
+ * It was the no-op version that let the A/B attribution bug through: the only test that could have
+ * caught it needed to store an experiment and read it back, and with get_option() answering `false`
+ * forever, no such test could be written. A harness that cannot represent state cannot test the
+ * code that depends on it.
+ */
+$GLOBALS['__options'] = array();
+function get_option( $k, $d = false ) { return array_key_exists( $k, $GLOBALS['__options'] ) ? $GLOBALS['__options'][ $k ] : $d; }
+function update_option( $k, $v, $a = null ) { $GLOBALS['__options'][ $k ] = $v; return true; }
+function delete_option( $k ) { unset( $GLOBALS['__options'][ $k ] ); return true; }
+function wp_unslash( $v ) { return is_string( $v ) ? stripslashes( $v ) : $v; }
 function get_transient( $k ) { return false; }
 function set_transient( $k, $v, $t = 0 ) { return true; }
 function wp_cache_get( $k, $g = '', $f = false, &$found = null ) { $found = false; return false; }
