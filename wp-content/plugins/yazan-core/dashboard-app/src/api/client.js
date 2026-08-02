@@ -158,6 +158,15 @@ async function request(path, options = {}, isReplay = false) {
      */
     if (response.status === 403 && code === 'rest_cookie_invalid_nonce' && !isReplay) {
       if (await renewNonce()) return request(path, options, true)
+
+      // Renewal itself failed too: not just an aged nonce, the whole cookie/session state this
+      // page loaded with is stale. A silent reload re-fetches everything from scratch and is, in
+      // the overwhelming majority of cases (browser cookies just fine, session simply moved on),
+      // the end of it — the visitor never sees this ever happened.
+      if (reloadOnceOrGiveUp()) {
+        return new Promise(() => {}) // Page is navigating away; never resolve into a flashed error.
+      }
+
       window.dispatchEvent(new CustomEvent(AUTH_LOST_EVENT, { detail: { code, message } }))
     }
 
@@ -175,6 +184,16 @@ async function request(path, options = {}, isReplay = false) {
 
     throw new ApiError(message, response.status, code)
   }
+
+  // A clean response proves the session is healthy again — release the one-shot reload guard so a
+  // later, genuinely new cookie failure (hours from now, in the same tab) still gets one free
+  // silent reload rather than inheriting a flag left over from this unrelated earlier recovery.
+  try {
+    sessionStorage.removeItem(RELOAD_GUARD_KEY)
+  } catch {
+    /* Storage unavailable — nothing to release. */
+  }
+
   return data
 }
 
