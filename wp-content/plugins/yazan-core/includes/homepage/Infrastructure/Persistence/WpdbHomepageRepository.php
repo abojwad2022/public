@@ -63,6 +63,7 @@ final class WpdbHomepageRepository implements HomepageRepositoryPort {
 				'live_sections'         => DocumentSerializer::decode( $row['live_payload'] ),
 				'scheduled_at'          => $row['scheduled_at'] ? strtotime( $row['scheduled_at'] . ' UTC' ) : null,
 				'published_revision_id' => (int) $row['published_revision_id'],
+				'bound_page_id'         => isset( $row['bound_page_id'] ) ? (int) $row['bound_page_id'] : 0,
 			)
 		);
 	}
@@ -89,6 +90,7 @@ final class WpdbHomepageRepository implements HomepageRepositoryPort {
 			'live_payload'          => DocumentSerializer::encode( $document->live_sections() ),
 			'scheduled_at'          => $document->scheduled_at() ? gmdate( 'Y-m-d H:i:s', $document->scheduled_at() ) : null,
 			'published_revision_id' => $document->published_revision_id(),
+			'bound_page_id'         => $document->bound_page_id(),
 			'updated_by'            => get_current_user_id(),
 			'updated_at'            => $now,
 		);
@@ -131,6 +133,82 @@ final class WpdbHomepageRepository implements HomepageRepositoryPort {
 		$this->cache->set( $cache_key, $sections, HOUR_IN_SECONDS * 12 );
 
 		return $sections;
+	}
+
+	/**
+	 * Every document, for the switcher in the builder.
+	 *
+	 * @return array<int,array>
+	 */
+	public function listing() {
+		global $wpdb;
+
+		$table = Schema::table( 'documents' );
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$rows = $wpdb->get_results( "SELECT doc_key, title, status, bound_page_id, updated_at FROM {$table} ORDER BY doc_key = 'default' DESC, title ASC", ARRAY_A );
+
+		return is_array( $rows ) ? $rows : array();
+	}
+
+	/**
+	 * The document bound to a WordPress page, if any.
+	 *
+	 * Reads only the key: the caller loads the full document afterwards, and this runs on every
+	 * page view of a site that may have no landing pages at all.
+	 *
+	 * @param int $page_id Page id.
+	 * @return string|null Document key.
+	 */
+	public function key_for_page( $page_id ) {
+		$page_id = (int) $page_id;
+
+		if ( $page_id <= 0 ) {
+			return null;
+		}
+
+		$cache_key = 'page:' . $page_id;
+		$cached    = $this->cache->get( $cache_key, false );
+
+		if ( is_string( $cached ) ) {
+			return '' === $cached ? null : $cached;
+		}
+
+		global $wpdb;
+		$table = Schema::table( 'documents' );
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$key = $wpdb->get_var( $wpdb->prepare( "SELECT doc_key FROM {$table} WHERE bound_page_id = %d LIMIT 1", $page_id ) );
+
+		// The MISS is cached too, as an empty string — otherwise every ordinary page on the site
+		// pays for a query that will never find anything.
+		$this->cache->set( $cache_key, (string) $key, HOUR_IN_SECONDS * 12 );
+
+		return $key ? (string) $key : null;
+	}
+
+	/**
+	 * Remove a document and everything that belongs to it.
+	 *
+	 * @param DocumentKey $key Key.
+	 * @return bool
+	 */
+	public function delete( DocumentKey $key ) {
+		if ( DocumentKey::DEFAULT_KEY === $key->value() ) {
+			// The homepage itself is not deletable. Emptying it is a different, reversible act.
+			return false;
+		}
+
+		global $wpdb;
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$wpdb->delete( Schema::table( 'revisions' ), array( 'doc_key' => $key->value() ) );
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$done = $wpdb->delete( Schema::table( 'documents' ), array( 'doc_key' => $key->value() ) );
+
+		$this->cache->flush();
+
+		return (bool) $done;
 	}
 
 	/**

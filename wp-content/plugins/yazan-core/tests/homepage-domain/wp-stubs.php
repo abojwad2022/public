@@ -32,12 +32,77 @@ function wp_kses( $html, $allowed, $protocols = array() ) {
 }
 function wp_kses_post( $html ) { return strip_tags( (string) $html, '<a><p><strong><em><ul><li><br>' ); }
 $GLOBALS['__actions'] = array();
-function add_action( $h, $cb, $p = 10, $n = 1 ) { $GLOBALS['__actions'][ $h ][] = $cb; }
+$GLOBALS['__filters'] = array();
+function add_action( $h, $cb, $p = 10, $n = 1 ) { $GLOBALS['__actions'][ $h ][ $p ][] = $cb; }
 function do_action( $h, ...$args ) {
-	foreach ( (array) ( $GLOBALS['__actions'][ $h ] ?? array() ) as $cb ) { $cb( ...$args ); }
+	$all = $GLOBALS['__actions'][ $h ] ?? array();
+	ksort( $all );
+	foreach ( $all as $bucket ) { foreach ( $bucket as $cb ) { $cb( ...$args ); } }
 }
-function add_filter( $h, $cb, $p = 10, $n = 1 ) {}
-function apply_filters( $h, $v, ...$rest ) { return $v; }
+function add_filter( $h, $cb, $p = 10, $n = 1 ) { $GLOBALS['__filters'][ $h ][ $p ][] = $cb; }
+function apply_filters( $h, $v, ...$rest ) {
+	$all = $GLOBALS['__filters'][ $h ] ?? array();
+	ksort( $all );
+	foreach ( $all as $bucket ) { foreach ( $bucket as $cb ) { $v = $cb( $v, ...$rest ); } }
+	return $v;
+}
+function remove_all_filters( $h ) { unset( $GLOBALS['__filters'][ $h ] ); }
+
+/* Terms — a tiny fixture catalogue for the binding tests. */
+$GLOBALS['__terms'] = array(
+	11 => array( 'name' => 'Red Aqeeq',   'slug' => 'red-aqeeq',   'thumb' => 501, 'count' => 12 ),
+	12 => array( 'name' => 'Blue Aqeeq',  'slug' => 'blue-aqeeq',  'thumb' => 0,   'count' => 7 ),
+);
+function get_terms( $args = array() ) {
+	$out = array();
+	$ids = isset( $args['include'] ) ? $args['include'] : array_keys( $GLOBALS['__terms'] );
+	foreach ( $ids as $id ) {
+		if ( ! isset( $GLOBALS['__terms'][ $id ] ) ) { continue; }
+		$t = (object) array( 'term_id' => $id, 'name' => $GLOBALS['__terms'][ $id ]['name'], 'slug' => $GLOBALS['__terms'][ $id ]['slug'], 'count' => $GLOBALS['__terms'][ $id ]['count'] );
+		$out[] = $t;
+	}
+	return $out;
+}
+function get_term_link( $t ) { return 'https://yazan.local/product-category/' . $t->slug . '/'; }
+function get_term_meta( $id, $k, $single = false ) { return $GLOBALS['__terms'][ $id ]['thumb'] ?? 0; }
+function is_wp_error( $v ) { return false; }
+function taxonomy_exists( $t ) { return in_array( $t, array( 'product_cat', 'product_tag', 'pa_stone' ), true ); }
+function wc_get_product_ids_on_sale() { return array(); }
+function wp_next_scheduled( $h ) { return false; }
+function wp_schedule_single_event( $t, $h ) { return true; }
+function wp_clear_scheduled_hook( $h ) { return true; }
+function is_admin() { return false; }
+function is_front_page() { return true; }
+function wp_get_attachment_url( $id ) { return $id ? 'https://yazan.local/uploads/' . $id . '.mp4' : ''; }
+function wp_enqueue_style( ...$a ) { $GLOBALS['__styles'][] = $a[0]; return true; }
+function esc_html( $v ) { return htmlspecialchars( (string) $v, ENT_QUOTES ); }
+function esc_attr( $v ) { return htmlspecialchars( (string) $v, ENT_QUOTES ); }
+function esc_url( $v ) { return (string) $v; }
+function esc_html_e( $v, $d = null ) { echo esc_html( $v ); }
+function filemtime_safe( $p ) { return 1; }
+function wp_get_attachment_image( $id, $size = 'medium', $icon = false, $attr = array() ) {
+	$id = (int) $id;
+	if ( ! $id ) { return ''; }
+	// Honour whatever attributes the caller passed — the real function does, and a stub that
+	// hardcodes loading="lazy" hides exactly the LCP bug this test exists to catch.
+	$attr = array_merge( array( 'alt' => '', 'loading' => 'lazy' ), (array) $attr );
+	$out  = '<img src="https://yazan.local/img/' . $id . '.jpg"';
+	foreach ( $attr as $key => $value ) {
+		$out .= ' ' . $key . '="' . esc_attr( (string) $value ) . '"';
+	}
+	return $out . ' />';
+}
+function esc_attr_e( $v, $d = null ) { echo esc_attr( $v ); }
+function wp_trim_words( $t, $n = 55, $more = null ) { return $t; }
+$GLOBALS['__pages'] = array( 55 => 'Eid campaign', 56 => 'Winter' );
+function get_post( $id ) {
+	return isset( $GLOBALS['__pages'][ (int) $id ] ) ? (object) array( 'ID' => (int) $id, 'post_type' => 'page' ) : null;
+}
+function get_the_title( $id = 0 ) { return $GLOBALS['__pages'][ (int) $id ] ?? ''; }
+function get_permalink( $id = 0 ) { return 'https://yazan.local/?p=' . (int) $id; }
+function sanitize_key_stub() {}
+function wp_strip_all_tags( $t, $break = false ) { return trim( strip_tags( (string) $t ) ); }
+function get_post_time( $format = 'U', $gmt = false, $post = null ) { return '2026-01-15T09:00:00+00:00'; }
 function get_current_user_id() { return 1; }
 function get_option( $k, $d = false ) { return $d; }
 function update_option( $k, $v, $a = null ) { return true; }
@@ -46,10 +111,15 @@ function set_transient( $k, $v, $t = 0 ) { return true; }
 function wp_cache_get( $k, $g = '', $f = false, &$found = null ) { $found = false; return false; }
 function wp_cache_set( $k, $v, $g = '', $t = 0 ) { return true; }
 function get_post_type( $id ) { return 'attachment'; }
-function get_post_mime_type( $id ) { return 128 === (int) $id ? 'image/svg+xml' : 'image/jpeg'; }
+function get_post_mime_type( $id ) {
+	$id = (int) $id;
+	if ( 128 === $id ) { return 'image/svg+xml'; }   // the one we expect to be refused
+	if ( 77 === $id )  { return 'video/mp4'; }       // the one used as a video in tests
+	return 'image/jpeg';
+}
 function wp_get_attachment_image_url( $id, $s = 'full' ) { return 'https://yazan.local/img/' . $id . '.jpg'; }
 function wp_get_attachment_image_src( $id, $s = 'full' ) { return array( 'https://yazan.local/img/' . $id . '.jpg', 1600, 900 ); }
-function wp_get_attachment_image_srcset( $id, $s = 'full' ) { return ''; }
+function wp_get_attachment_image_srcset( $id, $s = 'full' ) { return 'https://yazan.local/img/' . (int) $id . '.jpg 1x'; }
 function wp_get_attachment_image_sizes( $id, $s = 'full' ) { return ''; }
 function get_post_meta( $id, $k, $single = false ) { return ''; }
 function wp_timezone_string() { return 'Asia/Aden'; }

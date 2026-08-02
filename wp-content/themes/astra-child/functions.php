@@ -67,3 +67,4 @@ require YAZAN_DIR . '/inc/promo-popup.php'; // First-order email-capture popup â
 require YAZAN_DIR . '/inc/chat-widget.php'; // Storefront AI concierge (yazan-core yazan/v1/ai/chat).
 require YAZAN_DIR . '/inc/wishlist.php';    // Customer favourites: heart toggle + My Account tab (yazan/v1/wishlist).
 require YAZAN_DIR . '/inc/schema.php';       // AI/search visibility: Product JSON-LD + dynamic /llms.txt.
+

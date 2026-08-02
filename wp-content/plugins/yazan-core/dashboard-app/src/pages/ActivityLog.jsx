@@ -215,7 +215,7 @@ export default function ActivityLog() {
                   const link = objectLink(row)
                   return (
                     <TR key={row.id} className="align-top">
-                      <TD className="yz-num whitespace-nowrap text-muted">{row.date} label="When"</TD>
+                      <TD className="yz-num whitespace-nowrap text-muted" label="When">{row.date}</TD>
                       <TD label="Action">
                         <Badge tone={actionTone(row.action)}>{row.action}</Badge>
                       </TD>
@@ -241,14 +241,35 @@ export default function ActivityLog() {
                               <li key={key}>
                                 <span className="text-faint">{key}:</span>{' '}
                                 <span className="text-fg">
-                                  {Array.isArray(value) ? value.join(', ') : String(value)}
+                                  {/*
+                                    A list of changes gets one line each — the homepage's save rows
+                                    carry the old→new value per field, and joining them with commas
+                                    made them unreadable. Anything non-scalar is JSON rather than
+                                    String(value), which used to render "[object Object]": an audit
+                                    entry you cannot read is the same as one that was never written.
+                                  */}
+                                  {Array.isArray(value) ? (
+                                    <span className="block space-y-0.5">
+                                      {value.map((entry, i) => (
+                                        <span key={i} className="block">
+                                          {typeof entry === 'object' && entry !== null
+                                            ? JSON.stringify(entry)
+                                            : String(entry)}
+                                        </span>
+                                      ))}
+                                    </span>
+                                  ) : typeof value === 'object' && value !== null ? (
+                                    JSON.stringify(value)
+                                  ) : (
+                                    String(value)
+                                  )}
                                 </span>
                               </li>
                             ))}
                           </ul>
                         )}
                       </TD>
-                      <TD className="text-muted">{row.user} label="By"</TD>
+                      <TD className="text-muted" label="By">{row.user}</TD>
                       <TD className="font-mono text-xs text-faint" label="IP">{row.ip || '—'}</TD>
                       {/* Truncated with the full string on hover — a user-agent is far too long
                           for a column, but useless if it cannot be read at all. */}

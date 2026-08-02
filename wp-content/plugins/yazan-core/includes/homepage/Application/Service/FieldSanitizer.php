@@ -134,6 +134,27 @@ final class FieldSanitizer {
 			case FieldType::TOGGLE:
 				return (bool) $value;
 
+			case FieldType::DATETIME:
+				// Stored as a UTC timestamp whatever the client sent — a string date is parsed
+				// here rather than in three different templates later.
+				if ( is_numeric( $value ) ) {
+					return max( 0, (int) $value );
+				}
+
+				$value = trim( (string) $value );
+
+				// An empty date means UNSET, and 0 is how unset is stored. Without this line the
+				// string ' UTC' reached strtotime(), which reads a bare timezone as "now" — so a
+				// hero slide saved with no schedule got from == to == the instant it was saved and
+				// was then correctly judged out of its own window and removed from the page. An
+				// empty field must never become a moment in time.
+				if ( '' === $value ) {
+					return 0;
+				}
+
+				$parsed = strtotime( $value . ' UTC' );
+				return $parsed ? (int) $parsed : 0;
+
 			case FieldType::SELECT:
 				$choices = (array) $field->constraint( 'choices', array() );
 				$value   = sanitize_key( (string) $value );
@@ -156,6 +177,10 @@ final class FieldSanitizer {
 
 			case FieldType::GALLERY:
 				return $this->sanitize_attachment_list( $value, $field );
+
+			case FieldType::URL:
+				// A bare URL string, for the theme keys that store one (story_cta_url, cstory_*_url).
+				return esc_url_raw( (string) $value, self::ALLOWED_PROTOCOLS );
 
 			case FieldType::LINK:
 				return $this->sanitize_link( (array) $value );

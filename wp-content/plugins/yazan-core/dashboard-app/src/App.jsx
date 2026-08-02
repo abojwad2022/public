@@ -104,6 +104,7 @@ const Categories = lazyRoute(() => import('./pages/Categories.jsx'))
 const Attributes = lazyRoute(() => import('./pages/Attributes.jsx'))
 const Inventory = lazyRoute(() => import('./pages/Inventory.jsx'))
 const Settings = lazyRoute(() => import('./pages/Settings.jsx'))
+const HomepageBuilder = lazyRoute(() => import('./pages/homepage/HomepageBuilder.jsx'))
 const Coupons = lazyRoute(() => import('./pages/Coupons.jsx'))
 const Reports = lazyRoute(() => import('./pages/Reports.jsx'))
 const ActivityLog = lazyRoute(() => import('./pages/ActivityLog.jsx'))
@@ -219,6 +220,7 @@ function Shell() {
      */
     <Routes>
       <Route path="/" element={<Protected perm="dashboard.view" title="Dashboard"><DashboardHome /></Protected>} />
+      <Route path="/homepage" element={<Protected perm="homepage.view" title="Homepage"><HomepageBuilder /></Protected>} />
       <Route path="/products" element={<Protected perm="products.view" title="Products"><Products /></Protected>} />
       <Route path="/products/new" element={<Protected perm="products.create" title="Products"><ProductEditor /></Protected>} />
       <Route path="/products/:id" element={<Protected perm="products.view" title="Products"><ProductEditor /></Protected>} />

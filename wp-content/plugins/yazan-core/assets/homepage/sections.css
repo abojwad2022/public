@@ -1,0 +1,599 @@
+/*
+ * Styles for the sections the plugin draws itself.
+ *
+ * Deliberately thin. Every colour, font and rhythm value comes from the theme's own custom
+ * properties (assets/css/theme-tokens.css), so these bands follow the Obsidian/Maroon switcher and
+ * the type scale without knowing either exists. Nothing here hard-codes a brand colour.
+ *
+ * Loaded ONLY when one of these sections is on the page — see AssetCollector.
+ */
+
+/* ---------------------------------------------------------------- video */
+
+.yzhp-video__frame {
+	margin-top: clamp(1.5rem, 4vw, 3rem);
+	border-radius: 2px;
+	overflow: hidden;
+	background: color-mix(in srgb, var(--yz-ink, #14161b) 88%, #fff);
+}
+
+.yzhp-video__player {
+	display: block;
+	width: 100%;
+	height: auto;
+	aspect-ratio: 16 / 9;
+	object-fit: cover;
+}
+
+/* ---------------------------------------------------------------- numbers */
+
+.yzhp-stats__grid {
+	display: grid;
+	gap: clamp(1.25rem, 3vw, 2.5rem);
+	grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+	margin-top: clamp(1.5rem, 4vw, 3rem);
+	text-align: center;
+}
+
+.yzhp-stats__value {
+	display: block;
+	font-family: var(--yz-font-display, inherit);
+	font-size: clamp(2rem, 5vw, 3.25rem);
+	line-height: 1.05;
+	/* The gold accent is the theme's; falling back to currentColor keeps it legible on both
+	   backgrounds if the token is ever renamed. */
+	color: var(--yz-gold, currentColor);
+}
+
+.yzhp-stats__label {
+	display: block;
+	margin-top: 0.5rem;
+	opacity: 0.75;
+}
+
+/* ---------------------------------------------------------------- questions */
+
+.yzhp-faq__list {
+	max-width: 46rem;
+	margin: clamp(1.5rem, 4vw, 3rem) auto 0;
+}
+
+.yzhp-faq__item {
+	border-block-end: 1px solid color-mix(in srgb, currentColor 15%, transparent);
+}
+
+.yzhp-faq__q {
+	cursor: pointer;
+	padding: 1rem 2rem 1rem 0;
+	position: relative;
+	font-size: 1.0625rem;
+	list-style: none;
+}
+
+/* Safari still paints its own triangle without this. */
+.yzhp-faq__q::-webkit-details-marker {
+	display: none;
+}
+
+.yzhp-faq__q::after {
+	content: '+';
+	position: absolute;
+	inset-inline-end: 0;
+	top: 50%;
+	transform: translateY(-50%);
+	font-size: 1.25rem;
+	opacity: 0.6;
+	transition: transform 0.2s ease;
+}
+
+.yzhp-faq__item[open] .yzhp-faq__q::after {
+	content: '−';
+}
+
+.yzhp-faq__a {
+	padding: 0 2rem 1.25rem 0;
+	opacity: 0.85;
+	line-height: 1.7;
+}
+
+/* The reveal animation must never be the reason content is invisible. */
+@media (prefers-reduced-motion: reduce) {
+	.yzhp-video__frame,
+	.yzhp-stats__item,
+	.yzhp-faq__item {
+		opacity: 1 !important;
+		transform: none !important;
+	}
+}
+
+/* ---------------------------------------------------------------- brands */
+
+.yzhp-brands__grid {
+	display: grid;
+	gap: clamp(1rem, 3vw, 2.5rem);
+	grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr));
+	align-items: center;
+	margin-top: clamp(1.25rem, 3vw, 2.5rem);
+}
+
+.yzhp-brands__item {
+	text-align: center;
+}
+
+.yzhp-brands__logo {
+	max-width: 100%;
+	height: auto;
+	max-height: 3.5rem;
+	width: auto;
+	/* Marks are rarely supplied in one palette. Desaturating until hover keeps the row calm
+	   without asking anyone to re-cut their logo. */
+	filter: grayscale(1);
+	opacity: 0.65;
+	transition: filter 0.25s ease, opacity 0.25s ease;
+}
+
+.yzhp-brands__item:hover .yzhp-brands__logo {
+	filter: grayscale(0);
+	opacity: 1;
+}
+
+/* ---------------------------------------------------------------- call to action */
+
+.yzhp-cta {
+	position: relative;
+	text-align: center;
+	background-size: cover;
+	background-position: center;
+}
+
+.yzhp-cta__scrim {
+	position: absolute;
+	inset: 0;
+	background: linear-gradient(
+		to bottom,
+		color-mix(in srgb, var(--yz-ink, #14161b) 55%, transparent),
+		color-mix(in srgb, var(--yz-ink, #14161b) 80%, transparent)
+	);
+}
+
+.yzhp-cta__inner {
+	position: relative;
+}
+
+.yzhp-cta__title {
+	margin-block: 0.5rem;
+}
+
+.yzhp-cta__intro {
+	max-width: 40rem;
+	margin-inline: auto;
+	opacity: 0.85;
+}
+
+.yzhp-cta__actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.75rem;
+	justify-content: center;
+	margin-top: clamp(1.25rem, 3vw, 2rem);
+}
+
+/* ---------------------------------------------------------------- flash sale */
+
+.yzhp-sale__timer {
+	display: flex;
+	gap: clamp(0.75rem, 2vw, 1.5rem);
+	justify-content: center;
+	margin-top: 1.25rem;
+	/* Tabular figures stop the row jittering every second as digit widths change. */
+	font-variant-numeric: tabular-nums;
+}
+
+.yzhp-sale__unit {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	min-width: 3rem;
+}
+
+.yzhp-sale__unit b {
+	font-size: clamp(1.25rem, 3vw, 1.75rem);
+	font-weight: 500;
+	color: var(--yz-gold, currentColor);
+}
+
+.yzhp-sale__unit i {
+	font-style: normal;
+	font-size: 0.6875rem;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	opacity: 0.6;
+}
+
+.yzhp-sale__more {
+	margin-top: clamp(1.25rem, 3vw, 2rem);
+	text-align: center;
+}
+
+/* ---------------------------------------------------------------- journal */
+
+.yzhp-blog__grid {
+	display: grid;
+	gap: clamp(1.25rem, 3vw, 2rem);
+	grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+	margin-top: clamp(1.5rem, 4vw, 3rem);
+}
+
+.yzhp-blog__link {
+	display: block;
+	text-decoration: none;
+	color: inherit;
+}
+
+.yzhp-blog__media {
+	display: block;
+	overflow: hidden;
+	aspect-ratio: 4 / 3;
+	margin-bottom: 0.875rem;
+}
+
+.yzhp-blog__media img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	transition: transform 0.5s ease;
+}
+
+.yzhp-blog__link:hover .yzhp-blog__media img {
+	transform: scale(1.04);
+}
+
+.yzhp-blog__title {
+	display: block;
+	margin-top: 0.35rem;
+	font-size: 1.125rem;
+	line-height: 1.35;
+}
+
+.yzhp-blog__excerpt {
+	display: block;
+	margin-top: 0.5rem;
+	opacity: 0.75;
+	line-height: 1.6;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.yzhp-brands__logo,
+	.yzhp-blog__media img {
+		transition: none;
+	}
+}
+
+/* ---------------------------------------------------------------- hero slider */
+
+.yzhp-hero {
+	position: relative;
+	padding: 0;
+	overflow: hidden;
+	/* svh, not vh: on mobile browsers vh includes the collapsing address bar, so a 100vh hero is
+	   taller than the screen on first paint and the button sits below the fold. */
+	min-height: min(88svh, 46rem);
+	color: #fff;
+}
+
+.yzhp-hero__track {
+	display: grid;
+	min-height: inherit;
+}
+
+.yzhp-hero__slide {
+	grid-area: 1 / 1;
+	position: relative;
+	display: flex;
+	align-items: center;
+	min-height: inherit;
+	opacity: 0;
+	visibility: hidden;
+	transition: opacity 0.7s ease;
+}
+
+.yzhp-hero__slide.is-active {
+	opacity: 1;
+	visibility: visible;
+}
+
+.yzhp-hero__media,
+.yzhp-hero__img {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+.yzhp-hero__scrim {
+	position: absolute;
+	inset: 0;
+	background: linear-gradient(
+		to top,
+		color-mix(in srgb, var(--yz-ink, #14161b) calc(var(--yzhp-hero-overlay, 0.45) * 130%), transparent),
+		color-mix(in srgb, var(--yz-ink, #14161b) calc(var(--yzhp-hero-overlay, 0.45) * 60%), transparent)
+	);
+}
+
+.yzhp-hero__inner {
+	position: relative;
+	width: 100%;
+	padding-block: clamp(3rem, 10vh, 7rem);
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+}
+
+.yzhp-hero__slide.is-align-center .yzhp-hero__inner {
+	align-items: center;
+	text-align: center;
+}
+
+.yzhp-hero__slide.is-align-end .yzhp-hero__inner {
+	align-items: flex-end;
+	text-align: end;
+}
+
+.yzhp-hero__title {
+	margin: 0;
+	font-size: clamp(2rem, 6vw, 4rem);
+	line-height: 1.05;
+}
+
+.yzhp-hero__subtitle {
+	font-size: clamp(1.125rem, 2.5vw, 1.5rem);
+	opacity: 0.9;
+}
+
+.yzhp-hero__desc {
+	max-width: 34rem;
+	opacity: 0.85;
+	line-height: 1.65;
+}
+
+.yzhp-hero__actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.75rem;
+	margin-top: 1rem;
+}
+
+.yzhp-hero__nav {
+	position: absolute;
+	top: 50%;
+	transform: translateY(-50%);
+	z-index: 2;
+	width: 2.75rem;
+	height: 2.75rem;
+	border: 1px solid rgba(255, 255, 255, 0.35);
+	border-radius: 50%;
+	background: rgba(0, 0, 0, 0.25);
+	color: #fff;
+	font-size: 1.5rem;
+	line-height: 1;
+	cursor: pointer;
+}
+
+.yzhp-hero__nav:hover {
+	background: rgba(0, 0, 0, 0.45);
+}
+
+/* Logical properties so the arrows swap sides on the RTL version without a second rule. */
+.yzhp-hero__nav.is-prev { inset-inline-start: clamp(0.5rem, 2vw, 1.5rem); }
+.yzhp-hero__nav.is-next { inset-inline-end: clamp(0.5rem, 2vw, 1.5rem); }
+
+.yzhp-hero__dots {
+	position: absolute;
+	inset-inline: 0;
+	bottom: 1.25rem;
+	z-index: 2;
+	display: flex;
+	gap: 0.5rem;
+	justify-content: center;
+}
+
+.yzhp-hero__dot {
+	width: 2rem;
+	height: 3px;
+	padding: 0;
+	border: 0;
+	background: rgba(255, 255, 255, 0.35);
+	cursor: pointer;
+}
+
+.yzhp-hero__dot.is-active {
+	background: var(--yz-gold, #fff);
+}
+
+/* Every control needs a visible focus ring — these sit on photographs, where the browser default
+   is often invisible. */
+.yzhp-hero__nav:focus-visible,
+.yzhp-hero__dot:focus-visible {
+	outline: 2px solid var(--yz-gold, #fff);
+	outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.yzhp-hero__slide {
+		transition: none;
+	}
+}
+
+/* ---------------------------------------------------------------- product carousel */
+
+.yzhp-carousel__viewport {
+	position: relative;
+	margin-top: clamp(1.25rem, 3vw, 2.5rem);
+}
+
+.yzhp-carousel__track {
+	overflow-x: auto;
+	scroll-snap-type: x mandatory;
+	scroll-behavior: smooth;
+	scrollbar-width: none;
+	/* Room for the card's own hover lift and focus ring, which a clipped track would cut off. */
+	padding-block: 0.25rem;
+}
+
+.yzhp-carousel__track::-webkit-scrollbar {
+	display: none;
+}
+
+/* WooCommerce renders <ul class="products"><li class="product">. The rail is that list turned
+   horizontal, so every card keeps the theme's own styling, hooks and badges. */
+.yzhp-carousel__track ul.products {
+	display: flex;
+	gap: var(--yzhp-gap, 1.25rem);
+	margin: 0;
+	padding: 0;
+	list-style: none;
+	float: none;
+}
+
+.yzhp-carousel__track ul.products::before,
+.yzhp-carousel__track ul.products::after {
+	content: none;
+}
+
+.yzhp-carousel__track ul.products li.product {
+	flex: 0 0 calc(
+		( 100% - ( var(--yzhp-per-desktop, 4) - 1 ) * var(--yzhp-gap, 1.25rem) ) / var(--yzhp-per-desktop, 4)
+	);
+	margin: 0 !important;
+	width: auto !important;
+	scroll-snap-align: start;
+}
+
+@media ( max-width: 1024px ) {
+	.yzhp-carousel__track ul.products li.product {
+		flex-basis: calc(
+			( 100% - ( var(--yzhp-per-tablet, 3) - 1 ) * var(--yzhp-gap, 1.25rem) ) / var(--yzhp-per-tablet, 3)
+		);
+	}
+}
+
+@media ( max-width: 600px ) {
+	.yzhp-carousel__track ul.products li.product {
+		/* The 0.12 sliver is deliberate: a partially visible next card is what tells someone the
+		   rail scrolls, without needing an arrow they may not see. */
+		flex-basis: calc(
+			( 100% - ( var(--yzhp-per-mobile, 1) - 1 ) * var(--yzhp-gap, 1.25rem) ) /
+			( var(--yzhp-per-mobile, 1) + 0.12 )
+		);
+	}
+}
+
+.yzhp-carousel__nav {
+	position: absolute;
+	top: 40%;
+	z-index: 2;
+	width: 2.5rem;
+	height: 2.5rem;
+	border: 1px solid color-mix(in srgb, currentColor 25%, transparent);
+	border-radius: 50%;
+	background: var(--yz-ivory, #fff);
+	color: inherit;
+	font-size: 1.35rem;
+	line-height: 1;
+	cursor: pointer;
+}
+
+.yzhp-carousel__nav[hidden] {
+	display: none;
+}
+
+.yzhp-carousel__nav.is-prev { inset-inline-start: -0.75rem; }
+.yzhp-carousel__nav.is-next { inset-inline-end: -0.75rem; }
+
+.yzhp-carousel__track:focus-visible,
+.yzhp-carousel__nav:focus-visible {
+	outline: 2px solid var(--yz-gold, currentColor);
+	outline-offset: 3px;
+}
+
+.yzhp-carousel__more {
+	margin-top: clamp(1rem, 2.5vw, 1.75rem);
+	text-align: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.yzhp-carousel__track {
+		scroll-behavior: auto;
+	}
+}
+
+/* ---------------------------------------------------------------- per-section design */
+
+/*
+ * The wrapper exists only for sections that have design of their own. Everything it does is driven
+ * by custom properties written into a scoped rule, so this file never needs to know what any
+ * particular section chose.
+ */
+.yzhp-sec {
+	display: block;
+	padding-block: var(--yzhp-pt, 0) var(--yzhp-pb, 0);
+}
+
+.yzhp-sec.has-bg-image {
+	position: relative;
+}
+
+.yzhp-sec.has-bg-image::before {
+	content: '';
+	position: absolute;
+	inset: 0;
+	background: rgb(0 0 0 / var(--yzhp-overlay, 0.4));
+	pointer-events: none;
+}
+
+.yzhp-sec.has-bg-image > * {
+	position: relative;
+}
+
+/* ---------------------------------------------------------------- entrance */
+
+/*
+ * The animation is applied by a class the observer adds, NOT by the presence of the attribute —
+ * so if the script never runs, the section is simply visible. An entrance animation must never be
+ * the reason content cannot be read.
+ */
+.yzhp-anim {
+	--yzhp-anim-duration: 600ms;
+	--yzhp-anim-delay: 0ms;
+}
+
+.yzhp-anim.is-armed {
+	opacity: 0;
+	will-change: opacity, transform;
+}
+
+.yzhp-anim.is-armed[data-yzhp-anim='rise'] {
+	transform: translateY(1.5rem);
+}
+
+.yzhp-anim.is-armed[data-yzhp-anim='scale'] {
+	transform: scale(0.97);
+}
+
+.yzhp-anim.is-inview {
+	opacity: 1;
+	transform: none;
+	transition:
+		opacity var(--yzhp-anim-duration) ease var(--yzhp-anim-delay),
+		transform var(--yzhp-anim-duration) ease var(--yzhp-anim-delay);
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.yzhp-anim.is-armed,
+	.yzhp-anim.is-inview {
+		opacity: 1;
+		transform: none;
+		transition: none;
+	}
+}

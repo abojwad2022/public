@@ -48,6 +48,7 @@ final class PermissionCatalog {
 			'import'              => __( 'Import a homepage package. Replaces the whole draft.', 'yazan' ),
 			'export'              => __( 'Export the homepage as a portable package.', 'yazan' ),
 			'settings'            => null,
+			'experiment'          => __( 'Run an A/B test between two layouts, and promote the winner.', 'yazan' ),
 
 			'sections.view'       => null,
 			'sections.create'     => null,

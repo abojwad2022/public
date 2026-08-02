@@ -142,6 +142,138 @@ $empty = HomepageDocument::create( DocumentKey::default_key() );
 check( 'no errors',        array() === $validator->errors( $empty ) );
 check( 'no live sections', array() === $empty->live_sections() );
 
+echo "\n[8] The audit diff — old value and new value, per field\n";
+$diff_before = array(
+	array(
+		'id'      => 'aaaaaaaa-0000-0000-0000-000000000001',
+		'type'    => 'story',
+		'state'   => 'enabled',
+		'content' => array( 'heading' => 'The Legacy of Yemeni Agate', 'body' => 'Old body' ),
+		'design'  => array( 'background' => '' ),
+	),
+	array(
+		'id'      => 'aaaaaaaa-0000-0000-0000-000000000002',
+		'type'    => 'faq',
+		'state'   => 'enabled',
+		'content' => array( 'items' => array( array( 'q' => 'Shipping?' ) ) ),
+	),
+);
+
+$diff_after = array(
+	array(
+		'id'      => 'aaaaaaaa-0000-0000-0000-000000000002',
+		'type'    => 'faq',
+		'state'   => 'disabled',
+		'content' => array( 'items' => array( array( 'q' => 'Shipping?' ) ) ),
+	),
+	array(
+		'id'      => 'aaaaaaaa-0000-0000-0000-000000000001',
+		'type'    => 'story',
+		'state'   => 'enabled',
+		'content' => array( 'heading' => 'Verification Heading', 'body' => 'Old body' ),
+		'design'  => array( 'background' => '--ink' ),
+	),
+	array(
+		'id'      => 'aaaaaaaa-0000-0000-0000-000000000003',
+		'type'    => 'video',
+		'state'   => 'enabled',
+		'content' => array(),
+	),
+);
+
+$lines = \Yazan\Homepage\Domain\Document\SectionDiff::describe( $diff_before, $diff_after );
+$joined = implode( ' | ', $lines );
+
+check( 'the changed field is named with its old and new value', false !== strpos( $joined, 'content.heading: “The Legacy of Yemeni Agate” → “Verification Heading”' ) );
+check( 'an untouched field is not reported',                    false === strpos( $joined, 'content.body' ) );
+check( 'a design change is reported',                           false !== strpos( $joined, 'design.background: (empty) → “--ink”' ) );
+check( 'hiding a section is reported',                          false !== strpos( $joined, 'state: “enabled” → “disabled”' ) );
+check( 'a new section is reported as added',                    false !== strpos( $joined, 'added video#aaaaaaaa' ) );
+check( 'reordering is reported',                                in_array( 'reordered', $lines, true ) );
+check( 'the section is identifiable in the line',               false !== strpos( $joined, 'story#aaaaaaaa' ) );
+
+$removed = \Yazan\Homepage\Domain\Document\SectionDiff::describe( $diff_before, array( $diff_before[0] ) );
+check( 'a deleted section is reported as removed', in_array( 'removed faq#aaaaaaaa', $removed, true ) );
+
+check( 'an identical draft produces no lines', array() === \Yazan\Homepage\Domain\Document\SectionDiff::describe( $diff_before, $diff_before ) );
+
+$long_before = array( array( 'id' => 'b-1', 'type' => 'story', 'content' => array( 'body' => str_repeat( 'x', 400 ) ) ) );
+$long_after  = array( array( 'id' => 'b-1', 'type' => 'story', 'content' => array( 'body' => str_repeat( 'y', 400 ) ) ) );
+$long        = \Yazan\Homepage\Domain\Document\SectionDiff::describe( $long_before, $long_after );
+check( 'a long value is truncated, not stored whole', false !== strpos( $long[0], '…' ) && strlen( $long[0] ) < 400 );
+
+$many_before = array();
+$many_after  = array();
+for ( $i = 0; $i < 60; $i++ ) {
+	$many_before[] = array( 'id' => 'c-' . $i, 'type' => 'story', 'content' => array( 'heading' => 'a' ) );
+	$many_after[]  = array( 'id' => 'c-' . $i, 'type' => 'story', 'content' => array( 'heading' => 'b' ) );
+}
+$many = \Yazan\Homepage\Domain\Document\SectionDiff::describe( $many_before, $many_after );
+check( 'the list is capped',            count( $many ) === \Yazan\Homepage\Domain\Document\SectionDiff::MAX_LINES + 1 );
+check( 'and says what it left out',     false !== strpos( end( $many ), 'not recorded' ) );
+
+echo "\n[9] The diff reaches the audit event\n";
+$audited = HomepageDocument::create( DocumentKey::default_key() );
+$audited->add_section( $factory->make( 'hero', array( 'title' => 'First' ) ) );
+$audited->release_events();
+
+$existing = $audited->sections()->all();
+$edited   = $existing[0]->with_content( array( 'title' => 'Second' ) );
+$audited->replace_sections( \Yazan\Homepage\Domain\Document\SectionCollection::of( array( $edited ) ), 'draft_save' );
+
+$saved_event = null;
+foreach ( $audited->release_events() as $event ) {
+	if ( 'homepage.saved' === $event->name() ) {
+		$saved_event = $event;
+	}
+}
+
+check( 'the save event exists',            null !== $saved_event );
+$changes = $saved_event ? $saved_event->changes() : array();
+check( 'it carries a changed list',        isset( $changes['changed'] ) && is_array( $changes['changed'] ) );
+check( 'naming the old and the new value', false !== strpos( implode( ' | ', isset( $changes['changed'] ) ? $changes['changed'] : array() ), '“First” → “Second”' ) );
+
+$quiet = HomepageDocument::create( DocumentKey::default_key() );
+$quiet->replace_sections( \Yazan\Homepage\Domain\Document\SectionCollection::empty_collection(), 'draft_save' );
+$quiet_changes = array();
+foreach ( $quiet->release_events() as $event ) {
+	if ( 'homepage.saved' === $event->name() ) {
+		$quiet_changes = $event->changes();
+	}
+}
+check( 'a save that changed nothing says so', array( 'no field changes' ) === $quiet_changes['changed'] );
+
+$imported = HomepageDocument::create( DocumentKey::default_key() );
+$imported->replace_sections( \Yazan\Homepage\Domain\Document\SectionCollection::empty_collection(), 'import', false );
+$import_changes = array();
+foreach ( $imported->release_events() as $event ) {
+	if ( 'homepage.saved' === $event->name() ) {
+		$import_changes = $event->changes();
+	}
+}
+check( 'import records no per-field list', ! isset( $import_changes['changed'] ) );
+
+echo "\n[10] An empty date is unset, not now\n";
+$dated = ComponentDefinition::make( array(
+	'type'   => 'dated',
+	'label'  => 'Dated',
+	'schema' => ComponentSchema::of( array(
+		F::make( 'from', T::DATETIME ),
+		F::make( 'to',   T::DATETIME ),
+	) ),
+) );
+$registry->register( $dated );
+
+$blank = $factory->make( 'dated', array( 'from' => null, 'to' => '' ) );
+check( 'null date stored as unset',  0 === $blank->content()['from'] );
+check( 'empty string stored as unset', 0 === $blank->content()['to'] );
+
+$real = $factory->make( 'dated', array( 'from' => '2026-01-02 03:04:05' ) );
+check( 'a real date still parses', $real->content()['from'] === strtotime( '2026-01-02 03:04:05 UTC' ) );
+
+$stamp = $factory->make( 'dated', array( 'from' => 1767322000 ) );
+check( 'a timestamp passes through', 1767322000 === $stamp->content()['from'] );
+
 echo "\n----------------------------------------\n";
 echo "  passed: $pass   failed: $fail\n";
 exit( $fail ? 1 : 0 );

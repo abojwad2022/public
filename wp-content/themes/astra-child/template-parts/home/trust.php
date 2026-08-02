@@ -29,6 +29,17 @@ $items = array(
 	array( 'i' => 'ship',   't' => __( 'International Shipping', 'yazan' ),  'd' => __( 'Insured worldwide delivery.', 'yazan' ) ),
 	array( 'i' => 'support', 't' => __( 'Customer Support', 'yazan' ),      'd' => __( 'Personal help, every step.', 'yazan' ) ),
 );
+
+/**
+ * Allow the Homepage Manager (or any integration) to supply the assurance items.
+ *
+ * Each item is [ 'i' => icon key from $icon above, 't' => title, 'd' => description ]. The icon is
+ * a KEY, never markup: the SVGs stay static and trusted in this file, so nothing editable can ever
+ * inject script here.
+ *
+ * @param array $items Default items.
+ */
+$items = apply_filters( 'yazan_home_trust_items', $items );
 ?>
 <section id="trust" class="yz-home-section yz-trust yz-section--ivory">
 	<div class="yz-container">

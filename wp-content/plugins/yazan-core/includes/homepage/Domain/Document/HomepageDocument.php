@@ -59,6 +59,14 @@ final class HomepageDocument {
 	/** @var array Sections as they are currently live (empty until first publish). */
 	private $live_sections;
 
+	/**
+	 * @var int WordPress page this document renders on. 0 = the front page (the default document).
+	 *
+	 * A landing page is the same document type bound somewhere else — which is why "multi
+	 * homepages" needed no new aggregate, only a key that was never assumed to be 'default'.
+	 */
+	private $bound_page_id = 0;
+
 	/** @var DomainEvent[] */
 	private $events = array();
 
@@ -121,7 +129,7 @@ final class HomepageDocument {
 			$sections[] = Section::from_array( (array) $section );
 		}
 
-		return new self(
+		$document = new self(
 			isset( $row['id'] ) ? $row['id'] : 0,
 			DocumentKey::from( isset( $row['key'] ) ? $row['key'] : DocumentKey::DEFAULT_KEY ),
 			isset( $row['title'] ) ? $row['title'] : '',
@@ -132,6 +140,10 @@ final class HomepageDocument {
 			isset( $row['scheduled_at'] ) ? $row['scheduled_at'] : null,
 			isset( $row['published_revision_id'] ) ? $row['published_revision_id'] : null
 		);
+
+		$document->bound_page_id = isset( $row['bound_page_id'] ) ? (int) $row['bound_page_id'] : 0;
+
+		return $document;
 	}
 
 	/* ------------------------------------------------------------------ reads */
@@ -179,6 +191,33 @@ final class HomepageDocument {
 	/** @return int|null */
 	public function published_revision_id() {
 		return $this->published_revision_id;
+	}
+
+	/** @return int */
+	public function bound_page_id() {
+		return $this->bound_page_id;
+	}
+
+	/**
+	 * Bind this document to a WordPress page, or to nothing.
+	 *
+	 * @param int $page_id Page id, or 0 to unbind.
+	 * @return void
+	 */
+	public function bind_to_page( $page_id ) {
+		$page_id = max( 0, (int) $page_id );
+
+		if ( $page_id === $this->bound_page_id ) {
+			return;
+		}
+
+		$this->bound_page_id = $page_id;
+
+		// No touch() here on purpose. The version is the optimistic-lock token for CONTENT: it
+		// exists so two people editing sections cannot overwrite each other. Binding changes where
+		// the document renders, not what it says. Bumping it made the builder's open copy stale the
+		// moment someone bound a page in the modal beside it, and the very next keystroke was
+		// refused with "Someone else saved the homepage" — the someone else being themselves.
 	}
 
 	/**
@@ -392,17 +431,32 @@ final class HomepageDocument {
 	 * @param string            $reason   Audit reason.
 	 * @return void
 	 */
-	public function replace_sections( SectionCollection $sections, $reason = '' ) {
+	public function replace_sections( SectionCollection $sections, $reason = '', $detailed = true ) {
+		// Computed BEFORE the assignment, obviously — and before touch(), so a save that changes
+		// nothing still says so rather than inventing a difference.
+		$changed = $detailed
+			? SectionDiff::describe( $this->sections->to_array(), $sections->to_array() )
+			: array();
+
 		$this->sections = $sections;
 		$this->touch();
+
+		$payload = array(
+			'reason'   => $reason,
+			'sections' => $sections->count(),
+		);
+
+		if ( $detailed ) {
+			// `changed` is the old-value/new-value record the specification asked for. An empty
+			// list is recorded as such: "the operator saved and nothing moved" is a fact worth
+			// keeping, not an absence to be guessed at later.
+			$payload['changed'] = $changed ? $changed : array( 'no field changes' );
+		}
 
 		$this->events[] = DomainEvent::document(
 			DomainEvent::DOCUMENT_SAVED,
 			$this->key->value(),
-			array(
-				'reason'   => $reason,
-				'sections' => $sections->count(),
-			)
+			$payload
 		);
 	}
 
@@ -427,6 +481,37 @@ final class HomepageDocument {
 				'revision' => (int) $revision_id,
 				'sections' => count( $this->live_sections ),
 				'actor'    => $actor_id,
+			)
+		);
+	}
+
+	/**
+	 * Put an earlier published version back on the LIVE page, leaving the draft alone.
+	 *
+	 * This is the difference between "undo the publish" and "restore a revision":
+	 *
+	 *   restore_from_revision() replaces the DRAFT   — the editor's work, invisible to visitors.
+	 *   revert_live_to()        replaces the LIVE    — what visitors see, right now.
+	 *
+	 * Someone who has just published a mistake needs the second one, and needs it without losing
+	 * whatever they were in the middle of writing.
+	 *
+	 * @param array $sections    Sections from the earlier published revision.
+	 * @param int   $revision_id That revision's id.
+	 * @return void
+	 */
+	public function revert_live_to( array $sections, $revision_id ) {
+		$this->live_sections         = $sections;
+		$this->status                = DocumentStatus::PUBLISHED;
+		$this->published_revision_id = (int) $revision_id;
+		$this->touch();
+
+		$this->events[] = DomainEvent::document(
+			DomainEvent::PUBLISH_REVERTED,
+			$this->key->value(),
+			array(
+				'revision' => (int) $revision_id,
+				'sections' => count( $sections ),
 			)
 		);
 	}
@@ -529,6 +614,7 @@ final class HomepageDocument {
 			'live_sections'         => $this->live_sections,
 			'scheduled_at'          => $this->scheduled_at,
 			'published_revision_id' => $this->published_revision_id,
+			'bound_page_id'         => $this->bound_page_id,
 		);
 	}
 }

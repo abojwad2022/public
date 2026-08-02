@@ -137,6 +137,54 @@ final class ComponentDefinition {
 	}
 
 	/**
+	 * How this component's fields map onto the theme's existing content hooks.
+	 *
+	 *   text  => [ 'hero_line_1' => 'line_1' ]                     yazan_home_text_{key}
+	 *   image => [ 'hero_image'  => 'image' ]                      yazan_home_image_{key}
+	 *   array => [ 'yazan_home_reviews' => [ path, shape ] ]       whole-array filters
+	 *
+	 * Paths may be dotted (`stories.0.title`) for components whose template reads numbered keys.
+	 *
+	 * @return array{text:array<string,string>,image:array<string,string>,array:array<string,array>}
+	 */
+	public function bindings() {
+		$bindings = isset( $this->spec['bindings'] ) ? (array) $this->spec['bindings'] : array();
+
+		return array(
+			'text'  => isset( $bindings['text'] ) ? (array) $bindings['text'] : array(),
+			'image' => isset( $bindings['image'] ) ? (array) $bindings['image'] : array(),
+			'array' => isset( $bindings['array'] ) ? (array) $bindings['array'] : array(),
+		);
+	}
+
+	/**
+	 * A callable that turns this component's content into a schema.org node, or null.
+	 *
+	 * Declared by the component rather than switched on centrally, so a section added later can
+	 * describe itself without the renderer learning about it.
+	 *
+	 * @return callable|null
+	 */
+	public function structured_data() {
+		return isset( $this->spec['structured_data'] ) ? $this->spec['structured_data'] : null;
+	}
+
+	/**
+	 * Dotted paths inside the content that hold their own `{from,to}` window.
+	 *
+	 * A hero whose individual slides are scheduled needs the page cache purged at each slide's
+	 * boundary, not only at the section's. Declaring the paths here keeps RenderPipeline generic:
+	 * it never has to know what a "slide" is.
+	 *
+	 * `*` matches every index of a repeater.
+	 *
+	 * @return string[]
+	 */
+	public function schedule_paths() {
+		return isset( $this->spec['schedule_paths'] ) ? (array) $this->spec['schedule_paths'] : array();
+	}
+
+	/**
 	 * Assets loaded only when a section of this type actually renders.
 	 *
 	 * @return array{css:string[],js:string[]}

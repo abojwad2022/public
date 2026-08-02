@@ -79,8 +79,11 @@ final class ComponentSchema {
 		$out = array();
 		foreach ( $this->fields as $field ) {
 			$perm = $field->permission();
-			if ( $perm ) {
-				$out[ $perm ] = true;
+
+			foreach ( (array) $perm as $slug ) {
+				if ( $slug ) {
+					$out[ $slug ] = true;
+				}
 			}
 			if ( $field->children() ) {
 				foreach ( $field->children()->permissions() as $child_perm ) {

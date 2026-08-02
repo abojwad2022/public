@@ -54,7 +54,7 @@ final class PermissionFilter {
 			$permission = $field->permission();
 			$value      = array_key_exists( $key, $incoming ) ? $incoming[ $key ] : $field->default_value();
 
-			if ( ! $permission || $this->can( $permission ) ) {
+			if ( ! $permission || $this->can_write( $permission ) ) {
 				$allowed[ $key ] = $value;
 				continue;
 			}
@@ -70,7 +70,9 @@ final class PermissionFilter {
 				$blocked[] = array(
 					'field'      => $key,
 					'label'      => $field->label(),
-					'permission' => $permission,
+					// Report the first slug: it is the specific one, and "ask for colors.edit" is
+					// more actionable than a list of alternatives.
+					'permission' => is_array( $permission ) ? reset( $permission ) : $permission,
 				);
 			}
 		}
@@ -93,6 +95,22 @@ final class PermissionFilter {
 		}
 
 		return $map;
+	}
+
+	/**
+	 * A field's requirement is met when ANY of its slugs is held.
+	 *
+	 * @param string|string[] $permission Requirement.
+	 * @return bool
+	 */
+	private function can_write( $permission ) {
+		foreach ( (array) $permission as $slug ) {
+			if ( $this->can( $slug ) ) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	/**

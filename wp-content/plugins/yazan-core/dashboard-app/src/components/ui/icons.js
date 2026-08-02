@@ -43,6 +43,7 @@ export {
   EyeOff,
   RefreshCw,
   RotateCcw,
+  Undo2, // Homepage Manager — undo the last publish
   Check,
   Minus,
   Star, // Featured toggle on the products table
@@ -73,6 +74,11 @@ export {
   LoaderCircle,
   // Content
   Image,
+  LayoutGrid, // Homepage Manager — the swatch/banner component
+  BookOpen, // Homepage Manager — the brand-story component
+  Images, // Homepage Manager — the story-panels component
+  Quote, // Homepage Manager — testimonials
+  LayoutTemplate, // Homepage Manager — the module's own nav entry
   ImagePlus,
   FileText,
   Mail,

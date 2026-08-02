@@ -46,6 +46,33 @@ class Yazan_Homepage_Boot {
 		add_action( 'init', array( __CLASS__, 'maybe_install' ), 2 );
 
 		/*
+		 * The theme bridge is registered ONLY on the front page. Every other request — product
+		 * pages, checkout, wp-admin, REST — never loads a single class of the render layer.
+		 */
+		add_action( 'template_redirect', array( __CLASS__, 'maybe_register_theme_bridge' ), 5 );
+
+		// Scheduled-section cache purge. Registered always (cron fires on any request), but the
+		// render classes only load if the event actually runs.
+		add_action( 'yazan_homepage_schedule_boundary', array( __CLASS__, 'on_schedule_boundary' ) );
+
+		// Structured data for the sections that emit it, printed once at the end of the document.
+		add_action( 'wp_footer', array( __CLASS__, 'print_structured_data' ), 20 );
+
+		// Scheduled publishing.
+		add_action( 'yazan_homepage_publish_due', array( __CLASS__, 'publish_due' ) );
+
+		/*
+		 * A/B attribution. Two hooks, both checkout-only on purpose: an order an administrator
+		 * types in by hand did not come from either variant, and counting it would flatter
+		 * whichever arm happened to be showing.
+		 */
+		add_action( 'woocommerce_checkout_create_order', array( __CLASS__, 'stamp_order' ), 10, 1 );
+		add_action( 'woocommerce_checkout_order_processed', array( __CLASS__, 'count_order' ), 10, 1 );
+
+		// REST surface, in the dashboard's own namespace and behind its guard.
+		add_action( 'rest_api_init', array( __CLASS__, 'register_routes' ) );
+
+		/*
 		 * Cross-cutting listeners: audit and cache REACT to events, they are not called by the
 		 * handlers. The hook name is written literally rather than read from
 		 * WpEventDispatcher::ANY_HOOK so that touching a constant does not autoload a class on
@@ -98,12 +125,135 @@ class Yazan_Homepage_Boot {
 	}
 
 	/**
+	 * Bind the published homepage document onto the theme's content hooks — front page only.
+	 *
+	 * @return void
+	 */
+	public static function maybe_register_theme_bridge() {
+		if ( is_admin() ) {
+			return;
+		}
+
+		if ( is_front_page() ) {
+			\Yazan\Homepage\Presentation\Render\ThemeBridge::register();
+			return;
+		}
+
+		// Any other page is untouched unless a layout was deliberately bound to it.
+		\Yazan\Homepage\Presentation\Render\PageRenderer::maybe_take_over();
+	}
+
+	/**
+	 * A scheduled section became due or expired.
+	 *
+	 * @return void
+	 */
+	public static function on_schedule_boundary() {
+		\Yazan\Homepage\Presentation\Render\ThemeBridge::on_schedule_boundary();
+	}
+
+	/**
+	 * Mark an order with the experiment arm its basket was built in.
+	 *
+	 * @param \WC_Order $order Order being created.
+	 * @return void
+	 */
+	public static function stamp_order( $order ) {
+		if ( ! is_object( $order ) || ! method_exists( $order, 'update_meta_data' ) ) {
+			return;
+		}
+
+		$stamp = \Yazan\Homepage\Presentation\Render\ExperimentRunner::stamp();
+
+		if ( '' === $stamp ) {
+			return;
+		}
+
+		// Underscore-prefixed: internal, and not shown on the order screen as a customer-facing
+		// line item.
+		$order->update_meta_data( '_yazan_ab_arm', $stamp );
+	}
+
+	/**
+	 * Count a completed checkout against its arm.
+	 *
+	 * @param int $order_id Order id.
+	 * @return void
+	 */
+	public static function count_order( $order_id ) {
+		if ( ! function_exists( 'wc_get_order' ) ) {
+			return;
+		}
+
+		$order = wc_get_order( $order_id );
+
+		if ( ! $order ) {
+			return;
+		}
+
+		$stamp = (string) $order->get_meta( '_yazan_ab_arm' );
+
+		if ( '' === $stamp ) {
+			return;
+		}
+
+		\Yazan\Homepage\Presentation\Render\ExperimentRunner::record_order(
+			$stamp,
+			(float) $order->get_total(),
+			(string) wp_date( 'Y-m-d' )
+		);
+	}
+
+	/**
 	 * Install or upgrade.
 	 *
 	 * @return void
 	 */
 	public static function maybe_install() {
 		\Yazan\Homepage\Infrastructure\Bootstrap\Installer::maybe_install();
+	}
+
+	/**
+	 * Register the REST controllers.
+	 *
+	 * Deliberately on `rest_api_init` and not earlier: Yazan_REST_Guard is required by
+	 * Yazan_Dashboard_Boot, which loads AFTER this module (this one has to precede RBAC — see the
+	 * ordering note at the top). By the time REST initialises, everything is present.
+	 *
+	 * @return void
+	 */
+	public static function register_routes() {
+		if ( ! class_exists( 'Yazan_REST_Guard' ) ) {
+			return;
+		}
+
+		\Yazan\Homepage\Presentation\Rest\HomepageController::register_routes();
+		\Yazan\Homepage\Presentation\Rest\SectionsController::register_routes();
+		\Yazan\Homepage\Presentation\Rest\RevisionsController::register_routes();
+		\Yazan\Homepage\Presentation\Rest\TemplatesController::register_routes();
+		\Yazan\Homepage\Presentation\Rest\DocumentsController::register_routes();
+		\Yazan\Homepage\Presentation\Rest\PortingController::register_routes();
+		\Yazan\Homepage\Presentation\Rest\ExperimentController::register_routes();
+	}
+
+	/**
+	 * Print JSON-LD for whatever rendered on this request.
+	 *
+	 * @return void
+	 */
+	public static function print_structured_data() {
+		if ( class_exists( '\\Yazan\\Homepage\\Presentation\\Render\\StructuredData', false ) ) {
+			\Yazan\Homepage\Presentation\Render\StructuredData::render();
+		}
+	}
+
+	/**
+	 * Publish any document whose scheduled moment has arrived.
+	 *
+	 * @return void
+	 */
+	public static function publish_due() {
+		\Yazan\Homepage\Infrastructure\Bootstrap\ServiceFactory::publish()->run_due();
 	}
 
 	/**
@@ -116,8 +266,11 @@ class Yazan_Homepage_Boot {
 		$audit = \Yazan\Homepage\Infrastructure\Bootstrap\ServiceFactory::audit_recorder();
 		$cache = \Yazan\Homepage\Infrastructure\Bootstrap\ServiceFactory::cache_invalidator();
 
+		$booker = \Yazan\Homepage\Infrastructure\Bootstrap\ServiceFactory::publish_scheduler();
+
 		$audit( $event );
 		$cache( $event );
+		$booker( $event );
 	}
 
 	/**

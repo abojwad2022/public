@@ -33,6 +33,7 @@ final class DomainEvent {
 	const DOCUMENT_PUBLISHED = 'homepage.published';
 	const DOCUMENT_SCHEDULED = 'homepage.scheduled';
 	const DOCUMENT_ROLLED_BACK = 'homepage.rolled_back';
+	const PUBLISH_REVERTED     = 'homepage.publish_reverted';
 	const DOCUMENT_IMPORTED  = 'homepage.imported';
 	const DOCUMENT_EXPORTED  = 'homepage.exported';
 	const FIELDS_BLOCKED     = 'homepage.permission_blocked';

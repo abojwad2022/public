@@ -97,12 +97,23 @@ final class FieldDefinition {
 	}
 
 	/**
-	 * Permission slug required to WRITE this field. Null = inherits the section's edit permission.
+	 * Permission slug(s) required to WRITE this field. Null = inherits the section's edit permission.
 	 *
-	 * @return string|null
+	 * A string is one requirement; an array is ANY of them. That matters for design fields, which
+	 * should be reachable both by a narrow grant (`homepage.colors.edit`) and by the umbrella one
+	 * (`homepage.design.edit`) — without the umbrella, granting "can design" would somehow not
+	 * include colours.
+	 *
+	 * @return string|string[]|null
 	 */
 	public function permission() {
-		return isset( $this->spec['permission'] ) ? (string) $this->spec['permission'] : null;
+		if ( ! isset( $this->spec['permission'] ) ) {
+			return null;
+		}
+
+		return is_array( $this->spec['permission'] )
+			? array_values( $this->spec['permission'] )
+			: (string) $this->spec['permission'];
 	}
 
 	/** @return bool */

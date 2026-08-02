@@ -25,24 +25,49 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 get_header();
 
-$yazan_home_sections = array(
-	// commafootball top division (verified against the live site): swatch rail directly under the
-	// header, then the big hero image — so `swatches` (which carries both) leads, replacing the old
-	// standalone hero. Re-add 'hero' before 'swatches' to restore the previous full-screen hero.
-	'swatches',
-	'collections',
-	'bestsellers',
-	'story',
-	'trust',
-	'collection-stories',
-	'reviews',
-	'newsletter',
+/*
+ * The default order. YAZAN Core's Homepage Manager replaces this list with the published
+ * homepage document; with no document published — or with the plugin disabled — this array is
+ * what renders, exactly as before.
+ */
+$yazan_home_sections = apply_filters(
+	'yazan_home_sections',
+	array(
+		// commafootball top division (verified against the live site): swatch rail directly under
+		// the header, then the big hero image — so `swatches` (which carries both) leads, replacing
+		// the old standalone hero. Re-add 'hero' before 'swatches' to restore the previous
+		// full-screen hero.
+		'swatches',
+		'collections',
+		'bestsellers',
+		'story',
+		'trust',
+		'collection-stories',
+		'reviews',
+		'newsletter',
+	)
 );
 ?>
 <main id="primary" class="yz-home" role="main">
 	<?php
-	foreach ( $yazan_home_sections as $yazan_section ) {
-		get_template_part( 'template-parts/home/' . $yazan_section );
+	foreach ( array_values( (array) $yazan_home_sections ) as $yazan_index => $yazan_section ) {
+		/*
+		 * The index is what lets the Homepage Manager tell two blocks of the SAME type apart —
+		 * two Collections rows with different categories, for instance. Without it the second one
+		 * would render the first one's content.
+		 */
+		do_action( 'yazan_home_before_section', $yazan_section, $yazan_index );
+
+		/*
+		 * Sections this theme has no template for (video, numbers, questions…) are drawn by the
+		 * Homepage Manager, which returns true here. Anything the theme DOES own falls through to
+		 * its own template part below, unchanged.
+		 */
+		if ( ! apply_filters( 'yazan_home_render_section', false, $yazan_section, $yazan_index ) ) {
+			get_template_part( 'template-parts/home/' . $yazan_section );
+		}
+
+		do_action( 'yazan_home_after_section', $yazan_section, $yazan_index );
 	}
 	?>
 </main>

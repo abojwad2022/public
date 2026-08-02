@@ -65,7 +65,9 @@ export default function ProductsTable({
   const shown = PRODUCT_COLUMNS.filter((column) => column.locked || columns.includes(column.key))
 
   return (
-    <Table>
+    /* No card fallback: below `sm` the page renders ProductsMobileList instead,
+       which is a real phone layout rather than this table folded into labels. */
+    <Table cards={false}>
       <THead>
         <TR>
           <TH className="w-8">

@@ -107,6 +107,49 @@ final class WpdbRevisionRepository implements RevisionRepositoryPort {
 	}
 
 	/**
+	 * The newest publish snapshot older than $before_revision.
+	 *
+	 * @param string $document_key    Key.
+	 * @param int    $before_revision Exclusive bound; 0 = latest publish.
+	 * @return array|null
+	 */
+	public function previous_publish( $document_key, $before_revision ) {
+		global $wpdb;
+
+		$table = Schema::table( 'revisions' );
+		$bound = (int) $before_revision;
+
+		if ( $bound > 0 ) {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+			$row = $wpdb->get_row(
+				$wpdb->prepare(
+					"SELECT * FROM {$table} WHERE doc_key = %s AND is_publish = 1 AND id < %d ORDER BY id DESC LIMIT 1",
+					$document_key,
+					$bound
+				),
+				ARRAY_A
+			);
+		} else {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+			$row = $wpdb->get_row(
+				$wpdb->prepare(
+					"SELECT * FROM {$table} WHERE doc_key = %s AND is_publish = 1 ORDER BY id DESC LIMIT 1",
+					$document_key
+				),
+				ARRAY_A
+			);
+		}
+
+		if ( ! $row ) {
+			return null;
+		}
+
+		$row['sections'] = DocumentSerializer::decode( $row['payload'] );
+
+		return $row;
+	}
+
+	/**
 	 * Keep the newest N revisions.
 	 *
 	 * @param string $document_key Key.

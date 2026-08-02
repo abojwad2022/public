@@ -9,6 +9,7 @@ import { Can } from '../components/Protected.jsx'
 import ProductStatusTabs from '../components/product/ProductStatusTabs.jsx'
 import ProductFilters from '../components/product/ProductFilters.jsx'
 import ProductsTable from '../components/product/ProductsTable.jsx'
+import ProductsMobileList from '../components/product/ProductsMobileList.jsx'
 import ScreenOptions, { useScreenOptions } from '../components/product/ScreenOptions.jsx'
 import ProductQuickEdit, { quickEditStateFrom } from '../components/product/ProductQuickEdit.jsx'
 import ProductBulkEditPanel from '../components/product/ProductBulkEditPanel.jsx'
@@ -135,6 +136,10 @@ export default function Products() {
         ? { orderby: key, order: sort.order === 'asc' ? 'desc' : 'asc' }
         : { orderby: key, order: 'asc' },
     )
+
+  // The phone list has no column headers to click, so it sets both halves of the
+  // sort at once from a single control.
+  const setSort = (orderby, order) => patchParams({ orderby, order })
 
   const items = data?.items || []
   const allSelected = items.length > 0 && selected.length === items.length
@@ -393,13 +398,26 @@ export default function Products() {
                 `edit_products && import` — the porting permission alone says you may move
                 bulk data, not that you may move THIS data. Checking both here is what stops
                 the button being a link to a 403. */}
+            {/* Hidden on a phone: both are shortcuts to Settings → Tools, and a
+                CSV import is not a thing anyone does from a phone — while the two
+                buttons pushed "Add product" onto its own wrapped row. */}
             {can('porting.import') && can('products.import') && (
-              <Button size="sm" icon={Upload} onClick={() => navigate('/settings?tab=tools')}>
+              <Button
+                size="sm"
+                icon={Upload}
+                onClick={() => navigate('/settings?tab=tools')}
+                className="hidden sm:inline-flex"
+              >
                 Import
               </Button>
             )}
             {can('porting.export') && can('products.export') && (
-              <Button size="sm" icon={Download} onClick={() => navigate('/settings?tab=tools')}>
+              <Button
+                size="sm"
+                icon={Download}
+                onClick={() => navigate('/settings?tab=tools')}
+                className="hidden sm:inline-flex"
+              >
                 Export
               </Button>
             )}
@@ -508,28 +526,56 @@ export default function Products() {
           </EmptyState>
         ) : (
           <>
-            <ProductsTable
-              items={items}
-              meta={meta}
-              columns={visibleColumns}
-              sort={sort}
-              onSort={toggleSort}
-              selected={selected}
-              onToggleOne={toggleOne}
-              onToggleAll={toggleAll}
-              allSelected={allSelected}
-              someSelected={selected.length > 0}
-              inTrash={inTrash}
-              can={can}
-              onFilterBy={setFilter}
-              onEdit={(product) => navigate(`/products/${product.id}`)}
-              onQuickEdit={openQuick}
-              onDuplicate={duplicate}
-              onToggleFeatured={toggleFeatured}
-              onTrash={removeOne}
-              onRestore={restoreOne}
-              onDeleteForever={deleteOne}
-            />
+            {/* Two presentations of the same list, not two behaviours: a phone gets
+                a compact card row, everything from `sm` up gets the full table.
+                Both are driven by the identical handlers below. */}
+            <div className="sm:hidden">
+              <ProductsMobileList
+                items={items}
+                meta={meta}
+                sort={sort}
+                onSortChange={setSort}
+                selected={selected}
+                onToggleOne={toggleOne}
+                onToggleAll={toggleAll}
+                allSelected={allSelected}
+                someSelected={selected.length > 0}
+                inTrash={inTrash}
+                can={can}
+                onEdit={(product) => navigate(`/products/${product.id}`)}
+                onQuickEdit={openQuick}
+                onDuplicate={duplicate}
+                onToggleFeatured={toggleFeatured}
+                onTrash={removeOne}
+                onRestore={restoreOne}
+                onDeleteForever={deleteOne}
+              />
+            </div>
+
+            <div className="hidden sm:block">
+              <ProductsTable
+                items={items}
+                meta={meta}
+                columns={visibleColumns}
+                sort={sort}
+                onSort={toggleSort}
+                selected={selected}
+                onToggleOne={toggleOne}
+                onToggleAll={toggleAll}
+                allSelected={allSelected}
+                someSelected={selected.length > 0}
+                inTrash={inTrash}
+                can={can}
+                onFilterBy={setFilter}
+                onEdit={(product) => navigate(`/products/${product.id}`)}
+                onQuickEdit={openQuick}
+                onDuplicate={duplicate}
+                onToggleFeatured={toggleFeatured}
+                onTrash={removeOne}
+                onRestore={restoreOne}
+                onDeleteForever={deleteOne}
+              />
+            </div>
 
             <Pagination
               page={data.page}

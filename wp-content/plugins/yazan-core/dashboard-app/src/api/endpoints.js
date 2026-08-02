@@ -239,6 +239,79 @@ export const rolesApi = {
   members: (id, params) => api.get(`/roles/${id}/users`, params),
 }
 
+// The Homepage Manager. Every path the builder screen can reach, in the order the screen uses
+// them: open, save, publish, then the things that are only reached from a panel.
+export const homepageApi = {
+  // One request opens the builder: document, component catalog, and the permission map the UI
+  // draws from. Three calls would let the screen render before it knows what the user may do.
+  get: (params) => api.get('/homepage', params),
+  components: () => api.get('/homepage/components'),
+
+  // The whole draft in one write. Every section still goes through the same sanitiser and the
+  // same field-permission filter as a single-section edit — this is not a shortcut around either.
+  save: (payload) => api.put('/homepage', payload),
+
+  publish: (payload) => api.post('/homepage/publish', payload),
+  schedule: (payload) => api.post('/homepage/schedule', payload),
+
+  // Puts the PREVIOUS published version back on the live page. Does not touch the draft — the
+  // fast fix for something that shipped by mistake.
+  revertPublish: (payload) => api.post('/homepage/revert-publish', payload),
+
+  // Section-level routes. The builder edits locally and saves in bulk, so these exist for
+  // integrations and scripts rather than for the screen itself.
+  createSection: (payload) => api.post('/homepage/sections', payload),
+  updateSection: (id, payload) => api.put(`/homepage/sections/${id}`, payload),
+  removeSection: (id, params) => api.del(`/homepage/sections/${id}`, params),
+  duplicateSection: (id, payload) => api.post(`/homepage/sections/${id}/duplicate`, payload),
+  toggleSection: (id, payload) => api.post(`/homepage/sections/${id}/toggle`, payload),
+  reorder: (payload) => api.post('/homepage/sections/reorder', payload),
+
+  previewSource: (params) => api.get('/homepage/sources/preview', params),
+
+  // History. Restore lands in the DRAFT, never straight on the live page.
+  revisions: (params) => api.get('/homepage/revisions', params),
+  revision: (id) => api.get(`/homepage/revisions/${id}`),
+  revisionDiff: (id, params) => api.get(`/homepage/revisions/${id}/diff`, params),
+  restore: (id, payload) => api.post(`/homepage/revisions/${id}/restore`, payload),
+
+  // Landing pages: the same builder, bound to a WordPress page instead of the front page.
+  documents: () => api.get('/homepage/documents'),
+  createDocument: (payload) => api.post('/homepage/documents', payload),
+  bindDocument: (key, payload) => api.post(`/homepage/documents/${key}/bind`, payload),
+  removeDocument: (key) => api.del(`/homepage/documents/${key}`),
+  pages: () => api.get('/homepage/pages'),
+
+  // The template library. Applying one goes through the same factory and the same permission
+  // checks as building a section by hand — it is a convenience, not a second way in.
+  templates: () => api.get('/homepage/templates'),
+  saveTemplate: (payload) => api.post('/homepage/templates', payload),
+  applyTemplate: (id, payload) => api.post(`/homepage/templates/${id}/apply`, payload),
+  removeTemplate: (id) => api.del(`/homepage/templates/${id}`),
+
+  // Shared sections are stored once and referenced. Sharing replaces the section with a pointer;
+  // detaching turns the pointer back into a private copy.
+  shareSection: (id, payload) => api.post(`/homepage/sections/${id}/share`, payload),
+  detachSection: (id, payload) => api.post(`/homepage/sections/${id}/detach`, payload),
+
+  // Packages. `confirm` is what separates the dry run from the real thing.
+  export: (params) => api.get('/homepage/export', params),
+  import: (payload) => api.post('/homepage/import', payload),
+
+  // The rendered HTML of named sections, for the preview patcher. Behind homepage.preview, and
+  // the only route here that returns markup rather than data.
+  previewSections: (params) => api.get('/homepage/preview-sections', params),
+
+  // A/B testing. Reading the numbers needs homepage.view; changing anything needs
+  // homepage.experiment; promoting a winner needs homepage.publish on top of it.
+  experiment: (params) => api.get('/homepage/experiment', params),
+  saveExperiment: (payload) => api.put('/homepage/experiment', payload),
+  startExperiment: (payload) => api.post('/homepage/experiment/start', payload),
+  stopExperiment: (payload) => api.post('/homepage/experiment/stop', payload),
+  removeExperiment: (params) => api.del('/homepage/experiment', params),
+  promoteExperiment: (payload) => api.post('/homepage/experiment/promote', payload),
+}
+
 // The permission catalog, grouped by module. `grantable` is the subset the CALLER may hand out,
 // so the role editor can disable the rest without a second request.
 export const permissionsApi = {

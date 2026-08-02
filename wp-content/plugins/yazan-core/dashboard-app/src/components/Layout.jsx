@@ -22,6 +22,7 @@ import {
   Gift,
   KeyRound,
   LayoutDashboard,
+  LayoutTemplate,
   Lightbulb,
   LogOut,
   Megaphone,
@@ -165,6 +166,7 @@ const NAV = [
     section: 'Catalog',
     tint: 3, // amber — goods, closest to the gold/agate brand warmth
     items: [
+      { to: '/homepage', label: 'Homepage', icon: LayoutTemplate, perm: 'homepage.view' },
       { to: '/products', label: 'Products', icon: Package, perm: 'products.view' },
       { to: '/categories', label: 'Categories', icon: FolderTree, perm: 'categories.view' },
       { to: '/attributes', label: 'Attributes', icon: Tags, perm: 'attributes.view' },

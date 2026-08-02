@@ -26,7 +26,7 @@ final class CacheInvalidator {
 	/** Events that change what a visitor sees. */
 	const PUBLIC_EVENTS = array(
 		DomainEvent::DOCUMENT_PUBLISHED,
-		DomainEvent::DOCUMENT_IMPORTED,
+		DomainEvent::PUBLISH_REVERTED,
 	);
 
 	/** @var CachePort */

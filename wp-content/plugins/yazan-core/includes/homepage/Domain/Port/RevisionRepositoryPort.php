@@ -42,6 +42,18 @@ interface RevisionRepositoryPort {
 	public function find( $revision_id );
 
 	/**
+	 * The newest PUBLISHED revision older than a given one.
+	 *
+	 * This is what "undo the publish" needs: the version visitors were seeing before the last
+	 * publish replaced it.
+	 *
+	 * @param string $document_key    Document key.
+	 * @param int    $before_revision Exclusive upper bound; 0 means "the latest publish".
+	 * @return array|null
+	 */
+	public function previous_publish( $document_key, $before_revision );
+
+	/**
 	 * Trim to the newest N revisions for a document.
 	 *
 	 * @param string $document_key Document key.

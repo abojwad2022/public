@@ -26,6 +26,14 @@ export function useFocusTrap(open, onClose) {
   const ref = useRef(null)
   const restoreTo = useRef(null)
 
+  // The handler is read through a ref rather than closed over, so it can stay OUT of the effect's
+  // dependency list. Callers pass an inline arrow — `onClose={() => setOpen(false)}` — which is a
+  // new function on every render, and with it as a dependency the trap tore itself down and set
+  // itself up again after every keystroke: cleanup restored focus to whatever opened the dialog,
+  // setup then focused the first control. A text field inside a modal kept exactly one character.
+  const closeRef = useRef(onClose)
+  closeRef.current = onClose
+
   useEffect(() => {
     if (!open) return undefined
 
@@ -45,7 +53,7 @@ export function useFocusTrap(open, onClose) {
     const onKeyDown = (event) => {
       if (event.key === 'Escape') {
         event.stopPropagation()
-        onClose?.()
+        closeRef.current?.()
         return
       }
       if (event.key !== 'Tab' || !node) return
@@ -84,7 +92,7 @@ export function useFocusTrap(open, onClose) {
         restoreTo.current.focus?.()
       }
     }
-  }, [open, onClose])
+  }, [open])
 
   return ref
 }

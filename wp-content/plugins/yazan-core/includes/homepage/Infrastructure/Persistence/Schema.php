@@ -20,7 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 final class Schema {
 
 	/** Bump when any table below changes. */
-	const SCHEMA_VERSION = '1';
+	const SCHEMA_VERSION = '3';
 
 	/** Option holding the installed schema version. */
 	const SCHEMA_OPTION = 'yazan_homepage_schema_version';
@@ -28,7 +28,7 @@ final class Schema {
 	/**
 	 * Table name for a suffix.
 	 *
-	 * @param string $suffix documents | revisions | templates.
+	 * @param string $suffix documents | revisions | templates | ab_stats.
 	 * @return string
 	 */
 	public static function table( $suffix ) {
@@ -71,12 +71,15 @@ final class Schema {
 			live_payload LONGTEXT NULL,
 			scheduled_at DATETIME NULL DEFAULT NULL,
 			published_revision_id BIGINT UNSIGNED NULL DEFAULT NULL,
+			bound_page_id BIGINT UNSIGNED NOT NULL DEFAULT 0,
+			title_note VARCHAR(191) NOT NULL DEFAULT '',
 			updated_by BIGINT UNSIGNED NOT NULL DEFAULT 0,
 			updated_at DATETIME NOT NULL DEFAULT '0000-00-00 00:00:00',
 			created_at DATETIME NOT NULL DEFAULT '0000-00-00 00:00:00',
 			PRIMARY KEY  (id),
 			UNIQUE KEY doc_key (doc_key),
-			KEY status_scheduled (status, scheduled_at)
+			KEY status_scheduled (status, scheduled_at),
+			KEY bound_page (bound_page_id)
 		) {$charset};";
 
 		$sql_revisions = "CREATE TABLE {$revs} (
@@ -108,9 +111,33 @@ final class Schema {
 			KEY kind_type (kind, component_type)
 		) {$charset};";
 
+		$stats = self::table( 'ab_stats' );
+
+		/*
+		 * The A/B tally. One row per document, arm and DAY — not per view, and not one running
+		 * total either. Per-day is what makes "the variant only won on the weekend" visible, and
+		 * it keeps the row count bounded by time rather than by traffic.
+		 *
+		 * The unique key is what the counter upsert collides on; without it every view would
+		 * insert a new row and the totals would be a table scan.
+		 */
+		$sql_ab_stats = "CREATE TABLE {$stats} (
+			id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+			doc_key VARCHAR(64) NOT NULL,
+			arm VARCHAR(64) NOT NULL,
+			stat_date DATE NOT NULL,
+			views BIGINT UNSIGNED NOT NULL DEFAULT 0,
+			orders BIGINT UNSIGNED NOT NULL DEFAULT 0,
+			revenue DECIMAL(18,2) NOT NULL DEFAULT 0,
+			PRIMARY KEY  (id),
+			UNIQUE KEY arm_day (doc_key, arm, stat_date),
+			KEY doc_date (doc_key, stat_date)
+		) {$charset};";
+
 		dbDelta( $sql_documents );
 		dbDelta( $sql_revisions );
 		dbDelta( $sql_templates );
+		dbDelta( $sql_ab_stats );
 
 		if ( ! self::is_installed() ) {
 			return false;
@@ -129,7 +156,7 @@ final class Schema {
 	public static function is_installed() {
 		global $wpdb;
 
-		foreach ( array( 'documents', 'revisions', 'templates' ) as $suffix ) {
+		foreach ( array( 'documents', 'revisions', 'templates', 'ab_stats' ) as $suffix ) {
 			$table = self::table( $suffix );
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 			$found = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table ) );

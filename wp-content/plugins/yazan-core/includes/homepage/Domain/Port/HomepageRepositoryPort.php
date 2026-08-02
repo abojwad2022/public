@@ -44,6 +44,29 @@ interface HomepageRepositoryPort {
 	public function live_payload( DocumentKey $key );
 
 	/**
+	 * Every document, for the builder's switcher.
+	 *
+	 * @return array<int,array>
+	 */
+	public function listing();
+
+	/**
+	 * The document key bound to a WordPress page, or null.
+	 *
+	 * @param int $page_id Page id.
+	 * @return string|null
+	 */
+	public function key_for_page( $page_id );
+
+	/**
+	 * Delete a document. The default document is never deletable.
+	 *
+	 * @param DocumentKey $key Key.
+	 * @return bool
+	 */
+	public function delete( DocumentKey $key );
+
+	/**
 	 * Every document with a scheduled publish that is now due.
 	 *
 	 * @param int $now UTC timestamp.

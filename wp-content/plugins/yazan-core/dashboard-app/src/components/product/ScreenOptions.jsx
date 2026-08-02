@@ -63,33 +63,38 @@ export default function ScreenOptions({ columns, onToggleColumn, perPage, onPerP
           onClick={toggle}
           aria-haspopup="menu"
           aria-expanded={open}
+          aria-label="Screen options"
           className="yz-btn yz-btn-ghost yz-btn-sm"
         >
           <Icon as={Columns3} size={15} />
-          Screen options
+          <span className="hidden sm:inline">Screen options</span>
         </button>
       )}
     >
       <div className="min-w-56">
-          <p className="px-2 pt-1 pb-1.5 text-2xs font-medium tracking-wide text-faint uppercase">
-            Columns
-          </p>
-          {PRODUCT_COLUMNS.filter((column) => !column.locked).map((column) => (
-            <label
-              key={column.key}
-              className="flex cursor-pointer items-center gap-2 rounded-sm px-2.5 py-1.5 text-sm transition-colors hover:bg-hover"
-            >
-              <input
-                type="checkbox"
-                checked={columns.includes(column.key)}
-                onChange={() => onToggleColumn(column.key)}
-                className="size-3.5 rounded-xs accent-[var(--yz-agate)]"
-              />
-              {column.label}
-            </label>
-          ))}
+          {/* Columns are a wide-screen concept: the phone list has one fixed row
+              shape, so offering to toggle columns there controls nothing. */}
+          <div className="hidden sm:block">
+            <p className="px-2 pt-1 pb-1.5 text-2xs font-medium tracking-wide text-faint uppercase">
+              Columns
+            </p>
+            {PRODUCT_COLUMNS.filter((column) => !column.locked).map((column) => (
+              <label
+                key={column.key}
+                className="flex cursor-pointer items-center gap-2 rounded-sm px-2.5 py-1.5 text-sm transition-colors hover:bg-hover"
+              >
+                <input
+                  type="checkbox"
+                  checked={columns.includes(column.key)}
+                  onChange={() => onToggleColumn(column.key)}
+                  className="size-3.5 rounded-xs accent-[var(--yz-agate)]"
+                />
+                {column.label}
+              </label>
+            ))}
 
-          <div className="my-1 h-px bg-divider" />
+            <div className="my-1 h-px bg-divider" />
+          </div>
 
           <p className="px-2 pt-1 pb-1.5 text-2xs font-medium tracking-wide text-faint uppercase">
             Rows per page

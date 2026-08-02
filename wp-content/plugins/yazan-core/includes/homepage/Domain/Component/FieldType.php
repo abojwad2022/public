@@ -25,11 +25,13 @@ final class FieldType {
 	const NUMBER        = 'number';
 	const RANGE         = 'range';
 	const TOGGLE        = 'toggle';
+	const DATETIME      = 'datetime';
 	const SELECT        = 'select';
 	const COLOR         = 'color';
 	const MEDIA         = 'media';
 	const GALLERY       = 'gallery';
 	const VIDEO         = 'video';
+	const URL           = 'url';
 	const LINK          = 'link';
 	const BUTTON        = 'button';
 	const ICON          = 'icon';
@@ -52,11 +54,13 @@ final class FieldType {
 			self::NUMBER,
 			self::RANGE,
 			self::TOGGLE,
+			self::DATETIME,
 			self::SELECT,
 			self::COLOR,
 			self::MEDIA,
 			self::GALLERY,
 			self::VIDEO,
+			self::URL,
 			self::LINK,
 			self::BUTTON,
 			self::ICON,
@@ -91,6 +95,10 @@ final class FieldType {
 				return 0;
 			case self::TOGGLE:
 				return false;
+			case self::DATETIME:
+				// 0, not null: "no date" has to survive a JSON round trip as a value, not as an
+				// absence that later reads as "the epoch".
+				return 0;
 			case self::MEDIA:
 			case self::VIDEO:
 				return 0;
