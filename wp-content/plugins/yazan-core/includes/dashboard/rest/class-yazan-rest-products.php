@@ -665,8 +665,13 @@ class Yazan_REST_Products {
 	/**
 	 * POST /products/quick-edit — patch a few fields on several products at once.
 	 *
-	 * Body: { items: [ { id, name?, sku?, regular_price?, sale_price?, status?, stock_status?,
-	 *                    stock_quantity?, manage_stock?, menu_order? } ] }
+	 * Body: { items: [ { id, name?, sku?, global_unique_id?, regular_price?, sale_price?, status?,
+	 *                    featured?, catalog_visibility?, tax_status?, tax_class?, weight?, length?,
+	 *                    width?, height?, shipping_class_id?, sold_individually?, backorders?,
+	 *                    stock_status?, stock_quantity?, manage_stock?, menu_order? } ] }
+	 *
+	 * The field set matches wp-admin's Quick Edit panel, so an operator can do inline what
+	 * they could do there without being pushed into the full editor.
 	 *
 	 * @param WP_REST_Request $request Request.
 	 * @return WP_REST_Response|WP_Error
@@ -691,12 +696,15 @@ class Yazan_REST_Products {
 		$may_stock = Yazan_Permissions::can( 'products.change_stock' );
 		$blocked   = array();
 
+		$price_fields = array( 'regular_price', 'sale_price' );
+		$stock_fields = array( 'manage_stock', 'stock_quantity', 'stock_status', 'backorders' );
+
 		$updated = array();
 		$skipped = array();
 
 		foreach ( $rows as $row ) {
 			if ( ! $may_price ) {
-				foreach ( array( 'regular_price', 'sale_price' ) as $field ) {
+				foreach ( $price_fields as $field ) {
 					if ( array_key_exists( $field, $row ) ) {
 						unset( $row[ $field ] );
 						$blocked['products.change_price'] = true;
@@ -704,7 +712,7 @@ class Yazan_REST_Products {
 				}
 			}
 			if ( ! $may_stock ) {
-				foreach ( array( 'manage_stock', 'stock_quantity', 'stock_status' ) as $field ) {
+				foreach ( $stock_fields as $field ) {
 					if ( array_key_exists( $field, $row ) ) {
 						unset( $row[ $field ] );
 						$blocked['products.change_stock'] = true;
@@ -750,6 +758,46 @@ class Yazan_REST_Products {
 			}
 			if ( array_key_exists( 'menu_order', $row ) ) {
 				$product->set_menu_order( (int) $row['menu_order'] );
+			}
+			if ( array_key_exists( 'global_unique_id', $row ) ) {
+				$product->set_global_unique_id( sanitize_text_field( (string) $row['global_unique_id'] ) );
+			}
+			if ( array_key_exists( 'featured', $row ) ) {
+				$product->set_featured( wc_string_to_bool( $row['featured'] ) );
+			}
+			if ( array_key_exists( 'catalog_visibility', $row ) ) {
+				$vis = sanitize_key( (string) $row['catalog_visibility'] );
+				if ( in_array( $vis, array( 'visible', 'catalog', 'search', 'hidden' ), true ) ) {
+					$product->set_catalog_visibility( $vis );
+				}
+			}
+			if ( array_key_exists( 'tax_status', $row ) ) {
+				$tax_status = sanitize_key( (string) $row['tax_status'] );
+				if ( in_array( $tax_status, array( 'taxable', 'shipping', 'none' ), true ) ) {
+					$product->set_tax_status( $tax_status );
+				}
+			}
+			if ( array_key_exists( 'tax_class', $row ) ) {
+				$product->set_tax_class( sanitize_title( (string) $row['tax_class'] ) );
+			}
+			foreach ( array( 'weight', 'length', 'width', 'height' ) as $dimension ) {
+				if ( array_key_exists( $dimension, $row ) ) {
+					$value  = '' === $row[ $dimension ] ? '' : wc_format_decimal( $row[ $dimension ] );
+					$setter = 'set_' . $dimension;
+					$product->$setter( $value );
+				}
+			}
+			if ( array_key_exists( 'shipping_class_id', $row ) ) {
+				$product->set_shipping_class_id( absint( $row['shipping_class_id'] ) );
+			}
+			if ( array_key_exists( 'sold_individually', $row ) ) {
+				$product->set_sold_individually( wc_string_to_bool( $row['sold_individually'] ) );
+			}
+			if ( array_key_exists( 'backorders', $row ) ) {
+				$backorders = sanitize_key( (string) $row['backorders'] );
+				if ( in_array( $backorders, array( 'no', 'notify', 'yes' ), true ) ) {
+					$product->set_backorders( $backorders );
+				}
 			}
 			if ( array_key_exists( 'manage_stock', $row ) ) {
 				$product->set_manage_stock( wc_string_to_bool( $row['manage_stock'] ) );
@@ -1170,6 +1218,21 @@ class Yazan_REST_Products {
 			'global_unique_id'   => (string) $p->get_global_unique_id(),
 			'catalog_visibility' => $p->get_catalog_visibility(),
 			'menu_order'   => (int) $p->get_menu_order(),
+			/*
+			 * Everything Quick Edit needs travels with the row. WooCommerce does the same
+			 * thing with a hidden <div> per row, for the same reason: opening the panel then
+			 * has nothing to fetch, so it opens instantly and cannot show stale values.
+			 */
+			'tax_status'   => $p->get_tax_status(),
+			'tax_class'    => $p->get_tax_class(),
+			'weight'       => (string) $p->get_weight(),
+			'length'       => (string) $p->get_length(),
+			'width'        => (string) $p->get_width(),
+			'height'       => (string) $p->get_height(),
+			'shipping_class_id' => (int) $p->get_shipping_class_id(),
+			'backorders'   => $p->get_backorders(),
+			'sold_individually' => (bool) $p->get_sold_individually(),
+			'virtual'      => (bool) $p->get_virtual(),
 			// Drives the "this product has produced sales" warning before a trash, the same
 			// guard WooCommerce puts in front of trashing a product orders already reference.
 			'total_sales'  => (int) $p->get_total_sales(),

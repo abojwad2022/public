@@ -10,14 +10,12 @@ import ProductStatusTabs from '../components/product/ProductStatusTabs.jsx'
 import ProductFilters from '../components/product/ProductFilters.jsx'
 import ProductsTable from '../components/product/ProductsTable.jsx'
 import ScreenOptions, { useScreenOptions } from '../components/product/ScreenOptions.jsx'
+import ProductQuickEdit, { quickEditStateFrom } from '../components/product/ProductQuickEdit.jsx'
 import {
   Button,
   Card,
   ConfirmDialog,
   EmptyState,
-  Field,
-  Input,
-  Modal,
   Pagination,
   Select,
   SkeletonTable,
@@ -316,36 +314,34 @@ export default function Products() {
     }
   }
 
-  // Quick edit: patch a few fields inline without opening the full editor.
+  // Quick edit: patch fields inline without opening the full editor. The row already
+  // carries every value the panel needs, so opening it costs no request.
   const [quick, setQuick] = useState(null)
   const saveQuick = async () => {
+    setBusy(true)
     try {
       const result = await productsApi.quickEdit([{ id: quick.id, ...quick.changes }])
       if (result.skipped.length) {
         toast.error(`Not saved: ${result.skipped[0].reason.replace(/_/g, ' ')}.`)
+        return
+      }
+      // The server reports which fields the caller's own permissions dropped, so the
+      // operator is told rather than watching an edit quietly revert.
+      if (result.blocked?.length) {
+        toast.info(`Saved, but some fields were not changed: ${result.blocked.join(', ')}.`)
       } else {
         toast.success('Product updated.')
-        setQuick(null)
-        load()
       }
+      setQuick(null)
+      load()
     } catch (err) {
       toast.error(err.message)
+    } finally {
+      setBusy(false)
     }
   }
 
-  const openQuick = (product) =>
-    setQuick({
-      id: product.id,
-      name: product.name,
-      changes: {
-        name: product.name,
-        sku: product.sku || '',
-        regular_price: product.regular_price || '',
-        sale_price: product.sale_price || '',
-        status: product.status,
-        stock_status: product.stock_status,
-      },
-    })
+  const openQuick = (product) => setQuick(quickEditStateFrom(product))
 
   const hasFilters = Object.values(filters).some(Boolean)
   const clearFilters = () => {
@@ -501,84 +497,15 @@ export default function Products() {
       </Card>
 
       {quick && (
-        <Modal
-          open
+        <ProductQuickEdit
+          product={quick}
+          meta={meta}
+          can={can}
+          busy={busy}
+          onChange={setQuick}
           onClose={() => setQuick(null)}
-          title="Quick edit"
-          description={quick.name}
-          footer={
-            <>
-              <Button variant="ghost" onClick={() => setQuick(null)}>
-                Cancel
-              </Button>
-              <Button variant="primary" onClick={saveQuick}>
-                Save
-              </Button>
-            </>
-          }
-        >
-          <div className="space-y-3">
-            <Field label="Name">
-              <Input
-                value={quick.changes.name}
-                onChange={(e) => setQuick({ ...quick, changes: { ...quick.changes, name: e.target.value } })}
-                data-autofocus
-              />
-            </Field>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <Field label="SKU">
-                <Input
-                  value={quick.changes.sku}
-                  onChange={(e) => setQuick({ ...quick, changes: { ...quick.changes, sku: e.target.value } })}
-                />
-              </Field>
-              <Field label="Status">
-                <Select
-                  value={quick.changes.status}
-                  onChange={(e) => setQuick({ ...quick, changes: { ...quick.changes, status: e.target.value } })}
-                >
-                  {Object.entries(meta?.statuses || {}).map(([k, v]) => (
-                    <option key={k} value={k}>
-                      {v}
-                    </option>
-                  ))}
-                </Select>
-              </Field>
-              <Field label="Regular price">
-                <Input
-                  type="number"
-                  step="0.01"
-                  inputMode="decimal"
-                  value={quick.changes.regular_price}
-                  onChange={(e) =>
-                    setQuick({ ...quick, changes: { ...quick.changes, regular_price: e.target.value } })
-                  }
-                />
-              </Field>
-              <Field label="Sale price">
-                <Input
-                  type="number"
-                  step="0.01"
-                  inputMode="decimal"
-                  value={quick.changes.sale_price}
-                  onChange={(e) => setQuick({ ...quick, changes: { ...quick.changes, sale_price: e.target.value } })}
-                />
-              </Field>
-              <Field label="Stock status" className="sm:col-span-2">
-                <Select
-                  value={quick.changes.stock_status}
-                  onChange={(e) =>
-                    setQuick({ ...quick, changes: { ...quick.changes, stock_status: e.target.value } })
-                  }
-                >
-                  <option value="instock">In stock</option>
-                  <option value="outofstock">Out of stock</option>
-                  <option value="onbackorder">On backorder</option>
-                </Select>
-              </Field>
-            </div>
-          </div>
-        </Modal>
+          onSave={saveQuick}
+        />
       )}
 
       <ConfirmDialog
