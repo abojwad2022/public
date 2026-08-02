@@ -75,7 +75,9 @@ class Yazan_Store_Schema {
 
 		return array(
 			Yazan_DB::table( 'homepage_documents' ) => array( 'store_status', array( 'store_id', 'status' ) ),
-			Yazan_DB::table( 'homepage_revisions' ) => array( 'store_doc', array( 'store_id', 'document_id' ) ),
+			// Revisions are keyed by doc_key, not by a document_id FK — the homepage module
+			// deliberately references documents by their stable key rather than by row id.
+			Yazan_DB::table( 'homepage_revisions' ) => array( 'store_doc', array( 'store_id', 'doc_key' ) ),
 			Yazan_DB::table( 'homepage_templates' ) => array( 'store_id', array( 'store_id' ) ),
 			Yazan_DB::table( 'homepage_ab_stats' )  => array( 'store_doc', array( 'store_id', 'doc_key' ) ),
 			Yazan_DB::table( 'audit_log' )          => array( 'store_created', array( 'store_id', 'created_at' ) ),

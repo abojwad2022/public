@@ -27,7 +27,7 @@ final class Database {
 	public const TABLE_PREFIX = 'yazan_store_';
 
 	/** Tables this plugin owns, without prefix. */
-	public const TABLES = array( 'stores', 'domains', 'settings' );
+	public const TABLES = array( 'stores', 'domains', 'settings', 'object_map', 'certificates' );
 
 	/**
 	 * The wpdb instance.

@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Yazan — Store Engine
  * Description: The store registry: entity, repository, service, context, resolver, middleware and provider. Ships with one store and changes no behaviour.
- * Version:     1.0.0
+ * Version:     1.1.0
  * Author:      Yazan
  * Requires PHP: 8.1
  * Text Domain: yazan-stores
@@ -33,7 +33,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'YAZAN_STORES_VERSION', '1.0.0' );
+define( 'YAZAN_STORES_VERSION', '1.1.0' );
 define( 'YAZAN_STORES_FILE', __FILE__ );
 define( 'YAZAN_STORES_DIR', plugin_dir_path( __FILE__ ) );
 define( 'YAZAN_STORES_URL', plugin_dir_url( __FILE__ ) );

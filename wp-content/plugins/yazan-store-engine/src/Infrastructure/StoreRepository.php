@@ -64,9 +64,28 @@ final class StoreRepository extends AbstractRepository implements StoreRepositor
 		$domains  = $this->domains_table();
 		$settings = $this->settings_table();
 
+		$objects      = $this->db->table( 'object_map' );
+		$certificates = $this->db->table( 'certificates' );
+
 		return array(
+			/*
+			 * `uuid` is a stable external identity that survives a database rebuild, a restore into
+			 * a different environment, and an id sequence that starts again from 1. The numeric id
+			 * stays the internal key — it is smaller, it indexes better, and every foreign column
+			 * already references it — but anything that leaves this database (an API payload, a
+			 * webhook, a mobile client's cached record) should carry the uuid instead.
+			 *
+			 * `languages` is a comma-separated list rather than a join table: it is read whole,
+			 * never queried by member, and a table for it would be three joins to answer "what
+			 * languages does this store speak".
+			 *
+			 * Addresses are NOT here. A store can hold a subdomain AND a custom domain AND a path
+			 * at once, so `subdomain`/`custom_domain` columns would force exactly one of each and
+			 * contradict the domains table that already models them properly.
+			 */
 			"CREATE TABLE {$stores} (
 	id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+	uuid char(36) NOT NULL DEFAULT '',
 	slug varchar(64) NOT NULL DEFAULT '',
 	name varchar(191) NOT NULL DEFAULT '',
 	status varchar(20) NOT NULL DEFAULT 'draft',
@@ -74,14 +93,72 @@ final class StoreRepository extends AbstractRepository implements StoreRepositor
 	parent_store_id bigint(20) unsigned NOT NULL DEFAULT 0,
 	currency char(3) NOT NULL DEFAULT '',
 	locale varchar(20) NOT NULL DEFAULT '',
+	languages varchar(191) NOT NULL DEFAULT '',
+	timezone varchar(64) NOT NULL DEFAULT '',
 	theme varchar(64) NOT NULL DEFAULT '',
+	logo_attachment_id bigint(20) unsigned NOT NULL DEFAULT 0,
 	owner_user_id bigint(20) unsigned NOT NULL DEFAULT 0,
 	created_at datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
 	updated_at datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
 	PRIMARY KEY  (id),
 	UNIQUE KEY slug (slug),
+	KEY uuid (uuid),
 	KEY status (status),
 	KEY parent_store_id (parent_store_id)
+) {$charset_collate};",
+
+			/*
+			 * Tenancy for the entities WordPress and WooCommerce own.
+			 *
+			 * `wp_posts`, `wp_users`, `wp_terms` and `wp_wc_orders` cannot take a `store_id` column
+			 * — altering them breaks core upgrades, WP_Query, and HPOS's own schema tooling. This
+			 * table carries the same information from the outside.
+			 *
+			 * UNIQUE is (object_type, object_id, store_id) and NOT (object_type, object_id),
+			 * because this models MEMBERSHIP rather than ownership: a customer may legitimately
+			 * shop at several stores, and a product may be listed by more than one. A two-column
+			 * key would have quietly made both impossible.
+			 */
+			"CREATE TABLE {$objects} (
+	id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+	store_id bigint(20) unsigned NOT NULL DEFAULT 1,
+	object_type varchar(32) NOT NULL DEFAULT '',
+	object_id bigint(20) unsigned NOT NULL DEFAULT 0,
+	is_primary tinyint(1) NOT NULL DEFAULT 1,
+	created_at datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
+	PRIMARY KEY  (id),
+	UNIQUE KEY object_store (object_type,object_id,store_id),
+	KEY store_type (store_id,object_type),
+	KEY object_lookup (object_type,object_id)
+) {$charset_collate};",
+
+			/*
+			 * Certificates: the first real storage this concept has had.
+			 *
+			 * A ring's certificate was a projection computed at read time from `_yz_serial` in
+			 * post meta, and serial uniqueness was enforced only by two PHP checks in two REST
+			 * controllers — nothing at the database level. That was survivable with one store. With
+			 * several it is not: two stores minting the same serial is exactly the collision the
+			 * PHP checks cannot see, because they each query their own scope.
+			 *
+			 * UNIQUE (store_id, serial) makes the database the authority. The meta key stays where
+			 * it is, so every existing reader keeps working.
+			 */
+			"CREATE TABLE {$certificates} (
+	id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+	store_id bigint(20) unsigned NOT NULL DEFAULT 1,
+	serial varchar(64) NOT NULL DEFAULT '',
+	product_id bigint(20) unsigned NOT NULL DEFAULT 0,
+	certificate_attachment_id bigint(20) unsigned NOT NULL DEFAULT 0,
+	qr_attachment_id bigint(20) unsigned NOT NULL DEFAULT 0,
+	status varchar(20) NOT NULL DEFAULT 'draft',
+	issued_at datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
+	created_at datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
+	updated_at datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
+	PRIMARY KEY  (id),
+	UNIQUE KEY store_serial (store_id,serial),
+	KEY product_id (product_id),
+	KEY store_status (store_id,status)
 ) {$charset_collate};",
 
 			/*

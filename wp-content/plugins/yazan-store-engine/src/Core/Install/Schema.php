@@ -26,7 +26,7 @@ final class Schema {
 	public const VERSION_OPTION = 'yazan_stores_db_version';
 
 	/** Bump when ANY schema() changes. */
-	public const VERSION = '1.0.0';
+	public const VERSION = '1.1.0';
 
 	public function __construct( private Container $container ) {}
 

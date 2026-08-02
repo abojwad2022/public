@@ -19,6 +19,7 @@ use Yazan\Stores\Core\Database\Database;
 use Yazan\Stores\Core\Events\EventBus;
 use Yazan\Stores\Core\Hooks\HookLoader;
 use Yazan\Stores\Infrastructure\HostmapProjector;
+use Yazan\Stores\Infrastructure\StoreBackfill;
 use Yazan\Stores\Infrastructure\StoreRepository;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -54,6 +55,11 @@ final class StoreProvider {
 		$c->singleton(
 			StoreRepositoryInterface::class,
 			fn( Container $c ): StoreRepositoryInterface => $c->get( StoreRepository::class )
+		);
+
+		$c->singleton(
+			StoreBackfill::class,
+			fn( Container $c ): StoreBackfill => new StoreBackfill( $c->get( Database::class ) )
 		);
 
 		$c->singleton(

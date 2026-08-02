@@ -16,6 +16,7 @@ use Yazan\Stores\Core\Contracts\Installable;
 use Yazan\Stores\Core\Hooks\HookLoader;
 use Yazan\Stores\Core\Module\AbstractModule;
 use Yazan\Stores\Infrastructure\HostmapProjector;
+use Yazan\Stores\Infrastructure\StoreBackfill;
 use Yazan\Stores\Infrastructure\StoreRepository;
 use Yazan\Stores\Rest\V1\StoresController;
 
@@ -118,6 +119,13 @@ final class StoreModule extends AbstractModule implements Installable {
 				);
 			}
 		}
+
+		/*
+		 * Seed what a column DEFAULT cannot: a per-row uuid, and certificate rows promoted from the
+		 * serials that until now lived only in post meta. Both are idempotent, so re-running this
+		 * on every version bump costs two guarded queries.
+		 */
+		$container->get( StoreBackfill::class )->run();
 
 		$container->get( HostmapProjector::class )->project();
 	}
