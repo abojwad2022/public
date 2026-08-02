@@ -52,7 +52,6 @@ final class Store {
 	 */
 	public function __construct(
 		private int $id,
-		private string $uuid,
 		private string $slug,
 		private string $name,
 		private string $status = StoreStatus::ACTIVE,
@@ -66,7 +65,14 @@ final class Store {
 		private int $logo_attachment_id = 0,
 		private int $owner_user_id = 0,
 		private string $created_at = '',
-		private string $updated_at = ''
+		private string $updated_at = '',
+		/*
+		 * APPENDED, NOT INSERTED. Every positional call site — including the tests written against
+		 * the previous signature — keeps working untouched. This is the same convention
+		 * Yazan_Permissions::can() documents for its own store argument, and inserting a parameter
+		 * mid-list is exactly the breaking change it exists to avoid.
+		 */
+		private string $uuid = ''
 	) {
 		/*
 		 * Mint a uuid when the caller has none. `to_array()` used to omit the field entirely, so
@@ -288,7 +294,6 @@ final class Store {
 
 		return new self(
 			(int) ( $row['id'] ?? 0 ),
-			(string) ( $row['uuid'] ?? '' ),
 			(string) ( $row['slug'] ?? '' ),
 			(string) ( $row['name'] ?? '' ),
 			(string) ( $row['status'] ?? StoreStatus::ACTIVE ),
@@ -302,7 +307,8 @@ final class Store {
 			(int) ( $row['logo_attachment_id'] ?? 0 ),
 			(int) ( $row['owner_user_id'] ?? 0 ),
 			(string) ( $row['created_at'] ?? '' ),
-			(string) ( $row['updated_at'] ?? '' )
+			(string) ( $row['updated_at'] ?? '' ),
+			(string) ( $row['uuid'] ?? '' )
 		);
 	}
 }
