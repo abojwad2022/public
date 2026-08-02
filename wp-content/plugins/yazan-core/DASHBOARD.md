@@ -637,6 +637,33 @@ loose equivalent. What that buys, and the traps behind each piece:
   a display preference is not worth a REST route and an RBAC surface. Per browser, like the
   theme toggle.
 
+### CSV porting takes TWO keys, not one
+
+WordPress treats `import` and `export` as **site-wide** capabilities — "may move bulk data in
+and out of this site" — and core grants them to administrators only
+(`wp-admin/includes/schema.php`). WooCommerce therefore requires two keys before either CSV
+screen will open, and widens the site-wide one to Shop Manager on install:
+
+```php
+current_user_can( 'edit_products' ) && current_user_can( 'export' )   // class-wc-admin-exporters.php:58
+current_user_can( 'edit_products' ) && current_user_can( 'import' )   // class-wc-admin-importers.php:62
+```
+
+`porting.export` / `porting.import` are our site-wide key; `products.export` /
+`products.import`, `orders.view` and `customers.view` are the subject-scoped one. **Both are
+required**, enforced by `Yazan_REST_Porting::require_subject()` inside the handler — the
+central guard takes a single slug, so the second check lives with the code that reads `type`.
+
+⚠️ **Why this is not cosmetic.** `/porting/export` and `/porting/import` dispatch on a `type`
+body parameter across products, orders **and customers**. With one gate, a role granted
+`porting.export` so it could export the *catalogue* could export the *customer list* —
+personal data — by changing that one parameter. The seeded **Accountant** role was in exactly
+that state. It now exports orders and customers (which it is entitled to) but not products,
+which matches what WooCommerce would allow a view-only-products role to do: nothing.
+
+An unrecognised or omitted `type` falls through to the products path, so it is gated **as
+products** rather than waved through — otherwise omitting the parameter would be the bypass.
+
 ### Orders — what's covered
 
 List (search / status / date-range filters, sortable by order, date, total, bulk status changes,
