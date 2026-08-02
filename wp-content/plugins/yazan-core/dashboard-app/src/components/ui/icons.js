@@ -53,6 +53,8 @@ export {
   // Direction
   ChevronRight,
   ChevronLeft,
+  ChevronsRight, // Pagination — jump to the last page
+  ChevronsLeft, // Pagination — jump to the first page
   ChevronDown,
   ChevronUp,
   ChevronsUpDown,
