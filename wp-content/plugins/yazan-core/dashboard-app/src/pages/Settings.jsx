@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router'
 import { settingsApi } from '../api/endpoints.js'
 import { useAuth } from '../context/AuthContext.jsx'
 import { useToast } from '../context/ToastContext.jsx'
@@ -19,7 +20,10 @@ export default function Settings() {
   const toast = useToast()
   const { can } = useAuth()
   const [groups, setGroups] = useState(null)
-  const [tab, setTab] = useState('store')
+  // Seeded from ?tab= so other screens can deep-link into a panel — the Products page
+  // links straight to Tools for CSV import/export, the way wp-admin does.
+  const [params] = useSearchParams()
+  const [tab, setTab] = useState(() => params.get('tab') || 'store')
   const [edits, setEdits] = useState({})
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)

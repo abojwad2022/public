@@ -21,7 +21,7 @@ import {
   Select,
   SkeletonTable,
 } from '../components/ui/index.js'
-import { Package, Plus, Trash2 } from '../components/ui/icons.js'
+import { Download, Package, Plus, Trash2, Upload } from '../components/ui/icons.js'
 
 const EMPTY_FILTERS = { search: '', category: '', tag: '', stock_status: '', type: '', featured: '' }
 
@@ -385,6 +385,19 @@ export default function Products() {
         breadcrumbs={[{ label: 'Catalog' }, { label: 'Products' }]}
         actions={
           <>
+            {/* WooCommerce puts Import and Export next to "Add Product"; the CSV tools
+                themselves already live in Settings → Tools, so these are shortcuts to it
+                rather than a second implementation. */}
+            <Can perm="porting.import">
+              <Button size="sm" icon={Upload} onClick={() => navigate('/settings?tab=tools')}>
+                Import
+              </Button>
+            </Can>
+            <Can perm="porting.export">
+              <Button size="sm" icon={Download} onClick={() => navigate('/settings?tab=tools')}>
+                Export
+              </Button>
+            </Can>
             <ScreenOptions
               columns={visibleColumns}
               onToggleColumn={toggleColumn}

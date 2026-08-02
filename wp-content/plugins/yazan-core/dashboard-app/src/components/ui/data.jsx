@@ -11,7 +11,7 @@ import {
   UserRound,
 } from './icons.js'
 import { DirIcon } from './primitives.jsx'
-import { ChevronLeft, ChevronRight } from './icons.js'
+import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from './icons.js'
 
 /* ----------------------------------------------------------------- Avatar */
 
@@ -218,6 +218,21 @@ export function Pagination({ page, pages, total, perPage, onPage, label = 'items
         of <span className="yz-num">{total}</span> {label}
       </p>
       <div className="flex items-center gap-1.5">
+        {/* First/last jumps appear only once there is somewhere to jump to. Without them,
+            reaching the end of a 40-page list means 39 clicks — the reason wp-admin has
+            had them since forever. */}
+        {pages > 2 && (
+          <button
+            type="button"
+            onClick={() => onPage(1)}
+            disabled={page <= 1}
+            aria-label="First page"
+            title="First page"
+            className="yz-btn yz-btn-ghost yz-btn-sm yz-btn-icon"
+          >
+            <DirIcon as={ChevronsLeft} size={14} />
+          </button>
+        )}
         <button
           type="button"
           onClick={() => onPage(page - 1)}
@@ -239,6 +254,18 @@ export function Pagination({ page, pages, total, perPage, onPage, label = 'items
           Next
           <DirIcon as={ChevronRight} size={14} />
         </button>
+        {pages > 2 && (
+          <button
+            type="button"
+            onClick={() => onPage(pages)}
+            disabled={page >= pages}
+            aria-label="Last page"
+            title="Last page"
+            className="yz-btn yz-btn-ghost yz-btn-sm yz-btn-icon"
+          >
+            <DirIcon as={ChevronsRight} size={14} />
+          </button>
+        )}
       </div>
     </nav>
   )
