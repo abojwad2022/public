@@ -1,11 +1,12 @@
-import { useCallback, useEffect, useState } from 'react'
-import { Link, useNavigate } from 'react-router'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { Link, useNavigate, useSearchParams } from 'react-router'
 import { productsApi } from '../api/endpoints.js'
 import { useMeta, formatPrice } from '../context/MetaContext.jsx'
 import { useToast } from '../context/ToastContext.jsx'
 import { useAuth } from '../context/AuthContext.jsx'
 import { PageHeader } from '../components/Layout.jsx'
 import { Can } from '../components/Protected.jsx'
+import ProductStatusTabs from '../components/product/ProductStatusTabs.jsx'
 import {
   Badge,
   Button,
@@ -33,6 +34,7 @@ import {
   Package,
   Pencil,
   Plus,
+  RotateCcw,
   SlidersHorizontal,
   Trash2,
 } from '../components/ui/icons.js'
@@ -44,7 +46,20 @@ const SORTABLE = [
   { key: 'date', label: 'Date' },
 ]
 
-const EMPTY_FILTERS = { search: '', category: '', stock_status: '', type: '', status: '' }
+const EMPTY_FILTERS = { search: '', category: '', stock_status: '', type: '' }
+
+/** Past-tense wording per bulk action, so the toast says what actually happened. */
+const BULK_PAST = {
+  trash: 'moved to the trash',
+  restore: 'restored',
+  delete: 'deleted permanently',
+  publish: 'published',
+  draft: 'set to draft',
+  set_instock: 'marked in stock',
+  set_outofstock: 'marked out of stock',
+  feature: 'featured',
+  unfeature: 'unfeatured',
+}
 
 export default function Products() {
   const { meta } = useMeta()
@@ -52,10 +67,34 @@ export default function Products() {
   const { can } = useAuth()
   const navigate = useNavigate()
 
-  const [filters, setFilters] = useState(EMPTY_FILTERS)
-  const [searchInput, setSearchInput] = useState('')
-  const [sort, setSort] = useState({ orderby: 'date', order: 'desc' })
-  const [page, setPage] = useState(1)
+  /*
+   * The whole list state lives in the query string, as it does in wp-admin. That is not
+   * decoration: it makes the browser Back button step through filter changes, makes a
+   * filtered view a shareable link, and survives a reload — none of which component state does.
+   */
+  const [params, setParams] = useSearchParams()
+  const filters = useMemo(
+    () => ({
+      search: params.get('search') || '',
+      category: params.get('category') || '',
+      stock_status: params.get('stock_status') || '',
+      type: params.get('type') || '',
+    }),
+    [params],
+  )
+  // The status view is a tab, not a filter — it is never cleared by "Clear filters",
+  // and the trash view changes which actions a row even offers.
+  const view = params.get('status') || ''
+  const sort = useMemo(
+    () => ({
+      orderby: params.get('orderby') || 'date',
+      order: params.get('order') === 'asc' ? 'asc' : 'desc',
+    }),
+    [params],
+  )
+  const page = Math.max(1, Number(params.get('page')) || 1)
+
+  const [searchInput, setSearchInput] = useState(params.get('search') || '')
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [selected, setSelected] = useState([])
@@ -63,10 +102,12 @@ export default function Products() {
   const [confirm, setConfirm] = useState(null)
   const [busy, setBusy] = useState(false)
 
+  const inTrash = view === 'trash'
+
   const load = useCallback(async () => {
     setLoading(true)
     try {
-      const result = await productsApi.list({ ...filters, ...sort, page, per_page: 20 })
+      const result = await productsApi.list({ ...filters, status: view, ...sort, page, per_page: 20 })
       setData(result)
       setSelected([])
     } catch (err) {
@@ -74,34 +115,52 @@ export default function Products() {
     } finally {
       setLoading(false)
     }
-  }, [filters, sort, page, toast])
+  }, [filters, view, sort, page, toast])
 
   useEffect(() => {
     load()
   }, [load])
 
+  /**
+   * Merge changes into the query string. Anything falsy is removed rather than written
+   * as an empty value, so a cleared filter leaves a clean URL. Every change but paging
+   * resets to page 1 — landing on page 7 of a 2-page result is the classic filter bug.
+   */
+  const patchParams = useCallback(
+    (changes, { keepPage = false } = {}) => {
+      setParams(
+        (current) => {
+          const next = new URLSearchParams(current)
+          for (const [key, value] of Object.entries(changes)) {
+            if (value === '' || value === null || value === undefined) next.delete(key)
+            else next.set(key, String(value))
+          }
+          if (!keepPage && !('page' in changes)) next.delete('page')
+          return next
+        },
+        { replace: true },
+      )
+    },
+    [setParams],
+  )
+
   // Debounce the free-text search so we aren't querying on every keystroke.
   useEffect(() => {
     const timer = setTimeout(() => {
-      setFilters((current) => (current.search === searchInput ? current : { ...current, search: searchInput }))
-      setPage(1)
+      if (searchInput !== (params.get('search') || '')) patchParams({ search: searchInput })
     }, 350)
     return () => clearTimeout(timer)
-  }, [searchInput])
+  }, [searchInput, params, patchParams])
 
-  const setFilter = (key, value) => {
-    setFilters((current) => ({ ...current, [key]: value }))
-    setPage(1)
-  }
+  const setFilter = (key, value) => patchParams({ [key]: value })
+  const setPage = (next) => patchParams({ page: next > 1 ? next : '' }, { keepPage: true })
 
-  const toggleSort = (key) => {
-    setSort((current) =>
-      current.orderby === key
-        ? { orderby: key, order: current.order === 'asc' ? 'desc' : 'asc' }
+  const toggleSort = (key) =>
+    patchParams(
+      sort.orderby === key
+        ? { orderby: key, order: sort.order === 'asc' ? 'desc' : 'asc' }
         : { orderby: key, order: 'asc' },
     )
-    setPage(1)
-  }
 
   const items = data?.items || []
   const allSelected = items.length > 0 && selected.length === items.length
@@ -114,9 +173,18 @@ export default function Products() {
 
   const applyBulk = async () => {
     setBusy(true)
+    const ids = selected
+    const action = bulkAction
     try {
-      const result = await productsApi.bulk(bulkAction, selected)
-      toast.success(`${result.count} product(s) updated.`)
+      const result = await productsApi.bulk(action, ids)
+      // Trashing is the one bulk action that is both destructive and cheaply reversible,
+      // so it gets the same Undo affordance wp-admin offers after a bulk trash.
+      toast.success(
+        `${result.count} product${result.count === 1 ? '' : 's'} ${BULK_PAST[action] || 'updated'}.`,
+        action === 'trash'
+          ? { action: { label: 'Undo', onClick: () => undoTrash(result.ids || ids) } }
+          : undefined,
+      )
       setBulkAction('')
       setConfirm(null)
       load()
@@ -127,36 +195,103 @@ export default function Products() {
     }
   }
 
+  /** Put back what a trash action just removed — used by every "Undo" we offer. */
+  const undoTrash = async (ids) => {
+    try {
+      const result = await productsApi.bulk('restore', ids)
+      toast.success(`${result.count} product${result.count === 1 ? '' : 's'} restored.`)
+      load()
+    } catch (err) {
+      toast.error(err.message)
+    }
+  }
+
   const runBulk = () => {
     if (!bulkAction || !selected.length) return
-    const destructive = bulkAction === 'trash' || bulkAction === 'delete'
-    if (!destructive) {
+    if (bulkAction !== 'delete') {
       applyBulk()
       return
     }
     // A styled dialog rather than window.confirm: it can be themed, translated
-    // and dismissed with Escape, and it does not freeze the whole tab.
+    // and dismissed with Escape, and it does not freeze the whole tab. Only the
+    // irreversible action stops the user — trashing is undoable, so it does not.
     setConfirm({
-      title: bulkAction === 'delete' ? 'Delete permanently?' : 'Move to trash?',
-      body:
-        bulkAction === 'delete'
-          ? `${selected.length} product(s) will be deleted permanently. This cannot be undone.`
-          : `${selected.length} product(s) will be moved to the trash.`,
-      confirmLabel: bulkAction === 'delete' ? 'Delete permanently' : 'Move to trash',
+      title: 'Delete permanently?',
+      body: `${selected.length} product(s) will be deleted permanently. This cannot be undone.`,
+      confirmLabel: 'Delete permanently',
       onConfirm: applyBulk,
     })
   }
 
   const removeOne = (product) => {
+    // WooCommerce warns before trashing a product that has sold, because it is
+    // referenced by existing orders. Same rule, same reason.
+    const sold = Number(product.total_sales) > 0
     setConfirm({
       title: 'Move to trash?',
-      body: `“${product.name}” will be moved to the trash. You can restore it from WooCommerce.`,
+      body: sold
+        ? `“${product.name}” has produced sales and may be linked to existing orders. Move it to the trash anyway?`
+        : `“${product.name}” will be moved to the trash. You can restore it from the Trash tab.`,
       confirmLabel: 'Move to trash',
       onConfirm: async () => {
         setBusy(true)
         try {
           await productsApi.remove(product.id)
-          toast.success('Product moved to trash.')
+          toast.success('Product moved to trash.', {
+            action: { label: 'Undo', onClick: () => undoTrash([product.id]) },
+          })
+          setConfirm(null)
+          load()
+        } catch (err) {
+          toast.error(err.message)
+        } finally {
+          setBusy(false)
+        }
+      },
+    })
+  }
+
+  const restoreOne = async (product) => {
+    try {
+      await productsApi.restore(product.id)
+      toast.success(`“${product.name}” restored.`)
+      load()
+    } catch (err) {
+      toast.error(err.message)
+    }
+  }
+
+  const deleteOne = (product) => {
+    setConfirm({
+      title: 'Delete permanently?',
+      body: `“${product.name}” will be deleted permanently. This cannot be undone.`,
+      confirmLabel: 'Delete permanently',
+      onConfirm: async () => {
+        setBusy(true)
+        try {
+          await productsApi.remove(product.id, true)
+          toast.success('Product deleted permanently.')
+          setConfirm(null)
+          load()
+        } catch (err) {
+          toast.error(err.message)
+        } finally {
+          setBusy(false)
+        }
+      },
+    })
+  }
+
+  const emptyTrash = () => {
+    setConfirm({
+      title: 'Empty the trash?',
+      body: `All ${data?.counts?.trash ?? 0} product(s) in the trash will be deleted permanently. This cannot be undone.`,
+      confirmLabel: 'Empty trash',
+      onConfirm: async () => {
+        setBusy(true)
+        try {
+          const result = await productsApi.emptyTrash()
+          toast.success(`${result.count} product(s) deleted permanently.`)
           setConfirm(null)
           load()
         } catch (err) {
@@ -235,6 +370,16 @@ export default function Products() {
         }
       />
 
+      <ProductStatusTabs
+        counts={data?.counts}
+        value={view}
+        onChange={(next) => {
+          setView(next)
+          setBulkAction('')
+          setPage(1)
+        }}
+      />
+
       <Card className="mb-4" bodyClass="p-3">
         <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center">
           <SearchInput
@@ -272,18 +417,15 @@ export default function Products() {
             ))}
           </Select>
 
-          <Select value={filters.status} onChange={(e) => setFilter('status', e.target.value)} className="w-full sm:w-auto">
-            <option value="">Any status</option>
-            {Object.entries(meta?.statuses || {}).map(([key, label]) => (
-              <option key={key} value={key}>
-                {label}
-              </option>
-            ))}
-          </Select>
-
           {hasFilters && (
             <Button size="sm" onClick={clearFilters}>
               Clear
+            </Button>
+          )}
+
+          {inTrash && (data?.counts?.trash ?? 0) > 0 && can('products.delete') && (
+            <Button size="sm" variant="danger" icon={Trash2} onClick={emptyTrash} className="ms-auto">
+              Empty trash
             </Button>
           )}
         </div>
@@ -296,12 +438,22 @@ export default function Products() {
             <span className="text-sm text-muted">selected</span>
             <Select value={bulkAction} onChange={(e) => setBulkAction(e.target.value)} className="w-full sm:w-auto">
               <option value="">Bulk actions…</option>
-              <option value="publish">Publish</option>
-              <option value="draft">Set to draft</option>
-              <option value="set_instock">Mark in stock</option>
-              <option value="set_outofstock">Mark out of stock</option>
-              {can('products.delete') && <option value="trash">Move to trash</option>}
-              {can('products.delete') && <option value="delete">Delete permanently</option>}
+              {inTrash ? (
+                <>
+                  {can('products.restore') && <option value="restore">Restore</option>}
+                  {can('products.delete') && <option value="delete">Delete permanently</option>}
+                </>
+              ) : (
+                <>
+                  <option value="publish">Publish</option>
+                  <option value="draft">Set to draft</option>
+                  <option value="feature">Mark as featured</option>
+                  <option value="unfeature">Remove featured</option>
+                  <option value="set_instock">Mark in stock</option>
+                  <option value="set_outofstock">Mark out of stock</option>
+                  {can('products.delete') && <option value="trash">Move to trash</option>}
+                </>
+              )}
             </Select>
             <Button size="sm" variant="primary" onClick={runBulk} disabled={!bulkAction}>
               Apply
@@ -318,10 +470,12 @@ export default function Products() {
           <SkeletonTable rows={8} cols={6} />
         ) : items.length === 0 ? (
           <EmptyState
-            title="No products found"
-            icon={Package}
+            title={inTrash ? 'The trash is empty' : 'No products found'}
+            icon={inTrash ? Trash2 : Package}
             action={
-              hasFilters ? (
+              inTrash ? (
+                <Button onClick={() => setView('')}>Back to all products</Button>
+              ) : hasFilters ? (
                 <Button onClick={clearFilters}>Clear filters</Button>
               ) : (
                 <Button variant="primary" icon={Plus} onClick={() => navigate('/products/new')}>
@@ -330,9 +484,11 @@ export default function Products() {
               )
             }
           >
-            {hasFilters
-              ? 'No products match the current filters.'
-              : 'Products you create here appear in WooCommerce and on the store immediately.'}
+            {inTrash
+              ? 'Nothing has been moved to the trash.'
+              : hasFilters
+                ? 'No products match the current filters.'
+                : 'Products you create here appear in WooCommerce and on the store immediately.'}
           </EmptyState>
         ) : (
           <>
@@ -431,6 +587,22 @@ export default function Products() {
                         Five equal-weight text links per row read as noise and made
                         every row 40% wider than its content needed. */}
                     <TD align="end" className="whitespace-nowrap">
+                      {inTrash ? (
+                        /* A trashed row offers only the two things you can do to it — the
+                           same pair wp-admin swaps in on its Trash view. */
+                        <span className="inline-flex items-center gap-1">
+                          <Can perm="products.restore">
+                            <Button size="sm" variant="quiet" icon={RotateCcw} onClick={() => restoreOne(product)}>
+                              Restore
+                            </Button>
+                          </Can>
+                          <Can perm="products.delete">
+                            <Button size="sm" variant="quiet" icon={Trash2} onClick={() => deleteOne(product)}>
+                              Delete permanently
+                            </Button>
+                          </Can>
+                        </span>
+                      ) : (
                       <span className="inline-flex items-center gap-1">
                         <Button
                           size="sm"
@@ -483,6 +655,7 @@ export default function Products() {
                           ]}
                         />
                       </span>
+                      )}
                     </TD>
                   </TR>
                 ))}

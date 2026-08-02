@@ -20,6 +20,15 @@ if ( ! defined( 'ABSPATH' ) ) {
 class Yazan_REST_Products {
 
 	/**
+	 * Statuses the list may be filtered to, one at a time.
+	 *
+	 * DEFAULT_STATUSES is what "All" means — the same four WooCommerce's own admin list shows.
+	 * Trash is reachable but never part of "All", exactly as in wp-admin.
+	 */
+	const DEFAULT_STATUSES = array( 'publish', 'draft', 'pending', 'private' );
+	const LIST_STATUSES    = array( 'publish', 'draft', 'pending', 'private', 'trash' );
+
+	/**
 	 * Register routes. Hook: rest_api_init.
 	 *
 	 * @return void
@@ -50,6 +59,27 @@ class Yazan_REST_Products {
 			$ns,
 			'/products/(?P<id>\d+)/duplicate',
 			Yazan_REST_Guard::args( WP_REST_Server::CREATABLE, array( __CLASS__, 'duplicate' ), 'products.duplicate' )
+		);
+
+		/*
+		 * Restore is its own permission because putting a product back on sale is not the same
+		 * decision as taking it off: products.delete removes it, products.restore returns it.
+		 */
+		register_rest_route(
+			$ns,
+			'/products/(?P<id>\d+)/restore',
+			Yazan_REST_Guard::args( WP_REST_Server::CREATABLE, array( __CLASS__, 'restore' ), 'products.restore' )
+		);
+
+		/*
+		 * Emptying the trash is irreversible for every row at once, so it carries the hard
+		 * delete permission rather than the bulk one. Registered before the /{id} route reads
+		 * naturally, but it cannot collide with it either way: "trash" is not \d+.
+		 */
+		register_rest_route(
+			$ns,
+			'/products/trash/empty',
+			Yazan_REST_Guard::args( WP_REST_Server::CREATABLE, array( __CLASS__, 'empty_trash' ), 'products.delete' )
 		);
 
 		/*
@@ -92,7 +122,7 @@ class Yazan_REST_Products {
 		$order           = 'asc' === strtolower( (string) $request->get_param( 'order' ) ) ? 'ASC' : 'DESC';
 
 		$args = array(
-			'status'   => array( 'publish', 'draft', 'pending', 'private' ),
+			'status'   => self::DEFAULT_STATUSES,
 			'limit'    => $per_page,
 			'page'     => $page,
 			'paginate' => true,
@@ -106,8 +136,13 @@ class Yazan_REST_Products {
 			$args['s'] = $search;
 		}
 
+		/*
+		 * 'trash' is deliberately absent from the default status set — a trashed product should
+		 * not turn up in the normal list — but it must be reachable, or a mis-click here would
+		 * put a ring permanently out of the operator's reach without opening wp-admin.
+		 */
 		$status = sanitize_key( (string) $request->get_param( 'status' ) );
-		if ( $status && in_array( $status, array( 'publish', 'draft', 'pending', 'private' ), true ) ) {
+		if ( $status && in_array( $status, self::LIST_STATUSES, true ) ) {
 			$args['status'] = $status;
 		}
 
@@ -139,9 +174,33 @@ class Yazan_REST_Products {
 				'total_pages' => (int) $result->max_num_pages,
 				'page'        => $page,
 				'per_page'    => $per_page,
+				'counts'      => self::status_counts(),
 			),
 			200
 		);
+	}
+
+	/**
+	 * Per-status row counts for the status tabs.
+	 *
+	 * Deliberately NOT filter-aware — the tabs answer "how many products are in each status",
+	 * not "how many match the current search", which is what WooCommerce's own views do too.
+	 * wp_count_posts() is a single cached query, so it is cheap enough to send on every list.
+	 *
+	 * @return array<string,int>
+	 */
+	private static function status_counts() {
+		$counts = wp_count_posts( 'product' );
+		$out    = array( 'all' => 0 );
+
+		foreach ( self::LIST_STATUSES as $status ) {
+			$out[ $status ] = isset( $counts->$status ) ? (int) $counts->$status : 0;
+			if ( 'trash' !== $status ) {
+				$out['all'] += $out[ $status ];
+			}
+		}
+
+		return $out;
 	}
 
 	/* --------------------------------------------------------------------- */
@@ -679,6 +738,92 @@ class Yazan_REST_Products {
 	}
 
 	/**
+	 * POST /products/{id}/restore — bring a trashed product back.
+	 *
+	 * @param WP_REST_Request $request Request.
+	 * @return WP_REST_Response|WP_Error
+	 */
+	public static function restore( WP_REST_Request $request ) {
+		$id = absint( $request['id'] );
+
+		$restored = self::untrash( $id );
+		if ( is_wp_error( $restored ) ) {
+			return $restored;
+		}
+
+		Yazan_Dashboard_Audit::log( 'product.restore', 'product', $id, array( 'status' => $restored->get_status() ) );
+
+		return new WP_REST_Response( self::summary( $restored ), 200 );
+	}
+
+	/**
+	 * Untrash one product and hand back the reloaded object.
+	 *
+	 * wp_untrash_post() is the right API rather than set_status(): it is what restores the
+	 * status the product held before it was trashed (via the _wp_trash_meta_status meta WP
+	 * wrote on the way in), so a draft comes back a draft instead of silently going live.
+	 *
+	 * @param int $id Product id.
+	 * @return WC_Product|WP_Error
+	 */
+	private static function untrash( $id ) {
+		$product = $id ? wc_get_product( $id ) : null;
+		if ( ! $product instanceof WC_Product ) {
+			return self::not_found();
+		}
+		if ( 'trash' !== $product->get_status() ) {
+			return new WP_Error(
+				'yazan_not_trashed',
+				__( 'That product is not in the trash.', 'yazan' ),
+				array( 'status' => 409 )
+			);
+		}
+
+		if ( ! wp_untrash_post( $id ) ) {
+			return new WP_Error(
+				'yazan_restore_failed',
+				__( 'The product could not be restored.', 'yazan' ),
+				array( 'status' => 500 )
+			);
+		}
+
+		// Read it back rather than trusting the in-memory copy: WordPress changed the status
+		// underneath us, and the lookup tables/transients are rebuilt on the reload.
+		wc_delete_product_transients( $id );
+		$restored = wc_get_product( $id );
+
+		return $restored instanceof WC_Product ? $restored : self::not_found();
+	}
+
+	/**
+	 * POST /products/trash/empty — permanently delete every trashed product.
+	 *
+	 * @return WP_REST_Response
+	 */
+	public static function empty_trash() {
+		$ids = wc_get_products(
+			array(
+				'status' => 'trash',
+				'limit'  => -1,
+				'return' => 'ids',
+			)
+		);
+
+		$done = array();
+		foreach ( (array) $ids as $id ) {
+			$product = wc_get_product( $id );
+			if ( $product instanceof WC_Product ) {
+				$product->delete( true );
+				$done[] = (int) $id;
+			}
+		}
+
+		Yazan_Dashboard_Audit::log( 'product.empty_trash', 'product', 0, array( 'count' => count( $done ) ) );
+
+		return new WP_REST_Response( array( 'ids' => $done, 'count' => count( $done ) ), 200 );
+	}
+
+	/**
 	 * POST /products/bulk — apply one action to many ids.
 	 *
 	 * @param WP_REST_Request $request Request.
@@ -688,7 +833,7 @@ class Yazan_REST_Products {
 		$action = sanitize_key( (string) $request->get_param( 'action' ) );
 		$ids    = array_filter( array_map( 'absint', (array) $request->get_param( 'ids' ) ) );
 
-		$allowed = array( 'trash', 'delete', 'publish', 'draft', 'set_instock', 'set_outofstock' );
+		$allowed = array( 'trash', 'restore', 'delete', 'publish', 'draft', 'set_instock', 'set_outofstock', 'feature', 'unfeature' );
 		if ( ! in_array( $action, $allowed, true ) || empty( $ids ) ) {
 			return new WP_Error( 'yazan_invalid', __( 'Invalid bulk request.', 'yazan' ), array( 'status' => 400 ) );
 		}
@@ -699,11 +844,14 @@ class Yazan_REST_Products {
 		 */
 		$action_perm = array(
 			'trash'          => 'products.delete',
+			'restore'        => 'products.restore',
 			'delete'         => 'products.delete',
 			'publish'        => 'products.publish',
 			'draft'          => 'products.publish',
 			'set_instock'    => 'products.change_stock',
 			'set_outofstock' => 'products.change_stock',
+			'feature'        => 'products.edit',
+			'unfeature'      => 'products.edit',
 		);
 		if ( ! Yazan_Permissions::can( $action_perm[ $action ] ) ) {
 			return new WP_Error(
@@ -728,6 +876,16 @@ class Yazan_REST_Products {
 					break;
 				case 'trash':
 					$product->delete( false );
+					break;
+				case 'restore':
+					if ( is_wp_error( self::untrash( $id ) ) ) {
+						continue 2; // Already live, or gone — not a row this action touched.
+					}
+					break;
+				case 'feature':
+				case 'unfeature':
+					$product->set_featured( 'feature' === $action );
+					$product->save();
 					break;
 				case 'publish':
 				case 'draft':
@@ -919,6 +1077,9 @@ class Yazan_REST_Products {
 			'thumb'        => $img_id ? wp_get_attachment_image_url( $img_id, 'thumbnail' ) : '',
 			'date'         => $p->get_date_created() ? $p->get_date_created()->date( 'Y-m-d' ) : '',
 			'permalink'    => get_permalink( $p->get_id() ),
+			// Drives the "this product has produced sales" warning before a trash, the same
+			// guard WooCommerce puts in front of trashing a product orders already reference.
+			'total_sales'  => (int) $p->get_total_sales(),
 			'edit_serial'  => (string) $p->get_meta( Yazan_Core_Verify::SERIAL_META ),
 		);
 	}

@@ -18,6 +18,8 @@ export const productsApi = {
   remove: (id, force = false) => api.del(`/products/${id}`, force ? { force: 1 } : undefined),
   bulk: (action, ids) => api.post('/products/bulk', { action, ids }),
   duplicate: (id) => api.post(`/products/${id}/duplicate`, {}),
+  restore: (id) => api.post(`/products/${id}/restore`, {}),
+  emptyTrash: () => api.post('/products/trash/empty', {}),
   quickEdit: (items) => api.post('/products/quick-edit', { items }),
 }
 
