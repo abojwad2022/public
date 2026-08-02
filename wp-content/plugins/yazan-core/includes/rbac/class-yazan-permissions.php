@@ -200,7 +200,7 @@ class Yazan_Permissions {
 			return $set;
 		}
 
-		$set = self::resolve( $user_id );
+		$set = self::resolve( $user_id, $store );
 
 		self::$memo[ $memo_key ] = $set;
 		wp_cache_set( $cache_key, $set, $cache_group, HOUR_IN_SECONDS );
@@ -238,7 +238,7 @@ class Yazan_Permissions {
 	 * @param int $user_id User id.
 	 * @return array{super:bool,perms:array<string,true>,roles:int[]}
 	 */
-	private static function resolve( $user_id ) {
+	private static function resolve( $user_id, $store_id = 1 ) {
 		$set = self::blank();
 
 		/*
@@ -268,7 +268,11 @@ class Yazan_Permissions {
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		$rows = $wpdb->get_results(
-			$wpdb->prepare( "SELECT r.id, r.is_super FROM {$pivot} ur JOIN {$roles} r ON r.id = ur.role_id WHERE ur.user_id = %d", $user_id )
+			$wpdb->prepare(
+				"SELECT r.id, r.is_super FROM {$pivot} ur JOIN {$roles} r ON r.id = ur.role_id WHERE ur.user_id = %d AND ur.store_id = %d",
+				$user_id,
+				$store_id
+			)
 		);
 
 		foreach ( (array) $rows as $row ) {

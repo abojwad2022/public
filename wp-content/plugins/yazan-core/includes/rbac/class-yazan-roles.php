@@ -39,6 +39,23 @@ class Yazan_Roles {
 	 *
 	 * @return bool
 	 */
+	/**
+	 * The store a membership operation applies to.
+	 *
+	 * Mirrors Yazan_Permissions::store() including the literal fallback: a missing mu-plugin must
+	 * degrade to "the only store", never fatal.
+	 *
+	 * @param int|null $store_id Explicit store, or null for the active one.
+	 * @return int
+	 */
+	private static function store( $store_id = null ) {
+		if ( null !== $store_id ) {
+			return absint( $store_id );
+		}
+
+		return class_exists( 'Yazan_Store_Context' ) ? Yazan_Store_Context::current() : 1;
+	}
+
 	public static function lock() {
 		global $wpdb;
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
@@ -179,7 +196,7 @@ class Yazan_Roles {
 	 *
 	 * @return array<int,int>
 	 */
-	public static function member_counts() {
+	public static function member_counts( $store_id = null ) {
 		if ( ! Yazan_RBAC_Schema::is_installed() ) {
 			return array();
 		}
@@ -188,7 +205,9 @@ class Yazan_Roles {
 		$pivot = Yazan_RBAC_Schema::user_roles_table();
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-		$rows = $wpdb->get_results( "SELECT role_id, COUNT(*) AS total FROM {$pivot} GROUP BY role_id" );
+		$rows = $wpdb->get_results(
+			$wpdb->prepare( "SELECT role_id, COUNT(*) AS total FROM {$pivot} WHERE store_id = %d GROUP BY role_id", self::store( $store_id ) )
+		);
 
 		$out = array();
 		foreach ( (array) $rows as $row ) {
@@ -434,7 +453,15 @@ class Yazan_Roles {
 		$pivot       = Yazan_RBAC_Schema::user_roles_table();
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-		$members = $wpdb->get_col( $wpdb->prepare( "SELECT user_id FROM {$pivot} WHERE role_id = %d", $role_id ) );
+		/*
+		 * Roles are global, so deleting one removes its memberships in every store. The reassignment
+		 * below therefore has to remember WHICH store each membership was in — reassigning them all
+		 * into the active store would quietly move staff between tenants.
+		 */
+		$members = $wpdb->get_results(
+			$wpdb->prepare( "SELECT user_id, store_id FROM {$pivot} WHERE role_id = %d", $role_id ),
+			ARRAY_A
+		);
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		$wpdb->delete( $pivot, array( 'role_id' => $role_id ), array( '%d' ) );
@@ -444,8 +471,9 @@ class Yazan_Roles {
 		$wpdb->delete( Yazan_RBAC_Schema::roles_table(), array( 'id' => $role_id ), array( '%d' ) );
 
 		if ( $reassign_to && self::get( $reassign_to ) ) {
-			foreach ( (array) $members as $user_id ) {
-				self::assign( (int) $user_id, $reassign_to );
+			foreach ( (array) $members as $member ) {
+				// Each membership is restored into the store it came from, not the active one.
+				self::assign( (int) $member['user_id'], $reassign_to, (int) $member['store_id'] );
 			}
 		}
 
@@ -464,7 +492,7 @@ class Yazan_Roles {
 	 * @param int $user_id User id.
 	 * @return int[]
 	 */
-	public static function for_user( $user_id ) {
+	public static function for_user( $user_id, $store_id = null ) {
 		if ( ! Yazan_RBAC_Schema::is_installed() ) {
 			return array();
 		}
@@ -473,7 +501,13 @@ class Yazan_Roles {
 		$pivot = Yazan_RBAC_Schema::user_roles_table();
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-		$rows = $wpdb->get_col( $wpdb->prepare( "SELECT role_id FROM {$pivot} WHERE user_id = %d", absint( $user_id ) ) );
+		$rows = $wpdb->get_col(
+			$wpdb->prepare(
+				"SELECT role_id FROM {$pivot} WHERE user_id = %d AND store_id = %d",
+				absint( $user_id ),
+				self::store( $store_id )
+			)
+		);
 
 		return array_map( 'intval', (array) $rows );
 	}
@@ -485,16 +519,17 @@ class Yazan_Roles {
 	 * @param int $role_id Role id.
 	 * @return void
 	 */
-	public static function assign( $user_id, $role_id ) {
+	public static function assign( $user_id, $role_id, $store_id = null ) {
 		global $wpdb;
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		$wpdb->query(
 			$wpdb->prepare(
 				// IGNORE keeps re-assignment a no-op rather than a primary-key error.
-				'INSERT IGNORE INTO ' . Yazan_RBAC_Schema::user_roles_table() . ' (user_id, role_id, assigned_at) VALUES (%d, %d, %s)',
+				'INSERT IGNORE INTO ' . Yazan_RBAC_Schema::user_roles_table() . ' (user_id, role_id, store_id, assigned_at) VALUES (%d, %d, %d, %s)',
 				absint( $user_id ),
 				absint( $role_id ),
+				self::store( $store_id ),
 				current_time( 'mysql' )
 			)
 		);
@@ -509,7 +544,7 @@ class Yazan_Roles {
 	 * @param int[] $role_ids Role ids.
 	 * @return array{added:int[],removed:int[]}
 	 */
-	public static function set_user_roles( $user_id, array $role_ids ) {
+	public static function set_user_roles( $user_id, array $role_ids, $store_id = null ) {
 		$user_id = absint( $user_id );
 
 		$valid = array();
@@ -520,7 +555,8 @@ class Yazan_Roles {
 			}
 		}
 		$valid   = array_keys( $valid );
-		$current = self::for_user( $user_id );
+		$store   = self::store( $store_id );
+		$current = self::for_user( $user_id, $store );
 
 		$added   = array_values( array_diff( $valid, $current ) );
 		$removed = array_values( array_diff( $current, $valid ) );
@@ -529,7 +565,16 @@ class Yazan_Roles {
 		$pivot = Yazan_RBAC_Schema::user_roles_table();
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-		$wpdb->delete( $pivot, array( 'user_id' => $user_id ), array( '%d' ) );
+		/*
+		 * 🔴 THE STORE PREDICATE HERE IS LOAD-BEARING.
+		 *
+		 * Without it this DELETE removes every role the user holds ANYWHERE, so assigning roles in
+		 * store B silently strips their access to store A. The insert loop below then only restores
+		 * the store-B rows, and the store-A grants are gone with no error and no audit trail of a
+		 * removal that nobody asked for.
+		 */
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$wpdb->delete( $pivot, array( 'user_id' => $user_id, 'store_id' => $store ), array( '%d', '%d' ) );
 
 		$now = current_time( 'mysql' );
 		foreach ( $valid as $role_id ) {
@@ -539,9 +584,10 @@ class Yazan_Roles {
 				array(
 					'user_id'     => $user_id,
 					'role_id'     => $role_id,
+					'store_id'    => $store,
 					'assigned_at' => $now,
 				),
-				array( '%d', '%d', '%s' )
+				array( '%d', '%d', '%d', '%s' )
 			);
 		}
 
@@ -577,7 +623,7 @@ class Yazan_Roles {
 	 *
 	 * @return int[]
 	 */
-	public static function staff_ids() {
+	public static function staff_ids( $store_id = null ) {
 		if ( ! Yazan_RBAC_Schema::is_installed() ) {
 			return array();
 		}
@@ -586,7 +632,9 @@ class Yazan_Roles {
 		$pivot = Yazan_RBAC_Schema::user_roles_table();
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-		$rows = $wpdb->get_col( "SELECT DISTINCT user_id FROM {$pivot}" );
+		$rows = $wpdb->get_col(
+			$wpdb->prepare( "SELECT DISTINCT user_id FROM {$pivot} WHERE store_id = %d", self::store( $store_id ) )
+		);
 
 		return array_map( 'intval', (array) $rows );
 	}
@@ -597,7 +645,7 @@ class Yazan_Roles {
 	 * @param int $role_id Role id.
 	 * @return int[]
 	 */
-	public static function user_ids_in_role( $role_id ) {
+	public static function user_ids_in_role( $role_id, $store_id = null ) {
 		if ( ! Yazan_RBAC_Schema::is_installed() ) {
 			return array();
 		}
@@ -606,7 +654,13 @@ class Yazan_Roles {
 		$pivot = Yazan_RBAC_Schema::user_roles_table();
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-		$rows = $wpdb->get_col( $wpdb->prepare( "SELECT user_id FROM {$pivot} WHERE role_id = %d", absint( $role_id ) ) );
+		$rows = $wpdb->get_col(
+			$wpdb->prepare(
+				"SELECT user_id FROM {$pivot} WHERE role_id = %d AND store_id = %d",
+				absint( $role_id ),
+				self::store( $store_id )
+			)
+		);
 
 		return array_map( 'intval', (array) $rows );
 	}
