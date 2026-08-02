@@ -1076,6 +1076,15 @@ body.yazan ul.products li.product .ast-shop-product-out-of-stock { display: none
 .yazan.single-product .related.products > ul.products,
 .yazan.single-product .up-sells.products > ul.products {
 	display: grid;
+	/* CRITICAL — Astra ships an EXPLICIT track list for every `ul.products`
+	   (`repeat(4, 1fr)` desktop, `repeat(3, minmax(0,1fr))` ≤921px,
+	   `repeat(2, minmax(0,1fr))` ≤544px). Inside this `overflow-x: auto` slider the
+	   free space is negative, so those `1fr` tracks resolve to **0px** and the first
+	   2–3 cards collapse on top of each other at the start edge (the overlapping
+	   titles/prices seen on phones) while the rest render in the implicit tracks.
+	   Killing the explicit template forces every card into `grid-auto-columns`. */
+	grid-template-columns: none !important;
+	grid-template-rows: none !important;
 	grid-auto-flow: column;
 	grid-auto-columns: minmax(220px, 1fr);
 	gap: 20px;
@@ -1145,6 +1154,25 @@ body.yazan ul.products li.product .ast-shop-product-out-of-stock { display: none
 }
 /* Only ever show on small screens. */
 @media (min-width: 993px) { .yz-sticky-atc { display: none !important; } }
+
+/* The bar is `position: fixed` across the FULL viewport bottom, so anything else
+   pinned there (the concierge launcher at 1.25rem, the theme switcher stacked
+   above it) ends up underneath it — on a phone the launcher sits inside the black
+   bar and swallows the product name. Step the stack up by the bar's height while
+   it is on screen. `body.yz-atc-visible` is toggled by initStickyAtc() in
+   interactions.js, in the same IntersectionObserver callback that reveals the bar. */
+@media (max-width: 992px) {
+	.yz-chat,
+	.yz-theme-switcher:not(.yz-theme-switcher--in-header) {
+		transition: inset-block-end var(--mo-med, 320ms) var(--mo-ease-inout, ease);
+	}
+	body.yz-atc-visible .yz-chat {
+		inset-block-end: calc(1.25rem + var(--yz-atc-h, 69px));
+	}
+	body.yz-atc-visible .yz-theme-switcher:not(.yz-theme-switcher--in-header) {
+		inset-block-end: calc(1.25rem + 56px + var(--yz-atc-h, 69px));
+	}
+}
 
 /* --------------------------------------------------------------------------
    Add-to-cart feedback label (motion Part 9)

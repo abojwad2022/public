@@ -41,7 +41,18 @@
 		// Show the bar only while the real add-to-cart form is out of view.
 		var io = new IntersectionObserver(function (entries) {
 			entries.forEach(function (entry) {
-				bar.classList.toggle('is-visible', !entry.isIntersecting);
+				var show = !entry.isIntersecting;
+				bar.classList.toggle('is-visible', show);
+				// The bar is fixed across the whole viewport bottom, so the other
+				// bottom-pinned widgets (concierge launcher, theme switcher) have to
+				// step up over it. Publish its real height for the CSS offsets.
+				if (show) {
+					document.documentElement.style.setProperty(
+						'--yz-atc-h',
+						Math.round(bar.getBoundingClientRect().height) + 'px'
+					);
+				}
+				document.body.classList.toggle('yz-atc-visible', show);
 			});
 		}, { rootMargin: '0px 0px -20% 0px' });
 		io.observe(form);
