@@ -161,6 +161,7 @@ class Yazan_Permission_Registry {
 					'bulk'         => __( 'Apply an action to many products at once.', 'yazan' ),
 					'export'       => null,
 					'import'       => null,
+					'view_serial'  => __( 'See the authenticity serial on a ring. It is what a counterfeit would need to clone.', 'yazan' ),
 				),
 			),
 
@@ -226,6 +227,7 @@ class Yazan_Permission_Registry {
 				'label'   => __( 'Orders', 'yazan' ),
 				'sort'    => 100,
 				'actions' => array(
+					'view_payment' => __( 'See gateway transaction identifiers on an order.', 'yazan' ),
 					'view'           => null,
 					'create'         => __( 'Create an order manually on a customer\'s behalf.', 'yazan' ),
 					'edit'           => null,
@@ -247,6 +249,7 @@ class Yazan_Permission_Registry {
 				'label'   => __( 'Customers', 'yazan' ),
 				'sort'    => 110,
 				'actions' => array(
+					'view_pii'  => __( 'See customer names, addresses, phone numbers and email addresses.', 'yazan' ),
 					'view'   => __( 'Browse shoppers and their order history. Personal data — grant deliberately.', 'yazan' ),
 					'export' => null,
 				),

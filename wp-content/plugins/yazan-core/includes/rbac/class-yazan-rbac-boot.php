@@ -56,9 +56,14 @@ class Yazan_RBAC_Boot {
 		require_once $dir . 'class-yazan-roles.php';
 		require_once $dir . 'class-yazan-users.php';
 		require_once $dir . 'class-yazan-cap-projection.php';
+		require_once $dir . 'class-yazan-field-policy.php';
 		require_once $dir . 'class-yazan-rbac-guard.php';
 
 		Yazan_Cap_Projection::register();
+
+		// Outbound field redaction. Registered here so it is live for every REST route,
+		// including ones added by plugins that know nothing about it.
+		Yazan_Field_Policy::register();
 		Yazan_Users::register();
 
 		/*
