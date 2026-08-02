@@ -414,6 +414,25 @@ class Yazan_Backup_Engine {
 	 * @param string $value Raw column value.
 	 * @return string
 	 */
+	/**
+	 * The single-column primary key of a table, or null when there isn't one.
+	 *
+	 * @param string $quoted Backtick-quoted table name.
+	 * @return string|null
+	 */
+	private static function primary_key_column( $quoted ) {
+		global $wpdb;
+
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$rows = $wpdb->get_results( "SHOW KEYS FROM {$quoted} WHERE Key_name = 'PRIMARY'", ARRAY_A );
+
+		if ( ! is_array( $rows ) || 1 !== count( $rows ) ) {
+			return null; // No PK, or a composite one — no single column to order by.
+		}
+
+		return isset( $rows[0]['Column_name'] ) ? (string) $rows[0]['Column_name'] : null;
+	}
+
 	private static function escape_value( $value ) {
 		global $wpdb;
 
@@ -437,10 +456,22 @@ class Yazan_Backup_Engine {
 			)
 		);
 
+		/*
+		 * Page deterministically.
+		 *
+		 * LIMIT/OFFSET with no ORDER BY lets InnoDB return rows in any order it likes, and the
+		 * order is free to differ between pages — so a row could be dumped twice or skipped
+		 * entirely. Ordering by the primary key removes that. Tables with no single-column PK
+		 * (the analytics rollup is one) fall back to unordered paging, which is acceptable
+		 * because they are small enough to fit in a single batch.
+		 */
+		$pk       = self::primary_key_column( $quoted );
+		$order_by = null === $pk ? '' : ' ORDER BY `' . str_replace( '`', '``', $pk ) . '` ASC';
+
 		$offset = 0;
 		do {
 			// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-			$rows = $wpdb->get_results( $wpdb->prepare( "SELECT * FROM {$quoted} LIMIT %d OFFSET %d", self::INSERT_BATCH, $offset ), ARRAY_A );
+			$rows = $wpdb->get_results( $wpdb->prepare( "SELECT * FROM {$quoted}{$order_by} LIMIT %d OFFSET %d", self::INSERT_BATCH, $offset ), ARRAY_A );
 			if ( empty( $rows ) ) {
 				break;
 			}
@@ -608,12 +639,42 @@ class Yazan_Backup_Engine {
 			if ( $sql ) {
 				$imported = self::import_database_stream( $sql );
 				fclose( $sql ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose
-				if ( is_wp_error( $imported ) ) {
+
+				$expected = isset( $manifest['statements'] ) ? (int) $manifest['statements'] : 0;
+				$executed = (int) $imported['executed'];
+				$failures = (int) $imported['failed'];
+
+				$summary['db_statements'] = $executed;
+				$summary['db_expected']   = $expected;
+				$summary['db_failed']     = $failures;
+				$summary['db_errors']     = $imported['errors'];
+
+				/*
+				 * `db_restored` now means "every statement ran", not "a stream was opened".
+				 *
+				 * The expected count is only compared when the archive carries one — dumps written
+				 * before this shipped have no `statements` field, and treating their absence as a
+				 * mismatch would make every existing backup unrestorable.
+				 */
+				$complete = 0 === $failures && ( 0 === $expected || $executed === $expected );
+
+				$summary['db_restored'] = $complete;
+
+				if ( ! $complete ) {
 					$zip->close();
-					return $imported;
+
+					return new WP_Error(
+						'yazan_restore_incomplete',
+						sprintf(
+							/* translators: 1: statements executed, 2: statements expected, 3: number that failed. */
+							__( 'The restore did not complete: %1$d of %2$d statements ran and %3$d failed. The database is now in a partial state — restore the automatic safety snapshot taken before this attempt.', 'yazan' ),
+							$executed,
+							$expected,
+							$failures
+						),
+						array_merge( $summary, array( 'status' => 500 ) )
+					);
 				}
-				$summary['db_restored']    = true;
-				$summary['db_statements']  = $imported;
 			}
 		}
 

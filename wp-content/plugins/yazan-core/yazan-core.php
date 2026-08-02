@@ -39,6 +39,10 @@ add_action(
 // First: the table-name authority. Everything with a schema below is named through it.
 require YAZAN_CORE_DIR . 'includes/class-yazan-db.php';
 
+// Raw DDL for the things dbDelta cannot express — widening a UNIQUE key, rebuilding a PRIMARY KEY.
+require YAZAN_CORE_DIR . 'includes/class-yazan-schema-migrator.php';
+require YAZAN_CORE_DIR . 'includes/class-yazan-store-schema.php';
+
 require YAZAN_CORE_DIR . 'includes/class-yazan-core-taxonomies.php';
 require YAZAN_CORE_DIR . 'includes/class-yazan-core-menu.php';
 require YAZAN_CORE_DIR . 'includes/class-yazan-core-verify.php';
@@ -100,6 +104,20 @@ Yazan_Dashboard_Boot::init();
 // Tools → Yazan Backup: the wp-admin backup/restore screen (same archives as the dashboard tab).
 require YAZAN_CORE_DIR . 'includes/backup/class-yazan-backup-admin.php';
 Yazan_Backup_Admin::init();
+
+/*
+ * Multi-tenant schema migration.
+ *
+ * Priority 3 — deliberately AFTER every installer that creates the tables it alters: RBAC, the
+ * rewards migrator and the payment-bridge installer all run at `init` priority 1, and the homepage
+ * installer at 2. Altering a table before its creator has run is a silent no-op that would then be
+ * stamped as complete; altering one after is harmless, because dbDelta is additive and the column
+ * is already there.
+ *
+ * `init` rather than `admin_init` for the reason the sibling installers document: this store is
+ * operated from /dashboard and wp-admin may never be loaded.
+ */
+add_action( 'init', array( 'Yazan_Store_Schema', 'maybe_migrate' ), 3 );
 
 // Register the Collections taxonomy on every load (front + admin) so it always exists.
 add_action( 'init', array( 'Yazan_Core_Taxonomies', 'register' ), 5 );
