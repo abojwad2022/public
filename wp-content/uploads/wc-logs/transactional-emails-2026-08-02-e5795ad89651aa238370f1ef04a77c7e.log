@@ -90,3 +90,7 @@
 2026-08-02T15:20:34+00:00 NOTICE Email "customer_partially_refunded_order" for order #9134 not sent: no_recipient CONTEXT: {"email_type":"customer_partially_refunded_order","status":"skipped","recipient":"guest","reason":"no_recipient","order":9134}
 2026-08-02T15:20:34+00:00 NOTICE Email "customer_refunded_order" for order #9134 not sent: no_recipient CONTEXT: {"email_type":"customer_refunded_order","status":"skipped","recipient":"guest","reason":"no_recipient","order":9134}
 2026-08-02T15:20:40+00:00 INFO Email "customer_new_account" for user #682 sent CONTEXT: {"email_type":"customer_new_account","status":"sent","recipient":"yazan.tester","user":682}
+2026-08-02T15:24:37+00:00 NOTICE Email "customer_partially_refunded_order" for order #9162 not sent: no_recipient CONTEXT: {"email_type":"customer_partially_refunded_order","status":"skipped","recipient":"guest","reason":"no_recipient","order":9162}
+2026-08-02T15:24:38+00:00 NOTICE Email "customer_partially_refunded_order" for order #9162 not sent: no_recipient CONTEXT: {"email_type":"customer_partially_refunded_order","status":"skipped","recipient":"guest","reason":"no_recipient","order":9162}
+2026-08-02T15:24:39+00:00 NOTICE Email "customer_refunded_order" for order #9162 not sent: no_recipient CONTEXT: {"email_type":"customer_refunded_order","status":"skipped","recipient":"guest","reason":"no_recipient","order":9162}
+2026-08-02T15:24:46+00:00 INFO Email "customer_new_account" for user #687 sent CONTEXT: {"email_type":"customer_new_account","status":"sent","recipient":"yazan.tester","user":687}
