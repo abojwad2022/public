@@ -180,6 +180,21 @@ export default function ExperimentPanel({ open, onClose, docKey, documents, onPr
               </Button>
             </Can>
           ) : null}
+
+          {/* Sits with the other actions, not inside the day-by-day block where it started: a
+              button that only appears once data exists is a feature nobody knows they have until
+              the day they no longer need to be told about it. Disabled until there is something
+              to export, with the reason on the button rather than left to be guessed. */}
+          {experiment ? (
+            <Button
+              variant="secondary"
+              disabled={busy || !days.length}
+              title={days.length ? 'One row per day per layout' : 'Nothing to export yet — no visitor has been counted'}
+              onClick={download}
+            >
+              Download CSV
+            </Button>
+          ) : null}
         </div>
 
         {state?.results?.length ? (
@@ -218,21 +233,15 @@ export default function ExperimentPanel({ open, onClose, docKey, documents, onPr
 
         {days.length ? (
           <div>
-            <div className="flex items-center justify-between">
-              <button
-                type="button"
-                className="text-2xs text-muted underline decoration-dotted hover:text-fg"
-                onClick={() => setShowDays((value) => !value)}
-              >
-                {showDays
-                  ? 'Hide the day-by-day figures'
-                  : `Show the day-by-day figures (${days.length} ${days.length === 1 ? 'day' : 'days'})`}
-              </button>
-
-              <Button variant="secondary" disabled={busy} onClick={download}>
-                Download CSV
-              </Button>
-            </div>
+            <button
+              type="button"
+              className="text-2xs text-muted underline decoration-dotted hover:text-fg"
+              onClick={() => setShowDays((value) => !value)}
+            >
+              {showDays
+                ? 'Hide the day-by-day figures'
+                : `Show the day-by-day figures (${days.length} ${days.length === 1 ? 'day' : 'days'})`}
+            </button>
 
             {showDays ? (
               <div className="mt-2 max-h-64 overflow-auto rounded border border-edge">
