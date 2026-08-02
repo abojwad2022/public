@@ -43,6 +43,13 @@ require YAZAN_CORE_DIR . 'includes/class-yazan-db.php';
 require YAZAN_CORE_DIR . 'includes/class-yazan-schema-migrator.php';
 require YAZAN_CORE_DIR . 'includes/class-yazan-store-schema.php';
 
+/*
+ * Per-store option resolution. Loaded HERE, before any module, because every module's settings
+ * accessor reads through it — and those accessors are reachable from the boot calls further down
+ * this file, which run synchronously at plugin-load rather than on a hook.
+ */
+require YAZAN_CORE_DIR . 'includes/class-yazan-store-options.php';
+
 require YAZAN_CORE_DIR . 'includes/class-yazan-core-taxonomies.php';
 require YAZAN_CORE_DIR . 'includes/class-yazan-core-menu.php';
 require YAZAN_CORE_DIR . 'includes/class-yazan-core-verify.php';
