@@ -114,14 +114,23 @@ class Yazan_REST_Guard {
 	 * @return array
 	 */
 	public static function args( $methods, $callback, $perm, array $extra = array() ) {
+		/*
+		 * $extra is merged FIRST so it can supply `args`, `validate_callback` and friends, but the
+		 * three keys that constitute the guarantee are written afterwards and therefore win.
+		 *
+		 * Before, $extra was merged second: a call site passing `'yazan_perm' => ''` or
+		 * `'permission_callback' => '__return_true'` silently disabled both layers of defence with
+		 * no warning anywhere. No call site did — but "no call site does it today" is not a
+		 * security property, and this is the one helper every protected route flows through.
+		 */
 		return array_merge(
+			$extra,
 			array(
 				'methods'             => $methods,
 				'callback'            => $callback,
 				'permission_callback' => Yazan_Dashboard_Auth::require_perm( $perm ),
 				self::KEY_PERM        => $perm,
-			),
-			$extra
+			)
 		);
 	}
 
