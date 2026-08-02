@@ -117,6 +117,9 @@ const UserEditor = lazyRoute(() => import('./pages/access/UserEditor.jsx'))
 const Roles = lazyRoute(() => import('./pages/access/Roles.jsx'))
 const RoleEditor = lazyRoute(() => import('./pages/access/RoleEditor.jsx'))
 const Permissions = lazyRoute(() => import('./pages/access/Permissions.jsx'))
+const Stores = lazyRoute(() => import('./pages/stores/Stores.jsx'))
+const StoreWizard = lazyRoute(() => import('./pages/stores/StoreWizard.jsx'))
+const StoreEditor = lazyRoute(() => import('./pages/stores/StoreEditor.jsx'))
 
 export default function App() {
   return (
@@ -242,6 +245,11 @@ function Shell() {
       <Route path="/rewards" element={<Navigate to="/rewards/analytics" replace />} />
       <Route path="/rewards/:screen" element={<Protected perm="rewards.view" title="Yazan Rewards"><RewardsEmbed /></Protected>} />
       {/* Access control. */}
+      {/* Static segment before the dynamic one, or /stores/new matches :id. */}
+      <Route path="/stores" element={<Protected perm="stores.view" title="Stores"><Stores /></Protected>} />
+      <Route path="/stores/new" element={<Protected perm="stores.create" title="Stores"><StoreWizard /></Protected>} />
+      <Route path="/stores/:id" element={<Protected perm="stores.view" title="Stores"><StoreEditor /></Protected>} />
+
       <Route path="/users" element={<Protected perm="users.view" title="Users"><Users /></Protected>} />
       <Route path="/users/new" element={<Protected perm="users.create" title="Users"><UserEditor /></Protected>} />
       <Route path="/users/:id" element={<Protected perm="users.view" title="Users"><UserEditor /></Protected>} />

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { NavLink, useLocation, useNavigate } from 'react-router'
 import { useAuth } from '../context/AuthContext.jsx'
+import StoreSwitcher from './StoreSwitcher.jsx'
 import { useOrderAlerts } from '../context/OrderAlertsContext.jsx'
 import { boot } from '../api/client.js'
 import { isMuted, setMuted } from '../lib/chime.js'
@@ -227,6 +228,13 @@ const NAV = [
       { to: '/roles', label: 'Roles', icon: ShieldCheck, perm: 'roles.view' },
       { to: '/permissions', label: 'Permissions', icon: KeyRound, perm: 'permissions.view' },
     ],
+  },
+  {
+    section: 'Administration',
+    // Reuses the System/Access blue: TINT only defines hues 1-6 and all six are taken. Platform
+    // administration is utility work, like both of those.
+    tint: 4,
+    items: [{ to: '/stores', label: 'Stores', icon: Store, perm: 'stores.view' }],
   },
   {
     section: 'System',
@@ -636,6 +644,8 @@ export default function Layout({ children }) {
           </button>
 
           <div className="flex-1" />
+
+        <StoreSwitcher />
 
           <OrderBell />
 
