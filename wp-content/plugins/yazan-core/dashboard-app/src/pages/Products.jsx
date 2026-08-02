@@ -8,7 +8,8 @@ import { PageHeader } from '../components/Layout.jsx'
 import { Can } from '../components/Protected.jsx'
 import ProductStatusTabs from '../components/product/ProductStatusTabs.jsx'
 import ProductFilters from '../components/product/ProductFilters.jsx'
-import ProductsTable, { DEFAULT_VISIBLE_COLUMNS } from '../components/product/ProductsTable.jsx'
+import ProductsTable from '../components/product/ProductsTable.jsx'
+import ScreenOptions, { useScreenOptions } from '../components/product/ScreenOptions.jsx'
 import {
   Button,
   Card,
@@ -67,7 +68,7 @@ export default function Products() {
   const page = Math.max(1, Number(params.get('page')) || 1)
 
   const [searchInput, setSearchInput] = useState(params.get('search') || '')
-  const [visibleColumns, setVisibleColumns] = useState(DEFAULT_VISIBLE_COLUMNS)
+  const { columns: visibleColumns, toggleColumn, perPage, setPerPage } = useScreenOptions()
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [selected, setSelected] = useState([])
@@ -80,7 +81,7 @@ export default function Products() {
   const load = useCallback(async () => {
     setLoading(true)
     try {
-      const result = await productsApi.list({ ...filters, status: view, ...sort, page, per_page: 20 })
+      const result = await productsApi.list({ ...filters, status: view, ...sort, page, per_page: perPage })
       setData(result)
       setSelected([])
     } catch (err) {
@@ -88,7 +89,7 @@ export default function Products() {
     } finally {
       setLoading(false)
     }
-  }, [filters, view, sort, page, toast])
+  }, [filters, view, sort, page, perPage, toast])
 
   useEffect(() => {
     load()
