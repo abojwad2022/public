@@ -31,7 +31,7 @@ class Yazan_Dashboard_Audit {
 	 */
 	public static function table() {
 		global $wpdb;
-		return $wpdb->prefix . 'yazan_audit_log';
+		return Yazan_DB::table( 'audit_log' );
 	}
 
 	/**

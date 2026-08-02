@@ -36,6 +36,9 @@ add_action(
 	}
 );
 
+// First: the table-name authority. Everything with a schema below is named through it.
+require YAZAN_CORE_DIR . 'includes/class-yazan-db.php';
+
 require YAZAN_CORE_DIR . 'includes/class-yazan-core-taxonomies.php';
 require YAZAN_CORE_DIR . 'includes/class-yazan-core-menu.php';
 require YAZAN_CORE_DIR . 'includes/class-yazan-core-verify.php';

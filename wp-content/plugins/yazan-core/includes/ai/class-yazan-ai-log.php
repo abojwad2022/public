@@ -32,7 +32,7 @@ class Yazan_AI_Log {
 	 */
 	public static function table() {
 		global $wpdb;
-		return $wpdb->prefix . 'yazan_ai_generations';
+		return Yazan_DB::table( 'ai_generations' );
 	}
 
 	/**

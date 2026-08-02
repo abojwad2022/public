@@ -33,7 +33,7 @@ final class Schema {
 	 */
 	public static function table( $suffix ) {
 		global $wpdb;
-		return $wpdb->prefix . 'yazan_homepage_' . $suffix;
+		return \Yazan_DB::table( 'homepage_' . $suffix );
 	}
 
 	/**
