@@ -211,10 +211,27 @@ class Yazan_REST_Backup {
 			return new WP_Error( 'yazan_not_found', __( 'That backup could not be found.', 'yazan' ), array( 'status' => 404 ) );
 		}
 
+		/*
+		 * Bind the token to the client that asked for it.
+		 *
+		 * This token is an unauthenticated bearer credential for a full-database archive, and it
+		 * travels in a URL query string — so it lands in nginx access logs, in browser history,
+		 * and in the Referer header of anything the download page subsequently loads. Single use
+		 * and a 120-second TTL bound the window; binding to the requesting client bounds who can
+		 * use it inside that window.
+		 *
+		 * The user agent is hashed rather than stored: it is request-supplied data with no reason
+		 * to sit in the options table in the clear, and only equality is ever needed.
+		 */
 		$token = wp_generate_password( 40, false, false );
 		set_transient(
 			self::TOKEN_PREFIX . $token,
-			array( 'id' => $id, 'user' => get_current_user_id() ),
+			array(
+				'id'   => $id,
+				'user' => get_current_user_id(),
+				'ip'   => self::client_ip(),
+				'ua'   => self::client_ua_hash(),
+			),
 			self::TOKEN_TTL
 		);
 
@@ -244,6 +261,21 @@ class Yazan_REST_Backup {
 		}
 		delete_transient( $key ); // Single use.
 
+		/*
+		 * The token only works from the client that minted it. A leaked link — copied out of an
+		 * access log, a Referer header or shoulder-surfed from the URL bar — is inert elsewhere.
+		 *
+		 * Tokens minted before this check shipped carry no 'ip'/'ua' and are allowed through on
+		 * those keys alone; they expire within two minutes anyway.
+		 */
+		if ( isset( $data['ip'] ) && $data['ip'] !== self::client_ip() ) {
+			return new WP_Error( 'yazan_bad_token', __( 'This download link has expired. Please try again.', 'yazan' ), array( 'status' => 403 ) );
+		}
+
+		if ( isset( $data['ua'] ) && ! hash_equals( (string) $data['ua'], self::client_ua_hash() ) ) {
+			return new WP_Error( 'yazan_bad_token', __( 'This download link has expired. Please try again.', 'yazan' ), array( 'status' => 403 ) );
+		}
+
 		// Re-check the capability of the user the token was minted for — belt and braces.
 		if ( ! user_can( (int) $data['user'], self::CAP ) ) {
 			return new WP_Error( 'yazan_forbidden', __( 'You are not allowed to download backups.', 'yazan' ), array( 'status' => 403 ) );
@@ -255,6 +287,33 @@ class Yazan_REST_Backup {
 		}
 
 		self::stream_file( $path );
+	}
+
+	/**
+	 * The requesting client's IP.
+	 *
+	 * REMOTE_ADDR only — proxy headers are attacker-controlled unless a specific, trusted reverse
+	 * proxy is known to rewrite them, and there is none here. The same choice is made in
+	 * Yazan_Dashboard_Auth::client_ip() for the login rate limiter.
+	 *
+	 * @return string
+	 */
+	private static function client_ip() {
+		$ip = isset( $_SERVER['REMOTE_ADDR'] ) ? wp_unslash( $_SERVER['REMOTE_ADDR'] ) : '';
+		$ip = filter_var( $ip, FILTER_VALIDATE_IP );
+
+		return $ip ? (string) $ip : '0.0.0.0';
+	}
+
+	/**
+	 * A stable hash of the requesting client's user agent.
+	 *
+	 * @return string
+	 */
+	private static function client_ua_hash() {
+		$ua = isset( $_SERVER['HTTP_USER_AGENT'] ) ? (string) wp_unslash( $_SERVER['HTTP_USER_AGENT'] ) : '';
+
+		return hash( 'sha256', $ua );
 	}
 
 	/**
