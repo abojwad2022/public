@@ -439,12 +439,44 @@ class Yazan_Backup_Engine {
 	}
 
 	/**
-	 * Restore from any archive on disk (a stored backup or a freshly uploaded one).
+	 * Does this archive's database identity differ from the one we are connected to?
 	 *
-	 * @param string $zip_path     Absolute path to the .zip.
-	 * @param bool   $safety_first Take an automatic DB-only snapshot before overwriting.
-	 * @return array|WP_Error
+	 * Returns a human-readable reason, or '' when the archive is safe to restore here. A value the
+	 * manifest never recorded (older archives) is treated as "unknown", not as a mismatch —
+	 * refusing those would strand every backup taken before this check existed.
+	 *
+	 * @param array $manifest Decoded archive manifest.
+	 * @return string Reason to refuse, or '' to allow.
 	 */
+	private static function database_mismatch( array $manifest ) {
+		global $wpdb;
+
+		$archive_db     = (string) ( $manifest['db_name'] ?? '' );
+		$archive_prefix = (string) ( $manifest['db_prefix'] ?? '' );
+		$current_db     = defined( 'DB_NAME' ) ? (string) DB_NAME : '';
+		$current_prefix = (string) $wpdb->prefix;
+
+		if ( '' !== $archive_db && '' !== $current_db && $archive_db !== $current_db ) {
+			return sprintf(
+				/* translators: 1: database in the archive, 2: database currently connected. */
+				__( 'This archive was taken from the database "%1$s", but this site is connected to "%2$s". Restoring it would overwrite one database with another one\'s contents.', 'yazan' ),
+				$archive_db,
+				$current_db
+			);
+		}
+
+		if ( '' !== $archive_prefix && $archive_prefix !== $current_prefix ) {
+			return sprintf(
+				/* translators: 1: table prefix in the archive, 2: table prefix in use. */
+				__( 'This archive uses the table prefix "%1$s", but this site uses "%2$s". The restored tables would not be the ones WordPress reads.', 'yazan' ),
+				$archive_prefix,
+				$current_prefix
+			);
+		}
+
+		return '';
+	}
+
 	public static function restore_from_file( $zip_path, $safety_first = true ) {
 		if ( ! self::is_supported() ) {
 			return new WP_Error( 'yazan_no_zip', __( 'The PHP ZipArchive extension is not available on this server.', 'yazan' ), array( 'status' => 501 ) );
@@ -470,6 +502,30 @@ class Yazan_Backup_Engine {
 		if ( ! $has_sql && ! $has_files ) {
 			$zip->close();
 			return new WP_Error( 'yazan_empty', __( 'This archive contains neither a database nor files to restore.', 'yazan' ), array( 'status' => 400 ) );
+		}
+
+		/*
+		 * Refuse to restore a dump taken from a DIFFERENT database or table prefix.
+		 *
+		 * This became load-bearing the moment a second schema existed: the test harness runs on
+		 * `local_tests`, and a restore is the one operation that can silently overwrite an entire
+		 * database with another one's contents. The manifest has always recorded `db_name` and
+		 * `db_prefix` (see create()); nothing ever read them back until now.
+		 *
+		 * Missing values mean an archive written before this check shipped — those are allowed
+		 * through, because refusing them would strand every existing backup.
+		 */
+		if ( $has_sql ) {
+			$mismatch = self::database_mismatch( $manifest );
+
+			if ( '' !== $mismatch && ! apply_filters( 'yazan_backup_allow_cross_database', false, $manifest, $zip_path ) ) {
+				$zip->close();
+				return new WP_Error(
+					'yazan_db_mismatch',
+					$mismatch,
+					array( 'status' => 409 )
+				);
+			}
 		}
 
 		// Safety snapshot of the current database before we overwrite anything.
