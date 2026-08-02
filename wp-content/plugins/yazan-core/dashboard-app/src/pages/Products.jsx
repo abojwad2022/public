@@ -387,17 +387,22 @@ export default function Products() {
           <>
             {/* WooCommerce puts Import and Export next to "Add Product"; the CSV tools
                 themselves already live in Settings → Tools, so these are shortcuts to it
-                rather than a second implementation. */}
-            <Can perm="porting.import">
+                rather than a second implementation.
+
+                Both keys are required, exactly as WooCommerce requires
+                `edit_products && import` — the porting permission alone says you may move
+                bulk data, not that you may move THIS data. Checking both here is what stops
+                the button being a link to a 403. */}
+            {can('porting.import') && can('products.import') && (
               <Button size="sm" icon={Upload} onClick={() => navigate('/settings?tab=tools')}>
                 Import
               </Button>
-            </Can>
-            <Can perm="porting.export">
+            )}
+            {can('porting.export') && can('products.export') && (
               <Button size="sm" icon={Download} onClick={() => navigate('/settings?tab=tools')}>
                 Export
               </Button>
-            </Can>
+            )}
             <ScreenOptions
               columns={visibleColumns}
               onToggleColumn={toggleColumn}

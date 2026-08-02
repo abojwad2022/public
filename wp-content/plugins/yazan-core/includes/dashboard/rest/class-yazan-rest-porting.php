@@ -65,6 +65,63 @@ class Yazan_REST_Porting {
 		);
 	}
 
+	/**
+	 * The subject-scoped permission each CSV `type` additionally requires.
+	 *
+	 * WordPress treats `import`/`export` as SITE-WIDE capabilities — "may move bulk data in
+	 * and out of this site" — and grants them to administrators only. WooCommerce therefore
+	 * demands two keys before either CSV screen opens:
+	 *
+	 *     current_user_can( 'edit_products' ) && current_user_can( 'export' )   // exporters
+	 *     current_user_can( 'edit_products' ) && current_user_can( 'import' )   // importers
+	 *
+	 * `porting.export` / `porting.import` are our site-wide key. This map is the other one.
+	 * Without it a single gate covered products, orders AND customers, so a role granted the
+	 * porting permission in order to export the CATALOGUE could also export the customer
+	 * list — personal data — by changing one parameter in the request body.
+	 */
+	const SUBJECT_PERMS = array(
+		'export' => array(
+			''          => 'products.export',
+			'products'  => 'products.export',
+			'orders'    => 'orders.view',
+			'customers' => 'customers.view',
+		),
+		'import' => array(
+			''          => 'products.import',
+			'products'  => 'products.import',
+			'customers' => 'customers.view',
+		),
+	);
+
+	/**
+	 * Enforce the subject-scoped half of the two-key rule.
+	 *
+	 * @param string $type      Requested CSV subject ('', 'products', 'orders', 'customers').
+	 * @param string $direction 'export' or 'import'.
+	 * @return true|WP_Error True when allowed, WP_Error when refused.
+	 */
+	private static function require_subject( $type, $direction ) {
+		$map = self::SUBJECT_PERMS[ $direction ];
+
+		// An unrecognised type falls through to the products path below, so it must be
+		// gated as products rather than waved through as "not in the map".
+		$perm = $map[ $type ] ?? $map[''];
+
+		if ( Yazan_Permissions::can( $perm ) ) {
+			return true;
+		}
+
+		return new WP_Error(
+			'yazan_forbidden',
+			__( 'You do not have permission to move that data.', 'yazan' ),
+			array(
+				'status'     => rest_authorization_required_code(),
+				'permission' => $perm,
+			)
+		);
+	}
+
 	/* --------------------------------------------------------------------- */
 	/* Export                                                                 */
 	/* --------------------------------------------------------------------- */
