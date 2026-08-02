@@ -23,14 +23,50 @@ class Yazan_Dashboard_Auth {
 	/** REST namespace shared by every dashboard controller. */
 	const NS = 'yazan/v1';
 
-	/** Capability required to reach the dashboard at all. */
-	const CAP = 'edit_products';
+	/**
+	 * Capability required to reach the dashboard at all.
+	 *
+	 * Was `edit_products`, which meant every staff member had to be granted product editing purely
+	 * to get through the door — the coarsest possible key for the narrowest possible purpose.
+	 * Yazan_Cap_Projection has projected `yazan_dashboard_access` onto every non-suspended Yazan
+	 * role holder all along; it simply was not the thing being checked.
+	 *
+	 * ⚠️ Do not check this constant directly — call {@see self::can_access()}. See the note there:
+	 * a real WordPress administrator does NOT receive this capability, and gating on it alone
+	 * locks every administrator out of /dashboard.
+	 */
+	const CAP = Yazan_Cap_Projection::ACCESS_CAP;
 
 	/** Max failed logins per IP before a temporary block. */
 	const MAX_ATTEMPTS = 6;
 
 	/** Lockout / attempt window in seconds. */
 	const WINDOW = 900; // 15 minutes.
+
+	/**
+	 * May this user open the dashboard?
+	 *
+	 * THE ADMINISTRATOR CASE IS WHY THIS FUNCTION EXISTS. Yazan_Cap_Projection::project() returns
+	 * early for anyone holding the WordPress `administrator` role — deliberately, because an
+	 * administrator already holds everything and resolving permissions inside the `user_has_cap`
+	 * filter for them would be work with no effect. The consequence is that an administrator never
+	 * receives the projected `yazan_dashboard_access` capability. Gating on ACCESS_CAP alone would
+	 * therefore have locked out every WordPress administrator on this site, including the owner,
+	 * with no way back in through the dashboard.
+	 *
+	 * The in-code note calling this flip "a one-line change with no migration" was wrong on that
+	 * point. `manage_options` is the second clause that makes it true.
+	 *
+	 * @param int|WP_User|null $user User or id. Defaults to the current user.
+	 * @return bool
+	 */
+	public static function can_access( $user = null ) {
+		if ( null === $user ) {
+			return current_user_can( self::CAP ) || current_user_can( 'manage_options' );
+		}
+
+		return user_can( $user, self::CAP ) || user_can( $user, 'manage_options' );
+	}
 
 	/**
 	 * Register auth routes. Hook: rest_api_init.
