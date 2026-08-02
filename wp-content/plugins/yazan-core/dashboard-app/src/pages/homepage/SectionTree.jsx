@@ -32,9 +32,7 @@ export default function SectionTree({
       <div className="flex items-center justify-between border-b border-edge px-3 py-2">
         <span className="text-2xs font-medium uppercase tracking-wide text-faint">Sections</span>
         <Can perm="homepage.sections.create">
-          <IconButton label="Add a section" onClick={onAdd}>
-            <Icons.Plus />
-          </IconButton>
+          <IconButton label="Add a section" onClick={onAdd} icon={Icons.Plus} />
         </Can>
       </div>
 
@@ -87,31 +85,20 @@ export default function SectionTree({
 
               <div className="mt-1 flex justify-end gap-0.5">
                 <Can perm="homepage.sections.sort">
-                  <IconButton label="Move up" onClick={() => onMove(index, index - 1)}>
-                    <Icons.ChevronUp />
-                  </IconButton>
+                  <IconButton label="Move up" onClick={() => onMove(index, index - 1)} icon={Icons.ChevronUp} />
                 </Can>
                 <Can perm="homepage.sections.sort">
-                  <IconButton label="Move down" onClick={() => onMove(index, index + 1)}>
-                    <Icons.ChevronDown />
-                  </IconButton>
+                  <IconButton label="Move down" onClick={() => onMove(index, index + 1)} icon={Icons.ChevronDown} />
                 </Can>
                 <IconButton
                   label={disabled ? 'Show this section' : 'Hide this section'}
                   onClick={() => onToggle(section.id, disabled)}
-                  disabled={!editable}
-                >
-                  {disabled ? <Icons.EyeOff /> : <Icons.Eye />}
-                </IconButton>
+                  disabled={!editable} icon={disabled ? Icons.EyeOff : Icons.Eye} />
                 <Can perm="homepage.sections.duplicate">
-                  <IconButton label="Duplicate" onClick={() => onDuplicate(section.id)}>
-                    <Icons.Copy />
-                  </IconButton>
+                  <IconButton label="Duplicate" onClick={() => onDuplicate(section.id)} icon={Icons.Copy} />
                 </Can>
                 <Can perm="homepage.sections.delete">
-                  <IconButton label="Remove" onClick={() => onRemove(section.id)}>
-                    <Icons.Trash2 />
-                  </IconButton>
+                  <IconButton label="Remove" onClick={() => onRemove(section.id)} icon={Icons.Trash2} />
                 </Can>
               </div>
 

@@ -90,9 +90,7 @@ export default function TemplatesList({ open, version, onApplied }) {
                 {row.kind === 'document' ? 'Replace' : 'Add'}
               </Button>
               <Can perm="homepage.templates.delete">
-                <IconButton label="Delete template" onClick={() => remove(row)}>
-                  <Icons.Trash2 />
-                </IconButton>
+                <IconButton label="Delete template" onClick={() => remove(row)} icon={Icons.Trash2} />
               </Can>
             </div>
           </div>

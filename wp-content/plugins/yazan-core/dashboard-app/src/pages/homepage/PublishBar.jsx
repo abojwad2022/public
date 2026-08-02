@@ -62,44 +62,48 @@ export default function PublishBar({
 
       <div className="flex items-center gap-1">
         {/* Labelled, not bare icons: two arrows next to each other are a coin toss, and this is
-            the control people reach for when they have just done something they regret. */}
-        <Button variant="secondary" onClick={onUndo} disabled={!canUndo} title="Undo (Ctrl+Z)">
-          <span className="flex items-center gap-1">
-            <Icons.RotateCcw size={14} /> Undo
-          </span>
-        </Button>
-        <Button variant="secondary" onClick={onRedo} disabled={!canRedo} title="Redo (Ctrl+Shift+Z)">
-          <span className="flex items-center gap-1">
-            <Icons.RefreshCw size={14} /> Redo
-          </span>
-        </Button>
+            the control people reach for when they have just done something they regret.
+
+            Behind homepage.edit with everything else that writes: undo and redo change the draft
+            in the editor, and offering them to someone who may only look is offering a door that
+            opens onto a wall. */}
+        <Can perm="homepage.edit">
+          <Button variant="secondary" onClick={onUndo} disabled={!canUndo} title="Undo (Ctrl+Z)">
+            <span className="flex items-center gap-1">
+              <Icons.RotateCcw size={14} /> Undo
+            </span>
+          </Button>
+          <Button variant="secondary" onClick={onRedo} disabled={!canRedo} title="Redo (Ctrl+Shift+Z)">
+            <span className="flex items-center gap-1">
+              <Icons.RefreshCw size={14} /> Redo
+            </span>
+          </Button>
+        </Can>
 
         <span className="mx-1 h-5 w-px bg-divider" aria-hidden="true" />
 
         <Can perm="homepage.export">
-          <IconButton label="Export this homepage as a file" onClick={onExport}>
-            <Icons.Download />
-          </IconButton>
+          <IconButton label="Export this homepage as a file" onClick={onExport} icon={Icons.Download} />
         </Can>
         <Can perm="homepage.import">
-          <IconButton label="Import a homepage file" onClick={onImport}>
-            <Icons.Upload />
-          </IconButton>
+          <IconButton label="Import a homepage file" onClick={onImport} icon={Icons.Upload} />
         </Can>
-        <IconButton label="History" onClick={onHistory}>
-          <Icons.ScrollText />
-        </IconButton>
+        <IconButton label="History" onClick={onHistory} icon={Icons.ScrollText} />
         <Can perm="homepage.experiment">
           {/* Columns3 rather than a new glyph: the icon set is a curated list on purpose, and two
               layouts side by side is exactly what this opens. */}
-          <IconButton label="A/B test" onClick={onExperiment}>
-            <Icons.Columns3 />
-          </IconButton>
+          <IconButton label="A/B test" onClick={onExperiment} icon={Icons.Columns3} />
         </Can>
 
-        <Button variant="secondary" onClick={onSave} disabled={!dirty || saving}>
-          Save draft
-        </Button>
+        {/* This one was rendered for everybody, and a role holding only homepage.view saw a
+            greyed "Save draft" — the exact thing the specification said not to do. The server
+            would have refused the write, but a button you may never press is still a promise the
+            screen cannot keep. */}
+        <Can perm="homepage.edit">
+          <Button variant="secondary" onClick={onSave} disabled={!dirty || saving}>
+            Save draft
+          </Button>
+        </Can>
 
         <Can perm="homepage.publish">
           <Button variant="secondary" onClick={() => setScheduling(true)}>

@@ -106,9 +106,7 @@ export default function DocumentSwitcher({ docKey, onSwitch, onDocumentChanged, 
         </Select>
 
         <Can perm="homepage.settings">
-          <IconButton label="Manage page layouts" onClick={() => setManaging(true)}>
-            <Icons.SlidersHorizontal />
-          </IconButton>
+          <IconButton label="Manage page layouts" onClick={() => setManaging(true)} icon={Icons.SlidersHorizontal} />
         </Can>
       </div>
 
@@ -150,9 +148,7 @@ export default function DocumentSwitcher({ docKey, onSwitch, onDocumentChanged, 
                           </option>
                         ))}
                       </Select>
-                      <IconButton label="Delete layout" onClick={() => remove(entry.doc_key)}>
-                        <Icons.Trash2 />
-                      </IconButton>
+                      <IconButton label="Delete layout" onClick={() => remove(entry.doc_key)} icon={Icons.Trash2} />
                     </div>
                   )}
                 </div>

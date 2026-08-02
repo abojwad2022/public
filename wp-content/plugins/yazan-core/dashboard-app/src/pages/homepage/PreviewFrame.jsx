@@ -120,9 +120,7 @@ export default function PreviewFrame({ device, onDevice, signal, docKey, homeUrl
               {key}
             </button>
           ))}
-          <IconButton label="Reload the preview" onClick={() => reload()}>
-            <Icons.RefreshCw />
-          </IconButton>
+          <IconButton label="Reload the preview" onClick={() => reload()} icon={Icons.RefreshCw} />
         </div>
       </div>
 
