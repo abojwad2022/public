@@ -87,6 +87,7 @@ class Yazan_REST_Audit {
 				'ip'          => $row->ip,
 				// Present only on rows written since schema v2; older entries return ''.
 				'user_agent'  => isset( $row->user_agent ) ? (string) $row->user_agent : '',
+				'store_id'    => (int) ( $row->store_id ?? 1 ),
 				'date'        => $row->created_at,
 			);
 		}

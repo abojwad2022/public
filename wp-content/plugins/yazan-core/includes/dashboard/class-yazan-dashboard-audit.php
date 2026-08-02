@@ -222,13 +222,31 @@ class Yazan_Dashboard_Audit {
 	 *
 	 * @return array{actions:string[],object_types:string[]}
 	 */
+	/**
+	 * The store the facet lists apply to.
+	 *
+	 * @return int
+	 */
+	private static function scope_store() {
+		return class_exists( 'Yazan_DB' ) ? Yazan_DB::store_id() : 1;
+	}
+
 	public static function facets() {
 		global $wpdb;
 		$table = self::table();
 
 		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-		$actions = $wpdb->get_col( "SELECT DISTINCT action FROM {$table} ORDER BY action ASC" );
-		$types   = $wpdb->get_col( "SELECT DISTINCT object_type FROM {$table} ORDER BY object_type ASC" );
+		/*
+		 * Scoped too. Unscoped facets do not leak row CONTENT, but they leak the existence and
+		 * vocabulary of other tenants' activity — a store admin seeing `store.archived` in their
+		 * filter dropdown learns about events that never touched them.
+		 */
+		$store = self::scope_store();
+
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$actions = $wpdb->get_col( $wpdb->prepare( "SELECT DISTINCT action FROM {$table} WHERE store_id IN ( %d, %d ) ORDER BY action ASC", 0, $store ) );
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$types   = $wpdb->get_col( $wpdb->prepare( "SELECT DISTINCT object_type FROM {$table} WHERE store_id IN ( %d, %d ) ORDER BY object_type ASC", 0, $store ) );
 		// phpcs:enable
 
 		return array(
@@ -251,6 +269,18 @@ class Yazan_Dashboard_Audit {
 		$cutoff = gmdate( 'Y-m-d H:i:s', time() - ( $days * DAY_IN_SECONDS ) );
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		/*
+		 * ⚠️ RETENTION IS A PLATFORM POLICY, SO PURGING IS A PLATFORM ACT.
+		 *
+		 * Unscoped, a store administrator running "delete older than 30 days" erased every tenant's
+		 * history. Scoping it naively to their own store would still let one tenant's retention
+		 * setting govern rows they never created. So only a platform super may purge — and then it
+		 * purges everything, which is what a retention policy actually means.
+		 */
+		if ( class_exists( 'Yazan_Permissions' ) && ! Yazan_Permissions::is_platform_super() ) {
+			return 0;
+		}
+
 		return (int) $wpdb->query( $wpdb->prepare( "DELETE FROM {$table} WHERE created_at < %s", $cutoff ) );
 	}
 
