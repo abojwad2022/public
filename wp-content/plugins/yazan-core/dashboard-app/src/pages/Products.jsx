@@ -1,52 +1,28 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Link, useNavigate, useSearchParams } from 'react-router'
+import { useNavigate, useSearchParams } from 'react-router'
 import { productsApi } from '../api/endpoints.js'
-import { useMeta, formatPrice } from '../context/MetaContext.jsx'
+import { useMeta } from '../context/MetaContext.jsx'
 import { useToast } from '../context/ToastContext.jsx'
 import { useAuth } from '../context/AuthContext.jsx'
 import { PageHeader } from '../components/Layout.jsx'
 import { Can } from '../components/Protected.jsx'
 import ProductStatusTabs from '../components/product/ProductStatusTabs.jsx'
+import ProductFilters from '../components/product/ProductFilters.jsx'
+import ProductsTable, { DEFAULT_VISIBLE_COLUMNS } from '../components/product/ProductsTable.jsx'
 import {
-  Badge,
   Button,
   Card,
   ConfirmDialog,
-  Dropdown,
   EmptyState,
   Field,
   Input,
   Modal,
   Pagination,
-  SearchInput,
   Select,
-  SkeletonTable,
-  Table,
-  TBody,
-  TD,
-  TH,
-  THead,
-  TR,
 } from '../components/ui/index.js'
-import {
-  Copy,
-  ExternalLink,
-  Package,
-  Pencil,
-  Plus,
-  RotateCcw,
-  SlidersHorizontal,
-  Trash2,
-} from '../components/ui/icons.js'
+import { Package, Plus, Trash2 } from '../components/ui/icons.js'
 
-const SORTABLE = [
-  { key: 'title', label: 'Product' },
-  { key: 'sku', label: 'SKU' },
-  { key: 'price', label: 'Price' },
-  { key: 'date', label: 'Date' },
-]
-
-const EMPTY_FILTERS = { search: '', category: '', stock_status: '', type: '' }
+const EMPTY_FILTERS = { search: '', category: '', tag: '', stock_status: '', type: '', featured: '' }
 
 /** Past-tense wording per bulk action, so the toast says what actually happened. */
 const BULK_PAST = {
@@ -74,12 +50,8 @@ export default function Products() {
    */
   const [params, setParams] = useSearchParams()
   const filters = useMemo(
-    () => ({
-      search: params.get('search') || '',
-      category: params.get('category') || '',
-      stock_status: params.get('stock_status') || '',
-      type: params.get('type') || '',
-    }),
+    () =>
+      Object.fromEntries(Object.keys(EMPTY_FILTERS).map((key) => [key, params.get(key) || ''])),
     [params],
   )
   // The status view is a tab, not a filter — it is never cleared by "Clear filters",
@@ -95,6 +67,7 @@ export default function Products() {
   const page = Math.max(1, Number(params.get('page')) || 1)
 
   const [searchInput, setSearchInput] = useState(params.get('search') || '')
+  const [visibleColumns, setVisibleColumns] = useState(DEFAULT_VISIBLE_COLUMNS)
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [selected, setSelected] = useState([])
@@ -251,6 +224,30 @@ export default function Products() {
     })
   }
 
+  /**
+   * Flip Featured straight from the row, the way wp-admin's star column does.
+   * Optimistic: the star moves at once and rolls back if the save is refused, because a
+   * round trip before any feedback makes a one-click control feel broken.
+   */
+  const toggleFeatured = async (product) => {
+    const next = !product.featured
+    setData((current) => ({
+      ...current,
+      items: current.items.map((row) => (row.id === product.id ? { ...row, featured: next } : row)),
+    }))
+    try {
+      await productsApi.update(product.id, { featured: next })
+    } catch (err) {
+      setData((current) => ({
+        ...current,
+        items: current.items.map((row) =>
+          row.id === product.id ? { ...row, featured: !next } : row,
+        ),
+      }))
+      toast.error(err.message)
+    }
+  }
+
   const restoreOne = async (product) => {
     try {
       await productsApi.restore(product.id)
@@ -379,54 +376,19 @@ export default function Products() {
       />
 
       <Card className="mb-4" bodyClass="p-3">
-        <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center">
-          <SearchInput
-            value={searchInput}
-            onChange={setSearchInput}
-            placeholder="Search products…"
-            className="col-span-2 min-w-52 flex-1"
-          />
-
-          <Select value={filters.category} onChange={(e) => setFilter('category', e.target.value)} className="w-full sm:w-auto">
-            <option value="">All categories</option>
-            {(meta?.categories || []).map((term) => (
-              <option key={term.id} value={term.slug}>
-                {term.parent ? '— ' : ''}
-                {term.name} ({term.count})
-              </option>
-            ))}
-          </Select>
-
-          <Select value={filters.stock_status} onChange={(e) => setFilter('stock_status', e.target.value)} className="w-full sm:w-auto">
-            <option value="">Any stock</option>
-            {Object.entries(meta?.stock_statuses || {}).map(([key, label]) => (
-              <option key={key} value={key}>
-                {label}
-              </option>
-            ))}
-          </Select>
-
-          <Select value={filters.type} onChange={(e) => setFilter('type', e.target.value)} className="w-full sm:w-auto">
-            <option value="">Any type</option>
-            {Object.entries(meta?.product_types || {}).map(([key, label]) => (
-              <option key={key} value={key}>
-                {label}
-              </option>
-            ))}
-          </Select>
-
-          {hasFilters && (
-            <Button size="sm" onClick={clearFilters}>
-              Clear
-            </Button>
-          )}
-
-          {inTrash && (data?.counts?.trash ?? 0) > 0 && can('products.delete') && (
-            <Button size="sm" variant="danger" icon={Trash2} onClick={emptyTrash} className="ms-auto">
-              Empty trash
-            </Button>
-          )}
-        </div>
+        <ProductFilters
+          meta={meta}
+          filters={filters}
+          searchInput={searchInput}
+          onSearchInput={setSearchInput}
+          onFilter={setFilter}
+          hasFilters={hasFilters}
+          onClear={clearFilters}
+          inTrash={inTrash}
+          trashCount={data?.counts?.trash ?? 0}
+          canEmptyTrash={can('products.delete')}
+          onEmptyTrash={emptyTrash}
+        />
       </Card>
 
       {selected.length > 0 && (
@@ -490,175 +452,28 @@ export default function Products() {
           </EmptyState>
         ) : (
           <>
-            <Table>
-              <THead>
-                <TR>
-                  <TH className="w-8">
-                    <input
-                      type="checkbox"
-                      checked={allSelected}
-                      onChange={toggleAll}
-                      aria-label="Select all products"
-                      className="size-4 rounded-xs accent-[var(--yz-agate)]"
-                    />
-                  </TH>
-                  <TH className="w-12">
-                    <span className="sr-only">Image</span>
-                  </TH>
-                  {SORTABLE.map((column) => (
-                    <TH
-                      key={column.key}
-                      sortKey={column.key}
-                      activeSort={sort.orderby}
-                      direction={sort.order}
-                      onSort={toggleSort}
-                    >
-                      {column.label}
-                    </TH>
-                  ))}
-                  <TH>Stock</TH>
-                  <TH>Categories</TH>
-                  <TH>Status</TH>
-                  <TH align="end">Actions</TH>
-                </TR>
-              </THead>
-              <TBody>
-                {items.map((product) => (
-                  <TR key={product.id} selected={selected.includes(product.id)}>
-                    <TD>
-                      <input
-                        type="checkbox"
-                        checked={selected.includes(product.id)}
-                        onChange={() => toggleOne(product.id)}
-                        aria-label={`Select ${product.name}`}
-                        className="size-4 rounded-xs accent-[var(--yz-agate)]"
-                      />
-                    </TD>
-                    <TD>
-                      {product.thumb ? (
-                        <img
-                          src={product.thumb}
-                          alt=""
-                          className="size-10 rounded-sm border border-edge object-cover"
-                        />
-                      ) : (
-                        <div className="size-10 rounded-sm border border-edge bg-sunken" />
-                      )}
-                    </TD>
-                    <TD primary>
-                      <Link
-                        to={`/products/${product.id}`}
-                        className="font-medium text-fg transition-colors hover:text-agate-fg"
-                      >
-                        {product.name || '(no title)'}
-                      </Link>
-                      <div className="mt-1 flex flex-wrap gap-1.5">
-                        {product.type !== 'simple' && <Badge>{product.type}</Badge>}
-                        {product.edit_serial && <Badge tone="gold">Certified</Badge>}
-                        {product.on_sale && <Badge tone="warn">Sale</Badge>}
-                      </div>
-                    </TD>
-                    <TD className="yz-num font-mono text-xs text-muted" label="SKU">{product.sku || '—'}</TD>
-                    <TD className="yz-num whitespace-nowrap" label="Price">
-                      {product.on_sale && product.regular_price ? (
-                        <>
-                          <span className="me-1 text-faint line-through">
-                            {formatPrice(meta, product.regular_price)}
-                          </span>
-                          <span className="text-fg">{formatPrice(meta, product.price)}</span>
-                        </>
-                      ) : (
-                        <span className="text-fg">{formatPrice(meta, product.price)}</span>
-                      )}
-                    </TD>
-                    <TD className="yz-num whitespace-nowrap text-muted" label="Date">{product.date}</TD>
-                    <TD className="whitespace-nowrap" label="Stock">
-                      <StockCell product={product} />
-                    </TD>
-                    <TD className="text-muted sm:max-w-40 sm:truncate" title={product.categories} label="Categories">
-                      {product.categories || '—'}
-                    </TD>
-                    <TD label="Status">
-                      <Badge tone={product.status === 'publish' ? 'ok' : 'muted'}>{product.status}</Badge>
-                    </TD>
-                    {/* Two primary actions stay visible; the rest move into a menu.
-                        Five equal-weight text links per row read as noise and made
-                        every row 40% wider than its content needed. */}
-                    <TD align="end" className="whitespace-nowrap">
-                      {inTrash ? (
-                        /* A trashed row offers only the two things you can do to it — the
-                           same pair wp-admin swaps in on its Trash view. */
-                        <span className="inline-flex items-center gap-1">
-                          <Can perm="products.restore">
-                            <Button size="sm" variant="quiet" icon={RotateCcw} onClick={() => restoreOne(product)}>
-                              Restore
-                            </Button>
-                          </Can>
-                          <Can perm="products.delete">
-                            <Button size="sm" variant="quiet" icon={Trash2} onClick={() => deleteOne(product)}>
-                              Delete permanently
-                            </Button>
-                          </Can>
-                        </span>
-                      ) : (
-                      <span className="inline-flex items-center gap-1">
-                        <Button
-                          size="sm"
-                          variant="quiet"
-                          icon={Pencil}
-                          onClick={() => navigate(`/products/${product.id}`)}
-                        >
-                          Edit
-                        </Button>
-                        <Dropdown
-                          label={`More actions for ${product.name}`}
-                          trigger={({ toggle, open }) => (
-                            <button
-                              type="button"
-                              onClick={toggle}
-                              aria-haspopup="menu"
-                              aria-expanded={open}
-                              aria-label={`More actions for ${product.name}`}
-                              className="yz-btn yz-btn-quiet yz-btn-sm yz-btn-icon"
-                            >
-                              ⋯
-                            </button>
-                          )}
-                          items={[
-                            {
-                              key: 'quick',
-                              label: 'Quick edit',
-                              icon: SlidersHorizontal,
-                              onSelect: () => openQuick(product),
-                            },
-                            { key: 'copy', label: 'Duplicate', icon: Copy, onSelect: () => duplicate(product) },
-                            {
-                              key: 'view',
-                              label: 'View on store',
-                              icon: ExternalLink,
-                              onSelect: () => window.open(product.permalink, '_blank', 'noreferrer'),
-                            },
-                            ...(can('products.delete')
-                              ? [
-                                  {
-                                    key: 'trash',
-                                    label: 'Move to trash',
-                                    icon: Trash2,
-                                    tone: 'danger',
-                                    separatorBefore: true,
-                                    onSelect: () => removeOne(product),
-                                  },
-                                ]
-                              : []),
-                          ]}
-                        />
-                      </span>
-                      )}
-                    </TD>
-                  </TR>
-                ))}
-              </TBody>
-            </Table>
+            <ProductsTable
+              items={items}
+              meta={meta}
+              columns={visibleColumns}
+              sort={sort}
+              onSort={toggleSort}
+              selected={selected}
+              onToggleOne={toggleOne}
+              onToggleAll={toggleAll}
+              allSelected={allSelected}
+              someSelected={selected.length > 0}
+              inTrash={inTrash}
+              can={can}
+              onFilterBy={setFilter}
+              onEdit={(product) => navigate(`/products/${product.id}`)}
+              onQuickEdit={openQuick}
+              onDuplicate={duplicate}
+              onToggleFeatured={toggleFeatured}
+              onTrash={removeOne}
+              onRestore={restoreOne}
+              onDeleteForever={deleteOne}
+            />
 
             <Pagination
               page={data.page}
@@ -764,18 +579,5 @@ export default function Products() {
         {confirm?.body}
       </ConfirmDialog>
     </>
-  )
-}
-
-function StockCell({ product }) {
-  if (product.stock_status === 'outofstock') return <Badge tone="danger">Out of stock</Badge>
-  if (product.stock_status === 'onbackorder') return <Badge tone="warn">On backorder</Badge>
-  return (
-    <Badge tone="ok">
-      In stock
-      {product.manage_stock && product.stock_qty !== null && product.stock_qty !== undefined
-        ? ` · ${product.stock_qty}`
-        : ''}
-    </Badge>
   )
 }

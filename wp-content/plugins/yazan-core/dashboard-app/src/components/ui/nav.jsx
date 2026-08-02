@@ -143,8 +143,12 @@ export function Breadcrumbs({ items, LinkComponent }) {
  * returns focus to the trigger so keyboard flow is not lost.
  *
  * @param {Array} items [{ key, label, icon?, onSelect, tone?, separatorBefore? }]
+ * @param {React.ReactNode} children Free-form panel content INSTEAD of `items` — for
+ *   panels whose controls are not one-shot commands (checkbox lists, filter forms).
+ *   Such a panel is not a menu, so it gets a plain container and does not self-close
+ *   on click; the dismissal behaviour (Escape, outside click) is shared either way.
  */
-export function Dropdown({ trigger, items, align = 'end', label = 'Actions' }) {
+export function Dropdown({ trigger, items, children, align = 'end', label = 'Actions' }) {
   const [open, setOpen] = useState(false)
   const wrapRef = useRef(null)
   const triggerRef = useRef(null)
@@ -190,13 +194,14 @@ export function Dropdown({ trigger, items, align = 'end', label = 'Actions' }) {
 
       {open && (
         <div
-          role="menu"
+          role={children ? undefined : 'menu'}
           style={{ zIndex: 'var(--yz-z-popover)' }}
           className={`absolute top-full mt-1.5 min-w-44 rounded-lg border border-edge bg-raised p-1 shadow-2 ${
             align === 'end' ? 'end-0' : 'start-0'
           }`}
         >
-          {items.map((item) => (
+          {children}
+          {(items || []).map((item) => (
             <div key={item.key}>
               {item.separatorBefore && <div className="my-1 h-px bg-divider" />}
               <button
