@@ -158,7 +158,7 @@ final class MarketingCampaignRepository extends AbstractRepository {
 	public function delete_campaign( int $id ): void {
 		$wpdb = $this->db->wpdb();
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-		$wpdb->delete( $this->table(), array( 'id' => $id ), array( '%d' ) );
+		$this->db->delete( $this->table(), array( 'id' => $id ), array( '%d' ) );
 	}
 
 	/**

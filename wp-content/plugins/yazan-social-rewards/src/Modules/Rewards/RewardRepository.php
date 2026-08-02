@@ -144,7 +144,7 @@ final class RewardRepository extends AbstractRepository {
 	public function delete_reward( int $id ): void {
 		$wpdb = $this->db->wpdb();
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-		$wpdb->delete( $this->table(), array( 'id' => $id ), array( '%d' ) );
+		$this->db->delete( $this->table(), array( 'id' => $id ), array( '%d' ) );
 	}
 
 	/**

@@ -160,12 +160,12 @@ final class AchievementRepository extends AbstractRepository {
 		if ( $current ) {
 			$new = (int) $current->progress + $by;
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-			$wpdb->update( $table, array( 'progress' => $new ), array( 'id' => (int) $current->id ), array( '%d' ), array( '%d' ) );
+			$this->db->update( $table, array( 'progress' => $new ), array( 'id' => (int) $current->id ), array( '%d' ), array( '%d' ) );
 			return $new;
 		}
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-		$wpdb->insert(
+		$this->db->insert(
 			$table,
 			array( 'user_id' => $user_id, 'achievement_id' => $achievement_id, 'progress' => $by, 'unlocked_at' => '0000-00-00 00:00:00' ),
 			array( '%d', '%d', '%d', '%s' )
@@ -190,10 +190,10 @@ final class AchievementRepository extends AbstractRepository {
 		}
 		if ( $row ) {
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-			$wpdb->update( $table, array( 'unlocked_at' => current_time( 'mysql' ) ), array( 'id' => (int) $row->id ), array( '%s' ), array( '%d' ) );
+			$this->db->update( $table, array( 'unlocked_at' => current_time( 'mysql' ) ), array( 'id' => (int) $row->id ), array( '%s' ), array( '%d' ) );
 		} else {
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-			$wpdb->insert(
+			$this->db->insert(
 				$table,
 				array( 'user_id' => $user_id, 'achievement_id' => $achievement_id, 'progress' => 1, 'unlocked_at' => current_time( 'mysql' ) ),
 				array( '%d', '%d', '%d', '%s' )

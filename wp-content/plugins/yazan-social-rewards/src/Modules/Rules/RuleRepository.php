@@ -170,7 +170,7 @@ final class RuleRepository extends AbstractRepository {
 		$wpdb  = $this->db->wpdb();
 		$table = $this->table();
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-		$wpdb->delete( $table, array( 'id' => $id ), array( '%d' ) );
+		$this->db->delete( $table, array( 'id' => $id ), array( '%d' ) );
 	}
 
 	/**
