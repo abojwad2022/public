@@ -28,7 +28,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 class Yazan_Permission_Registry {
 
 	/** Bump whenever the catalog below changes. Drives sync_catalog() and the cache key. */
-	const REGISTRY_VERSION = '2';
+	const REGISTRY_VERSION = '3';
 
 	/** Option storing the synced registry version. */
 	const VERSION_OPTION = 'yazan_rbac_registry_version';
@@ -523,6 +523,22 @@ class Yazan_Permission_Registry {
 				),
 			),
 		);
+
+		/**
+		 * Filter the permission catalog's modules.
+		 *
+		 * The extension point that lets a module declare its own permissions instead of this file
+		 * growing a hard-coded block per feature. A module registers here and its slugs appear in
+		 * the Role Editor, in the grants pivot, and in every guard — with no change to this class.
+		 *
+		 * TIMING: the result of this method is memoised in a static below, and
+		 * Yazan_RBAC_Boot::maybe_install() reads it on `init` priority 1. A filter attached later
+		 * than plugin-load time is therefore never seen, and the failure is SILENT — the module's
+		 * permissions simply do not exist. Attach at plugin load, not on `init`.
+		 *
+		 * @param array<string,array{label:string,status?:string,sort:int,actions:array<string,?string>}> $modules Modules.
+		 */
+		$modules = (array) apply_filters( 'yazan_permission_modules', $modules );
 
 		return $modules;
 	}

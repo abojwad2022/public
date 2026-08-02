@@ -69,6 +69,17 @@ require YAZAN_CORE_DIR . 'includes/social-auth/class-yazan-social-auth.php';
 Yazan_Social_Auth::register();
 
 /*
+ * Homepage Manager: the visual homepage builder module.
+ *
+ * Loaded BEFORE RBAC on purpose. It contributes its permissions through the
+ * `yazan_permission_modules` filter, and Yazan_Permission_Registry::modules() memoises its result
+ * the first time anything asks for it — so the filter has to be attached before RBAC's installer
+ * runs on `init` priority 1. Inert until its own installer has created its tables.
+ */
+require YAZAN_CORE_DIR . 'includes/homepage/class-yazan-homepage-boot.php';
+Yazan_Homepage_Boot::init();
+
+/*
  * Role-based access control: roles, the permission catalog, and the projection of Yazan
  * permissions onto native WordPress capabilities.
  *
