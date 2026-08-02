@@ -322,8 +322,11 @@ class Yazan_Permissions {
 	/**
 	 * Does this user hold a permission?
 	 *
-	 * @param string   $slug    Permission slug, e.g. 'orders.refund'.
-	 * @param int|null $user_id User id, or null for the current user.
+	 * @param string   $slug     Permission slug, e.g. 'orders.refund'.
+	 * @param int|null $user_id  User id, or null for the current user.
+	 * @param int|null $store_id Store id, or null for the active store. Appended rather than
+	 *                           inserted so all 14 existing call sites — 12 of which pass a single
+	 *                           argument — keep working untouched.
 	 * @return bool
 	 */
 	public static function can( $slug, $user_id = null, $store_id = null ) {
@@ -339,8 +342,9 @@ class Yazan_Permissions {
 	/**
 	 * Does this user hold any of these permissions?
 	 *
-	 * @param string[] $slugs   Permission slugs.
-	 * @param int|null $user_id User id.
+	 * @param string[] $slugs    Permission slugs.
+	 * @param int|null $user_id  User id.
+	 * @param int|null $store_id Store id, or null for the active store.
 	 * @return bool
 	 */
 	public static function can_any( array $slugs, $user_id = null, $store_id = null ) {

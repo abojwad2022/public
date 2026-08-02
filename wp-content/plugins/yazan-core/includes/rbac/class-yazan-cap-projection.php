@@ -38,16 +38,21 @@ class Yazan_Cap_Projection {
 	/**
 	 * Bespoke capability meaning "may reach the Yazan dashboard".
 	 *
-	 * Projected today but not yet required: Yazan_Dashboard_Auth::CAP is still `edit_products`, so
-	 * every staff member is over-granted product editing just to get through the door. Flipping
-	 * CAP to this constant later is a one-line change with no migration.
+	 * This IS the dashboard gate now — Yazan_Dashboard_Auth::CAP was flipped from `edit_products`,
+	 * so staff are no longer over-granted product editing merely to get through the door.
+	 *
+	 * ⚠️ The flip was NOT the "one-line change with no migration" this docblock used to promise.
+	 * project() returns early for WordPress administrators (below), so an administrator never
+	 * receives this capability; gating on it alone locked every administrator out of /dashboard.
+	 * Yazan_Dashboard_Auth::can_access() carries the second clause that makes it safe. Check
+	 * through that method, never against this constant directly.
 	 */
 	const ACCESS_CAP = 'yazan_dashboard_access';
 
 	/**
-	 * Re-entrancy guard, keyed by user id.
+	 * Re-entrancy guard, keyed by "user id|store id".
 	 *
-	 * @var array<int,bool>
+	 * @var array<string,bool>
 	 */
 	private static $busy = array();
 
@@ -78,7 +83,34 @@ class Yazan_Cap_Projection {
 
 		$user_id = (int) $user->ID;
 
-		if ( isset( self::$busy[ $user_id ] ) ) {
+		/*
+		 * The store this projection is for.
+		 *
+		 * Read through a class_exists() guard rather than assuming the mu-plugin: this runs inside
+		 * `user_has_cap`, the single most load-bearing filter in WordPress, and a fatal here takes
+		 * out wp-login.php along with everything else.
+		 *
+		 * ⚠️ THE STRUCTURAL LIMIT, stated plainly because it does not go away with more code:
+		 * WooCommerce and WordPress ask `current_user_can( 'edit_products' )` with no store
+		 * argument, so a capability projected here is necessarily projected for whichever store the
+		 * REQUEST resolved to. Inside /dashboard that is right. Inside wp-admin, where there is no
+		 * per-request store, staff of one store will hold WooCommerce capabilities over another
+		 * store's data. No projection can fix that, because the projection is additive-only and can
+		 * never REMOVE a capability. The mitigation is a policy — store staff live in /dashboard,
+		 * and wp-admin stays with platform users — not a mechanism.
+		 */
+		$store_id = class_exists( 'Yazan_Store_Context' ) ? Yazan_Store_Context::current() : 1;
+
+		/*
+		 * Re-entrancy guard, keyed by user AND store.
+		 *
+		 * Keyed by user alone, a projection running inside Yazan_Store_Context::run_for() for a
+		 * different store would collide with the outer one still on the stack and silently return
+		 * un-projected capabilities — a permission check that fails for a reason nothing reports.
+		 */
+		$busy_key = $user_id . '|' . $store_id;
+
+		if ( isset( self::$busy[ $busy_key ] ) ) {
 			return $allcaps;
 		}
 
@@ -93,7 +125,7 @@ class Yazan_Cap_Projection {
 			return $allcaps;
 		}
 
-		self::$busy[ $user_id ] = true;
+		self::$busy[ $busy_key ] = true;
 
 		try {
 			// A suspended account is projected NOTHING. That single fact is what makes suspension
@@ -103,7 +135,7 @@ class Yazan_Cap_Projection {
 				return $allcaps;
 			}
 
-			$set = Yazan_Permissions::for_user( $user_id );
+			$set = Yazan_Permissions::for_user( $user_id, $store_id );
 
 			// No Yazan role at all — a shopper, a subscriber. Leave them exactly as they were.
 			if ( empty( $set['roles'] ) && empty( $set['super'] ) ) {
@@ -126,16 +158,20 @@ class Yazan_Cap_Projection {
 
 			return $allcaps;
 		} finally {
-			unset( self::$busy[ $user_id ] );
+			unset( self::$busy[ $busy_key ] );
 		}
 	}
 
 	/**
 	 * Capabilities every active Yazan-role holder gets.
 	 *
-	 * `edit_products` is not optional: it is Yazan_Dashboard_Auth::CAP, and it gates both the
-	 * dashboard shell and require_login(). Until CAP flips to ACCESS_CAP, every staff member needs
-	 * it simply to sign in.
+	 * ACCESS_CAP is what opens the dashboard, and it is the reason this list exists.
+	 *
+	 * `edit_products` is still granted, but no longer because the door needs it — the gate moved to
+	 * ACCESS_CAP. It stays because WooCommerce checks it on paths a staff member reaches after
+	 * signing in (the product list table, media attachment to a product), and removing it would
+	 * turn a clean permission denial into a WooCommerce-internal failure. Narrowing it is a
+	 * separate change with its own testing, not a side effect of the gate flip.
 	 *
 	 * @return string[]
 	 */
