@@ -134,12 +134,46 @@ final class ExperimentRunner {
 	/**
 	 * What to stamp on an order created during this request.
 	 *
-	 * @return string Empty when this visitor is not in a test.
+	 * The homepage is where an arm is ASSIGNED; the checkout is a different request, minutes or
+	 * hours later, and nothing on it recomputes that assignment. The first version of this read
+	 * `self::$current` — which is only ever set while the front page renders — so every real order
+	 * was stamped with an empty string and the report showed zero conversions for both arms while
+	 * the visitor counters climbed. Caught by a live test order, not by a unit test: the two halves
+	 * were each correct on their own.
+	 *
+	 * The cookie is the durable record. Read it here.
+	 *
+	 * @return string "control-key|arm", or empty when this visitor is not in a test.
 	 */
 	public static function stamp() {
 		$current = self::current();
 
-		return $current ? $current['control'] . '|' . $current['arm'] : '';
+		if ( $current ) {
+			return $current['control'] . '|' . $current['arm'];
+		}
+
+		foreach ( ServiceFactory::experiments()->all() as $control => $experiment ) {
+			if ( ! $experiment->is_running() ) {
+				continue;
+			}
+
+			$name = self::COOKIE . $control;
+
+			if ( empty( $_COOKIE[ $name ] ) ) {
+				continue;
+			}
+
+			// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- sanitised here.
+			$arm = sanitize_key( wp_unslash( $_COOKIE[ $name ] ) );
+
+			// A cookie naming an arm this experiment no longer has is stale — an order must not be
+			// credited to a layout that is no longer in the comparison.
+			if ( $experiment->recognises( $arm ) ) {
+				return $control . '|' . $arm;
+			}
+		}
+
+		return '';
 	}
 
 	/**
