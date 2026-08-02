@@ -423,11 +423,31 @@ $handler->remove( $control );
 $row = $events->last();
 
 check( 'removing is audited',                     DomainEvent::EXPERIMENT_REMOVED === $row['name'] );
-check( 'the row keeps the numbers that are gone', ( $row['changes']['old']['totals']['eid']['views'] ?? 0 ) > 0 );
-check( 'and which variant it was',                'eid' === ( $row['changes']['old']['experiment']['variant'] ?? '' ) );
+check( 'the row keeps the numbers that are gone', ( $row['changes']['old']['views'] ?? 0 ) > 0 );
+check( 'and the money with them',                 ( $row['changes']['old']['revenue'] ?? 0 ) > 0 );
+check( 'and which variant it was',                'eid' === ( $row['changes']['old']['variant'] ?? '' ) );
 check( 'exactly one event, not a cascade',        $before_count + 1 === count( $events->names() ) );
 check( 'the numbers really are gone',             array() === $vault->totals( 'default' ) );
 check( 'and so is the experiment',                null === $vault->get( $control ) );
+
+/*
+ * The platform's audit writer (`Yazan_Dashboard_Audit::sanitize_changes()`) walks exactly two
+ * levels and replaces anything deeper with an empty string — no error, no warning. A row that
+ * records a deletion and none of what was deleted is worse than no row, because it looks like a
+ * record. This asserts the shape for EVERY event this handler raises, not just the one that got
+ * it wrong, so the next one added cannot lose its payload the same way.
+ */
+$too_deep = array();
+foreach ( $events->seen as $seen ) {
+	foreach ( $seen['changes'] as $side => $value ) {
+		if ( ! is_array( $value ) ) { continue; }
+		foreach ( $value as $field => $inner ) {
+			if ( is_array( $inner ) ) { $too_deep[] = $seen['name'] . ".$side.$field"; }
+		}
+	}
+}
+check( 'no audit payload nests deeper than the log can store', array() === $too_deep );
+if ( $too_deep ) { echo '       would be lost: ' . implode( ', ', $too_deep ) . "\n"; }
 
 echo "\n[19] The front page: who gets what, and who gets counted\n";
 

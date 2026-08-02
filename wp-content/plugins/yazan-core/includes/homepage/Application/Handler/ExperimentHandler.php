@@ -305,14 +305,35 @@ final class ExperimentHandler {
 		$this->store->remove( $key );
 		$this->store->clear( $key->value() );
 
-		// The numbers go with it, and they are not recoverable. The audit row carries the totals
-		// that were destroyed, so "we deleted a test that had 4,000 views" is answerable later.
+		/*
+		 * The numbers go with it, and they are not recoverable — so the audit row carries what was
+		 * destroyed, and "we deleted a test that had 4,000 views" stays answerable.
+		 *
+		 * FLAT, and that is not a style choice. `Yazan_Dashboard_Audit::sanitize_changes()` walks
+		 * exactly two levels and replaces anything deeper with an empty string, silently. The first
+		 * version of this row nested the experiment and the totals one level further and arrived in
+		 * the log as `{"experiment":"","totals":""}` — a row that records a deletion and none of
+		 * what was deleted, which is worse than no row because it looks like a record.
+		 */
+		$totalled = array( 'views' => 0, 'orders' => 0, 'revenue' => 0.0 );
+
+		foreach ( $totals as $arm ) {
+			$totalled['views']   += (int) ( $arm['views'] ?? 0 );
+			$totalled['orders']  += (int) ( $arm['orders'] ?? 0 );
+			$totalled['revenue'] += (float) ( $arm['revenue'] ?? 0 );
+		}
+
 		$this->announce(
 			DomainEvent::EXPERIMENT_REMOVED,
 			$key,
 			array(
-				'experiment' => $existing ? $existing->to_array() : array(),
-				'totals'     => $totals,
+				'variant'    => $existing ? $existing->variant()->value() : '',
+				'split'      => $existing ? $existing->split() : 0,
+				'running'    => $existing ? $existing->is_running() : false,
+				'started_at' => $existing && $existing->started_at() ? (int) $existing->started_at() : 0,
+				'views'      => $totalled['views'],
+				'orders'     => $totalled['orders'],
+				'revenue'    => round( $totalled['revenue'], 2 ),
 			),
 			array()
 		);

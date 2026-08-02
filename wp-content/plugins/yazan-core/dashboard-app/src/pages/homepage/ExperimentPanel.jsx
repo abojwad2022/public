@@ -224,7 +224,9 @@ export default function ExperimentPanel({ open, onClose, docKey, documents, onPr
                 className="text-2xs text-muted underline decoration-dotted hover:text-fg"
                 onClick={() => setShowDays((value) => !value)}
               >
-                {showDays ? 'Hide the day-by-day figures' : `Show the day-by-day figures (${days.length} days)`}
+                {showDays
+                  ? 'Hide the day-by-day figures'
+                  : `Show the day-by-day figures (${days.length} ${days.length === 1 ? 'day' : 'days'})`}
               </button>
 
               <Button variant="secondary" disabled={busy} onClick={download}>
