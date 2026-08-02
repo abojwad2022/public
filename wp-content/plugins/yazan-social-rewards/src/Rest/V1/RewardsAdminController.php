@@ -83,8 +83,18 @@ final class RewardsAdminController extends AbstractController {
 	public function index(): \WP_REST_Response {
 		$wpdb  = $this->container->get( \Yazan\Rewards\Core\Database\Database::class )->wpdb();
 		$table = $this->container->get( \Yazan\Rewards\Core\Database\Database::class )->table( 'rewards' );
+		/*
+		 * BOUNDED. This was an unbounded `SELECT *` over the whole rewards catalogue — the only
+		 * query in this plugin that had no LIMIT at all. It is fine at four rows and becomes a
+		 * memory-exhaustion vector the day a store bulk-imports a catalogue, on a route that is
+		 * merely `manage_yazan_rewards` rather than administrator.
+		 *
+		 * The cap is deliberately far above any plausible real catalogue, so this changes nothing
+		 * observable today; it just stops the failure mode from being unbounded. The sibling
+		 * endpoint (ReferralAdminController::index) already caps at 200.
+		 */
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-		$rows  = $wpdb->get_results( "SELECT * FROM {$table} ORDER BY sort ASC, id DESC" );
+		$rows  = $wpdb->get_results( "SELECT * FROM {$table} ORDER BY sort ASC, id DESC LIMIT 1000" );
 		$items = array_map( static fn( $r ) => Reward::from_row( $r )->to_array(), is_array( $rows ) ? $rows : array() );
 		return $this->ok( array( 'items' => $items ) );
 	}
