@@ -63,10 +63,25 @@ final class StoreAdminContext {
 	 * Defaults to the kernel's answer, so a client that knows nothing about multi-store keeps
 	 * working unchanged.
 	 *
+	 * ⚠️ THE ROUTE'S `{id}` WINS OVER EVERYTHING. A route that names a store in its path IS acting
+	 * on that store, and authorising against the query parameter instead would check one store and
+	 * act on another — `GET /stores/2` from store 1's dashboard passed the `stores.view` check
+	 * against store 1 and then returned store 2. That is the tenant-level form of trusting an id
+	 * from the request, which is precisely what these routes exist to prevent.
+	 *
+	 * The `store` parameter and header remain for routes with no id in the path — the collection
+	 * routes and the dashboard's store switcher.
+	 *
 	 * @param \WP_REST_Request $request Request.
 	 * @return int
 	 */
 	public function requested_store( \WP_REST_Request $request ): int {
+		$route_id = absint( $request->get_param( 'id' ) );
+
+		if ( $route_id > 0 ) {
+			return $route_id;
+		}
+
 		$raw = $request->get_param( self::PARAM );
 
 		if ( null === $raw || '' === $raw ) {

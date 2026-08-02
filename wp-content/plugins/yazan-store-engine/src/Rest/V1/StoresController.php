@@ -243,9 +243,24 @@ final class StoresController {
 		$per_page = max( 1, min( 100, absint( $request->get_param( 'per_page' ) ?: 20 ) ) );
 		$page     = max( 1, absint( $request->get_param( 'page' ) ?: 1 ) );
 
+		/*
+		 * ⚠️ THE PERMISSION CHECK ON THIS ROUTE IS NOT ENOUGH ON ITS OWN. `stores.view` is
+		 * store-scoped, so reaching this route only establishes that the caller may view SOME
+		 * store — it says nothing about which. Listing `service()->all()` unfiltered published
+		 * every tenant's name, slug and status to any store manager who held it.
+		 *
+		 * The rule is the one `StoreAdminContext::switchable_stores()` already applies: ask the
+		 * permission once per store, in that store. A platform grant answers yes everywhere, which
+		 * is why the platform administrator's list is unchanged.
+		 */
 		$all = array_filter(
 			$this->service()->all(),
 			static function ( $store ) use ( $status, $search ) {
+				if ( class_exists( 'Yazan_Permissions' )
+					&& ! \Yazan_Permissions::can( StorePermissions::VIEW, null, $store->id() ) ) {
+					return false;
+				}
+
 				if ( '' !== $status && $store->status() !== $status ) {
 					return false;
 				}

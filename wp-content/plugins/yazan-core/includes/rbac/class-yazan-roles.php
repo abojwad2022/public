@@ -754,6 +754,30 @@ class Yazan_Roles {
 				'sort'        => 20,
 				'permissions' => $admin,
 			),
+			/*
+			 * STORE OWNER — the tier that only makes sense once the platform has more than one
+			 * tenant, and the clearest demonstration of what the permission scope buys.
+			 *
+			 * `is_super` means "bypasses every permission check", which sounds like Super Admin and
+			 * is not. A super grant carries the scope of the row that grants it: held at a store,
+			 * it makes you unrestricted INSIDE that store and nothing at all outside it. The owner
+			 * of YAZAN Jewellery can do anything to their catalogue, orders and staff, and cannot
+			 * create a store, touch YAZAN Honey, restore a backup, or purge the platform's audit
+			 * log — because those are platform-scoped and their grant is not.
+			 *
+			 * There is therefore no permission list here on purpose. Enumerating one would drift
+			 * from the catalogue every time a store-scoped permission is added; the scope gate is
+			 * the thing that bounds this role, not a list somebody has to remember to update.
+			 */
+			array(
+				'name'        => __( 'Store Owner', 'yazan' ),
+				'slug'        => 'store-owner',
+				'description' => __( 'Full control of one store. No platform administration.', 'yazan' ),
+				'is_super'    => true,
+				'is_system'   => true,
+				'sort'        => 25,
+				'permissions' => array(),
+			),
 			array(
 				'name'        => __( 'Manager', 'yazan' ),
 				'slug'        => 'manager',
