@@ -44,11 +44,16 @@ final class Plugin {
 	/**
 	 * REST namespace reserved for v1.2. Nothing is registered in v1.0.
 	 *
-	 * Note: `yazan/v1` is already in use by yazan-core and yazan-social-rewards.
-	 * WordPress allows a namespace to be shared, but v1.2 must not assume it owns
-	 * the namespace — only the `/payment-events` route below.
+	 * OWN NAMESPACE, DELIBERATELY. This used to reserve `yazan/v1`, which yazan-core polices with
+	 * a default-deny filter over the whole namespace plus a hand-maintained allow-list of foreign
+	 * sub-routes (Yazan_REST_Guard::FOREIGN_PREFIXES). `/payment-events` was never on that list,
+	 * so the moment that guard moves to 'enforce' mode — which multi-store forces — a v1.2 route
+	 * here would be refused before its own permission_callback ever ran.
+	 *
+	 * Fixing that by appending to someone else's allow-list would just move the trap. Owning a
+	 * namespace removes the coupling permanently, and it costs one line while zero routes exist.
 	 */
-	public const REST_NS = 'yazan/v1';
+	public const REST_NS = 'yazan-payments/v1';
 
 	/** Route reserved for v1.2. Must ship with a real permission_callback. */
 	public const REST_ROUTE = '/payment-events';

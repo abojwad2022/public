@@ -27,10 +27,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 abstract class AbstractPublicController extends AbstractController {
 
 	/**
-	 * @param Container $container Service container.
+	 * @param Container   $container Service container.
+	 * @param string|null $namespace Override the namespace. Used only to register the legacy
+	 *                               `yazan/v1` aliases alongside the real routes during the
+	 *                               deprecation window; everything else takes the default.
 	 */
-	public function __construct( Container $container ) {
+	public function __construct( Container $container, ?string $namespace = null ) {
 		parent::__construct( $container );
-		$this->namespace = Plugin::PUBLIC_REST_NS;
+		$this->namespace = $namespace ?? Plugin::PUBLIC_REST_NS;
 	}
 }

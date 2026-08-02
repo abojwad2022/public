@@ -11,6 +11,7 @@ namespace Yazan\Rewards\Modules\PublicApi;
 
 use Yazan\Rewards\Core\Container;
 use Yazan\Rewards\Core\Module\AbstractModule;
+use Yazan\Rewards\Core\Plugin;
 use Yazan\Rewards\Core\Rest\RestBootstrap;
 use Yazan\Rewards\Core\Settings\Settings;
 use Yazan\Rewards\Rest\PublicV1\CampaignController;
@@ -53,9 +54,27 @@ final class PublicApiModule extends AbstractModule {
 			return;
 		}
 		$rest = $c->get( RestBootstrap::class );
-		$rest->add( static fn( Container $c ) => new CustomerController( $c ) );
-		$rest->add( static fn( Container $c ) => new CampaignController( $c ) );
-		$rest->add( static fn( Container $c ) => new RewardController( $c ) );
-		$rest->add( static fn( Container $c ) => new StatisticsController( $c ) );
+
+		$controllers = array(
+			CustomerController::class,
+			CampaignController::class,
+			RewardController::class,
+			StatisticsController::class,
+		);
+
+		foreach ( $controllers as $controller ) {
+			// The real home: a namespace this plugin owns.
+			$rest->add( static fn( Container $c ) => new $controller( $c ) );
+
+			/*
+			 * Compatibility alias on the old shared namespace.
+			 *
+			 * Same controller, same services, same permission callbacks — only the namespace
+			 * differs — so the two can never drift. Storefront JS and any third-party consumer
+			 * still calling /yazan/v1/customer/points keeps working through the deprecation
+			 * window. Delete this line (and Plugin::LEGACY_PUBLIC_REST_NS) to end it.
+			 */
+			$rest->add( static fn( Container $c ) => new $controller( $c, Plugin::LEGACY_PUBLIC_REST_NS ) );
+		}
 	}
 }

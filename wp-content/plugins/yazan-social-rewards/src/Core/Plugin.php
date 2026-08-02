@@ -46,8 +46,25 @@ final class Plugin {
 	/** Shared REST namespace for the whole platform (internal controllers). */
 	public const REST_NS = 'yazan-rewards/v1';
 
-	/** Public, stable REST namespace for third-party/developer consumers. */
-	public const PUBLIC_REST_NS = 'yazan/v1';
+	/**
+	 * Public, stable REST namespace for third-party/developer consumers.
+	 *
+	 * Moved off the shared `yazan/v1` (see LEGACY_PUBLIC_REST_NS). That namespace belongs to
+	 * yazan-core, which polices it with a default-deny filter and skips foreign sub-trees via a
+	 * hand-maintained allow-list. Publishing into it meant these routes were invisible to central
+	 * enforcement, and that any new controller added here would be denied at runtime with no
+	 * registration-time warning. Owning a namespace removes that whole class of failure.
+	 */
+	public const PUBLIC_REST_NS = 'yazan-rewards/public/v1';
+
+	/**
+	 * The namespace the public controllers used to answer on.
+	 *
+	 * Still registered, so storefront JS and any third-party consumer keeps working. Remove after
+	 * one release — and when it goes, `Yazan_REST_Guard::FOREIGN_PREFIXES` in yazan-core can drop
+	 * back to just the namespace index.
+	 */
+	public const LEGACY_PUBLIC_REST_NS = 'yazan/v1';
 
 	/** Singleton. */
 	private static ?Plugin $instance = null;
