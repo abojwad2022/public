@@ -46,7 +46,10 @@ final class WpdbHomepageRepository implements HomepageRepositoryPort {
 		$table = Schema::table( 'documents' );
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-		$row = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$table} WHERE doc_key = %s", $key->value() ), ARRAY_A );
+		$row = $wpdb->get_row(
+			$wpdb->prepare( "SELECT * FROM {$table} WHERE doc_key = %s AND store_id = %d", $key->value(), \Yazan_DB::store_id() ),
+			ARRAY_A
+		);
 
 		if ( ! $row ) {
 			return HomepageDocument::create( $key );
@@ -97,10 +100,12 @@ final class WpdbHomepageRepository implements HomepageRepositoryPort {
 
 		if ( $document->id() ) {
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-			$wpdb->update( $table, $data, array( 'id' => $document->id() ) );
+			// The store joins the WHERE, never the data: a document does not change tenant.
+			$wpdb->update( $table, $data, array( 'id' => $document->id(), 'store_id' => \Yazan_DB::store_id() ) );
 		} else {
 			$data['created_at'] = $now;
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+			$data['store_id'] = \Yazan_DB::store_id();
 			$wpdb->insert( $table, $data );
 			$document->assign_id( (int) $wpdb->insert_id );
 		}
@@ -126,7 +131,9 @@ final class WpdbHomepageRepository implements HomepageRepositoryPort {
 		$table = Schema::table( 'documents' );
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-		$json = $wpdb->get_var( $wpdb->prepare( "SELECT live_payload FROM {$table} WHERE doc_key = %s", $key->value() ) );
+		$json = $wpdb->get_var(
+			$wpdb->prepare( "SELECT live_payload FROM {$table} WHERE doc_key = %s AND store_id = %d", $key->value(), \Yazan_DB::store_id() )
+		);
 
 		$sections = DocumentSerializer::decode( $json );
 
@@ -146,7 +153,14 @@ final class WpdbHomepageRepository implements HomepageRepositoryPort {
 		$table = Schema::table( 'documents' );
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-		$rows = $wpdb->get_results( "SELECT doc_key, title, status, bound_page_id, updated_at FROM {$table} ORDER BY doc_key = 'default' DESC, title ASC", ARRAY_A );
+		$rows = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT doc_key, title, status, bound_page_id, updated_at FROM {$table}
+				 WHERE store_id = %d ORDER BY doc_key = 'default' DESC, title ASC",
+				\Yazan_DB::store_id()
+			),
+			ARRAY_A
+		);
 
 		return is_array( $rows ) ? $rows : array();
 	}
@@ -178,7 +192,9 @@ final class WpdbHomepageRepository implements HomepageRepositoryPort {
 		$table = Schema::table( 'documents' );
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-		$key = $wpdb->get_var( $wpdb->prepare( "SELECT doc_key FROM {$table} WHERE bound_page_id = %d LIMIT 1", $page_id ) );
+		$key = $wpdb->get_var(
+			$wpdb->prepare( "SELECT doc_key FROM {$table} WHERE bound_page_id = %d AND store_id = %d LIMIT 1", $page_id, \Yazan_DB::store_id() )
+		);
 
 		// The MISS is cached too, as an empty string — otherwise every ordinary page on the site
 		// pays for a query that will never find anything.
@@ -202,9 +218,9 @@ final class WpdbHomepageRepository implements HomepageRepositoryPort {
 		global $wpdb;
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-		$wpdb->delete( Schema::table( 'revisions' ), array( 'doc_key' => $key->value() ) );
+		$wpdb->delete( Schema::table( 'revisions' ), array( 'doc_key' => $key->value(), 'store_id' => \Yazan_DB::store_id() ) );
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-		$done = $wpdb->delete( Schema::table( 'documents' ), array( 'doc_key' => $key->value() ) );
+		$done = $wpdb->delete( Schema::table( 'documents' ), array( 'doc_key' => $key->value(), 'store_id' => \Yazan_DB::store_id() ) );
 
 		$this->cache->flush();
 
@@ -225,7 +241,8 @@ final class WpdbHomepageRepository implements HomepageRepositoryPort {
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		$keys = $wpdb->get_col(
 			$wpdb->prepare(
-				"SELECT doc_key FROM {$table} WHERE status = 'scheduled' AND scheduled_at IS NOT NULL AND scheduled_at <= %s",
+				"SELECT doc_key FROM {$table} WHERE store_id = %d AND status = 'scheduled' AND scheduled_at IS NOT NULL AND scheduled_at <= %s",
+				\Yazan_DB::store_id(),
 				gmdate( 'Y-m-d H:i:s', (int) $now )
 			)
 		);
