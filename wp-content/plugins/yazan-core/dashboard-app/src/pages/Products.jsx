@@ -442,6 +442,7 @@ export default function Products() {
                 </>
               ) : (
                 <>
+                  <option value="edit">Edit…</option>
                   <option value="publish">Publish</option>
                   <option value="draft">Set to draft</option>
                   <option value="feature">Mark as featured</option>
@@ -535,6 +536,16 @@ export default function Products() {
           onSave={saveQuick}
         />
       )}
+
+      <ProductBulkEditPanel
+        open={bulkEditOpen}
+        count={selected.length}
+        meta={meta}
+        can={can}
+        busy={busy}
+        onClose={() => setBulkEditOpen(false)}
+        onApply={applyBulkEdit}
+      />
 
       <ConfirmDialog
         open={Boolean(confirm)}
