@@ -187,7 +187,25 @@ class Yazan_REST_Guard {
 		$route = '/' . ltrim( (string) $request->get_route(), '/' );
 		$ns    = '/' . Yazan_Dashboard_Auth::NS;
 
-		if ( 0 !== strpos( $route, $ns . '/' ) && $route !== $ns ) {
+		/*
+		 * MATCH CASE-INSENSITIVELY, because WordPress does.
+		 *
+		 * WP_REST_Server::match_request_to_handler() looks for a namespace with a case-SENSITIVE
+		 * str_starts_with(); when that finds nothing it falls back to *every* registered route
+		 * (class-wp-rest-server.php:1167) and then matches with `preg_match( '@^' . $route . '$@i' )`
+		 * — case-INSENSITIVE. So `GET /YAZAN/V1/users` resolves to the `/yazan/v1/users` handler.
+		 *
+		 * This guard used to compare with a case-sensitive strpos and return unchecked on a miss,
+		 * which meant a request could opt out of the entire guard by changing one letter's case:
+		 * no suspension check, no ALWAYS_ENFORCE 503, and — once MODE is 'enforce' — no untagged
+		 * deny. The per-route permission_callback still held the line, so this was a loss of
+		 * defence in depth rather than an open door; it becomes an open door the moment any
+		 * untagged handler exists, which is precisely the state 'enforce' mode exists to make safe.
+		 */
+		$route_lc = strtolower( $route );
+		$ns_lc    = strtolower( $ns );
+
+		if ( 0 !== strpos( $route_lc, $ns_lc . '/' ) && $route_lc !== $ns_lc ) {
 			return $response; // Not ours.
 		}
 
@@ -196,18 +214,52 @@ class Yazan_REST_Guard {
 			return $response;
 		}
 
-		$sub_route = substr( $route, strlen( $ns ) );
+		// Compare sub-routes in lower case for the same reason as above.
+		$sub_route = substr( $route_lc, strlen( $ns_lc ) );
 
-		// Another plugin's route sharing our namespace — leave its own permission_callback to it.
+		$is_public = ! empty( $handler[ self::KEY_PUBLIC ] );
+		$perm      = isset( $handler[ self::KEY_PERM ] ) ? (string) $handler[ self::KEY_PERM ] : '';
+
+		/*
+		 * A handler carrying BOTH tags is a contradiction, and the public check runs first, so the
+		 * accident would silently resolve in favour of "public". Refuse it instead: a mistake in a
+		 * route declaration should be a loud 500 in development, not a quiet exemption.
+		 */
+		if ( $is_public && '' !== $perm ) {
+			return new WP_Error(
+				'yazan_route_contradiction',
+				__( 'This endpoint is declared both public and permission-gated, so it was refused.', 'yazan' ),
+				array( 'status' => defined( 'WP_DEBUG' ) && WP_DEBUG ? 500 : 403 )
+			);
+		}
+
+		/*
+		 * The WordPress-generated namespace index (`/yazan/v1`) is genuinely anonymous — it is core's
+		 * own route listing, not ours to gate.
+		 */
+		if ( self::is_namespace_index( $sub_route ) ) {
+			return $response;
+		}
+
+		/*
+		 * Another plugin's route sharing our namespace.
+		 *
+		 * It keeps its own permission_callback and we do NOT apply a permission slug to it — its
+		 * callers are shoppers who hold no staff role and must not be measured against the staff
+		 * catalog. But identity is not the sibling plugin's business to opt out of: this check used
+		 * to `return` before authentication and suspension ran, so every foreign route was entirely
+		 * invisible to central enforcement. Those are exactly the routes that carry customer points
+		 * and wallet balances.
+		 *
+		 * So: skip the PERMISSION check, never the IDENTITY checks.
+		 */
 		if ( self::is_foreign( $sub_route ) ) {
-			return $response;
+			return self::assert_identity( $response );
 		}
 
-		if ( ! empty( $handler[ self::KEY_PUBLIC ] ) ) {
+		if ( $is_public ) {
 			return $response;
 		}
-
-		$perm = isset( $handler[ self::KEY_PERM ] ) ? (string) $handler[ self::KEY_PERM ] : '';
 
 		if ( '' === $perm ) {
 			return self::handle_untagged( $response, $route, $request );
@@ -295,7 +347,52 @@ class Yazan_REST_Guard {
 	}
 
 	/**
+	 * Is this the WordPress-generated namespace index (`/yazan/v1`)?
+	 *
+	 * Split out of is_foreign() so the two can be answered differently: the index is genuinely
+	 * anonymous, while a sibling plugin's route still has to prove identity.
+	 *
+	 * @param string $sub_route Route with the namespace stripped.
+	 * @return bool
+	 */
+	private static function is_namespace_index( $sub_route ) {
+		return '' === $sub_route || '/' === $sub_route;
+	}
+
+	/**
+	 * Authentication and suspension, with no permission check.
+	 *
+	 * Applied to routes another plugin owns inside our namespace. They keep their own
+	 * permission_callback, but "who are you" is not theirs to waive.
+	 *
+	 * @param mixed $response Result so far.
+	 * @return mixed
+	 */
+	private static function assert_identity( $response ) {
+		if ( ! is_user_logged_in() ) {
+			return new WP_Error(
+				'yazan_unauthenticated',
+				__( 'You must be signed in.', 'yazan' ),
+				array( 'status' => 401 )
+			);
+		}
+
+		if ( Yazan_Users::is_suspended( get_current_user_id() ) ) {
+			return new WP_Error(
+				'yazan_suspended',
+				__( 'This account is suspended.', 'yazan' ),
+				array( 'status' => 403 )
+			);
+		}
+
+		return $response;
+	}
+
+	/**
 	 * Is this sub-route owned by another plugin sharing the namespace?
+	 *
+	 * Compared in lower case — the caller lower-cases the sub-route because WordPress matches
+	 * routes case-insensitively (see enforce()).
 	 *
 	 * @param string $sub_route Route with the namespace stripped ('' for the index route).
 	 * @return bool
@@ -303,11 +400,14 @@ class Yazan_REST_Guard {
 	private static function is_foreign( $sub_route ) {
 		foreach ( self::FOREIGN_PREFIXES as $prefix ) {
 			if ( '' === $prefix ) {
-				if ( '' === $sub_route || '/' === $sub_route ) {
+				if ( self::is_namespace_index( $sub_route ) ) {
 					return true;
 				}
 				continue;
 			}
+
+			$prefix = strtolower( $prefix );
+
 			if ( $sub_route === $prefix || 0 === strpos( $sub_route, $prefix . '/' ) ) {
 				return true;
 			}
@@ -326,7 +426,20 @@ class Yazan_REST_Guard {
 	 * @return void
 	 */
 	private static function report_untagged( $route, $method ) {
-		$key = 'yazan_untagged_' . md5( $method . ' ' . $route );
+		/*
+		 * Rate-limit on the route's SHAPE, not its concrete path.
+		 *
+		 * `$request->get_route()` is the raw request path — core never calls set_route() with the
+		 * pattern — so keying on it meant `/orders/1`, `/orders/2`, … each got their own hourly
+		 * bucket. One unguarded parameterised endpoint under load would write an audit row per id
+		 * per hour, which is how a rate limit turns into the flood it was meant to prevent.
+		 *
+		 * Collapsing numeric and uuid segments recovers the pattern closely enough to bucket by.
+		 */
+		$shape = preg_replace( '#/\d+(?=/|$)#', '/{id}', $route );
+		$shape = preg_replace( '#/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?=/|$)#i', '/{uuid}', $shape );
+
+		$key = 'yazan_untagged_' . md5( $method . ' ' . $shape );
 
 		if ( get_transient( $key ) ) {
 			return;
