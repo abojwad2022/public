@@ -55,6 +55,16 @@ class Yazan_REST_Products {
 			Yazan_REST_Guard::args( WP_REST_Server::CREATABLE, array( __CLASS__, 'bulk' ), 'products.bulk' )
 		);
 
+		/*
+		 * Bulk edit writes price and stock across many rows at once, so — like quick edit —
+		 * it re-checks products.change_price / products.change_stock per field in the handler.
+		 */
+		register_rest_route(
+			$ns,
+			'/products/bulk-edit',
+			Yazan_REST_Guard::args( WP_REST_Server::CREATABLE, array( __CLASS__, 'bulk_edit' ), 'products.bulk' )
+		);
+
 		register_rest_route(
 			$ns,
 			'/products/(?P<id>\d+)/duplicate',
@@ -867,6 +877,284 @@ class Yazan_REST_Products {
 		Yazan_Dashboard_Audit::log( 'product.delete', 'product', $id, array( 'force' => $force ? 1 : 0 ) );
 
 		return new WP_REST_Response( array( 'deleted' => true, 'id' => $id, 'force' => $force ), 200 );
+	}
+
+	/* --------------------------------------------------------------------- */
+	/* Bulk edit                                                              */
+	/* --------------------------------------------------------------------- */
+
+	/**
+	 * POST /products/bulk-edit — apply a set of field changes to many products.
+	 *
+	 * Body: { ids: [int], changes: { field: value | { mode, value } } }
+	 *
+	 * Numeric fields take a mode, mirroring wp-admin's Bulk Edit panel:
+	 *   change — set to this value          inc — increase by (amount or "10%")
+	 *   dec    — decrease by (amount or %)  from_regular_dec — sale price only:
+	 *                                        regular price minus amount or %
+	 *
+	 * Everything else is a plain value. A field that is absent is untouched — that is what
+	 * "— No change —" means, and it is why an empty string cannot be used as the sentinel.
+	 *
+	 * @param WP_REST_Request $request Request.
+	 * @return WP_REST_Response|WP_Error
+	 */
+	public static function bulk_edit( WP_REST_Request $request ) {
+		$ids     = array_filter( array_map( 'absint', (array) $request->get_param( 'ids' ) ) );
+		$changes = (array) $request->get_param( 'changes' );
+
+		if ( empty( $ids ) || empty( $changes ) ) {
+			return new WP_Error( 'yazan_invalid', __( 'Nothing to change.', 'yazan' ), array( 'status' => 400 ) );
+		}
+		if ( count( $ids ) > 200 ) {
+			return new WP_Error( 'yazan_too_many', __( 'Please edit at most 200 products at a time.', 'yazan' ), array( 'status' => 400 ) );
+		}
+
+		// Same rule as quick edit: the coarse gate lets you in, the fine permissions decide
+		// what actually lands, and blocked fields are dropped rather than failing the batch.
+		$blocked = array();
+		if ( ! Yazan_Permissions::can( 'products.change_price' ) ) {
+			foreach ( array( 'regular_price', 'sale_price' ) as $field ) {
+				if ( isset( $changes[ $field ] ) ) {
+					unset( $changes[ $field ] );
+					$blocked['products.change_price'] = true;
+				}
+			}
+		}
+		if ( ! Yazan_Permissions::can( 'products.change_stock' ) ) {
+			foreach ( array( 'manage_stock', 'stock_quantity', 'stock_status', 'backorders' ) as $field ) {
+				if ( isset( $changes[ $field ] ) ) {
+					unset( $changes[ $field ] );
+					$blocked['products.change_stock'] = true;
+				}
+			}
+		}
+
+		$updated = array();
+		$skipped = array();
+
+		foreach ( $ids as $id ) {
+			$product = wc_get_product( $id );
+			if ( ! $product instanceof WC_Product ) {
+				$skipped[] = array( 'id' => $id, 'reason' => 'not_found' );
+				continue;
+			}
+
+			self::apply_bulk_changes( $product, $changes );
+			$product->save();
+			$updated[] = self::summary( wc_get_product( $id ) );
+		}
+
+		Yazan_Dashboard_Audit::log(
+			'product.bulk_edit',
+			'product',
+			0,
+			array( 'fields' => array_keys( $changes ), 'count' => count( $updated ) )
+		);
+
+		return new WP_REST_Response(
+			array(
+				'updated' => $updated,
+				'skipped' => $skipped,
+				'count'   => count( $updated ),
+				'blocked' => array_keys( $blocked ),
+			),
+			200
+		);
+	}
+
+	/**
+	 * Stage one product's share of a bulk-edit payload.
+	 *
+	 * @param WC_Product $product Product.
+	 * @param array      $changes Field map.
+	 * @return void
+	 */
+	private static function apply_bulk_changes( WC_Product $product, array $changes ) {
+		/*
+		 * Prices only exist on the product itself for simple and external types — a variable
+		 * product's prices live on its variations, so WooCommerce skips it here and so do we
+		 * rather than writing a value the catalogue would ignore.
+		 */
+		if ( $product->is_type( array( 'simple', 'external' ) ) ) {
+			$regular_changed = false;
+			$sale_changed    = false;
+
+			if ( isset( $changes['regular_price'] ) ) {
+				$regular_changed = self::apply_price_change( $product, 'regular', $changes['regular_price'] );
+			}
+			if ( isset( $changes['sale_price'] ) ) {
+				$sale_changed = self::apply_price_change( $product, 'sale', $changes['sale_price'] );
+			}
+
+			// WooCommerce clears any scheduled sale when a bulk price edit lands, because the
+			// schedule was written against the old numbers. Same rule here.
+			if ( $regular_changed || $sale_changed ) {
+				$product->set_date_on_sale_from( '' );
+				$product->set_date_on_sale_to( '' );
+				if ( '' !== $product->get_sale_price() && $product->get_regular_price() < $product->get_sale_price() ) {
+					$product->set_sale_price( '' );
+				}
+			}
+		}
+
+		foreach ( array( 'weight', 'length', 'width', 'height' ) as $dimension ) {
+			if ( isset( $changes[ $dimension ] ) ) {
+				$setter = 'set_' . $dimension;
+				$getter = 'get_' . $dimension;
+				$next   = self::resolve_number( (float) $product->$getter(), $changes[ $dimension ] );
+				if ( null !== $next ) {
+					$product->$setter( wc_format_decimal( $next ) );
+				}
+			}
+		}
+
+		if ( isset( $changes['tax_status'] ) && in_array( $changes['tax_status'], array( 'taxable', 'shipping', 'none' ), true ) ) {
+			$product->set_tax_status( sanitize_key( $changes['tax_status'] ) );
+		}
+		if ( isset( $changes['tax_class'] ) ) {
+			$product->set_tax_class( sanitize_title( (string) $changes['tax_class'] ) );
+		}
+		if ( isset( $changes['shipping_class_id'] ) ) {
+			$product->set_shipping_class_id( absint( $changes['shipping_class_id'] ) );
+		}
+		if ( isset( $changes['catalog_visibility'] ) && in_array( $changes['catalog_visibility'], array( 'visible', 'catalog', 'search', 'hidden' ), true ) ) {
+			$product->set_catalog_visibility( sanitize_key( $changes['catalog_visibility'] ) );
+		}
+		if ( isset( $changes['featured'] ) ) {
+			$product->set_featured( wc_string_to_bool( $changes['featured'] ) );
+		}
+		if ( isset( $changes['sold_individually'] ) ) {
+			$product->set_sold_individually( wc_string_to_bool( $changes['sold_individually'] ) );
+		}
+		if ( isset( $changes['backorders'] ) && in_array( $changes['backorders'], array( 'no', 'notify', 'yes' ), true ) ) {
+			$product->set_backorders( sanitize_key( $changes['backorders'] ) );
+		}
+		if ( isset( $changes['manage_stock'] ) ) {
+			$product->set_manage_stock( wc_string_to_bool( $changes['manage_stock'] ) );
+		}
+		if ( isset( $changes['stock_quantity'] ) && $product->get_manage_stock() ) {
+			$next = self::resolve_number( (float) $product->get_stock_quantity(), $changes['stock_quantity'] );
+			if ( null !== $next ) {
+				$product->set_stock_quantity( wc_stock_amount( max( 0, $next ) ) );
+			}
+		}
+		if ( isset( $changes['stock_status'] ) && in_array( $changes['stock_status'], array( 'instock', 'outofstock', 'onbackorder' ), true ) ) {
+			// Managed stock derives its status from the quantity on save, so move the
+			// quantity too or WooCommerce discards the status we just set.
+			$status = sanitize_key( $changes['stock_status'] );
+			if ( $product->get_manage_stock() && ! isset( $changes['stock_quantity'] ) ) {
+				if ( 'outofstock' === $status ) {
+					$product->set_stock_quantity( 0 );
+				} elseif ( 'instock' === $status && (int) $product->get_stock_quantity() <= 0 ) {
+					$product->set_stock_quantity( 1 );
+				}
+			}
+			$product->set_stock_status( $status );
+		}
+	}
+
+	/**
+	 * Apply one price change, reproducing WC_Admin_Post_Types::set_new_price().
+	 *
+	 * The semantics are copied deliberately, down to the details that look like quirks:
+	 * an empty "change to" falls back to the regular price, an unset sale price uses the
+	 * regular price as the base to increase/decrease from, and results are clamped at 0
+	 * and rounded to the store's price precision.
+	 *
+	 * @param WC_Product   $product Product.
+	 * @param string       $type    'regular' or 'sale'.
+	 * @param array|string $change  { mode, value } or a bare value meaning mode "change".
+	 * @return bool Whether the price moved.
+	 */
+	private static function apply_price_change( WC_Product $product, $type, $change ) {
+		list( $mode, $raw ) = self::split_change( $change );
+
+		$getter    = "get_{$type}_price";
+		$old       = $product->$getter();
+		$old       = '' === $old ? (float) $product->get_regular_price() : (float) $old;
+		$percent   = is_string( $raw ) && false !== strpos( $raw, '%' );
+		$value     = (float) wc_format_decimal( $raw );
+		$new_price = null;
+
+		switch ( $mode ) {
+			case 'change':
+				$new_price = ( '' === trim( (string) $raw ) ) ? (float) $product->get_regular_price() : $value;
+				break;
+			case 'inc':
+				$new_price = $percent ? $old + ( $old * ( $value / 100 ) ) : $old + $value;
+				break;
+			case 'dec':
+				$new_price = $percent ? max( 0, $old - ( $old * ( $value / 100 ) ) ) : max( 0, $old - $value );
+				break;
+			case 'from_regular_dec':
+				if ( 'sale' !== $type ) {
+					break;
+				}
+				$regular   = (float) $product->get_regular_price();
+				$new_price = $percent
+					? max( 0, $regular - round( $regular * ( $value / 100 ), wc_get_price_decimals() ) )
+					: max( 0, $regular - $value );
+				break;
+		}
+
+		if ( null === $new_price || (float) $new_price === $old ) {
+			return false;
+		}
+
+		$setter = "set_{$type}_price";
+		$product->$setter( round( $new_price, wc_get_price_decimals() ) );
+
+		return true;
+	}
+
+	/**
+	 * Resolve a numeric field's new value from a change instruction.
+	 *
+	 * @param float        $old    Current value.
+	 * @param array|string $change { mode, value } or a bare value.
+	 * @return float|null Null when the instruction says nothing.
+	 */
+	private static function resolve_number( $old, $change ) {
+		list( $mode, $raw ) = self::split_change( $change );
+
+		if ( 'change' === $mode ) {
+			return '' === trim( (string) $raw ) ? null : (float) wc_format_decimal( $raw );
+		}
+
+		$percent = is_string( $raw ) && false !== strpos( $raw, '%' );
+		$value   = (float) wc_format_decimal( $raw );
+		if ( ! $value ) {
+			return null;
+		}
+
+		if ( 'inc' === $mode ) {
+			return $percent ? $old + ( $old * ( $value / 100 ) ) : $old + $value;
+		}
+		if ( 'dec' === $mode ) {
+			return $percent ? max( 0, $old - ( $old * ( $value / 100 ) ) ) : max( 0, $old - $value );
+		}
+
+		return null;
+	}
+
+	/**
+	 * Normalise a change instruction to [ mode, raw value ].
+	 *
+	 * @param array|string $change Instruction.
+	 * @return array{0:string,1:string}
+	 */
+	private static function split_change( $change ) {
+		if ( is_array( $change ) ) {
+			$mode = isset( $change['mode'] ) ? sanitize_key( $change['mode'] ) : 'change';
+			$raw  = isset( $change['value'] ) ? (string) $change['value'] : '';
+			return array(
+				in_array( $mode, array( 'change', 'inc', 'dec', 'from_regular_dec' ), true ) ? $mode : 'change',
+				sanitize_text_field( $raw ),
+			);
+		}
+
+		return array( 'change', sanitize_text_field( (string) $change ) );
 	}
 
 	/**
