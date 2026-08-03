@@ -148,7 +148,7 @@ class Yazan_API_Tokens {
 
 		$store_id = (int) ( $args['store_id'] ?? 0 );
 		$user_id  = (int) ( $args['user_id'] ?? get_current_user_id() );
-		$scopes   = array_values( array_unique( array_map( 'sanitize_key', (array) ( $args['scopes'] ?? array() ) ) ) );
+		$scopes   = self::clean_scopes( (array) ( $args['scopes'] ?? array() ) );
 
 		if ( $store_id < 1 ) {
 			return new WP_Error( 'yazan_api_no_store', __( 'A token must name the store it belongs to.', 'yazan' ), array( 'status' => 400 ) );
@@ -201,7 +201,7 @@ class Yazan_API_Tokens {
 				'store_id'   => $store_id,
 				'user_id'    => $user_id,
 				'created_by' => get_current_user_id(),
-				'type'       => in_array( $args['type'] ?? 'machine', array( 'machine', 'session' ), true ) ? $args['type'] : 'machine',
+				'type'       => in_array( $args['type'] ?? '', array( 'machine', 'session' ), true ) ? (string) $args['type'] : 'machine',
 				'name'       => substr( sanitize_text_field( (string) ( $args['name'] ?? '' ) ), 0, 191 ),
 				'token_hash' => hash( 'sha256', $secret ),
 				'last4'      => substr( $secret, -4 ),
@@ -474,6 +474,34 @@ class Yazan_API_Tokens {
 		update_option( self::VERSION_OPTION, (int) get_option( self::VERSION_OPTION, 0 ) + 1, true );
 
 		self::$memo = array();
+	}
+
+	/**
+	 * Sanitise a scope list.
+	 *
+	 * ⚠️ NOT `sanitize_key()`. That function strips everything outside `[a-z0-9_-]` — INCLUDING THE
+	 * DOT — so `users.delete` became `usersdelete`. Every consequence of that was silent: the
+	 * platform-scope refusal never matched, `in_scope()` never matched, and a token would have been
+	 * issued with a scope list that could not authorise anything and could not be reasoned about.
+	 *
+	 * A permission slug is `module.action`, so the dot is part of the vocabulary, not punctuation.
+	 *
+	 * @param array $scopes Raw scopes.
+	 * @return string[]
+	 */
+	private static function clean_scopes( array $scopes ) {
+		$out = array();
+
+		foreach ( $scopes as $scope ) {
+			$scope = strtolower( trim( (string) $scope ) );
+			$scope = (string) preg_replace( '/[^a-z0-9_.*-]/', '', $scope );
+
+			if ( '' !== $scope && '*' !== $scope ) {
+				$out[] = $scope;
+			}
+		}
+
+		return array_values( array_unique( $out ) );
 	}
 
 	/**
