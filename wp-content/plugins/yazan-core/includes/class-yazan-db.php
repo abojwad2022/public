@@ -58,6 +58,7 @@ class Yazan_DB {
 		'homepage_revisions',
 		'homepage_templates',
 		'homepage_ab_stats',
+		'api_tokens',
 	);
 
 	/**

@@ -58,6 +58,15 @@ Yazan_Store_Events::init();
 // Catalogue tenancy: the `yazan_store` taxonomy on products and `_yazan_store_id` on orders.
 require YAZAN_CORE_DIR . 'includes/class-yazan-store-catalogue.php';
 
+/*
+ * The store-aware public API. Loaded at plugin-load because `determine_current_user` can fire
+ * before `init` on some paths, and a token that arrives before its verifier exists is an
+ * anonymous request that returns 200 with less data — the quietest failure this surface has.
+ */
+require YAZAN_CORE_DIR . 'includes/api/class-yazan-api-tokens.php';
+require YAZAN_CORE_DIR . 'includes/api/class-yazan-api.php';
+Yazan_API::init();
+
 require YAZAN_CORE_DIR . 'includes/class-yazan-core-taxonomies.php';
 require YAZAN_CORE_DIR . 'includes/class-yazan-core-menu.php';
 require YAZAN_CORE_DIR . 'includes/class-yazan-core-verify.php';
