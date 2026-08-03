@@ -34,6 +34,110 @@ final class Scheduler {
 	public function __construct( private string $group = 'yazan_rewards' ) {}
 
 	/**
+	 * Every recurring hook this plugin owns, as DATA.
+	 *
+	 * A list rather than eight scattered constants, because per-store cancellation and the health
+	 * check both need to enumerate them. A hook that is not here cannot be cancelled when a store is
+	 * archived — and that failure is silent.
+	 *
+	 * @var string[]
+	 */
+	public const HOOKS = array(
+		'yazan_rewards/points/expire_due',
+		'yazan_rewards/points/expiry_reminder',
+		'yazan_rewards/rules/birthday_scan',
+		'yazan_rewards/campaign/tick',
+		'yzrw_notification_campaign_ending',
+		'yzrw_notification_digest',
+	);
+
+	/**
+	 * The store every job scheduled through this instance belongs to.
+	 *
+	 * @return int
+	 */
+	public function store_id(): int {
+		return \class_exists( 'Yazan_Store_Context' ) ? \Yazan_Store_Context::current() : 1;
+	}
+
+	/**
+	 * Put the store at the front of a job's arguments.
+	 *
+	 * ⚠️ THIS IS WHAT MAKES THE QUEUE MULTI-TENANT, and it is one line because Action Scheduler
+	 * already does the hard part: `as_has_scheduled_action()` matches on ARGS, so N stores produce N
+	 * distinct recurring actions with no deduplication logic to write and no per-store bookkeeping.
+	 *
+	 * Position 0 by convention so `Scheduler::handler()` can pop it without knowing the hook.
+	 *
+	 * @param array $args Caller args.
+	 * @return array
+	 */
+	private function with_store( array $args ): array {
+		array_unshift( $args, $this->store_id() );
+
+		return $args;
+	}
+
+	/**
+	 * Wrap a job handler so it runs inside its own store.
+	 *
+	 * ⚠️ WITHOUT THIS EVERY RECURRING JOB RUNS AS STORE 1, FOREVER.
+	 *
+	 * A scheduled request has no host, so `Yazan_Store_Context` resolves through its cron rung and
+	 * returns the default store. Points never expire in store 2, its tiers never recalculate, its
+	 * notification queue never drains — and every one of those is a job that completed successfully.
+	 *
+	 * A job that arrives with no store is REFUSED rather than guessed, which is what the kernel's
+	 * own comment asks for. Refusing marks the action failed, which is visible in the queue; guessing
+	 * writes another store's data and is not.
+	 *
+	 * @param callable $fn fn( ...$args ): void
+	 * @return callable
+	 */
+	public static function handler( callable $fn ): callable {
+		return static function ( ...$args ) use ( $fn ) {
+			$store = isset( $args[0] ) ? (int) $args[0] : 0;
+
+			if ( $store < 1 ) {
+				if ( \class_exists( 'Yazan_Log' ) ) {
+					\Yazan_Log::error( 'queue.no_store', array( 'args' => count( $args ) ) );
+				}
+
+				return;
+			}
+
+			array_shift( $args );
+
+			if ( ! \class_exists( 'Yazan_Store_Context' ) ) {
+				$fn( ...$args );
+
+				return;
+			}
+
+			\Yazan_Store_Context::run_for( $store, static fn() => $fn( ...$args ) );
+		};
+	}
+
+	/**
+	 * Cancel every recurring job belonging to one store.
+	 *
+	 * Exact, because Action Scheduler matches on args — so archiving one store cannot touch another's
+	 * queue.
+	 *
+	 * @param int $store_id Store.
+	 * @return void
+	 */
+	public function unschedule_store( int $store_id ): void {
+		if ( ! function_exists( 'as_unschedule_all_actions' ) ) {
+			return;
+		}
+
+		foreach ( self::HOOKS as $hook ) {
+			as_unschedule_all_actions( $hook, array( $store_id ), $this->group );
+		}
+	}
+
+	/**
 	 * Whether the one-time recurring-job scheduling pass has already run.
 	 *
 	 * @return bool
@@ -104,7 +208,7 @@ final class Scheduler {
 		if ( ! $this->available() ) {
 			return 0;
 		}
-		return (int) as_enqueue_async_action( $hook, $args, $this->group );
+		return (int) as_enqueue_async_action( $hook, $this->with_store( $args ), $this->group );
 	}
 
 	/**
@@ -119,7 +223,7 @@ final class Scheduler {
 		if ( ! function_exists( 'as_schedule_single_action' ) ) {
 			return 0;
 		}
-		return (int) as_schedule_single_action( $timestamp, $hook, $args, $this->group );
+		return (int) as_schedule_single_action( $timestamp, $hook, $this->with_store( $args ), $this->group );
 	}
 
 	/**
@@ -135,6 +239,10 @@ final class Scheduler {
 		if ( ! function_exists( 'as_schedule_recurring_action' ) || ! function_exists( 'as_has_scheduled_action' ) ) {
 			return 0;
 		}
+		$args = $this->with_store( $args );
+
+		// Args-matched, so this dedupes PER STORE: store 2 getting its own copy of a job store 1
+		// already has is exactly the intended outcome, not a duplicate.
 		if ( as_has_scheduled_action( $hook, $args, $this->group ) ) {
 			return 0;
 		}
