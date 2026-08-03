@@ -60,9 +60,10 @@ final class RedemptionRepository extends AbstractRepository {
 	public function count_for_user_reward( int $user_id, int $reward_id ): int {
 		$wpdb  = $this->db->wpdb();
 		$table = $this->table();
+		$scope = $this->scope();
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		return (int) $wpdb->get_var(
-			$wpdb->prepare( "SELECT COUNT(*) FROM {$table} WHERE user_id = %d AND reward_id = %d AND status <> 'reversed'", $user_id, $reward_id )
+			$wpdb->prepare( "SELECT COUNT(*) FROM {$table} WHERE {$scope} AND user_id = %d AND reward_id = %d AND status <> 'reversed'", $user_id, $reward_id )
 		);
 	}
 
@@ -75,8 +76,9 @@ final class RedemptionRepository extends AbstractRepository {
 	public function total_points_spent(): int {
 		$wpdb  = $this->db->wpdb();
 		$table = $this->table();
+		$scope = $this->scope();
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-		return (int) $wpdb->get_var( "SELECT COALESCE(SUM(points_spent),0) FROM {$table} WHERE status <> 'reversed'" );
+		return (int) $wpdb->get_var( "SELECT COALESCE(SUM(points_spent),0) FROM {$table} WHERE {$scope} AND status <> 'reversed'" );
 	}
 
 	/**
@@ -87,8 +89,9 @@ final class RedemptionRepository extends AbstractRepository {
 	public function total_redemptions(): int {
 		$wpdb  = $this->db->wpdb();
 		$table = $this->table();
+		$scope = $this->scope();
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-		return (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$table} WHERE status <> 'reversed'" );
+		return (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$table} WHERE {$scope} AND status <> 'reversed'" );
 	}
 
 	/**
@@ -102,15 +105,16 @@ final class RedemptionRepository extends AbstractRepository {
 	public function history( int $user_id, int $per_page = 20, int $page = 1 ): array {
 		$wpdb     = $this->db->wpdb();
 		$table    = $this->table();
+		$scope = $this->scope();
 		$per_page = max( 1, min( 100, $per_page ) );
 		$page     = max( 1, $page );
 		$offset   = ( $page - 1 ) * $per_page;
 
 		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-		$total = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$table} WHERE user_id = %d", $user_id ) );
+		$total = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$table} WHERE {$scope} AND user_id = %d", $user_id ) );
 		$rows  = $wpdb->get_results(
 			$wpdb->prepare(
-				"SELECT * FROM {$table} WHERE user_id = %d ORDER BY id DESC LIMIT %d OFFSET %d",
+				"SELECT * FROM {$table} WHERE {$scope} AND user_id = %d ORDER BY id DESC LIMIT %d OFFSET %d",
 				$user_id,
 				$per_page,
 				$offset

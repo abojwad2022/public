@@ -65,9 +65,10 @@ final class PointsRepository extends AbstractRepository {
 	public function balance( int $user_id ): int {
 		$wpdb  = $this->db->wpdb();
 		$table = $this->table();
+		$scope = $this->scope();
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		return (int) $wpdb->get_var(
-			$wpdb->prepare( "SELECT COALESCE(SUM(points),0) FROM {$table} WHERE user_id = %d AND status = 'approved'", $user_id )
+			$wpdb->prepare( "SELECT COALESCE(SUM(points),0) FROM {$table} WHERE {$scope} AND user_id = %d AND status = 'approved'", $user_id )
 		);
 	}
 
@@ -82,9 +83,10 @@ final class PointsRepository extends AbstractRepository {
 	public function lifetime_earned( int $user_id ): int {
 		$wpdb  = $this->db->wpdb();
 		$table = $this->table();
+		$scope = $this->scope();
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		return (int) $wpdb->get_var(
-			$wpdb->prepare( "SELECT COALESCE(SUM(points),0) FROM {$table} WHERE user_id = %d AND points > 0 AND status = 'approved'", $user_id )
+			$wpdb->prepare( "SELECT COALESCE(SUM(points),0) FROM {$table} WHERE {$scope} AND user_id = %d AND points > 0 AND status = 'approved'", $user_id )
 		);
 	}
 
@@ -99,10 +101,11 @@ final class PointsRepository extends AbstractRepository {
 	public function net_for_source( int $user_id, string $source, int $source_id ): int {
 		$wpdb  = $this->db->wpdb();
 		$table = $this->table();
+		$scope = $this->scope();
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		return (int) $wpdb->get_var(
 			$wpdb->prepare(
-				"SELECT COALESCE(SUM(points),0) FROM {$table} WHERE user_id = %d AND source = %s AND source_id = %d",
+				"SELECT COALESCE(SUM(points),0) FROM {$table} WHERE {$scope} AND user_id = %d AND source = %s AND source_id = %d",
 				$user_id,
 				$source,
 				$source_id
@@ -120,9 +123,10 @@ final class PointsRepository extends AbstractRepository {
 	public function earned_since( int $user_id, string $since ): int {
 		$wpdb  = $this->db->wpdb();
 		$table = $this->table();
+		$scope = $this->scope();
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		return (int) $wpdb->get_var(
-			$wpdb->prepare( "SELECT COALESCE(SUM(points),0) FROM {$table} WHERE user_id = %d AND points > 0 AND created_at >= %s", $user_id, $since )
+			$wpdb->prepare( "SELECT COALESCE(SUM(points),0) FROM {$table} WHERE {$scope} AND user_id = %d AND points > 0 AND created_at >= %s", $user_id, $since )
 		);
 	}
 
@@ -136,9 +140,10 @@ final class PointsRepository extends AbstractRepository {
 	public function credit_count_since( int $user_id, string $since ): int {
 		$wpdb  = $this->db->wpdb();
 		$table = $this->table();
+		$scope = $this->scope();
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		return (int) $wpdb->get_var(
-			$wpdb->prepare( "SELECT COUNT(*) FROM {$table} WHERE user_id = %d AND points > 0 AND created_at >= %s", $user_id, $since )
+			$wpdb->prepare( "SELECT COUNT(*) FROM {$table} WHERE {$scope} AND user_id = %d AND points > 0 AND created_at >= %s", $user_id, $since )
 		);
 	}
 
@@ -153,20 +158,21 @@ final class PointsRepository extends AbstractRepository {
 	public function rank_by_lifetime( int $user_id ): array {
 		$wpdb  = $this->db->wpdb();
 		$table = $this->table();
+		$scope = $this->scope();
 
 		$mine = $this->lifetime_earned( $user_id );
 
 		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		$total = (int) $wpdb->get_var(
 			"SELECT COUNT(*) FROM (
-				SELECT user_id FROM {$table} WHERE points > 0 AND status = 'approved'
+				SELECT user_id FROM {$table} WHERE {$scope} AND points > 0 AND status = 'approved'
 				GROUP BY user_id HAVING SUM(points) > 0
 			) t"
 		);
 		$higher = (int) $wpdb->get_var(
 			$wpdb->prepare(
 				"SELECT COUNT(*) FROM (
-					SELECT user_id, SUM(points) AS lt FROM {$table} WHERE points > 0 AND status = 'approved'
+					SELECT user_id, SUM(points) AS lt FROM {$table} WHERE {$scope} AND points > 0 AND status = 'approved'
 					GROUP BY user_id HAVING lt > %d
 				) t",
 				$mine
@@ -190,8 +196,9 @@ final class PointsRepository extends AbstractRepository {
 	public function total_outstanding(): int {
 		$wpdb  = $this->db->wpdb();
 		$table = $this->table();
+		$scope = $this->scope();
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-		return (int) $wpdb->get_var( "SELECT COALESCE(SUM(points),0) FROM {$table} WHERE status = 'approved'" );
+		return (int) $wpdb->get_var( "SELECT COALESCE(SUM(points),0) FROM {$table} WHERE {$scope} AND status = 'approved'" );
 	}
 
 	/**
@@ -207,6 +214,7 @@ final class PointsRepository extends AbstractRepository {
 	public function expiring_between( string $from, string $to, int $limit = 1000 ): array {
 		$wpdb  = $this->db->wpdb();
 		$table = $this->table();
+		$scope = $this->scope();
 		$limit = max( 1, min( 5000, $limit ) );
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		$rows = $wpdb->get_results(
@@ -239,6 +247,7 @@ final class PointsRepository extends AbstractRepository {
 	public function expire_due( int $limit = 500 ): array {
 		$wpdb  = $this->db->wpdb();
 		$table = $this->table();
+		$scope = $this->scope();
 		$now   = current_time( 'mysql' );
 
 		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
@@ -283,16 +292,17 @@ final class PointsRepository extends AbstractRepository {
 	public function history( int $user_id, int $per_page = 20, int $page = 1 ): array {
 		$wpdb     = $this->db->wpdb();
 		$table    = $this->table();
+		$scope = $this->scope();
 		$per_page = max( 1, min( 100, $per_page ) );
 		$page     = max( 1, $page );
 		$offset   = ( $page - 1 ) * $per_page;
 
 		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-		$total = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$table} WHERE user_id = %d", $user_id ) );
+		$total = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$table} WHERE {$scope} AND user_id = %d", $user_id ) );
 		$rows  = $wpdb->get_results(
 			$wpdb->prepare(
 				"SELECT id, points, balance_before, balance_after, type, reason, source, source_id, campaign_id, status, note, created_at
-				 FROM {$table} WHERE user_id = %d ORDER BY id DESC LIMIT %d OFFSET %d",
+				 FROM {$table} WHERE {$scope} AND user_id = %d ORDER BY id DESC LIMIT %d OFFSET %d",
 				$user_id,
 				$per_page,
 				$offset
@@ -351,9 +361,10 @@ final class PointsRepository extends AbstractRepository {
 	public function pending( int $limit = 100 ): array {
 		$wpdb  = $this->db->wpdb();
 		$table = $this->table();
+		$scope = $this->scope();
 		$limit = max( 1, min( 500, $limit ) );
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-		$rows = $wpdb->get_results( $wpdb->prepare( "SELECT * FROM {$table} WHERE status = 'pending' ORDER BY id DESC LIMIT %d", $limit ) );
+		$rows = $wpdb->get_results( $wpdb->prepare( "SELECT * FROM {$table} WHERE {$scope} AND status = 'pending' ORDER BY id DESC LIMIT %d", $limit ) );
 		return is_array( $rows ) ? $rows : array();
 	}
 
@@ -366,6 +377,7 @@ final class PointsRepository extends AbstractRepository {
 	public function migrate_statuses(): void {
 		$wpdb  = $this->db->wpdb();
 		$table = $this->table();
+		$scope = $this->scope();
 		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		$wpdb->query( "UPDATE {$table} SET status = 'approved' WHERE status = 'cleared'" );
 		$wpdb->query( "UPDATE {$table} SET status = 'rejected' WHERE status = 'void'" );

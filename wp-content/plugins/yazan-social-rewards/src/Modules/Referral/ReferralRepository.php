@@ -37,6 +37,7 @@ final class ReferralRepository extends AbstractRepository {
 	public function find_by_referred( int $referred_user_id ): ?object {
 		$wpdb  = $this->db->wpdb();
 		$table = $this->table();
+		$scope = $this->scope();
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		$row = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$table} WHERE referred_user_id = %d ORDER BY id ASC LIMIT 1", $referred_user_id ) );
 		return $row ?: null;
@@ -103,6 +104,7 @@ final class ReferralRepository extends AbstractRepository {
 		}
 		$wpdb  = $this->db->wpdb();
 		$table = $this->table();
+		$scope = $this->scope();
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		$wpdb->query( $wpdb->prepare( "UPDATE {$table} SET reward_points = reward_points + %d WHERE id = %d", $points, $id ) );
 	}
@@ -119,6 +121,7 @@ final class ReferralRepository extends AbstractRepository {
 	public function record_order( int $referred_user_id, float $order_total ): void {
 		$wpdb  = $this->db->wpdb();
 		$table = $this->table();
+		$scope = $this->scope();
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		$wpdb->query(
 			$wpdb->prepare(
@@ -145,6 +148,7 @@ final class ReferralRepository extends AbstractRepository {
 		}
 		$wpdb  = $this->db->wpdb();
 		$table = $this->table();
+		$scope = $this->scope();
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		$wpdb->query( $wpdb->prepare( "UPDATE {$table} SET points_generated = points_generated + %d WHERE id = %d", $points, $id ) );
 	}
@@ -159,6 +163,7 @@ final class ReferralRepository extends AbstractRepository {
 	public function for_referrer( int $referrer_user_id, int $limit = 100 ): array {
 		$wpdb  = $this->db->wpdb();
 		$table = $this->table();
+		$scope = $this->scope();
 		$limit = max( 1, min( 500, $limit ) );
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		$rows = $wpdb->get_results( $wpdb->prepare( "SELECT * FROM {$table} WHERE referrer_user_id = %d ORDER BY id DESC LIMIT %d", $referrer_user_id, $limit ) );
@@ -174,6 +179,7 @@ final class ReferralRepository extends AbstractRepository {
 	public function referred_ids( int $referrer_user_id ): array {
 		$wpdb  = $this->db->wpdb();
 		$table = $this->table();
+		$scope = $this->scope();
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		$ids = $wpdb->get_col( $wpdb->prepare( "SELECT referred_user_id FROM {$table} WHERE referrer_user_id = %d", $referrer_user_id ) );
 		return array_map( 'intval', (array) $ids );
@@ -196,6 +202,7 @@ final class ReferralRepository extends AbstractRepository {
 		}
 		$wpdb  = $this->db->wpdb();
 		$table = $this->table();
+		$scope = $this->scope();
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		return (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$table} WHERE ip_hash = %s AND referrer_user_id = %d AND referred_user_id <> %d", $ip_hash, $referrer_user_id, $exclude_referred ) );
 	}
@@ -210,6 +217,7 @@ final class ReferralRepository extends AbstractRepository {
 	public function revenue_generated( int $referrer_user_id ): string {
 		$wpdb  = $this->db->wpdb();
 		$table = $this->table();
+		$scope = $this->scope();
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		return (string) $wpdb->get_var( $wpdb->prepare( "SELECT COALESCE(SUM(revenue_total),0) FROM {$table} WHERE referrer_user_id = %d", $referrer_user_id ) );
 	}
@@ -223,10 +231,11 @@ final class ReferralRepository extends AbstractRepository {
 	public function global_stats(): array {
 		$wpdb  = $this->db->wpdb();
 		$table = $this->table();
+		$scope = $this->scope();
 		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		$revenue     = (string) $wpdb->get_var( "SELECT COALESCE(SUM(revenue_total),0) FROM {$table}" );
 		$signups     = (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$table}" );
-		$conversions = (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$table} WHERE status = 'converted'" );
+		$conversions = (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$table} WHERE {$scope} AND status = 'converted'" );
 		// phpcs:enable
 		return array( 'revenue' => $revenue, 'signups' => $signups, 'conversions' => $conversions );
 	}
@@ -240,6 +249,7 @@ final class ReferralRepository extends AbstractRepository {
 	public function stats_for_referrer( int $referrer_user_id ): array {
 		$wpdb  = $this->db->wpdb();
 		$table = $this->table();
+		$scope = $this->scope();
 		$earnings = $this->db->table( 'referral_earnings' );
 		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		$signups     = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$table} WHERE referrer_user_id = %d", $referrer_user_id ) );

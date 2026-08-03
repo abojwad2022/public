@@ -680,9 +680,46 @@ class Yazan_Backup_Engine {
 
 		$zip->close();
 
-		// Rewrite rules and object caches may reference the old dataset.
-		if ( function_exists( 'wp_cache_flush' ) ) {
-			wp_cache_flush();
+		/*
+		 * Rewrite rules and object caches may reference the old dataset — so something must be
+		 * invalidated. The question is how wide.
+		 *
+		 * ⚠️ `wp_cache_flush()` UNDER REDIS IS AN INSTANCE-WIDE FLUSH. Not this store's cache; not
+		 * even this site's. On a Redis shared with other installations it evicts THEIR keys too, and
+		 * nothing anywhere records that we did it. A restore is already a disruptive operation; it
+		 * should not also be a disruptive operation for somebody else's site.
+		 *
+		 * The ladder: prefer per-group flushing where the drop-in supports it (WP 6.1+), which is
+		 * precise and touches no neighbour. Fall back to the global flush only where the blast
+		 * radius is knowingly acceptable — and make that a decision the environment declares rather
+		 * than one this function assumes.
+		 */
+		$groups = array( 'options', 'posts', 'post_meta', 'terms', 'term_meta', 'users', 'user_meta', 'yazan_rbac', 'yazan_homepage', 'yazan_rate_limit' );
+
+		if ( function_exists( 'wp_cache_supports' ) && wp_cache_supports( 'flush_group' ) && function_exists( 'wp_cache_flush_group' ) ) {
+			foreach ( $groups as $group ) {
+				wp_cache_flush_group( $group );
+			}
+		} elseif ( function_exists( 'wp_cache_flush' ) ) {
+			/**
+			 * Filter whether a restore may flush the entire object cache.
+			 *
+			 * Defaults to allowed outside production, refused on production — where a shared cache
+			 * is likeliest and the neighbour is likeliest to be real.
+			 *
+			 * @param bool $allow Whether the global flush may run.
+			 */
+			$allow = (bool) apply_filters( 'yazan_backup_allow_global_flush', 'production' !== wp_get_environment_type() );
+
+			if ( $allow ) {
+				wp_cache_flush();
+			} else {
+				/*
+				 * Refusing silently would be its own failure: a restore that leaves stale caches
+				 * serves the OLD dataset from memory over the new one in the database. Say so.
+				 */
+				$summary['warnings'][] = __( 'The object cache was not flushed. Flush it manually, or the restored data may not appear until it expires.', 'yazan' );
+			}
 		}
 
 		return $summary;
