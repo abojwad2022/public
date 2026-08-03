@@ -42,6 +42,10 @@ class Yazan_Core_Installer {
 			Yazan_Dashboard_Audit::install_table();
 		}
 
+		if ( class_exists( 'Yazan_API_Tokens' ) ) {
+			Yazan_API_Tokens::install_table();
+		}
+
 		/*
 		 * RBAC: tables, permission catalog, default roles, and the one-time backfill that maps the
 		 * WordPress roles already in use onto Yazan roles. Also self-installs on `init` (see

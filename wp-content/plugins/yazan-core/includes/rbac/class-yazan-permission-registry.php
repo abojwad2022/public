@@ -28,7 +28,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 class Yazan_Permission_Registry {
 
 	/** Bump whenever the catalog below changes. Drives sync_catalog() and the cache key. */
-	const REGISTRY_VERSION = '5';
+	const REGISTRY_VERSION = '6';
 
 	/** Option storing the synced registry version. */
 	const VERSION_OPTION = 'yazan_rbac_registry_version';
@@ -475,14 +475,13 @@ class Yazan_Permission_Registry {
 
 			'api_keys'      => array(
 				'label'   => __( 'API keys', 'yazan' ),
-				'status'  => self::STATUS_PLANNED,
 				'sort'    => 420,
 				'actions' => array(
-					'view'   => null,
-					'create' => null,
-					'edit'   => null,
-					'revoke' => null,
-					'delete' => null,
+					'view'   => __( 'List this store’s API tokens. Secrets are never shown.', 'yazan' ),
+					'create' => __( 'Mint an API token. The secret is displayed once and cannot be recovered afterwards.', 'yazan' ),
+					'edit'   => __( 'Rename a token or narrow its scopes. Its store can never change.', 'yazan' ),
+					'revoke' => __( 'Stop a token working immediately.', 'yazan' ),
+					'delete' => __( 'Remove a revoked token from the list.', 'yazan' ),
 				),
 			),
 
@@ -595,7 +594,7 @@ class Yazan_Permission_Registry {
 	 *                 reached through `stores.settings`, which stays store-scoped.
 	 *   audit       — one table; `audit.purge` erases every tenant's history.
 	 *   webhooks    — global endpoints and credentials.
-	 *   api_keys
+	 *   (api_keys was here until the API phase -- see STORE_SCOPED_EXCEPTIONS)
 	 *
 	 * @var string[]
 	 */
@@ -609,7 +608,6 @@ class Yazan_Permission_Registry {
 		'settings',
 		'audit',
 		'webhooks',
-		'api_keys',
 	);
 
 	/**
@@ -620,6 +618,17 @@ class Yazan_Permission_Registry {
 	 * is exactly the property platform scope exists to enforce.
 	 *
 	 * @var string[]
+	 */
+	/*
+	 * ⚠️ `api_keys` MOVED OUT OF PLATFORM_MODULES IN THE API PHASE, and that is a WIDENING: every
+	 * store super admin can now mint tokens. It is correct because the scope of the power and the
+	 * scope of the thing it creates now match — a token is bound to ONE store, refuses every
+	 * platform-scoped slug, and cannot exceed its owner. Left platform-scoped, only a platform
+	 * administrator could ever issue a token, which would make a multi-tenant API unusable by the
+	 * tenants.
+	 *
+	 * The expected value is asserted in tests/test-permissions.php so this shows up as a diff to be
+	 * read rather than a change to be absorbed.
 	 */
 	const STORE_SCOPED_EXCEPTIONS = array(
 		'stores.view',
