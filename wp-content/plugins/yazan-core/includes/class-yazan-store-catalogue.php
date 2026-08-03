@@ -464,33 +464,49 @@ class Yazan_Store_Catalogue {
 			return 0;
 		}
 
-		$stamped = 0;
+		global $wpdb;
 
-		// Untangling this from the scoping filters matters: the query that finds unstamped products
-		// must not itself be scoped, or it would find nothing.
-		add_filter( 'yazan_scope_catalogue', '__return_false', 99 );
-
-		$ids = get_posts(
-			array(
-				'post_type'      => array( 'product' ),
-				'post_status'    => 'any',
-				'posts_per_page' => 2000,
-				'fields'         => 'ids',
-				'tax_query'      => array(
-					array(
-						'taxonomy' => self::TAXONOMY,
-						'operator' => 'NOT EXISTS',
-					),
-				),
+		$term_taxonomy_id = (int) $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT tt.term_taxonomy_id FROM {$wpdb->term_taxonomy} tt WHERE tt.taxonomy = %s AND tt.term_id = %d",
+				self::TAXONOMY,
+				$term_id
 			)
 		);
 
-		foreach ( (array) $ids as $id ) {
-			wp_set_object_terms( (int) $id, array( $term_id ), self::TAXONOMY, true );
-			++$stamped;
+		if ( ! $term_taxonomy_id ) {
+			return 0;
 		}
 
-		remove_filter( 'yazan_scope_catalogue', '__return_false', 99 );
+		$stamped = 0;
+
+		/*
+		 * ⚠️ RAW, AND NOT `get_posts()`. Two reasons, both found by measuring rather than reasoning:
+		 *
+		 *   1. `post_status => 'any'` EXCLUDES `trash` and `auto-draft`. The first pass left 32
+		 *      trashed products with no store term — and a trashed product is not gone, it is one
+		 *      click from being restored into a catalogue where it belongs to nobody and is
+		 *      therefore invisible in every store at once.
+		 *   2. A fixed `posts_per_page` is a silent cap: a shop with 5,000 products would have had
+		 *      3,000 of them quietly left out. This loops until the table is clean.
+		 */
+		do {
+			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+			$ids = $wpdb->get_col(
+				$wpdb->prepare(
+					"SELECT p.ID FROM {$wpdb->posts} p
+					 WHERE p.post_type = 'product'
+					   AND p.ID NOT IN ( SELECT tr.object_id FROM {$wpdb->term_relationships} tr WHERE tr.term_taxonomy_id = %d )
+					 LIMIT 500",
+					$term_taxonomy_id
+				)
+			);
+
+			foreach ( (array) $ids as $id ) {
+				wp_set_object_terms( (int) $id, array( $term_id ), self::TAXONOMY, true );
+				++$stamped;
+			}
+		} while ( ! empty( $ids ) );
 
 		update_option( self::BACKFILL_OPTION, gmdate( 'c' ), false );
 
