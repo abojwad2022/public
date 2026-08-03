@@ -44,7 +44,7 @@ final class NotificationBroadcaster implements Hookable {
 	 */
 	public function hooks(): array {
 		return array(
-			array( 'type' => 'action', 'hook' => self::HOOK, 'method' => 'run_chunk', 'args' => 1 ),
+			array( 'type' => 'action', 'hook' => self::HOOK, 'method' => 'run_chunk', 'args' => 1, 'job' => true ),
 		);
 	}
 

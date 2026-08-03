@@ -65,7 +65,7 @@ final class CampaignWorkflow implements Hookable {
 			// Scheduled on `init`: Action Scheduler's store isn't ready at plugins_loaded/boot,
 			// so a recurring action queued there never persists.
 			array( 'type' => 'action', 'hook' => 'init', 'method' => 'ensure_scheduled', 'priority' => 20 ),
-			array( 'type' => 'action', 'hook' => self::HOOK, 'method' => 'tick' ),
+			array( 'type' => 'action', 'hook' => self::HOOK, 'method' => 'tick', 'job' => true ),
 		);
 	}
 

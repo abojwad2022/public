@@ -55,7 +55,7 @@ final class CampaignEndingScanner implements Hookable {
 			// Scheduling happens on `init` (not boot): Action Scheduler's store isn't
 			// ready at plugins_loaded, so a recurring action queued there never persists.
 			array( 'type' => 'action', 'hook' => 'init', 'method' => 'ensure_scheduled', 'priority' => 20 ),
-			array( 'type' => 'action', 'hook' => self::HOOK, 'method' => 'run' ),
+			array( 'type' => 'action', 'hook' => self::HOOK, 'method' => 'run', 'job' => true ),
 		);
 	}
 

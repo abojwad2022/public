@@ -44,7 +44,7 @@ final class NotificationScheduler implements Hookable {
 	public function hooks(): array {
 		return array(
 			array( 'type' => 'action', 'hook' => 'init', 'method' => 'ensure_scheduled', 'priority' => 20 ),
-			array( 'type' => 'action', 'hook' => self::HOOK, 'method' => 'run' ),
+			array( 'type' => 'action', 'hook' => self::HOOK, 'method' => 'run', 'job' => true ),
 		);
 	}
 

@@ -62,6 +62,7 @@ final class ExpiryService implements Hookable {
 				'type'   => 'action',
 				'hook'   => self::HOOK,
 				'method' => 'run',
+				'job'    => true,
 			),
 		);
 	}

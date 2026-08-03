@@ -61,7 +61,7 @@ final class MetricsService implements SubscriberInterface, Hookable {
 	 */
 	public function hooks(): array {
 		return array(
-			array( 'type' => 'action', 'hook' => self::HOOK, 'method' => 'run', 'args' => 1 ),
+			array( 'type' => 'action', 'hook' => self::HOOK, 'method' => 'run', 'args' => 1, 'job' => true ),
 		);
 	}
 

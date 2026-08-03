@@ -56,7 +56,7 @@ final class ExpiryReminderService implements Hookable {
 		return array(
 			// Scheduled on `init` — Action Scheduler's store isn't ready at boot time.
 			array( 'type' => 'action', 'hook' => 'init', 'method' => 'ensure_scheduled', 'priority' => 20 ),
-			array( 'type' => 'action', 'hook' => self::HOOK, 'method' => 'run' ),
+			array( 'type' => 'action', 'hook' => self::HOOK, 'method' => 'run', 'job' => true ),
 		);
 	}
 
