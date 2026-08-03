@@ -383,6 +383,16 @@ class Yazan_API {
 			return $response;
 		}
 
+		/*
+		 * The namespace index (`/yazan-api/v1` with no trailing path) is registered by WordPress
+		 * itself and lists the routes it can see. `Yazan_REST_Guard` exempts the same thing with the
+		 * empty string in FOREIGN_PREFIXES — a route we did not write cannot carry our tags, and
+		 * refusing it would break discovery for no security gain.
+		 */
+		if ( 1 === preg_match( '#^/' . self::NS_ROOT . '/v[0-9]+/?$#', $route ) ) {
+			return $response;
+		}
+
 		$version = self::version_of( $route );
 		$sunset  = self::version_check( $version );
 
