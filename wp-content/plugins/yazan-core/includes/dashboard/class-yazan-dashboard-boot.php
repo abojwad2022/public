@@ -51,6 +51,7 @@ class Yazan_Dashboard_Boot {
 		require_once $dir . 'rest/class-yazan-rest-porting.php';
 		require_once $dir . 'rest/class-yazan-rest-webhooks.php';
 		require_once $dir . 'rest/class-yazan-rest-status.php';
+		require_once __DIR__ . '/rest/class-yazan-rest-health.php';
 		require_once $dir . 'rest/class-yazan-rest-backup.php';
 		require_once $dir . 'rest/class-yazan-rest-wishlist.php';
 		require_once $dir . 'rest/class-yazan-rest-social-auth.php';
@@ -105,6 +106,7 @@ class Yazan_Dashboard_Boot {
 				Yazan_REST_Porting::register_routes();
 				Yazan_REST_Webhooks::register_routes();
 				Yazan_REST_Status::register_routes();
+		Yazan_REST_Health::register_routes();
 				Yazan_REST_Backup::register_routes();
 				Yazan_REST_Wishlist::register_routes();
 				// Google / Apple sign-in credentials (write-only, encrypted at rest).
