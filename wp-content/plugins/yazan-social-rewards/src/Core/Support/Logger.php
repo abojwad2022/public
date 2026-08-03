@@ -55,6 +55,23 @@ final class Logger {
 	 * @return void
 	 */
 	private function write( string $level, string $message, array $context ): void {
+		/*
+		 * ⚠️ THE `WP_DEBUG` GATE IS GONE, AND ITS ABSENCE IS THE POINT.
+		 *
+		 * This method used to return early unless `WP_DEBUG` was on — which is `false` in
+		 * production, so this logger wrote NOTHING at exactly the moment anyone would want to read
+		 * it. Every `info()`, `warning()` and `error()` call in this plugin was decoration.
+		 *
+		 * `Yazan_Log` applies a per-store LEVEL FLOOR instead: debug is off by default, warnings and
+		 * errors always land, and one noisy tenant can be turned up without flooding the other 99.
+		 * The class and its container registration are unchanged, so no call site moves.
+		 */
+		if ( \class_exists( 'Yazan_Log' ) ) {
+			\Yazan_Log::write( $level, $message, $context, 'rewards' );
+
+			return;
+		}
+
 		if ( ! ( defined( 'WP_DEBUG' ) && WP_DEBUG ) ) {
 			return;
 		}
