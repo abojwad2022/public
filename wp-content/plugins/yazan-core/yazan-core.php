@@ -55,6 +55,9 @@ require YAZAN_CORE_DIR . 'includes/class-yazan-store-options.php';
 require YAZAN_CORE_DIR . 'includes/class-yazan-store-events.php';
 Yazan_Store_Events::init();
 
+// Catalogue tenancy: the `yazan_store` taxonomy on products and `_yazan_store_id` on orders.
+require YAZAN_CORE_DIR . 'includes/class-yazan-store-catalogue.php';
+
 require YAZAN_CORE_DIR . 'includes/class-yazan-core-taxonomies.php';
 require YAZAN_CORE_DIR . 'includes/class-yazan-core-menu.php';
 require YAZAN_CORE_DIR . 'includes/class-yazan-core-verify.php';
@@ -133,6 +136,14 @@ add_action( 'init', array( 'Yazan_Store_Schema', 'maybe_migrate' ), 3 );
 
 // Register the Collections taxonomy on every load (front + admin) so it always exists.
 add_action( 'init', array( 'Yazan_Core_Taxonomies', 'register' ), 5 );
+
+/*
+ * Catalogue tenancy. Priority 4 — BEFORE the Collections taxonomy and before anything that could
+ * run a product query, because a query issued before the scoping filters are attached returns every
+ * tenant's catalogue and looks entirely correct doing it.
+ */
+add_action( 'init', array( 'Yazan_Store_Catalogue', 'register' ), 4 );
+add_action( 'init', array( 'Yazan_Store_Catalogue', 'maybe_backfill' ), 20 );
 
 // Public ring-verification route: /verify-ring/{serial}/ + the serial query var.
 add_action( 'init', array( 'Yazan_Core_Verify', 'add_rewrite' ), 6 );
