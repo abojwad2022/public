@@ -61,6 +61,21 @@ class Yazan_Store_Catalogue {
 	/** Option marking the one-time catalogue backfill as done. */
 	const BACKFILL_OPTION = 'yazan_catalogue_backfilled';
 
+	/** Transient held while a backfill pass is running, so concurrent requests do not pile on. */
+	const LOCK = 'yazan_catalogue_backfilling';
+
+	/**
+	 * Batches per invocation.
+	 *
+	 * 500 x 40 = 20,000 products per pass. A catalogue larger than that finishes across several
+	 * requests instead of holding one request open for minutes — and a catalogue of millions never
+	 * runs inline at all, because the scheduled pass below picks it up.
+	 */
+	const MAX_PASSES = 40;
+
+	/** Cron hook running the backfill off the request path. */
+	const BACKFILL_HOOK = 'yazan_catalogue_backfill';
+
 	/**
 	 * Term id per store, resolved once per request.
 	 *
@@ -90,6 +105,8 @@ class Yazan_Store_Catalogue {
 		// A product created in a store belongs to it. Without this, new products join no store and
 		// vanish from every one of them.
 		add_action( 'save_post_product', array( __CLASS__, 'stamp_product' ), 10, 3 );
+
+		add_action( self::BACKFILL_HOOK, array( __CLASS__, 'run_backfill' ), 10, 1 );
 
 		// Orders carry the store in meta — see the note on `store_of_order()`.
 		add_action( 'woocommerce_checkout_create_order', array( __CLASS__, 'stamp_order' ) );
@@ -479,6 +496,20 @@ class Yazan_Store_Catalogue {
 		}
 
 		$stamped = 0;
+		$passes  = 0;
+
+		/*
+		 * ⚠️ A LOCK, BECAUSE THIS RUNS ON A REQUEST.
+		 *
+		 * Without it every concurrent request starts the whole backfill: the option that marks it
+		 * done is only written after the loop finishes, so N workers each run the full pass and
+		 * fight over the same term-relationship writes.
+		 */
+		if ( get_transient( self::LOCK ) ) {
+			return 0;
+		}
+
+		set_transient( self::LOCK, 1, 5 * MINUTE_IN_SECONDS );
 
 		/*
 		 * ⚠️ RAW, AND NOT `get_posts()`. Two reasons, both found by measuring rather than reasoning:
@@ -506,9 +537,27 @@ class Yazan_Store_Catalogue {
 				wp_set_object_terms( (int) $id, array( $term_id ), self::TAXONOMY, true );
 				++$stamped;
 			}
-		} while ( ! empty( $ids ) );
 
-		update_option( self::BACKFILL_OPTION, gmdate( 'c' ), false );
+			++$passes;
+
+			/*
+			 * ⚠️ AN ITERATION CEILING, BECAUSE THE EXIT CONDITION IS NOT GUARANTEED.
+			 *
+			 * The loop ends when the query stops returning rows — which assumes every row it
+			 * returns gets a term. If `wp_set_object_terms()` ever fails (a filtered-out term, a
+			 * term-count deadlock), the same 500 ids come back forever and this becomes an
+			 * infinite loop inside a web request. A bounded pass that resumes next time is the
+			 * honest failure.
+			 */
+		} while ( ! empty( $ids ) && $passes < self::MAX_PASSES );
+
+		delete_transient( self::LOCK );
+
+		// Only claim completion when the table is actually clean. A partial pass leaves the marker
+		// unset so the next request resumes rather than declaring victory over a half-done job.
+		if ( empty( $ids ) ) {
+			update_option( self::BACKFILL_OPTION, gmdate( 'c' ), false );
+		}
 
 		return $stamped;
 	}
@@ -523,6 +572,38 @@ class Yazan_Store_Catalogue {
 			return;
 		}
 
-		self::backfill();
+		/*
+		 * ⚠️ NOT INLINE ON A FRONT-END REQUEST.
+		 *
+		 * This used to run on `init` for whoever arrived first after a deploy. On a catalogue of
+		 * millions that is a multi-minute page load — and every concurrent visitor started their
+		 * own copy of it. Schedule it instead, and let the visitor's request return.
+		 *
+		 * Store 1 is passed explicitly: cron has no host, so a job that did not carry its store
+		 * would resolve to the default and stamp the wrong tenant's catalogue. That is exactly the
+		 * failure this phase exists to remove.
+		 */
+		if ( ! wp_next_scheduled( self::BACKFILL_HOOK, array( 1 ) ) ) {
+			wp_schedule_single_event( time() + 30, self::BACKFILL_HOOK, array( 1 ) );
+		}
+	}
+
+	/**
+	 * Run one bounded backfill pass, then re-queue if there is more to do.
+	 *
+	 * @param int $store_id Store to stamp.
+	 * @return void
+	 */
+	public static function run_backfill( $store_id = 1 ) {
+		Yazan_Store_Context::run_for(
+			(int) $store_id,
+			static function () use ( $store_id ) {
+				self::backfill();
+
+				if ( ! get_option( self::BACKFILL_OPTION ) && ! wp_next_scheduled( self::BACKFILL_HOOK, array( (int) $store_id ) ) ) {
+					wp_schedule_single_event( time() + 60, self::BACKFILL_HOOK, array( (int) $store_id ) );
+				}
+			}
+		);
 	}
 }

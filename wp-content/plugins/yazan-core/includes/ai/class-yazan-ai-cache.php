@@ -34,8 +34,17 @@ class Yazan_AI_Cache {
 	 * @return string
 	 */
 	public static function key( $task, $model, array $request ) {
+		/*
+		 * ⚠️ THE STORE IS PART OF THE MATERIAL, not merely a prefix.
+		 *
+		 * The same task, model and prompt produce a DIFFERENT correct answer per store: the house
+		 * knowledge, the brand voice and the catalogue that ground the generation are all
+		 * per-store. Sharing the entry meant store B was served store A's copy — with store A's
+		 * product names in it — and it read as a perfectly good answer.
+		 */
 		$material = wp_json_encode(
 			array(
+				's' => \class_exists( 'Yazan_Store_Context' ) ? \Yazan_Store_Context::current() : 1,
 				't' => $task,
 				'm' => $model,
 				'r' => $request,

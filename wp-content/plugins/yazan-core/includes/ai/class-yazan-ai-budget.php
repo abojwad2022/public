@@ -26,6 +26,18 @@ class Yazan_AI_Budget {
 	/** Transient key prefix for the per-user counter. */
 	const RATE_PREFIX = 'yz_ai_rate_';
 
+	/**
+	 * The store this request belongs to.
+	 *
+	 * The AI budget is per-store (the generation log is), so its rate window must be too — a user
+	 * who shops at two stores was otherwise sharing one hourly allowance between them.
+	 *
+	 * @return int
+	 */
+	private static function store() {
+		return class_exists( 'Yazan_Store_Context' ) ? Yazan_Store_Context::current() : 1;
+	}
+
 	/** Object-cache group used for the atomic counter path. */
 	const RATE_GROUP = 'yazan_ai_rate';
 
@@ -101,7 +113,7 @@ class Yazan_AI_Budget {
 	 * @return int
 	 */
 	private static function rate_get( $uid ) {
-		$key = self::RATE_PREFIX . $uid;
+		$key = self::RATE_PREFIX . self::store() . '_' . $uid;
 		if ( wp_using_ext_object_cache() ) {
 			$value = wp_cache_get( $key, self::RATE_GROUP );
 			return false === $value ? 0 : (int) $value;
@@ -119,7 +131,7 @@ class Yazan_AI_Budget {
 	 * @return void
 	 */
 	private static function rate_bump( $uid ) {
-		$key = self::RATE_PREFIX . $uid;
+		$key = self::RATE_PREFIX . self::store() . '_' . $uid;
 		if ( wp_using_ext_object_cache() ) {
 			if ( false === wp_cache_get( $key, self::RATE_GROUP ) ) {
 				wp_cache_add( $key, 0, self::RATE_GROUP, self::WINDOW );

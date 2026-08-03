@@ -88,6 +88,10 @@ final class RateLimiter {
 	 * @return string
 	 */
 	private function key( string $action, string $actor ): string {
-		return 'yzrw_rl_' . md5( $action . '|' . $actor );
+		// ⚠️ The store is in the key. Without it one tenant's traffic drained another tenant's
+		// bucket, and the victim saw refusals it did nothing to earn.
+		$store = \class_exists( 'Yazan_Store_Context' ) ? \Yazan_Store_Context::current() : 1;
+
+		return 'yzrw_rl_' . md5( $store . '|' . $action . '|' . $actor );
 	}
 }

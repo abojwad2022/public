@@ -36,6 +36,15 @@ final class AnalyticsMetrics {
 	/** Order-aggregate cache key. */
 	private const ORDER_CACHE = 'yzrw_analytics_orders';
 
+	/**
+	 * The store this request belongs to.
+	 *
+	 * @return int
+	 */
+	private function store_id(): int {
+		return \class_exists( 'Yazan_Store_Context' ) ? \Yazan_Store_Context::current() : 1;
+	}
+
 	/** Full-overview cache key prefix (per range). */
 	private const OVERVIEW_CACHE = 'yzrw_analytics_overview_';
 
@@ -64,7 +73,13 @@ final class AnalyticsMetrics {
 	 * @return array<string,mixed>
 	 */
 	public function overview( int $range_days = 30, bool $fresh = false ): array {
-		$cache_key = self::OVERVIEW_CACHE . $range_days;
+		/*
+		 * ⚠️ THE STORE IS IN THE KEY. Without it this transient held the ENTIRE analytics payload
+		 * — customer counts, campaign performance, outstanding liability, the revenue series —
+		 * under a key that named only the day range. The first store to warm it served its
+		 * commercial position to every other tenant that opened the same screen.
+		 */
+		$cache_key = self::OVERVIEW_CACHE . $this->store_id() . '_' . $range_days;
 		if ( ! $fresh ) {
 			$cached = get_transient( $cache_key );
 			if ( is_array( $cached ) ) {
@@ -255,7 +270,7 @@ final class AnalyticsMetrics {
 	 */
 	private function order_aggregate( bool $fresh = false ): array {
 		if ( ! $fresh ) {
-			$cached = get_transient( self::ORDER_CACHE );
+			$cached = get_transient( self::ORDER_CACHE . '_' . $this->store_id() );
 			if ( is_array( $cached ) ) {
 				return $cached;
 			}
@@ -305,7 +320,7 @@ final class AnalyticsMetrics {
 			'total_revenue'        => $this->money->format( $revenue ),
 			'clv'                  => $this->money->format( $purchasing > 0 ? $revenue / $purchasing : 0 ),
 		);
-		set_transient( self::ORDER_CACHE, $result, 30 * MINUTE_IN_SECONDS );
+		set_transient( self::ORDER_CACHE . '_' . $this->store_id(), $result, 30 * MINUTE_IN_SECONDS );
 		return $result;
 	}
 

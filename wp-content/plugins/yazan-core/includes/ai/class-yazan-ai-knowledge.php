@@ -92,7 +92,12 @@ class Yazan_AI_Knowledge {
 	 * @return string Leading double-newline so it appends cleanly; '' when there is no knowledge.
 	 */
 	public static function brief() {
-		$cached = get_transient( self::CACHE );
+		/*
+		 * ⚠️ PER STORE. This brief is injected into EVERY AI preamble, so one shared digest meant
+		 * every store's assistant answered with the house knowledge of whichever store warmed the
+		 * cache first — and the answer would look entirely plausible.
+		 */
+		$cached = get_transient( self::CACHE . '_' . ( \class_exists( 'Yazan_Store_Context' ) ? \Yazan_Store_Context::current() : 1 ) );
 		if ( false !== $cached ) {
 			return (string) $cached;
 		}
@@ -129,7 +134,7 @@ class Yazan_AI_Knowledge {
 			? ''
 			: "\n\nHOUSE KNOWLEDGE (accurate background you may draw on; never contradict a product's real data, and never invent specifics beyond this):\n" . implode( "\n", $lines );
 
-		set_transient( self::CACHE, $brief, HOUR_IN_SECONDS );
+		set_transient( self::CACHE . '_' . ( \class_exists( 'Yazan_Store_Context' ) ? \Yazan_Store_Context::current() : 1 ), $brief, HOUR_IN_SECONDS );
 		return $brief;
 	}
 
@@ -137,7 +142,7 @@ class Yazan_AI_Knowledge {
 	 * Drop the cached digest (on any knowledge edit/delete).
 	 */
 	public static function flush() {
-		delete_transient( self::CACHE );
+		delete_transient( self::CACHE . '_' . ( \class_exists( 'Yazan_Store_Context' ) ? \Yazan_Store_Context::current() : 1 ) );
 	}
 
 	/**
