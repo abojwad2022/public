@@ -99,11 +99,44 @@ class Yazan_REST_Status {
 			$plugins[] = array( 'name' => $data['Name'], 'version' => $data['Version'] );
 		}
 
+		/*
+		 * ⚠️ COUNTED, NOT LOADED.
+		 *
+		 * Each of these used to be `count( wc_get_products( array( 'limit' => -1, 'return' => 'ids' ) ) )`
+		 * — every id in the platform pulled into a PHP array so that `count()` could be called on
+		 * it. At a few thousand rows that is merely wasteful; at millions it is an out-of-memory
+		 * fatal on the one screen an operator opens when something is already wrong.
+		 *
+		 * `paginate => true` asks the data store for a total and returns no objects at all, so the
+		 * work happens in MySQL where it belongs. `'limit' => 1` because WooCommerce still runs the
+		 * row query alongside the count.
+		 */
+		$product_page = wc_get_products(
+			array(
+				'limit'    => 1,
+				'paginate' => true,
+				'return'   => 'ids',
+				'status'   => array( 'publish', 'draft' ),
+			)
+		);
+
+		$order_page = wc_get_orders(
+			array(
+				'limit'    => 1,
+				'paginate' => true,
+				'return'   => 'ids',
+				'status'   => 'any',
+				'type'     => 'shop_order',
+			)
+		);
+
+		$coupon_counts = (array) wp_count_posts( 'shop_coupon' );
+
 		$counts = array(
-			'products'  => count( wc_get_products( array( 'limit' => -1, 'return' => 'ids', 'status' => array( 'publish', 'draft' ) ) ) ),
-			'orders'    => count( wc_get_orders( array( 'limit' => -1, 'return' => 'ids', 'status' => 'any', 'type' => 'shop_order' ) ) ),
+			'products'  => (int) ( $product_page->total ?? 0 ),
+			'orders'    => (int) ( $order_page->total ?? 0 ),
 			'customers' => (int) count_users()['total_users'],
-			'coupons'   => count( get_posts( array( 'post_type' => 'shop_coupon', 'numberposts' => -1, 'post_status' => 'any', 'fields' => 'ids' ) ) ),
+			'coupons'   => (int) array_sum( array_map( 'intval', $coupon_counts ) ),
 			'audit'     => Yazan_Dashboard_Audit::query( array( 'per_page' => 1 ) )['total'],
 		);
 

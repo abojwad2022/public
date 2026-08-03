@@ -124,12 +124,25 @@ class Yazan_Store_Events {
 	 * @return void
 	 */
 	private static function unschedule( $hook, $store_id ) {
-		$args      = array( $store_id );
-		$timestamp = wp_next_scheduled( $hook, $args );
-
-		while ( false !== $timestamp ) {
-			wp_unschedule_event( $timestamp, $hook, $args );
+		/*
+		 * ⚠️ TWO SIGNATURES, BECAUSE THERE ARE TWO GENERATIONS OF JOB.
+		 *
+		 * These hooks were originally scheduled with NO arguments. Looking them up with
+		 * `array($store_id)` therefore found nothing — WP-Cron keys an event by hook AND args, so
+		 * the two are different events. Archiving a store reported success and left every one of
+		 * its jobs running.
+		 *
+		 * The argless form is cleared too, for events scheduled before jobs carried their store.
+		 * It is deliberately cleared LAST: a legacy argless event belongs to whichever store
+		 * scheduled it, and with one store that is this one.
+		 */
+		foreach ( array( array( (int) $store_id ), array() ) as $args ) {
 			$timestamp = wp_next_scheduled( $hook, $args );
+
+			while ( false !== $timestamp ) {
+				wp_unschedule_event( $timestamp, $hook, $args );
+				$timestamp = wp_next_scheduled( $hook, $args );
+			}
 		}
 	}
 

@@ -39,6 +39,15 @@ final class Scheduler {
 	 * @return bool
 	 */
 	public function is_ready(): bool {
+		/*
+		 * ⚠️ PER STORE. This was a plain `get_option()`, so the FIRST store to finish scheduling
+		 * marked the whole platform ready — and every store after it skipped scheduling entirely.
+		 * Its jobs would simply never exist, with nothing anywhere reporting a problem.
+		 */
+		if ( \class_exists( 'Yazan_Store_Options' ) ) {
+			return '1' === (string) \Yazan_Store_Options::get( self::READY_OPTION, '' );
+		}
+
 		return '1' === get_option( self::READY_OPTION );
 	}
 
@@ -48,6 +57,12 @@ final class Scheduler {
 	 * @return void
 	 */
 	public function mark_ready(): void {
+		if ( \class_exists( 'Yazan_Store_Options' ) ) {
+			\Yazan_Store_Options::set( self::READY_OPTION, '1' );
+
+			return;
+		}
+
 		if ( ! $this->is_ready() ) {
 			update_option( self::READY_OPTION, '1', true );
 		}
@@ -60,6 +75,12 @@ final class Scheduler {
 	 * @return void
 	 */
 	public function clear_ready(): void {
+		if ( \class_exists( 'Yazan_Store_Options' ) ) {
+			\Yazan_Store_Options::set( self::READY_OPTION, '' );
+
+			return;
+		}
+
 		delete_option( self::READY_OPTION );
 	}
 

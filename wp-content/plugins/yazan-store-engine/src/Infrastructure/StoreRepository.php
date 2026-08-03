@@ -341,7 +341,7 @@ final class StoreRepository extends AbstractRepository implements StoreRepositor
 				 INNER JOIN {$stores} s ON s.id = d.store_id
 				 WHERE s.status = %s
 				 ORDER BY d.store_id ASC, d.is_primary DESC, d.id ASC
-				 LIMIT 2000",
+				 LIMIT 20000",
 				StoreStatus::ACTIVE
 			),
 			ARRAY_A

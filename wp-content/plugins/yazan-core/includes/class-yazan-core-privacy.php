@@ -259,7 +259,7 @@ class Yazan_Core_Privacy {
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 			$rows = $wpdb->get_results(
 				$wpdb->prepare(
-					"SELECT * FROM `{$table}` WHERE `{$spec['user_column']}` = %d LIMIT 200",
+					"SELECT * FROM `{$table}` WHERE `{$spec['user_column']}` = %d LIMIT 5000",
 					(int) $user->ID
 				),
 				ARRAY_A

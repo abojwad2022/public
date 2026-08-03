@@ -505,11 +505,24 @@ class Yazan_Store_Catalogue {
 		 * done is only written after the loop finishes, so N workers each run the full pass and
 		 * fight over the same term-relationship writes.
 		 */
-		if ( get_transient( self::LOCK ) ) {
-			return 0;
-		}
+		/*
+		 * ⚠️ `add_option()`, NOT `set_transient()`. A transient check-then-set is a read-modify-write:
+		 * two workers can both read "absent" and both proceed. `add_option()` returns false when the
+		 * row already exists, and that atomicity comes from the UNIQUE key on `option_name` — it is a
+		 * real lock, not the shape of one.
+		 *
+		 * `autoload = false` so the lock never joins `alloptions`.
+		 */
+		if ( ! add_option( self::LOCK, time(), '', false ) ) {
+			$held = (int) get_option( self::LOCK, 0 );
 
-		set_transient( self::LOCK, 1, 5 * MINUTE_IN_SECONDS );
+			// A worker that died mid-pass would otherwise hold the lock forever.
+			if ( $held > time() - ( 15 * MINUTE_IN_SECONDS ) ) {
+				return 0;
+			}
+
+			update_option( self::LOCK, time(), false );
+		}
 
 		/*
 		 * ⚠️ RAW, AND NOT `get_posts()`. Two reasons, both found by measuring rather than reasoning:
@@ -551,7 +564,7 @@ class Yazan_Store_Catalogue {
 			 */
 		} while ( ! empty( $ids ) && $passes < self::MAX_PASSES );
 
-		delete_transient( self::LOCK );
+		delete_option( self::LOCK );
 
 		// Only claim completion when the table is actually clean. A partial pass leaves the marker
 		// unset so the next request resumes rather than declaring victory over a half-done job.
