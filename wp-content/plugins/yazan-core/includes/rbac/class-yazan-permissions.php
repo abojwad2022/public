@@ -438,11 +438,26 @@ class Yazan_Permissions {
 		 * and — because platform_super is a separate flag — assigning yourself a super role inside a
 		 * store you administer.
 		 */
+		/*
+		 * ⚠️ READ DEFENSIVELY, BECAUSE A DEPLOY CAN CHANGE THE SHAPE OF A CACHED VALUE.
+		 *
+		 * `platform_super` and `platform_perms` were added to this array when the permission scope
+		 * was introduced. The cache version is bumped when GRANTS change — it is not bumped when the
+		 * CODE changes, and nothing tells a running cache that the array it is holding now has the
+		 * wrong shape.
+		 *
+		 * The symptom was ugly out of proportion to the cause: every entry cached across the deploy
+		 * raised an undefined-index notice and evaluated as false, so `can()` refused a platform
+		 * permission to a platform super admin — a site-wide 403 that lasts exactly as long as the
+		 * cache TTL and then heals itself, which is the worst possible incident to diagnose.
+		 *
+		 * `??` costs nothing and makes a stale entry merely conservative instead of broken.
+		 */
 		if ( Yazan_Permission_Registry::is_platform( $slug ) ) {
-			return $set['platform_super'] || isset( $set['platform_perms'][ $slug ] );
+			return ! empty( $set['platform_super'] ) || isset( $set['platform_perms'][ $slug ] );
 		}
 
-		if ( $set['super'] ) {
+		if ( ! empty( $set['super'] ) ) {
 			return true;
 		}
 
