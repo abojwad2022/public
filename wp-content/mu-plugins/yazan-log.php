@@ -208,7 +208,13 @@ final class Yazan_Log {
 				continue;
 			}
 
-			$out[ $key ] = is_scalar( $value ) ? self::redact( (string) $value ) : '';
+			// Only strings can hide a secret, and only strings need redacting. Coercing an int to a
+			// string would lose the type for no gain and make every numeric field harder to read.
+			if ( is_string( $value ) ) {
+				$out[ $key ] = self::redact( $value );
+			} elseif ( is_scalar( $value ) ) {
+				$out[ $key ] = $value;
+			}
 		}
 
 		return $out;

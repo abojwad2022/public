@@ -1,2 +1,6 @@
 2026-08-03T01:11:22+00:00 ERROR {"lvl":"error","msg":"scale.probe","store":1,"src":"fallback","req":"c90c3ffc-e8fc-4bf9-a3cc-b3c87c21de8a","ctx":"web","uid":1,"data":{"count":"1"}}
 2026-08-03T01:11:23+00:00 ERROR {"lvl":"error","msg":"queue.no_store","store":1,"src":"cron-default","req":"3c0c8b4f-7d7e-4492-b289-7511f5c84abc","ctx":"cron","uid":0,"data":{"args":"0"}}
+2026-08-03T01:26:01+00:00 ERROR {"lvl":"error","msg":"queue.no_store","store":1,"src":"fallback","req":"166870d4-dda3-4a3d-ae9d-435652b66363","ctx":"web","uid":0,"data":{"args":"0"}}
+2026-08-03T01:26:01+00:00 ERROR {"lvl":"error","msg":"scale.probe","store":1,"src":"fallback","req":"166870d4-dda3-4a3d-ae9d-435652b66363","ctx":"web","uid":0,"data":{"count":"1"}}
+2026-08-03T01:27:06+00:00 ERROR {"lvl":"error","msg":"queue.no_store","store":1,"src":"fallback","req":"3685a905-987b-4fae-846b-e5ccf20dbed7","ctx":"web","uid":0,"data":{"args":0}}
+2026-08-03T01:27:06+00:00 ERROR {"lvl":"error","msg":"scale.probe","store":1,"src":"fallback","req":"3685a905-987b-4fae-846b-e5ccf20dbed7","ctx":"web","uid":0,"data":{"count":1}}
